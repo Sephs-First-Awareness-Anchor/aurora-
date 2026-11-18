@@ -52,6 +52,8 @@ Auto-detected. Override via environment variable:
 """
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_hardware_io.py')
 
 import json
 import os
@@ -67,13 +69,7 @@ from typing import Any, Callable, Dict, List, Optional
 try:
     from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_hardware_io.py:68",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 68, "source_file": "aurora_hardware_io.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 68)
     import threading as _threading
     PERSISTENCE_LOCK = _threading.RLock()
     def atomic_write_json(path, data, **kw):
@@ -118,25 +114,13 @@ def detect_platform() -> str:
         import sounddevice  # noqa: F401
         return "linux"
     except (ImportError, OSError) as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:112",
-            exc=_aurora_boundary_exc,
-            context={"function": "detect_platform", "handler_line": 112, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'detect_platform', 112)
         pass
     try:
         import speech_recognition  # noqa: F401
         return "linux"
     except (ImportError, OSError) as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:117",
-            exc=_aurora_boundary_exc,
-            context={"function": "detect_platform", "handler_line": 117, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'detect_platform', 117)
         pass
     return "headless"
 
@@ -201,13 +185,7 @@ def _speak_termux(text: str, block: bool) -> None:
                         timeout=120,
                     )
                 except subprocess.TimeoutExpired as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:181",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_speak_termux", "handler_line": 181, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_speak_termux', 181)
                     pass
                 except Exception:
                     print(f"[AURORA] {text}")
@@ -234,13 +212,7 @@ def _speak_linux(text: str, block: bool) -> None:
             engine.runAndWait()
             return
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:207",
-                exc=_aurora_boundary_exc,
-                context={"function": "_do", "handler_line": 207, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_do', 207)
             pass
         if shutil.which("espeak"):
             try:
@@ -248,13 +220,7 @@ def _speak_linux(text: str, block: bool) -> None:
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:214",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_do", "handler_line": 214, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_do', 214)
                 pass
         print(f"[AURORA] {text}")
 
@@ -309,13 +275,7 @@ def _parse_stt_output(raw: str) -> Optional[str]:
             if isinstance(utterances, list) and utterances:
                 return str(utterances[0]).strip() or None
     except (json.JSONDecodeError, TypeError, KeyError) as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:268",
-            exc=_aurora_boundary_exc,
-            context={"function": "_parse_stt_output", "handler_line": 268, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_parse_stt_output', 268)
         pass
     return raw.strip() or None
 
@@ -342,23 +302,11 @@ def _listen_termux(timeout: float) -> Optional[str]:
         if raw:
             return _parse_stt_output(raw)
     except subprocess.TimeoutExpired as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:294",
-            exc=_aurora_boundary_exc,
-            context={"function": "_listen_termux", "handler_line": 294, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_listen_termux', 294)
         # User didn't speak within Android STT window — not an error
         pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:297",
-            exc=_aurora_boundary_exc,
-            context={"function": "_listen_termux", "handler_line": 297, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_listen_termux', 297)
         pass
     return None
 
@@ -382,33 +330,15 @@ def _listen_linux(timeout: float) -> Optional[str]:
         try:
             return recognizer.recognize_google(audio)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:320",
-                exc=_aurora_boundary_exc,
-                context={"function": "_listen_linux", "handler_line": 320, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_listen_linux', 320)
             pass
         try:
             return recognizer.recognize_sphinx(audio)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:324",
-                exc=_aurora_boundary_exc,
-                context={"function": "_listen_linux", "handler_line": 324, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_listen_linux', 324)
             pass
     except ImportError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:326",
-            exc=_aurora_boundary_exc,
-            context={"function": "_listen_linux", "handler_line": 326, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_listen_linux', 326)
         pass
     return None
 
@@ -443,13 +373,7 @@ def _camera_termux(out: str) -> Optional[str]:
         )
         return out if Path(out).exists() else None
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:360",
-            exc=_aurora_boundary_exc,
-            context={"function": "_camera_termux", "handler_line": 360, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_camera_termux', 360)
         return None
 
 
@@ -466,22 +390,10 @@ def _camera_linux(out: str) -> Optional[str]:
             cv2.imwrite(out, frame)
             return out
     except ImportError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:376",
-            exc=_aurora_boundary_exc,
-            context={"function": "_camera_linux", "handler_line": 376, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_camera_linux', 376)
         pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:378",
-            exc=_aurora_boundary_exc,
-            context={"function": "_camera_linux", "handler_line": 378, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_camera_linux', 378)
         pass
     return None
 
@@ -536,25 +448,13 @@ class AmbientMicStream:
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:432",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "stop", "handler_line": 432, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'stop', 432)
                 pass
             if self._termux_proc is not None:
                 try:
                     self._termux_proc.terminate()
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:437",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "stop", "handler_line": 437, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'stop', 437)
                     pass
                 self._termux_proc = None
 
@@ -569,13 +469,7 @@ class AmbientMicStream:
                 try:
                     self._on_chunk(indata.flatten().astype("int16").tobytes())
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:451",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_callback", "handler_line": 451, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_callback', 451)
                     pass
 
             self._sd_stream = sd.InputStream(
@@ -588,13 +482,7 @@ class AmbientMicStream:
             self._sd_stream.start()
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:463",
-                exc=_aurora_boundary_exc,
-                context={"function": "_start_linux", "handler_line": 463, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_start_linux', 463)
             return False
 
     def _start_termux(self) -> bool:
@@ -635,23 +523,11 @@ class AmbientMicStream:
                     try:
                         _proc.wait(timeout=2)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hardware_io.py:503",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_poll", "handler_line": 503, "source_file": "aurora_hardware_io.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_poll', 503)
                         try:
                             _proc.terminate()
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_hardware_io.py:506",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_poll", "handler_line": 506, "source_file": "aurora_hardware_io.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_poll', 506)
                             pass
                     if self._running and Path(tmp).exists():
                         with open(tmp, "rb") as f:
@@ -661,13 +537,7 @@ class AmbientMicStream:
                             self._on_chunk(data[44:])
                         Path(tmp).unlink(missing_ok=True)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:515",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_poll", "handler_line": 515, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_poll', 515)
                     time.sleep(1.0)
 
         self._thread = threading.Thread(target=_poll, daemon=True,
@@ -772,13 +642,7 @@ class NameListener:
                     # No wake word, outside conversation window — check file PTT
                     self._check_file_ptt()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:619",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_loop_termux", "handler_line": 619, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_loop_termux', 619)
                 time.sleep(1.0)
 
     # ---- Linux loop --------------------------------------------------------
@@ -794,13 +658,7 @@ class NameListener:
             import numpy as np
             import speech_recognition as sr
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:634",
-                exc=_aurora_boundary_exc,
-                context={"function": "_loop_linux", "handler_line": 634, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_loop_linux', 634)
             # Degrade to file PTT
             self._loop_file_ptt()
             return
@@ -850,13 +708,7 @@ class NameListener:
                                     len(speech_buf) >= max_chunks):
                                 break
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:683",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_loop_linux", "handler_line": 683, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_loop_linux', 683)
                 time.sleep(0.5)
                 continue
 
@@ -869,23 +721,11 @@ class NameListener:
             try:
                 text = recognizer.recognize_google(audio)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:695",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_loop_linux", "handler_line": 695, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_loop_linux', 695)
                 try:
                     text = recognizer.recognize_sphinx(audio)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:698",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_loop_linux", "handler_line": 698, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_loop_linux', 698)
                     pass
 
             if not text:
@@ -932,13 +772,7 @@ class NameListener:
             if text:
                 self._dispatch(text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:744",
-                exc=_aurora_boundary_exc,
-                context={"function": "_check_file_ptt", "handler_line": 744, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_check_file_ptt', 744)
             pass
 
     def _dispatch(self, text: str) -> None:
@@ -982,13 +816,7 @@ class HardwareIO:
                 self._log(msg)
                 return
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:787",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_log_msg", "handler_line": 787, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_log_msg', 787)
                 pass
         print(msg)
 
@@ -1099,13 +927,7 @@ class HardwareIO:
                 audio_conf=min(1.0, rms * 8.0),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:897",
-                exc=_aurora_boundary_exc,
-                context={"function": "_default_ambient_handler", "handler_line": 897, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_default_ambient_handler', 897)
             pass
 
 
@@ -1156,49 +978,25 @@ def probe() -> Dict[str, Any]:
             result["ambient_mic"] = True
             result["stt"]         = True
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:947",
-                exc=_aurora_boundary_exc,
-                context={"function": "probe", "handler_line": 947, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'probe', 947)
             pass
         try:
             import speech_recognition  # noqa: F401
             result["stt"] = True
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:952",
-                exc=_aurora_boundary_exc,
-                context={"function": "probe", "handler_line": 952, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'probe', 952)
             pass
         try:
             import pyttsx3  # noqa: F401
             result["tts"] = True
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:957",
-                exc=_aurora_boundary_exc,
-                context={"function": "probe", "handler_line": 957, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'probe', 957)
             result["tts"] = shutil.which("espeak") is not None
         try:
             import cv2  # noqa: F401
             result["camera"] = True
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:962",
-                exc=_aurora_boundary_exc,
-                context={"function": "probe", "handler_line": 962, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'probe', 962)
             pass
     return result
 
@@ -1326,13 +1124,7 @@ try:
     )
     _OETS_AVAILABLE = True
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_hardware_io.py:1072",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 1072, "source_file": "aurora_hardware_io.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 1072)
     pass
 
 import logging
@@ -2584,13 +2376,7 @@ class SensoryCompetencyEngine:
                 return concept_label
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:2278",
-                exc=e,
-                context={"function": "_ground_to_oets", "handler_line": 2278, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), e, '_ground_to_oets', 2278)
             logger.debug(f"[SENSORY] OETS grounding failed: {e}")
 
         return ""
@@ -2926,13 +2712,7 @@ if not _PYTTSX3_AVAILABLE:
         import pyttsx3
         _PYTTSX3_AVAILABLE = True
     except ImportError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:2613",
-            exc=_aurora_boundary_exc,
-            context={"function": "<module>", "handler_line": 2613, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2613)
         logger.info("[VOICE] pyttsx3 not available. Install: pip install pyttsx3")
 
 try:
@@ -2940,26 +2720,14 @@ try:
     import asyncio
     _EDGE_TTS_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_hardware_io.py:2620",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 2620, "source_file": "aurora_hardware_io.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2620)
     logger.info("[VOICE] edge-tts not available. Install for natural voices: pip install edge-tts")
 
 # numpy (should be available if cv2 or sounddevice is)
 try:
     import numpy as np
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_hardware_io.py:2626",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 2626, "source_file": "aurora_hardware_io.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2626)
     pass
 
 
@@ -2994,13 +2762,7 @@ class LinuxCamera:
                 import mediapipe as mp  # type: ignore
                 self._mediapipe = mp
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2660",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_ensure_mediapipe_detectors", "handler_line": 2660, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_mediapipe_detectors', 2660)
                 self._mediapipe = False
         if self._mediapipe is False:
             return
@@ -3011,13 +2773,7 @@ class LinuxCamera:
                     min_detection_confidence=0.45,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2670",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_ensure_mediapipe_detectors", "handler_line": 2670, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_mediapipe_detectors', 2670)
                 self._mp_face_detector = False
         if self._mp_pose is None:
             try:
@@ -3027,13 +2783,7 @@ class LinuxCamera:
                     min_tracking_confidence=0.45,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2679",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_ensure_mediapipe_detectors", "handler_line": 2679, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_mediapipe_detectors', 2679)
                 self._mp_pose = False
 
     def _load_ultralytics_detector(self):
@@ -3042,13 +2792,7 @@ class LinuxCamera:
                 from ultralytics import YOLO  # type: ignore
                 self._ultralytics_detector = YOLO("yolov8n.pt")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2687",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_load_ultralytics_detector", "handler_line": 2687, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_load_ultralytics_detector', 2687)
                 self._ultralytics_detector = False
         return None if self._ultralytics_detector is False else self._ultralytics_detector
 
@@ -3065,13 +2809,7 @@ class LinuxCamera:
             try:
                 rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2703",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_enrich_visual_features", "handler_line": 2703, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_enrich_visual_features', 2703)
                 rgb = None
 
         if self._mp_face_detector and rgb is not None:
@@ -3091,13 +2829,7 @@ class LinuxCamera:
                     if len(enriched_faces) > len(features.get("faces", []) or []):
                         features["faces"] = enriched_faces
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2722",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_enrich_visual_features", "handler_line": 2722, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_enrich_visual_features', 2722)
                 pass
 
         if self._mp_pose and rgb is not None:
@@ -3107,13 +2839,7 @@ class LinuxCamera:
                     person_count = max(person_count, 1)
                     features["features"]["pose_detected"] = 1.0
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2731",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_enrich_visual_features", "handler_line": 2731, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_enrich_visual_features', 2731)
                 pass
 
         if self.frame_count % 4 == 0 or not self._last_object_detection.get("objects"):
@@ -3148,13 +2874,7 @@ class LinuxCamera:
                         "objects": list(detected_objects),
                     }
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:2765",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_enrich_visual_features", "handler_line": 2765, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_enrich_visual_features', 2765)
                     detected_objects = list(self._last_object_detection.get("objects") or [])
         else:
             detected_objects = list(self._last_object_detection.get("objects") or [])
@@ -3190,13 +2910,7 @@ class LinuxCamera:
             return True
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:2800",
-                exc=e,
-                context={"function": "open", "handler_line": 2800, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), e, 'open', 2800)
             logger.debug(f"[CAMERA] Device {self.device_id} error: {e}")
             return False
 
@@ -3258,13 +2972,7 @@ class LinuxCamera:
                 features["motion_detected"] = motion_amount > 0.02
                 features["features"]["motion_intensity"] = motion_amount
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2861",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "extract_features", "handler_line": 2861, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'extract_features', 2861)
                 pass
 
         # Face detection (if cascade available)
@@ -3276,13 +2984,7 @@ class LinuxCamera:
                 features["faces"] = [{"x": int(x), "y": int(y), "w": int(w), "h": int(h)}
                                      for (x, y, w, h) in faces]
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:2872",
-                exc=e,
-                context={"function": "extract_features", "handler_line": 2872, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), e, 'extract_features', 2872)
             logger.debug(f"[CAMERA] Face detection failed: {e}")
 
         # Color analysis
@@ -3299,13 +3001,7 @@ class LinuxCamera:
                 h_hist = h_hist.flatten() / (h_hist.sum() + 1e-9)
                 features["features"]["hsv_histogram"] = h_hist.tolist()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2888",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "extract_features", "handler_line": 2888, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'extract_features', 2888)
                 pass
 
         self._enrich_visual_features(frame, features)
@@ -3347,13 +3043,7 @@ class LinuxMicrophone:
                 import webrtcvad  # type: ignore
                 self._vad = webrtcvad.Vad(2)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:2929",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_get_vad", "handler_line": 2929, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_get_vad', 2929)
                 self._vad = False
         return None if self._vad is False else self._vad
 
@@ -3380,13 +3070,7 @@ class LinuxMicrophone:
                 return 0.0
             return float(speech_frames / total_frames)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:2955",
-                exc=_aurora_boundary_exc,
-                context={"function": "_voice_activity_ratio", "handler_line": 2955, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_voice_activity_ratio', 2955)
             return 0.0
 
     def _transcribe_with_faster_whisper(self, wav_bytes: bytes) -> Optional[str]:
@@ -3402,13 +3086,7 @@ class LinuxMicrophone:
                 text = " ".join(str(seg.text or "").strip() for seg in segments).strip()
                 return text or None
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:2970",
-                exc=_aurora_boundary_exc,
-                context={"function": "_transcribe_with_faster_whisper", "handler_line": 2970, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_transcribe_with_faster_whisper', 2970)
             return None
 
     def start_stream(self) -> bool:
@@ -3451,13 +3129,7 @@ class LinuxMicrophone:
         try:
             return self.audio_queue.get(timeout=timeout)
         except queue.Empty as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:3012",
-                exc=_aurora_boundary_exc,
-                context={"function": "get_audio_chunk", "handler_line": 3012, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'get_audio_chunk', 3012)
             return None
 
     def record_audio(self, duration: float = 3.0) -> Optional[np.ndarray]:
@@ -3501,13 +3173,7 @@ class LinuxMicrophone:
                 text = self._recognizer.recognize_google(audio)
                 return text
             except sr.UnknownValueError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3055",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "listen_and_transcribe", "handler_line": 3055, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'listen_and_transcribe', 3055)
                 logger.debug("[MICROPHONE] Google recognizer could not understand audio")
             except sr.RequestError as e:
                 logger.warning(f"[MICROPHONE] Google API error: {e}")
@@ -3517,13 +3183,7 @@ class LinuxMicrophone:
             return None
 
         except sr.WaitTimeoutError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:3064",
-                exc=_aurora_boundary_exc,
-                context={"function": "listen_and_transcribe", "handler_line": 3064, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'listen_and_transcribe', 3064)
             logger.debug("[MICROPHONE] Listening timed out")
             return None
         except Exception as e:
@@ -3547,13 +3207,7 @@ class LinuxMicrophone:
                 prop_decrease=0.6,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:3087",
-                exc=_aurora_boundary_exc,
-                context={"function": "extract_features", "handler_line": 3087, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'extract_features', 3087)
             clean_audio = np.asarray(audio).flatten()
         features, _ = _extract_rich_audio_features(clean_audio, self.sample_rate)
         vad_ratio = self._voice_activity_ratio(clean_audio)
@@ -3641,13 +3295,7 @@ class LinuxVoice:
                 self._apply_pyttsx3_voice(self.voice_name)
                 logger.info("[VOICE] pyttsx3 fallback initialized")
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3174",
-                    exc=e,
-                    context={"function": "__init__", "handler_line": 3174, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), e, '__init__', 3174)
                 logger.debug(f"[VOICE] pyttsx3 init failed: {e}")
 
         # Temp file for edge-tts output
@@ -3692,13 +3340,7 @@ class LinuxVoice:
         try:
             voices = list(self._engine.getProperty('voices') or [])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:3218",
-                exc=_aurora_boundary_exc,
-                context={"function": "_pick_pyttsx3_voice", "handler_line": 3218, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_pick_pyttsx3_voice', 3218)
             return None
         if not voices:
             return None
@@ -3747,13 +3389,7 @@ class LinuxVoice:
         try:
             self._engine.setProperty('voice', voice_id)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:3266",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_pyttsx3_voice", "handler_line": 3266, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_pyttsx3_voice', 3266)
             pass
 
     def set_rate(self, adjustment: str):
@@ -3858,22 +3494,10 @@ class LinuxVoice:
                 try:
                     os.unlink(_wav.name)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:3370",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "speak", "handler_line": 3370, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'speak', 3370)
                     pass
         except Exception as _pe:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:3372",
-                exc=_pe,
-                context={"function": "speak", "handler_line": 3372, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _pe, 'speak', 3372)
             logger.debug(f"[VOICE] piper error: {_pe}")
 
         # Fallback to pyttsx3
@@ -3887,13 +3511,7 @@ class LinuxVoice:
                     self._speaking = False
                 return True
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3385",
-                    exc=e,
-                    context={"function": "speak", "handler_line": 3385, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), e, 'speak', 3385)
                 logger.debug(f"[VOICE] pyttsx3 error: {e}")
 
         # Last resort: espeak command line
@@ -3924,13 +3542,7 @@ class LinuxVoice:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
             except RuntimeError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3415",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_speak_edge_tts_sync", "handler_line": 3415, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_speak_edge_tts_sync', 3415)
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
 
@@ -4034,13 +3646,7 @@ class LinuxVoice:
             try:
                 self._engine.stop()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3518",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "stop", "handler_line": 3518, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'stop', 3518)
                 pass
         self._speaking = False
 
@@ -4236,13 +3842,7 @@ class HardwareInterface:
                 self.stats["visual_frames"] += 1
                 return features
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3713",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "capture_visual", "handler_line": 3713, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'capture_visual', 3713)
                 return None
 
         return None
@@ -4291,13 +3891,7 @@ class HardwareInterface:
                         self.on_speech_detected(text)
                     return text
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3761",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "listen_for_speech", "handler_line": 3761, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'listen_for_speech', 3761)
                 return None
             return None
 
@@ -4320,13 +3914,7 @@ class HardwareInterface:
                 self.stats["utterances_spoken"] += 1
                 return True
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3783",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "speak", "handler_line": 3783, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'speak', 3783)
                 return False
 
         logger.warning("[HARDWARE] Voice not available")
@@ -4344,13 +3932,7 @@ class HardwareInterface:
                 subprocess.Popen(["termux-tts-speak", text])
                 self.stats["utterances_spoken"] += 1
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3800",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "speak_async", "handler_line": 3800, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'speak_async', 3800)
                 pass
 
     def process_visual(self, visual_data: Dict[str, Any],
@@ -4385,13 +3967,7 @@ class HardwareInterface:
                     visual_conf=float(visual_data.get("confidence", 0.5)),
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3834",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_visual", "handler_line": 3834, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process_visual', 3834)
                 pass
 
         # Save latest camera frame to disk so aurora_hub Vision tab can
@@ -4408,13 +3984,7 @@ class HardwareInterface:
                     _os.makedirs(_cam_dir, exist_ok=True)
                     cv2.imwrite(_os.path.join(_cam_dir, "frame_latest.png"), _frame)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3850",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_visual", "handler_line": 3850, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process_visual', 3850)
                 pass
 
         return result
@@ -4451,13 +4021,7 @@ class HardwareInterface:
                     audio_conf=float(audio_data.get("confidence", 0.5)),
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:3886",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_audio", "handler_line": 3886, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process_audio', 3886)
                 pass
 
         return result
@@ -4524,13 +4088,7 @@ class HardwareInterface:
                         features["faces"] = [{"x": int(x), "y": int(y), "w": int(w), "h": int(h)}
                                             for (x, y, w, h) in faces]
                 except Exception as e:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:3952",
-                        exc=e,
-                        context={"function": "load_image", "handler_line": 3952, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), e, 'load_image', 3952)
                     logger.debug(f"[HARDWARE] Face detection failed: {e}")
 
                 # Color analysis
@@ -4583,13 +4141,7 @@ class HardwareInterface:
             sample_rate = sr
             logger.info(f"[HARDWARE] Loaded audio with scipy: {file_path}")
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:4004",
-                exc=e,
-                context={"function": "load_audio_file", "handler_line": 4004, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), e, 'load_audio_file', 4004)
             logger.debug(f"[HARDWARE] scipy wavfile failed: {e}")
 
         # Method 2: soundfile (supports more formats)
@@ -4599,22 +4151,10 @@ class HardwareInterface:
                 audio, sample_rate = sf.read(file_path, dtype='float32')
                 logger.info(f"[HARDWARE] Loaded audio with soundfile: {file_path}")
             except ImportError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:4013",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "load_audio_file", "handler_line": 4013, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'load_audio_file', 4013)
                 logger.debug("[HARDWARE] soundfile not installed")
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:4015",
-                    exc=e,
-                    context={"function": "load_audio_file", "handler_line": 4015, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), e, 'load_audio_file', 4015)
                 logger.debug(f"[HARDWARE] soundfile failed: {e}")
 
         # Method 3: librosa (supports many formats including mp3)
@@ -4624,22 +4164,10 @@ class HardwareInterface:
                 audio, sample_rate = librosa.load(file_path, sr=None)
                 logger.info(f"[HARDWARE] Loaded audio with librosa: {file_path}")
             except ImportError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:4024",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "load_audio_file", "handler_line": 4024, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'load_audio_file', 4024)
                 logger.debug("[HARDWARE] librosa not installed")
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:4026",
-                    exc=e,
-                    context={"function": "load_audio_file", "handler_line": 4026, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), e, 'load_audio_file', 4026)
                 logger.debug(f"[HARDWARE] librosa failed: {e}")
 
         # Method 4: pydub (requires ffmpeg but handles many formats)
@@ -4655,22 +4183,10 @@ class HardwareInterface:
                     audio = samples.astype(np.float32) / np.max(np.abs(samples))
                 logger.info(f"[HARDWARE] Loaded audio with pydub: {file_path}")
             except ImportError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:4041",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "load_audio_file", "handler_line": 4041, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'load_audio_file', 4041)
                 logger.debug("[HARDWARE] pydub not installed")
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:4043",
-                    exc=e,
-                    context={"function": "load_audio_file", "handler_line": 4043, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), e, 'load_audio_file', 4043)
                 logger.debug(f"[HARDWARE] pydub failed: {e}")
 
         if audio is None:
@@ -4789,13 +4305,7 @@ class SensoryLoop:
                     try:
                         self.visual_results.put_nowait(result)
                     except queue.Full as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hardware_io.py:4161",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_visual_loop", "handler_line": 4161, "source_file": "aurora_hardware_io.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_visual_loop', 4161)
                         self.visual_results.get()  # Drop oldest
                         self.visual_results.put_nowait(result)
 
@@ -4814,13 +4324,7 @@ class SensoryLoop:
                     try:
                         self.audio_results.put_nowait(result)
                     except queue.Full as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hardware_io.py:4179",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_audio_loop", "handler_line": 4179, "source_file": "aurora_hardware_io.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_audio_loop', 4179)
                         self.audio_results.get()  # Drop oldest
                         self.audio_results.put_nowait(result)
 
@@ -4861,13 +4365,7 @@ def check_dependencies() -> Dict[str, bool]:
     try:
         deps["espeak"] = os.system("which espeak > /dev/null 2>&1") == 0
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hardware_io.py:4219",
-            exc=_aurora_boundary_exc,
-            context={"function": "check_dependencies", "handler_line": 4219, "source_file": "aurora_hardware_io.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'check_dependencies', 4219)
         deps["espeak"] = False
 
     return deps
@@ -5617,13 +5115,7 @@ class SensoryIntegrationEngine:
                 traits = personality.get("traits", {})
                 self.voice_mapper.set_personality(traits)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:4960",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "attach_systems", "handler_line": 4960, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'attach_systems', 4960)
                 pass
 
     def start(self):
@@ -5778,13 +5270,7 @@ class SensoryIntegrationEngine:
             from aurora_internal.aurora_sensory_crystal import audio_dict_to_crystal_20d
             _have_crystal_fn = True
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5114",
-                exc=_aurora_boundary_exc,
-                context={"function": "_continuous_listen_loop", "handler_line": 5114, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_continuous_listen_loop', 5114)
             _have_crystal_fn = False
 
         _SAMPLE_RATE = 16000
@@ -5880,23 +5366,11 @@ class SensoryIntegrationEngine:
                             import os as _os
                             _os.replace(_live_tmp, str(_live_path))
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_hardware_io.py:5209",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_continuous_listen_loop", "handler_line": 5209, "source_file": "aurora_hardware_io.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_continuous_listen_loop', 5209)
                             pass
 
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:5212",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_continuous_listen_loop", "handler_line": 5212, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_continuous_listen_loop', 5212)
                     pass
 
         logger.info("[SENSORY] Ambient listen loop ended")
@@ -5906,13 +5380,7 @@ class SensoryIntegrationEngine:
         try:
             return self.speech_queue.get_nowait()
         except queue.Empty as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5221",
-                exc=_aurora_boundary_exc,
-                context={"function": "get_heard_speech", "handler_line": 5221, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'get_heard_speech', 5221)
             return None
 
     def has_heard_speech(self) -> bool:
@@ -5936,13 +5404,7 @@ class SensoryIntegrationEngine:
                 event = self.event_queue.get(timeout=0.1)
                 self._process_event(event)
             except queue.Empty as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5244",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_process_loop", "handler_line": 5244, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_process_loop', 5244)
                 continue
             except Exception as e:
                 logger.error(f"[SENSORY INTEGRATION] Error processing event: {e}")
@@ -5980,26 +5442,14 @@ class SensoryIntegrationEngine:
             try:
                 competency = self.sensory_engine.get_visual_competency()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5281",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_process_visual_event", "handler_line": 5281, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_process_visual_event', 5281)
                 logger.exception("[SENSORY INTEGRATION] Visual competency lookup failed")
                 competency = {}
 
         try:
             description = self.visual_mapper.describe_visual(visual_data, competency)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5287",
-                exc=_aurora_boundary_exc,
-                context={"function": "_process_visual_event", "handler_line": 5287, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_process_visual_event', 5287)
             logger.exception("[SENSORY INTEGRATION] Visual description failed")
             description = "I can see a live visual frame, but I cannot interpret it cleanly yet."
         event.linguistic_description = description
@@ -6017,13 +5467,7 @@ class SensoryIntegrationEngine:
                 )
                 event.concepts_activated = result.get("concepts_matched", [])
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5304",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_process_visual_event", "handler_line": 5304, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_process_visual_event', 5304)
                 logger.exception("[SENSORY INTEGRATION] Visual competency processing failed")
 
         # 3. Ground in OETS if available
@@ -6047,26 +5491,14 @@ class SensoryIntegrationEngine:
             try:
                 competency = self.sensory_engine.get_audio_competency()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5327",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_process_audio_event", "handler_line": 5327, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_process_audio_event', 5327)
                 logger.exception("[SENSORY INTEGRATION] Audio competency lookup failed")
                 competency = {}
 
         try:
             description = self.audio_mapper.describe_audio(audio_data, competency)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5333",
-                exc=_aurora_boundary_exc,
-                context={"function": "_process_audio_event", "handler_line": 5333, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_process_audio_event', 5333)
             logger.exception("[SENSORY INTEGRATION] Audio description failed")
             description = "I can hear live audio, but I cannot interpret it cleanly yet."
         event.linguistic_description = description
@@ -6083,13 +5515,7 @@ class SensoryIntegrationEngine:
                 )
                 event.concepts_activated = result.get("concepts_matched", [])
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5349",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_process_audio_event", "handler_line": 5349, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_process_audio_event', 5349)
                 logger.exception("[SENSORY INTEGRATION] Audio competency processing failed")
 
         # 3. Handle transcribed speech specially
@@ -6120,13 +5546,7 @@ class SensoryIntegrationEngine:
         try:
             return (time.time() - float(event.timestamp or 0.0)) <= max_age_s
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5379",
-                exc=_aurora_boundary_exc,
-                context={"function": "_event_is_recent", "handler_line": 5379, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_event_is_recent', 5379)
             return False
 
     def _current_visual_vector(self) -> List[float]:
@@ -6140,13 +5560,7 @@ class SensoryIntegrationEngine:
         try:
             return list(extractor(dict(event.data or {}), competency) or [])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5392",
-                exc=_aurora_boundary_exc,
-                context={"function": "_current_visual_vector", "handler_line": 5392, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_current_visual_vector', 5392)
             return []
 
     def _current_audio_vector(self) -> List[float]:
@@ -6160,13 +5574,7 @@ class SensoryIntegrationEngine:
         try:
             return list(extractor(dict(event.data or {}), competency) or [])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5405",
-                exc=_aurora_boundary_exc,
-                context={"function": "_current_audio_vector", "handler_line": 5405, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_current_audio_vector', 5405)
             return []
 
     def _mark_guided_event(self, event: Optional[SensoryEvent], label: str, role: str) -> None:
@@ -6208,13 +5616,7 @@ class SensoryIntegrationEngine:
 
             return dict(append_surface_guidance(self.state_dir, payload) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5446",
-                exc=_aurora_boundary_exc,
-                context={"function": "_enqueue_surface_guidance", "handler_line": 5446, "source_file": "aurora_hardware_io.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_enqueue_surface_guidance', 5446)
             return payload
 
     def guide_current_visual_label(
@@ -6234,13 +5636,7 @@ class SensoryIntegrationEngine:
             try:
                 oets_node = str(self.sensory_engine._ground_to_oets(str(label or ""), role, source_text or label) or "")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5465",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "guide_current_visual_label", "handler_line": 5465, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'guide_current_visual_label', 5465)
                 oets_node = ""
         guided = self.sensory_engine.visual_concepts.guide_label(
             label,
@@ -6283,13 +5679,7 @@ class SensoryIntegrationEngine:
             try:
                 oets_node = str(self.sensory_engine._ground_to_oets(str(label or ""), role, source_text or label) or "")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5507",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "guide_current_audio_label", "handler_line": 5507, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'guide_current_audio_label', 5507)
                 oets_node = ""
         guided = self.sensory_engine.audio_concepts.guide_label(
             label,
@@ -6468,13 +5858,7 @@ class SensoryIntegrationEngine:
 
                 self.stats["concepts_grounded"] += 1
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5685",
-                    exc=e,
-                    context={"function": "_ground_visual_concepts", "handler_line": 5685, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), e, '_ground_visual_concepts', 5685)
                 logger.debug(f"[SENSORY INTEGRATION] Failed to ground concept: {e}")
 
     def _ground_audio_concepts(self, event: SensoryEvent):
@@ -6491,13 +5875,7 @@ class SensoryIntegrationEngine:
 
                 self.stats["concepts_grounded"] += 1
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5701",
-                    exc=e,
-                    context={"function": "_ground_audio_concepts", "handler_line": 5701, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), e, '_ground_audio_concepts', 5701)
                 logger.debug(f"[SENSORY INTEGRATION] Failed to ground concept: {e}")
 
     # ========================================================================
@@ -6557,13 +5935,7 @@ class SensoryIntegrationEngine:
                     try:
                         stale.unlink()
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hardware_io.py:5747",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_save_camera_snapshot", "handler_line": 5747, "source_file": "aurora_hardware_io.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_save_camera_snapshot', 5747)
                         pass
                 # cv2.imwrite() infers the encoder from the file extension,
                 # so the tmp suffix must come BEFORE it, not after.
@@ -6580,13 +5952,7 @@ class SensoryIntegrationEngine:
                 os.replace(_tmp_shared, str(_shared_path))
                 return str(snapshot_path)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hardware_io.py:5755",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_save_camera_snapshot", "handler_line": 5755, "source_file": "aurora_hardware_io.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_save_camera_snapshot', 5755)
                 return None
 
     def listen(self, duration: float = 2.0) -> Tuple[str, Dict[str, Any]]:
@@ -6685,13 +6051,7 @@ class SensoryIntegrationEngine:
                     voice._engine.setProperty('rate', params['rate'])
                     voice._engine.setProperty('volume', params['volume'])
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:5836",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "speak", "handler_line": 5836, "source_file": "aurora_hardware_io.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'speak', 5836)
                     pass
             success = voice.speak(prepared_text, blocking=blocking)
 

@@ -5,7 +5,8 @@ subsurface mechanism. No language module may dict-walk _subsurface_detail
 directly; they must call expand_crest instead.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/downward_traversal.py')
 
 import json
 from pathlib import Path
@@ -75,13 +76,7 @@ def expand_crest(state_dir: Path, crest_label: str, depth: int = 1) -> dict:
     try:
         detail = json.loads(detail_path.read_text(encoding="utf-8"))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/downward_traversal.py:76",
-            exc=_aurora_boundary_exc,
-            context={"function": "expand_crest", "handler_line": 76, "source_file": "aurora_internal/dual_strata/downward_traversal.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'expand_crest', 76)
         return {}
     if not isinstance(detail, dict):
         return {}

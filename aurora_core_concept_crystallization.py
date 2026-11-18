@@ -21,7 +21,8 @@ relation is a token of that semantic or a fellow constraint. Only SHELL concepts
 are touched — anything she has already developed herself is left alone.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_core_concept_crystallization.py')
 from typing import Any, Dict
 
 # Her own authored constraint semantics (mirrors aurora.py `_AXIS_SEMANTICS`).
@@ -72,13 +73,7 @@ def crystallize_core_concepts(systems: Dict[str, Any], verbose: bool = False) ->
             return 0
         from aurora_internal.aurora_ontological_scaffolding import RelationType as _RT
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_core_concept_crystallization.py:73",
-            exc=_aurora_boundary_exc,
-            context={"function": "crystallize_core_concepts", "handler_line": 73, "source_file": "aurora_core_concept_crystallization.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 73)
         return 0
 
     reg = systems.get("_concept_crystal_registry")
@@ -105,13 +100,7 @@ def crystallize_core_concepts(systems: Dict[str, Any], verbose: bool = False) ->
                     if _chunk and _chunk.lower() != concept and len(_chunk) > 3:
                         oets.teach(concept, _chunk)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_core_concept_crystallization.py:99",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "crystallize_core_concepts", "handler_line": 99, "source_file": "aurora_core_concept_crystallization.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 99)
                 pass
 
             nodes = getattr(web, "nodes", {}) or {}
@@ -126,13 +115,7 @@ def crystallize_core_concepts(systems: Dict[str, Any], verbose: bool = False) ->
                     web.add_relation(concept, "constraint", _RT.IS_A, strength=0.85,
                                      confidence=0.9, knowledge_source="axis_embodiment")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_core_concept_crystallization.py:113",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "crystallize_core_concepts", "handler_line": 113, "source_file": "aurora_core_concept_crystallization.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 113)
                 pass
 
             # 2. Relate to the meaning-tokens inside her authored semantic + fellow
@@ -149,13 +132,7 @@ def crystallize_core_concepts(systems: Dict[str, Any], verbose: bool = False) ->
                     web.add_relation(concept, tok, _RT.RELATED_TO, strength=0.7,
                                      confidence=0.85, knowledge_source="axis_embodiment")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_core_concept_crystallization.py:129",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "crystallize_core_concepts", "handler_line": 129, "source_file": "aurora_core_concept_crystallization.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 129)
                     continue
 
             # 3. IS_A the axis it lives on (agency IS_A agency is skipped as self).
@@ -167,13 +144,7 @@ def crystallize_core_concepts(systems: Dict[str, Any], verbose: bool = False) ->
                     web.add_relation(concept, _axname, _RT.IS_A, strength=0.8,
                                      confidence=0.85, knowledge_source="axis_embodiment")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_core_concept_crystallization.py:140",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "crystallize_core_concepts", "handler_line": 140, "source_file": "aurora_core_concept_crystallization.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 140)
                     pass
 
             # 4. A usage example from her own semantic so example-depth contributes
@@ -185,13 +156,7 @@ def crystallize_core_concepts(systems: Dict[str, Any], verbose: bool = False) ->
                     if hasattr(_n2, "encounter"):
                         _n2.encounter(context="axis_embodiment")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_core_concept_crystallization.py:151",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "crystallize_core_concepts", "handler_line": 151, "source_file": "aurora_core_concept_crystallization.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 151)
                 pass
 
             # 5. Deposit into the concept crystal registry at the axis coordinate, so
@@ -202,24 +167,12 @@ def crystallize_core_concepts(systems: Dict[str, Any], verbose: bool = False) ->
                     ax[axis] = 0.85
                     reg.observe_lsa(ax, f"core_concept:{concept}:{sem[:40]}")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_core_concept_crystallization.py:161",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "crystallize_core_concepts", "handler_line": 161, "source_file": "aurora_core_concept_crystallization.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 161)
                     pass
 
             developed += 1
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_core_concept_crystallization.py:165",
-                exc=_aurora_boundary_exc,
-                context={"function": "crystallize_core_concepts", "handler_line": 165, "source_file": "aurora_core_concept_crystallization.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 165)
             continue
 
     # Persist her enriched meaning space.
@@ -231,25 +184,13 @@ def crystallize_core_concepts(systems: Dict[str, Any], verbose: bool = False) ->
             elif hasattr(web, "save"):
                 web.save(sd)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_core_concept_crystallization.py:176",
-                exc=_aurora_boundary_exc,
-                context={"function": "crystallize_core_concepts", "handler_line": 176, "source_file": "aurora_core_concept_crystallization.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 176)
             pass
         try:
             if reg is not None and hasattr(reg, "save"):
                 reg.save(str(systems.get("state_dir") or "aurora_state"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_core_concept_crystallization.py:181",
-                exc=_aurora_boundary_exc,
-                context={"function": "crystallize_core_concepts", "handler_line": 181, "source_file": "aurora_core_concept_crystallization.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'crystallize_core_concepts', 181)
             pass
 
     if verbose:

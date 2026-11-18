@@ -1,6 +1,7 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/subsurface_projection.py')
 
 import json
 import time
@@ -16,13 +17,7 @@ def _clip01(value: Any, default: float = 0.0) -> float:
     try:
         return max(0.0, min(1.0, float(value or 0.0)))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/subsurface_projection.py:17",
-            exc=_aurora_boundary_exc,
-            context={"function": "_clip01", "handler_line": 17, "source_file": "aurora_internal/dual_strata/subsurface_projection.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_clip01', 17)
         return max(0.0, min(1.0, float(default or 0.0)))
 
 
@@ -111,13 +106,7 @@ def _carry_dream_fields(projection_path: Path | None) -> Dict[str, Any]:
     try:
         existing = json.loads(projection_path.read_text())
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/subsurface_projection.py:105",
-            exc=_aurora_boundary_exc,
-            context={"function": "_carry_dream_fields", "handler_line": 105, "source_file": "aurora_internal/dual_strata/subsurface_projection.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_carry_dream_fields', 105)
         return {}
     completed_at = float(existing.get("dream_completed_at") or 0.0)
     if completed_at <= 0.0:

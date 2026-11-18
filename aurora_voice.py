@@ -28,7 +28,8 @@ Transcription engine priority:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_voice.py')
 
 import os
 import sys
@@ -67,13 +68,7 @@ def _env_int(name: str, default: int, minimum: int = 1) -> int:
     try:
         return max(int(minimum), int(os.environ.get(name, str(default)).strip() or default))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:68",
-            exc=_aurora_boundary_exc,
-            context={"function": "_env_int", "handler_line": 68, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_env_int', 68)
         return max(int(minimum), int(default))
 
 
@@ -220,13 +215,7 @@ def _run_tts_safe(text: str) -> bool:
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:214",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_tts_safe", "handler_line": 214, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_tts_safe', 214)
             loop = None
 
         if loop and loop.is_running():
@@ -331,37 +320,19 @@ def speak(text: str) -> bool:
         _pyttsx3_engine.runAndWait()
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:318",
-            exc=_aurora_boundary_exc,
-            context={"function": "speak", "handler_line": 318, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'speak', 318)
         pass
     try:
         subprocess.run(["termux-tts-speak", safe_text], timeout=60)
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:323",
-            exc=_aurora_boundary_exc,
-            context={"function": "speak", "handler_line": 323, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'speak', 323)
         pass
     try:
         subprocess.run(["espeak", "-s", "160", "-v", "en", safe_text], timeout=60)
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:328",
-            exc=_aurora_boundary_exc,
-            context={"function": "speak", "handler_line": 328, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'speak', 328)
         return False
 
 
@@ -376,13 +347,7 @@ def _transcribe_google(audio_data) -> str:
     try:
         return r.recognize_google(audio_data)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:342",
-            exc=_aurora_boundary_exc,
-            context={"function": "_transcribe_google", "handler_line": 342, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_transcribe_google', 342)
         return ""
 
 
@@ -393,13 +358,7 @@ def _transcribe_sphinx(audio_data) -> str:
     try:
         return r.recognize_sphinx(audio_data)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:352",
-            exc=_aurora_boundary_exc,
-            context={"function": "_transcribe_sphinx", "handler_line": 352, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_transcribe_sphinx', 352)
         return ""
 
 
@@ -443,13 +402,7 @@ def _confirm_wake_phrase(raw_bytes: bytes) -> bool:
     try:
         audio = _make_audio_data(raw_bytes)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:395",
-            exc=_aurora_boundary_exc,
-            context={"function": "_confirm_wake_phrase", "handler_line": 395, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_confirm_wake_phrase', 395)
         return False
 
     for transcriber in (_transcribe_sphinx, _transcribe_google):
@@ -457,13 +410,7 @@ def _confirm_wake_phrase(raw_bytes: bytes) -> bool:
             if _matches_wake_transcript(transcriber(audio)):
                 return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:402",
-                exc=_aurora_boundary_exc,
-                context={"function": "_confirm_wake_phrase", "handler_line": 402, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_confirm_wake_phrase', 402)
             continue
 
     return False
@@ -496,13 +443,7 @@ def _speak_with_system_voice(
             if integration.speak(text, tone=tone or "warm"):
                 return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:434",
-                exc=_aurora_boundary_exc,
-                context={"function": "_speak_with_system_voice", "handler_line": 434, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_speak_with_system_voice', 434)
             pass
 
     voice = _get_hardware_voice(systems)
@@ -511,33 +452,15 @@ def _speak_with_system_voice(
             if voice.speak(text, blocking=True, emotion=tone):
                 return True
         except TypeError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:442",
-                exc=_aurora_boundary_exc,
-                context={"function": "_speak_with_system_voice", "handler_line": 442, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_speak_with_system_voice', 442)
             try:
                 if voice.speak(text, blocking=True):
                     return True
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:446",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_speak_with_system_voice", "handler_line": 446, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_speak_with_system_voice', 446)
                 pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:448",
-                exc=_aurora_boundary_exc,
-                context={"function": "_speak_with_system_voice", "handler_line": 448, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_speak_with_system_voice', 448)
             pass
 
     return speak(text)
@@ -565,13 +488,7 @@ def _cycle_system_voice(systems: Optional[Dict[str, Any]]) -> Optional[str]:
         if voice.set_voice(next_name):
             return voice.get_current_voice()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:475",
-            exc=_aurora_boundary_exc,
-            context={"function": "_cycle_system_voice", "handler_line": 475, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_cycle_system_voice', 475)
         return None
 
     return None
@@ -595,13 +512,7 @@ def get_system_voice_label(systems: Optional[Dict[str, Any]]) -> str:
             if label:
                 return label
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:498",
-                exc=_aurora_boundary_exc,
-                context={"function": "get_system_voice_label", "handler_line": 498, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'get_system_voice_label', 498)
             pass
     return _current_voice()
 
@@ -615,13 +526,7 @@ def persist_system_voice_selection(systems: Optional[Dict[str, Any]]) -> bool:
 
         return bool(save_sensory_skill_state(systems, verbose=False))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:511",
-            exc=_aurora_boundary_exc,
-            context={"function": "persist_system_voice_selection", "handler_line": 511, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'persist_system_voice_selection', 511)
         return False
 
 
@@ -633,13 +538,7 @@ def _wait_key_event_evdev(target_codes: set[int], event_values: set[int], timeou
     try:
         from evdev import InputDevice, list_devices, ecodes
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:522",
-            exc=_aurora_boundary_exc,
-            context={"function": "_wait_key_event_evdev", "handler_line": 522, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_wait_key_event_evdev', 522)
         return None
 
     devices = []
@@ -654,13 +553,7 @@ def _wait_key_event_evdev(target_codes: set[int], event_values: set[int], timeou
                     devices.append(dev)
                     selector.register(dev, selectors.EVENT_READ, dev)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:536",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_wait_key_event_evdev", "handler_line": 536, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_wait_key_event_evdev', 536)
                 continue
 
         if not devices:
@@ -687,46 +580,22 @@ def _wait_key_event_evdev(target_codes: set[int], event_values: set[int], timeou
                         if event.code in target_codes and event.value in event_values:
                             return event.code
                 except BlockingIOError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_voice.py:562",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_wait_key_event_evdev", "handler_line": 562, "source_file": "aurora_voice.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_wait_key_event_evdev', 562)
                     continue
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_voice.py:564",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_wait_key_event_evdev", "handler_line": 564, "source_file": "aurora_voice.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_wait_key_event_evdev', 564)
                     continue
     finally:
         for dev in devices:
             try:
                 selector.unregister(dev)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:570",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_wait_key_event_evdev", "handler_line": 570, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_wait_key_event_evdev', 570)
                 pass
             try:
                 dev.close()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:574",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_wait_key_event_evdev", "handler_line": 574, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_wait_key_event_evdev', 574)
                 pass
 
 
@@ -803,26 +672,14 @@ def _wait_for_named_press(target_keys: set[str], timeout: Optional[float] = None
             listener.stop()
             return pressed["value"]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:650",
-                exc=_aurora_boundary_exc,
-                context={"function": "_wait_pynput", "handler_line": 650, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_wait_pynput', 650)
             return None
 
     def _wait_evdev(wait_timeout: Optional[float]) -> Optional[str]:
         try:
             from evdev import ecodes
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:656",
-                exc=_aurora_boundary_exc,
-                context={"function": "_wait_evdev", "handler_line": 656, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_wait_evdev', 656)
             return None
 
         code_to_name: Dict[int, str] = {}
@@ -897,26 +754,14 @@ def _wait_for_named_release(target_keys: set[str], timeout: Optional[float] = No
             listener.stop()
             return released["value"]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:730",
-                exc=_aurora_boundary_exc,
-                context={"function": "_wait_pynput", "handler_line": 730, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_wait_pynput', 730)
             return None
 
     def _wait_evdev(wait_timeout: Optional[float]) -> Optional[str]:
         try:
             from evdev import ecodes
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:736",
-                exc=_aurora_boundary_exc,
-                context={"function": "_wait_evdev", "handler_line": 736, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_wait_evdev', 736)
             return None
 
         code_to_name: Dict[int, str] = {}
@@ -953,25 +798,13 @@ def _probe_audio_stack() -> Optional[str]:
     try:
         import sounddevice as sd
     except ImportError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:772",
-            exc=_aurora_boundary_exc,
-            context={"function": "_probe_audio_stack", "handler_line": 772, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_probe_audio_stack', 772)
         return "sounddevice is not installed"
 
     try:
         devices = sd.query_devices()
     except Exception as e:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:777",
-            exc=e,
-            context={"function": "_probe_audio_stack", "handler_line": 777, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), e, '_probe_audio_stack', 777)
         return f"could not query audio devices: {e}"
 
     if not any(int(d.get("max_input_channels", 0)) > 0 for d in devices):
@@ -996,13 +829,7 @@ def _probe_keyboard_stack(toggle_key: str = DEFAULT_DAEMON_TOGGLE_KEY) -> Option
             try:
                 from evdev import InputDevice, list_devices, ecodes
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:801",
-                    exc=e,
-                    context={"function": "_probe_keyboard_stack", "handler_line": 801, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), e, '_probe_keyboard_stack', 801)
                 errors.append(f"evdev unavailable: {e}")
                 continue
 
@@ -1025,23 +852,11 @@ def _probe_keyboard_stack(toggle_key: str = DEFAULT_DAEMON_TOGGLE_KEY) -> Option
                         if key_codes.intersection(target_codes):
                             return None
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_voice.py:823",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_probe_keyboard_stack", "handler_line": 823, "source_file": "aurora_voice.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_probe_keyboard_stack', 823)
                         continue
                 errors.append(f"no evdev keyboard exposes '{normalized}'")
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:826",
-                    exc=e,
-                    context={"function": "_probe_keyboard_stack", "handler_line": 826, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), e, '_probe_keyboard_stack', 826)
                 errors.append(f"evdev probe failed: {e}")
             continue
 
@@ -1056,13 +871,7 @@ def _probe_keyboard_stack(toggle_key: str = DEFAULT_DAEMON_TOGGLE_KEY) -> Option
                     _ = _kb.Key.esc
                 return None
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:840",
-                    exc=e,
-                    context={"function": "_probe_keyboard_stack", "handler_line": 840, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), e, '_probe_keyboard_stack', 840)
                 errors.append(f"pynput unavailable: {e}")
 
     return "; ".join(errors) if errors else "no keyboard backend available"
@@ -1099,13 +908,7 @@ def _capture_audio_window(duration: float = WAKE_WINDOW_SEC) -> Optional[bytes]:
         import sounddevice as sd
         import numpy as np
     except ImportError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:876",
-            exc=_aurora_boundary_exc,
-            context={"function": "_capture_audio_window", "handler_line": 876, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_capture_audio_window', 876)
         return None
 
     try:
@@ -1116,13 +919,7 @@ def _capture_audio_window(duration: float = WAKE_WINDOW_SEC) -> Optional[bytes]:
         arr = np.asarray(audio, dtype="int16")
         return arr.tobytes()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:886",
-            exc=_aurora_boundary_exc,
-            context={"function": "_capture_audio_window", "handler_line": 886, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_capture_audio_window', 886)
         return None
 
 
@@ -1241,13 +1038,7 @@ def _log_voice_command_to_hub(command_key: str, result_summary: str) -> None:
             try:
                 status = json.loads(status_path.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:1007",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_log_voice_command_to_hub", "handler_line": 1007, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_log_voice_command_to_hub', 1007)
                 pass
         summary_base = str(result_summary or "")
         summary_display = summary_base if len(summary_base) <= 360 else summary_base[:357] + "..."
@@ -1262,13 +1053,7 @@ def _log_voice_command_to_hub(command_key: str, result_summary: str) -> None:
         import os as _os
         _os.replace(tmp, str(status_path))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:1021",
-            exc=_aurora_boundary_exc,
-            context={"function": "_log_voice_command_to_hub", "handler_line": 1021, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_log_voice_command_to_hub', 1021)
         pass
 
     # Also append to daemon.log so hub log panel shows it
@@ -1280,13 +1065,7 @@ def _log_voice_command_to_hub(command_key: str, result_summary: str) -> None:
         with open(log_path, "a") as f:
             f.write(f"[{ts}] [VOICE CMD] {command_key}: {log_summary}\n")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:1032",
-            exc=_aurora_boundary_exc,
-            context={"function": "_log_voice_command_to_hub", "handler_line": 1032, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_log_voice_command_to_hub', 1032)
         pass
 
 
@@ -1342,13 +1121,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                 charging = "charging" if "charging" in status_str else "not charging"
                 return f"Battery is at {pct} percent and is {charging}."
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:1087",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_execute_voice_command", "handler_line": 1087, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_execute_voice_command', 1087)
                 return res.data
         return "I don't have access to the battery sensor."
 
@@ -1487,13 +1260,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                     coherence_window=200, unlock_avg=0.62, unlock_min=0.45, warmup_epochs=3,
                 )
             except Exception as _te:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:1225",
-                    exc=_te,
-                    context={"function": "_run_train", "handler_line": 1225, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _te, '_run_train', 1225)
                 import traceback
                 with open(str(_base / "aurora_state" / "training_error.log"), "a") as _f:
                     _f.write(f"corpus_train_auto error: {_te}\n{traceback.format_exc()}\n")
@@ -1529,13 +1296,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                 lex.save()
             result = "State saved."
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1260",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1260, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1260)
             result = f"Save failed: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1559,13 +1320,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                 f"with {episodes} episodes per epoch."
             )
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1283",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1283, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1283)
             result = f"Training unavailable: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1578,13 +1333,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
             _study(systems, cycles=cycles, verbose=False)
             result = f"Study complete after {cycles} cycles."
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1295",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1295, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1295)
             result = f"Study failed: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1599,13 +1348,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
             if dt:
                 dt.flush_lessons_to_simulation(systems, force=True)
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1309",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1309, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1309)
             result = f"Dream burst failed: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1640,13 +1383,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                 snippet = summary[:320] + ("..." if len(summary) > 320 else "")
                 result = f"Corpus runner failed: {snippet}"
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1343",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1343, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1343)
             result = f"Corpus runner command failed: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1659,13 +1396,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
             _explore(systems, cycles=cycles, verbose=False)
             result = f"Exploration complete after {cycles} cycles."
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1355",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1355, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1355)
             result = f"Exploration failed: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1696,13 +1427,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                 f"Weakest areas: {weak}."
             )
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1385",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1385, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1385)
             result = f"Status unavailable: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1718,13 +1443,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
             else:
                 result = "No lesson plan available yet."
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1400",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1400, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1400)
             result = f"Lessons unavailable: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1750,13 +1469,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                 parts = [f"{d.replace('_', ' ')} at {int(s * 100)}%" for d, s in top]
                 result = "Top fail dimensions: " + ", ".join(parts) + "."
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1425",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1425, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1425)
             result = f"Fail points unavailable: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1783,13 +1496,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
             else:
                 result = "No messages yet."
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1451",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1451, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1451)
             result = f"Messages unavailable: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1814,13 +1521,7 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
             else:
                 result = "Vision system not available."
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1475",
-                exc=e,
-                context={"function": "_execute_voice_command", "handler_line": 1475, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), e, '_execute_voice_command', 1475)
             result = f"Vision failed: {e}"
         _log_voice_command_to_hub(command_key, result)
         return result
@@ -1854,13 +1555,7 @@ def _generate_response(text: str, systems: Optional[Dict[str, Any]]) -> tuple[st
             if result:
                 return result, tone
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:1513",
-            exc=_aurora_boundary_exc,
-            context={"function": "_generate_response", "handler_line": 1513, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_generate_response', 1513)
         pass
     try:
         from aurora import process_external_user_turn
@@ -1882,13 +1577,7 @@ def _generate_response(text: str, systems: Optional[Dict[str, Any]]) -> tuple[st
         if result:
             return result.strip(), tone
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:1534",
-            exc=_aurora_boundary_exc,
-            context={"function": "_generate_response", "handler_line": 1534, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_generate_response', 1534)
         pass
 
     return "", "attentive"
@@ -1996,13 +1685,7 @@ class VoiceSession:
             ):
                 stop_event.wait(timeout=max_duration)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1641",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_until_stop_event", "handler_line": 1641, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_until_stop_event', 1641)
             return None
 
         if not chunks:
@@ -2089,13 +1772,7 @@ class VoiceSession:
             try:
                 peak = int(np.max(np.abs(chunk)))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:1727",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_callback", "handler_line": 1727, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_callback', 1727)
                 peak = 0
 
             if peak >= activation_threshold:
@@ -2121,13 +1798,7 @@ class VoiceSession:
                             break
                     time.sleep(0.05)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1752",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_until_silence", "handler_line": 1752, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_until_silence', 1752)
             return None
 
         if not chunks or not speech_started:
@@ -2323,13 +1994,7 @@ class WakeWordListener:
         try:
             import speech_recognition as sr
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1947",
-                exc=_aurora_boundary_exc,
-                context={"function": "_try_sphinx_loop", "handler_line": 1947, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_try_sphinx_loop', 1947)
             return False
 
         r = sr.Recognizer()
@@ -2359,35 +2024,17 @@ class WakeWordListener:
                 if normalized in {_normalize_wake_text(w) for w in WAKE_WORDS} and _confirm_wake_phrase(raw):
                     self._detected()
             except sr.UnknownValueError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:1976",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_try_sphinx_loop", "handler_line": 1976, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_try_sphinx_loop', 1976)
                 pass
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:1978",
-                    exc=e,
-                    context={"function": "_try_sphinx_loop", "handler_line": 1978, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), e, '_try_sphinx_loop', 1978)
                 # Missing PocketSphinx should degrade to Google fallback once.
                 if "pocketsphinx" in str(e).lower():
                     return False
                 try:
                     self._google_fallback_loop()
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_voice.py:1984",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_try_sphinx_loop", "handler_line": 1984, "source_file": "aurora_voice.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_try_sphinx_loop', 1984)
                     pass
                 return True
         return True
@@ -2398,13 +2045,7 @@ class WakeWordListener:
         try:
             import speech_recognition as sr
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:1994",
-                exc=_aurora_boundary_exc,
-                context={"function": "_google_fallback_loop", "handler_line": 1994, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_google_fallback_loop', 1994)
             return
 
         r = sr.Recognizer()
@@ -2432,22 +2073,10 @@ class WakeWordListener:
                     if _matches_wake_transcript(text):
                         self._detected()
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_voice.py:2021",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_google_fallback_loop", "handler_line": 2021, "source_file": "aurora_voice.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_google_fallback_loop', 2021)
                     pass
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:2023",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_google_fallback_loop", "handler_line": 2023, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_google_fallback_loop', 2023)
                 time.sleep(0.5)
 
     def _detected(self) -> None:
@@ -2544,13 +2173,7 @@ class AltToggleVoiceController:
                 timeout=2,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:2119",
-                exc=_aurora_boundary_exc,
-                context={"function": "_start_recording", "handler_line": 2119, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_start_recording', 2119)
             pass
 
     def _finish_recording(self) -> Optional[bytes]:
@@ -2580,13 +2203,7 @@ class AltToggleVoiceController:
                     timeout=2,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_voice.py:2148",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_process_recording", "handler_line": 2148, "source_file": "aurora_voice.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_process_recording', 2148)
                 pass
             return
             
@@ -2647,13 +2264,7 @@ def daemon_startup_greeting(systems: Optional[Dict[str, Any]] = None) -> str:
             timeout=3,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:2208",
-            exc=_aurora_boundary_exc,
-            context={"function": "daemon_startup_greeting", "handler_line": 2208, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'daemon_startup_greeting', 2208)
         pass
 
     session._speak_text(greeting, tone="warm")
@@ -2680,13 +2291,7 @@ def daemon_voice_session(systems: Optional[Dict[str, Any]] = None) -> None:
                 timeout=3,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_voice.py:2234",
-                exc=_aurora_boundary_exc,
-                context={"function": "daemon_voice_session", "handler_line": 2234, "source_file": "aurora_voice.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'daemon_voice_session', 2234)
             pass
 
         session.run(
@@ -2708,13 +2313,7 @@ def daemon_voice_session(systems: Optional[Dict[str, Any]] = None) -> None:
             timeout=3,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_voice.py:2255",
-            exc=_aurora_boundary_exc,
-            context={"function": "daemon_voice_session", "handler_line": 2255, "source_file": "aurora_voice.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'daemon_voice_session', 2255)
         pass
 
 

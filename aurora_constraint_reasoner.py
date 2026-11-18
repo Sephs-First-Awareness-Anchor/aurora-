@@ -57,7 +57,8 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_constraint_reasoner.py')
 
 import math
 import time
@@ -506,13 +507,7 @@ def _best_crystal_match(
                 best_score = score
                 best_concept = getattr(crystal, "concept", None)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_constraint_reasoner.py:507",
-            exc=_aurora_boundary_exc,
-            context={"function": "_best_crystal_match", "handler_line": 507, "source_file": "aurora_constraint_reasoner.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_best_crystal_match', 507)
         pass
     return best_concept, round(best_score, 4)
 
@@ -745,13 +740,7 @@ class ConstraintReasoner:
                     if any(abs(v - 0.5) > 0.01 for v in profile.values()):
                         return profile
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_reasoner.py:739",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "current_profile", "handler_line": 739, "source_file": "aurora_constraint_reasoner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'current_profile', 739)
                 pass
         # Dimensional pressure vector — unsigned [0, 1]
         if self._dimensional is not None and hasattr(self._dimensional, "_current_pressure_vec"):
@@ -760,13 +749,7 @@ class ConstraintReasoner:
                 if pv:
                     return {ax: round(float(pv.get(ax, 0.5)), 3) for ax in _AXES}
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_reasoner.py:747",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "current_profile", "handler_line": 747, "source_file": "aurora_constraint_reasoner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'current_profile', 747)
                 pass
         return {ax: 0.5 for ax in _AXES}
 
@@ -1022,13 +1005,7 @@ class ConstraintReasoner:
         try:
             from aurora_thought_formation import ProcessContext
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_reasoner.py:1002",
-                exc=_aurora_boundary_exc,
-                context={"function": "to_process_context", "handler_line": 1002, "source_file": "aurora_constraint_reasoner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'to_process_context', 1002)
             return None
 
         # Dominant tension axes drive axis_signature
@@ -1116,13 +1093,7 @@ class ConstraintReasoner:
                     persistence_key=f"divergence:{':'.join(sorted(trace.tension_axes))}",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_reasoner.py:1089",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "integrate", "handler_line": 1089, "source_file": "aurora_constraint_reasoner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'integrate', 1089)
                 pass
 
         # Emit any collected WARP signals from the reasoning chain itself
@@ -1167,13 +1138,7 @@ class ConstraintReasoner:
                     confidence=min(1.0, float(candidate.get("mean_alignment", 0.5))),
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_reasoner.py:1133",
-                exc=_aurora_boundary_exc,
-                context={"function": "_flush_crystal_to_dps", "handler_line": 1133, "source_file": "aurora_constraint_reasoner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_flush_crystal_to_dps', 1133)
             pass
 
     # ── Public reporting ───────────────────────────────────────────────────────
@@ -1234,13 +1199,7 @@ class ConstraintReasoner:
         try:
             from aurora_warp_protocol import warp_guard as _wg
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_reasoner.py:1193",
-                exc=_aurora_boundary_exc,
-                context={"function": "_emit_trace_warp_signals", "handler_line": 1193, "source_file": "aurora_constraint_reasoner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_emit_trace_warp_signals', 1193)
             return
         for trigger, severity in trace.warp_signals:
             if severity < 0.35:
@@ -1256,13 +1215,7 @@ class ConstraintReasoner:
                     persistence_key=f"constraint:{trigger}:{':'.join(sorted(trace.tension_axes))}",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_reasoner.py:1208",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_emit_trace_warp_signals", "handler_line": 1208, "source_file": "aurora_constraint_reasoner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_emit_trace_warp_signals', 1208)
                 pass
 
     def _narrative(self, frames: List[ConstraintFrame]) -> str:
@@ -1314,13 +1267,7 @@ class ConstraintReasoner:
                 semantic_profile = {ax: float(semantic_state.pressure_vec.get(ax, 0.5))
                                     for ax in _AXES}
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_reasoner.py:1259",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_compute_alignment", "handler_line": 1259, "source_file": "aurora_constraint_reasoner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_compute_alignment', 1259)
                 pass
 
         if semantic_profile is None:

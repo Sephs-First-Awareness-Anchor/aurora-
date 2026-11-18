@@ -10,7 +10,8 @@ Purpose : Crystal lifecycle and evolution mechanics — the metabolism.
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/quasiarch_observer/dimensional_processing.py')
 
 import statistics
 import uuid
@@ -1273,13 +1274,7 @@ class CrystalPromotion:
                 try:
                     return float(token.split("=")[1])
                 except (ValueError, IndexError) as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/quasiarch_observer/dimensional_processing.py:1274",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_parse_resolution_rate", "handler_line": 1274, "source_file": "aurora_internal/quasiarch_observer/dimensional_processing.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_parse_resolution_rate', 1274)
                     pass
         return 0.0
 

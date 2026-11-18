@@ -1,4 +1,5 @@
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_acm_bridge.py')
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 #
 # Aurora↔ACM Bridge — one system.
@@ -75,13 +76,7 @@ def _read_axes_from_collective(systems: Dict[str, Any]) -> Optional[Dict[str, fl
             axes[ax] = max(0.0, min(1.0, (pc - nc + 1.0) / 2.0))
         return axes
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_acm_bridge.py:77",
-            exc=_aurora_boundary_exc,
-            context={"function": "_read_axes_from_collective", "handler_line": 77, "source_file": "aurora_acm_bridge.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_read_axes_from_collective', 77)
         return None
 
 
@@ -191,13 +186,7 @@ def _wave_tick_cognitive(systems: Dict[str, Any], status: Dict,
         try:
             collective.tick()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_acm_bridge.py:186",
-                exc=_aurora_boundary_exc,
-                context={"function": "_wave_tick_cognitive", "handler_line": 186, "source_file": "aurora_acm_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_wave_tick_cognitive', 186)
             pass
 
     # Every _TICK_SENSORY (~1 s): inject kernel embodied state as pressure event
@@ -223,13 +212,7 @@ def _wave_tick_cognitive(systems: Dict[str, Any], status: Dict,
                       flush=True)
             _last_cryst_count = cryst
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_acm_bridge.py:211",
-                exc=_aurora_boundary_exc,
-                context={"function": "_wave_tick_cognitive", "handler_line": 211, "source_file": "aurora_acm_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_wave_tick_cognitive', 211)
             pass
 
     # Harmonic cycles — axis-conditioned harmonics of the kernel waveform.
@@ -270,13 +253,7 @@ def _trigger_fn(systems: Dict, fn_name: str, label: str, verbose: bool) -> None:
             print(f'[WAVE] {label} (axis-gated kernel tick harmonic).', flush=True)
         threading.Thread(target=fn, args=(systems,), daemon=True).start()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_acm_bridge.py:251",
-            exc=_aurora_boundary_exc,
-            context={"function": "_trigger_fn", "handler_line": 251, "source_file": "aurora_acm_bridge.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_trigger_fn', 251)
         pass
 
 
@@ -286,13 +263,7 @@ def _trigger_save(systems: Dict, verbose: bool) -> None:
         if callable(save_fn):
             threading.Thread(target=save_fn, daemon=True).start()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_acm_bridge.py:260",
-            exc=_aurora_boundary_exc,
-            context={"function": "_trigger_save", "handler_line": 260, "source_file": "aurora_acm_bridge.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_trigger_save', 260)
         pass
 
 
@@ -402,13 +373,7 @@ def run(systems: Dict[str, Any], host: str = 'localhost', port: int = 4567,
                 if data:
                     status_rx.feed(data)
             except BlockingIOError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_acm_bridge.py:369",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "run", "handler_line": 369, "source_file": "aurora_acm_bridge.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'run', 369)
                 pass
 
             # Tick cognitive waveform: use last known status or synthesize from axes
@@ -422,13 +387,7 @@ def run(systems: Dict[str, Any], host: str = 'localhost', port: int = 4567,
             print(f'[BRIDGE] Connection lost ({e}), reconnecting...', flush=True)
             try: sock.close()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_acm_bridge.py:382",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "run", "handler_line": 382, "source_file": "aurora_acm_bridge.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'run', 382)
                 pass
             sock = None
             continue

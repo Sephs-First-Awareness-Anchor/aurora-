@@ -4,7 +4,8 @@ DualStrataBridge — crest convergence orchestrator.
 Replaces the old packet-aggregator design with recursive crest propagation.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/dce_bridge.py')
 
 import json
 import time
@@ -316,13 +317,7 @@ def recursion_weights_from_lattice(lattice: Any) -> Optional[Dict[str, float]]:
     try:
         node_values = list(nodes.values()) if hasattr(nodes, "values") else list(nodes)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/dce_bridge.py:317",
-            exc=_aurora_boundary_exc,
-            context={"function": "recursion_weights_from_lattice", "handler_line": 317, "source_file": "aurora_internal/dual_strata/dce_bridge.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'recursion_weights_from_lattice', 317)
         return None
     if not node_values:
         return None
@@ -332,13 +327,7 @@ def recursion_weights_from_lattice(lattice: Any) -> Optional[Dict[str, float]]:
         try:
             level_name = str(node.recursion_level.name)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/dce_bridge.py:326",
-                exc=_aurora_boundary_exc,
-                context={"function": "recursion_weights_from_lattice", "handler_line": 326, "source_file": "aurora_internal/dual_strata/dce_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'recursion_weights_from_lattice', 326)
             continue
         counts[level_name] = counts.get(level_name, 0) + 1
 
@@ -604,13 +593,7 @@ class DualStrataBridge:
                 frame_for_sedi["conscious_crest"] = log_entry["conscious_crest"]
                 maybe_sediment_frame(frame_for_sedi, _sedi)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/dual_strata/dce_bridge.py:591",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "persist", "handler_line": 591, "source_file": "aurora_internal/dual_strata/dce_bridge.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'persist', 591)
                 pass
 
     def persist_subsurface_detail(self, detail: Dict[str, Any]) -> None:

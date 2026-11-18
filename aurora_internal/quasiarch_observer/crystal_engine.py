@@ -16,7 +16,8 @@ Crystal Order Ladder
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/quasiarch_observer/crystal_engine.py')
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -2014,13 +2015,7 @@ class CrystalEngine:
                 if not (0.0 <= s <= 1.0):
                     return False, f"Score facet '{facet_name}' value {s} out of [0,1]."
             except (TypeError, ValueError) as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/quasiarch_observer/crystal_engine.py:2015",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "validate_facet_value", "handler_line": 2015, "source_file": "aurora_internal/quasiarch_observer/crystal_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'validate_facet_value', 2015)
                 return False, f"Score facet '{facet_name}' received non-numeric value."
         return True, "ok"
 

@@ -38,7 +38,8 @@ Storage: aurora_state/adapter_hints.json
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_pressure_adapter.py')
 
 import json
 import os
@@ -247,13 +248,7 @@ class PressureParameterAdapter:
             try:
                 out[ax] = float(raw_val or 0.0)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_pressure_adapter.py:248",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_normalise_axis_pressure", "handler_line": 248, "source_file": "aurora_internal/aurora_pressure_adapter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_normalise_axis_pressure', 248)
                 out[ax] = 0.0
         return out
 
@@ -362,13 +357,7 @@ class PressureParameterAdapter:
                 if buf.strip() and len(raw_lines) < scan_entries:
                     raw_lines.append(buf.strip())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_adapter.py:356",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_log", "handler_line": 356, "source_file": "aurora_internal/aurora_pressure_adapter.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_log', 356)
             return []
 
         entries: List[Dict[str, Any]] = []
@@ -376,13 +365,7 @@ class PressureParameterAdapter:
             try:
                 payload = json.loads(raw.decode("utf-8"))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_pressure_adapter.py:363",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_load_log", "handler_line": 363, "source_file": "aurora_internal/aurora_pressure_adapter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_load_log', 363)
                 continue
             if isinstance(payload, dict):
                 entries.append(payload)
@@ -397,13 +380,7 @@ class PressureParameterAdapter:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_adapter.py:377",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_hints", "handler_line": 377, "source_file": "aurora_internal/aurora_pressure_adapter.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_hints', 377)
             return {}
 
     def _save_hints(self, hints: Dict[str, Any]) -> None:
@@ -413,13 +390,7 @@ class PressureParameterAdapter:
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(hints, fh, indent=2, sort_keys=True, ensure_ascii=True)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_adapter.py:386",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_hints", "handler_line": 386, "source_file": "aurora_internal/aurora_pressure_adapter.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_save_hints', 386)
             pass
 
 

@@ -52,7 +52,8 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_toroidal_circulation.py')
 
 import json
 import math
@@ -233,13 +234,7 @@ class ToroidalCirculationLayer:
                 if isinstance(prev, dict) and all(a in prev for a in AXES):
                     self._prev = {a: float(prev[a]) for a in AXES}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_toroidal_circulation.py:234",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load", "handler_line": 234, "source_file": "aurora_toroidal_circulation.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load', 234)
             self._flux = {}; self._prev = None; self._observations = 0
 
     def save(self) -> bool:
@@ -263,13 +258,7 @@ class ToroidalCirculationLayer:
                 self._dirty = False
                 return True
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_toroidal_circulation.py:257",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "save", "handler_line": 257, "source_file": "aurora_toroidal_circulation.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'save', 257)
                 return False
 
     # ── ingestion ──
@@ -288,13 +277,7 @@ class ToroidalCirculationLayer:
                 try:
                     out[axis] += max(0.0, float(inten or 0.0))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_toroidal_circulation.py:275",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "intensity_from_crests", "handler_line": 275, "source_file": "aurora_toroidal_circulation.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'intensity_from_crests', 275)
                     pass
         return out
 
@@ -336,13 +319,7 @@ class ToroidalCirculationLayer:
         try:
             lines = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_toroidal_circulation.py:316",
-                exc=_aurora_boundary_exc,
-                context={"function": "seed_from_surface_log", "handler_line": 316, "source_file": "aurora_toroidal_circulation.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'seed_from_surface_log', 316)
             return 0
         lines.sort(key=lambda x: x.get("timestamp", 0))
         n = 0
@@ -434,13 +411,7 @@ class ToroidalCirculationLayer:
         try:
             record[key] = self.current_signature().to_dict()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_toroidal_circulation.py:407",
-                exc=_aurora_boundary_exc,
-                context={"function": "attach_to_record", "handler_line": 407, "source_file": "aurora_toroidal_circulation.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'attach_to_record', 407)
             pass
         return record
 

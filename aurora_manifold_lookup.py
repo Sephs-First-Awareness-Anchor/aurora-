@@ -17,7 +17,8 @@ any miss (unknown nc_name, missing manifold directory, missing _index.json)
 -- callers must handle that gracefully rather than assume a hit.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_manifold_lookup.py')
 
 from functools import lru_cache
 from typing import Dict, List, Optional
@@ -32,13 +33,7 @@ def _directory() -> Optional[ManifoldDirectory]:
     try:
         return ManifoldDirectory(_MANIFOLD_ROOT)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_manifold_lookup.py:33",
-            exc=_aurora_boundary_exc,
-            context={"function": "_directory", "handler_line": 33, "source_file": "aurora_manifold_lookup.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_directory', 33)
         return None
 
 
@@ -52,13 +47,7 @@ def load_noncomp(nc_name: str) -> Optional[Dict]:
     try:
         return directory.load(nc_name).to_dict()
     except KeyError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_manifold_lookup.py:46",
-            exc=_aurora_boundary_exc,
-            context={"function": "load_noncomp", "handler_line": 46, "source_file": "aurora_manifold_lookup.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'load_noncomp', 46)
         return None
 
 

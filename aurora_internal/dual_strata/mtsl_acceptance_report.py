@@ -32,7 +32,8 @@ read-only over a log two OTHER modules already write, and it never
 writes anything itself.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/mtsl_acceptance_report.py')
 
 import json
 import os
@@ -59,33 +60,15 @@ def read_shadow_comparison_log(state_dir: str) -> List[Dict[str, Any]]:
                 try:
                     entry = json.loads(line)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/dual_strata/mtsl_acceptance_report.py:60",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "read_shadow_comparison_log", "handler_line": 60, "source_file": "aurora_internal/dual_strata/mtsl_acceptance_report.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'read_shadow_comparison_log', 60)
                     continue
                 if isinstance(entry, dict):
                     entries.append(entry)
     except FileNotFoundError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/mtsl_acceptance_report.py:64",
-            exc=_aurora_boundary_exc,
-            context={"function": "read_shadow_comparison_log", "handler_line": 64, "source_file": "aurora_internal/dual_strata/mtsl_acceptance_report.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'read_shadow_comparison_log', 64)
         pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/mtsl_acceptance_report.py:66",
-            exc=_aurora_boundary_exc,
-            context={"function": "read_shadow_comparison_log", "handler_line": 66, "source_file": "aurora_internal/dual_strata/mtsl_acceptance_report.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'read_shadow_comparison_log', 66)
         pass
     return entries
 

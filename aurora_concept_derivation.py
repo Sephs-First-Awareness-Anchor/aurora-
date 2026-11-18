@@ -48,7 +48,8 @@ both modules are fully loaded.
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_concept_derivation.py')
 
 from typing import Any, Dict, Optional
 
@@ -192,13 +193,7 @@ def _extract_geometry(text: str) -> Optional[Any]:
             _geom_extractor = GeometryExtractor()
         return _geom_extractor.extract(text)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_concept_derivation.py:195",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_geometry", "handler_line": 195, "source_file": "aurora_concept_derivation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_geometry', 195)
         return None
 
 
@@ -209,13 +204,7 @@ def _derive_channel(geom: Any, role: str, valence: float, word: str,
         from corpus_runner import derive_noncomp_channel
         return derive_noncomp_channel(geom, role, valence, word) or ""
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_concept_derivation.py:205",
-            exc=_aurora_boundary_exc,
-            context={"function": "_derive_channel", "handler_line": 205, "source_file": "aurora_concept_derivation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_derive_channel', 205)
         return ""
 
 
@@ -247,13 +236,7 @@ def _associate_in_lexicon(word: str, channel: str, lexicon: Any) -> None:
         if lexicon is not None and hasattr(lexicon, "associate"):
             lexicon.associate(word, channel, strength=0.8)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_concept_derivation.py:236",
-            exc=_aurora_boundary_exc,
-            context={"function": "_associate_in_lexicon", "handler_line": 236, "source_file": "aurora_concept_derivation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_associate_in_lexicon', 236)
         pass
 
 
@@ -314,11 +297,5 @@ def _ensure_oets_concept(
         node.seed_word = word
         node.concept_channel = channel
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_concept_derivation.py:296",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ensure_oets_concept", "handler_line": 296, "source_file": "aurora_concept_derivation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_oets_concept', 296)
         pass

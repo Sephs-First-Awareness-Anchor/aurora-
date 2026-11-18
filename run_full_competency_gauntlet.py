@@ -16,7 +16,8 @@ the stack instead of silently pretending the modality passed.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'run_full_competency_gauntlet.py')
 
 import argparse
 import json
@@ -38,13 +39,7 @@ def _json_safe(value: Any) -> Any:
         json.dumps(value)
         return value
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:run_full_competency_gauntlet.py:39",
-            exc=_aurora_boundary_exc,
-            context={"function": "_json_safe", "handler_line": 39, "source_file": "run_full_competency_gauntlet.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_json_safe', 39)
         if isinstance(value, dict):
             return {str(k): _json_safe(v) for k, v in value.items()}
         if isinstance(value, (list, tuple)):
@@ -67,13 +62,7 @@ def _snapshot(systems: Dict[str, Any]) -> Dict[str, Any]:
             for dim, score in list(dream_trainer.ledger.get_top_fails(5) or []):
                 top_fails.append({"dimension": str(dim), "score": float(score)})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_full_competency_gauntlet.py:61",
-                exc=_aurora_boundary_exc,
-                context={"function": "_snapshot", "handler_line": 61, "source_file": "run_full_competency_gauntlet.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_snapshot', 61)
             top_fails = []
 
     visual_competency = {}
@@ -84,46 +73,22 @@ def _snapshot(systems: Dict[str, Any]) -> Dict[str, Any]:
         try:
             visual_competency = dict(sensory.get_visual_competency() or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_full_competency_gauntlet.py:71",
-                exc=_aurora_boundary_exc,
-                context={"function": "_snapshot", "handler_line": 71, "source_file": "run_full_competency_gauntlet.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_snapshot', 71)
             visual_competency = {}
         try:
             audio_competency = dict(sensory.get_audio_competency() or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_full_competency_gauntlet.py:75",
-                exc=_aurora_boundary_exc,
-                context={"function": "_snapshot", "handler_line": 75, "source_file": "run_full_competency_gauntlet.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_snapshot', 75)
             audio_competency = {}
         try:
             visual_concepts = len(getattr(getattr(sensory, "visual_concepts", None), "concepts", {}) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_full_competency_gauntlet.py:79",
-                exc=_aurora_boundary_exc,
-                context={"function": "_snapshot", "handler_line": 79, "source_file": "run_full_competency_gauntlet.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_snapshot', 79)
             visual_concepts = 0
         try:
             audio_concepts = len(getattr(getattr(sensory, "audio_concepts", None), "concepts", {}) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_full_competency_gauntlet.py:83",
-                exc=_aurora_boundary_exc,
-                context={"function": "_snapshot", "handler_line": 83, "source_file": "run_full_competency_gauntlet.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_snapshot', 83)
             audio_concepts = 0
 
     return {
@@ -299,13 +264,7 @@ def _run_audio_intent_pass(systems: Dict[str, Any], probes: List[str]) -> List[D
                 response_text = str(getattr(gateway_response, "content", "") or "").strip()
                 response_src = response_src or "gateway_fallback"
             except Exception as exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:run_full_competency_gauntlet.py:258",
-                    exc=exc,
-                    context={"function": "_run_audio_intent_pass", "handler_line": 258, "source_file": "run_full_competency_gauntlet.py"},
-                )
+                _aurora_fault(locals(), exc, '_run_audio_intent_pass', 258)
                 response_src = response_src or f"gateway_error:{exc.__class__.__name__}"
         results.append(
             {

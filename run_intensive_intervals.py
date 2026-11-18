@@ -1,4 +1,5 @@
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'run_intensive_intervals.py')
 #!/usr/bin/env python3
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 import json
@@ -21,13 +22,7 @@ def get_stats():
             "generation": state.get("generation", 0)
         }
     except Exception as e:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:run_intensive_intervals.py:24",
-            exc=e,
-            context={"function": "get_stats", "handler_line": 24, "source_file": "run_intensive_intervals.py"},
-        )
+        _aurora_fault(locals(), e, 'get_stats', 24)
         return {"error": str(e)}
 
 def run_interval(index, start_offset, size=5000):

@@ -22,7 +22,8 @@ Why:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'crystalzip.py')
 
 import argparse
 import hashlib
@@ -621,13 +622,7 @@ class CrystalZipArchive:
                 self.file_data(f)
                 checked += 1
             except Exception as exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:crystalzip.py:622",
-                    exc=exc,
-                    context={"function": "test", "handler_line": 622, "source_file": "crystalzip.py"},
-                )
+                _aurora_fault(locals(), exc, 'test', 622)
                 failures.append({"path": f.get("path"), "error": str(exc)})
         return {"ok": not failures, "files_checked": checked, "failures": failures}
 

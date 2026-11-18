@@ -11,7 +11,8 @@ During sleep: Subsurface runs a dream burst to integrate what was accumulated.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/sleep_cycle.py')
 
 import json
 import time
@@ -39,13 +40,7 @@ def read_sleep_state(state_dir: Any) -> Dict[str, Any]:
         if isinstance(data, dict):
             return data
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/sleep_cycle.py:40",
-            exc=_aurora_boundary_exc,
-            context={"function": "read_sleep_state", "handler_line": 40, "source_file": "aurora_internal/dual_strata/sleep_cycle.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'read_sleep_state', 40)
         pass
     return {"sleeping": False}
 
@@ -84,13 +79,7 @@ def mark_dream_triggered(state_dir: Any) -> None:
             data["dream_triggered"] = True
             _write_atomic(path, data)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/sleep_cycle.py:78",
-            exc=_aurora_boundary_exc,
-            context={"function": "mark_dream_triggered", "handler_line": 78, "source_file": "aurora_internal/dual_strata/sleep_cycle.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'mark_dream_triggered', 78)
         pass
 
 

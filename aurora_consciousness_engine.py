@@ -87,6 +87,8 @@ Created: February 2026
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_consciousness_engine.py')
 import time
 import hashlib
 from typing import Dict, List, Any, Optional, Tuple
@@ -165,13 +167,7 @@ try:
     from aurora_constraint_manifold import ConstraintVector
     CONSTRAINT_MANIFOLD_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_consciousness_engine.py:168",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 168, "source_file": "aurora_consciousness_engine.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 168)
     CONSTRAINT_MANIFOLD_AVAILABLE = False
 
 
@@ -633,13 +629,7 @@ class DCEAssembly:
         try:
             return self.sensory_crystal.get_state()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_consciousness_engine.py:479",
-                exc=_aurora_boundary_exc,
-                context={"function": "_collect_sensory_facet", "handler_line": 479, "source_file": "aurora_consciousness_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_collect_sensory_facet', 479)
             return None
 
     def assemble(self, envelope: IVMEnvelope,
@@ -757,13 +747,7 @@ class DCEAssembly:
                 self._assembly_log = _deque(maxlen=100)
             self._assembly_log.append(_entry)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_consciousness_engine.py:596",
-                exc=_aurora_boundary_exc,
-                context={"function": "assemble", "handler_line": 596, "source_file": "aurora_consciousness_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'assemble', 596)
             pass
 
         return result
@@ -1452,13 +1436,7 @@ class ConsciousnessEngine:
                 raw_axis_tensions=dict(getattr(getattr(result, "synthesis", None), "axis_tensions", {}) or {}),
             )
         except Exception as _cers_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_consciousness_engine.py:1272",
-                exc=_cers_exc,
-                context={"function": "_attach_dual_strata_snapshot", "handler_line": 1272, "source_file": "aurora_consciousness_engine.py"},
-            )
+            _aurora_fault(locals(), _cers_exc, '_attach_dual_strata_snapshot', 1272)
             # Still swallowed -- the surface must never see this. But a
             # silently-swallowed exception is a silently-broken shadow
             # regulator, so log it privately (never read by the surface
@@ -1473,13 +1451,7 @@ class ConsciousnessEngine:
                         "error": repr(_cers_exc),
                     }) + "\n")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_consciousness_engine.py:1286",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_attach_dual_strata_snapshot", "handler_line": 1286, "source_file": "aurora_consciousness_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_attach_dual_strata_snapshot', 1286)
                 pass
 
         return result
@@ -1611,13 +1583,7 @@ class ConsciousnessEngine:
                         thought_intent=thought_intent,
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_consciousness_engine.py:1414",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "process", "handler_line": 1414, "source_file": "aurora_consciousness_engine.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'process', 1414)
                     return blocked
 
         # ---- L3.5 SediMemory pre-assembly recall ----
@@ -1636,13 +1602,7 @@ class ConsciousnessEngine:
                     max_results=16,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_consciousness_engine.py:1432",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process", "handler_line": 1432, "source_file": "aurora_consciousness_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process', 1432)
                 pass
 
         # Build pattern signature for entropy dedup
@@ -1655,13 +1615,7 @@ class ConsciousnessEngine:
             try:
                 _proc_tensor_state = self._tensor_layer.behavioral_state(force_refresh=True)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_consciousness_engine.py:1446",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process", "handler_line": 1446, "source_file": "aurora_consciousness_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process', 1446)
                 _proc_tensor_state = {}
 
         def _proc_emotion_gate() -> bool:
@@ -1768,13 +1722,7 @@ class ConsciousnessEngine:
                 thought_intent=thought_intent,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_consciousness_engine.py:1505",
-                exc=_aurora_boundary_exc,
-                context={"function": "process", "handler_line": 1505, "source_file": "aurora_consciousness_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'process', 1505)
             pass
 
         # ---- Subsystem telemetry: mechanistic fail attribution ----
@@ -1810,13 +1758,7 @@ class ConsciousnessEngine:
                 detail=f"cat_emo={_cat_emo:.3f}",
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_consciousness_engine.py:1540",
-                exc=_aurora_boundary_exc,
-                context={"function": "process", "handler_line": 1540, "source_file": "aurora_consciousness_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'process', 1540)
             pass
 
         # ---- GAP 6: Reality warp detection ----
@@ -1834,13 +1776,7 @@ class ConsciousnessEngine:
                         focus="paradox_resolution"
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_consciousness_engine.py:1557",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "process", "handler_line": 1557, "source_file": "aurora_consciousness_engine.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'process', 1557)
                     pass  # Simulation may not be ready
 
         # ---- Feed dissonance from thought budget to IVM ----
@@ -1880,13 +1816,7 @@ class ConsciousnessEngine:
                     source="consciousness_engine",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_consciousness_engine.py:1593",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process", "handler_line": 1593, "source_file": "aurora_consciousness_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process', 1593)
                 pass
 
         return result
@@ -1909,13 +1839,7 @@ class ConsciousnessEngine:
             from aurora_internal.aurora_tensor_expressions import get_tensor_layer
             self._tensor_layer = get_tensor_layer(field)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_consciousness_engine.py:1615",
-                exc=_aurora_boundary_exc,
-                context={"function": "connect_identity_field", "handler_line": 1615, "source_file": "aurora_consciousness_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'connect_identity_field', 1615)
             self._tensor_layer = None
 
     def _noncomp_gate(
@@ -2000,13 +1924,7 @@ class ConsciousnessEngine:
             return mean_p > threshold
 
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_consciousness_engine.py:1699",
-                exc=_aurora_boundary_exc,
-                context={"function": "_noncomp_gate", "handler_line": 1699, "source_file": "aurora_consciousness_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_noncomp_gate', 1699)
             return True   # any error in gate check → allow (fail open)
 
     def reset_pressure_topology(self, understanding: Dict[str, Any]) -> None:
@@ -2018,13 +1936,7 @@ class ConsciousnessEngine:
             try:
                 self._identity_field.reset_pressure_topology(understanding)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_consciousness_engine.py:1710",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "reset_pressure_topology", "handler_line": 1710, "source_file": "aurora_consciousness_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'reset_pressure_topology', 1710)
                 pass
 
     def recalibrate_salience(self, understanding: Dict[str, Any]) -> None:
@@ -2040,13 +1952,7 @@ class ConsciousnessEngine:
                 self.entropy.state.coherence + resolved_accuracy * 0.05,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_consciousness_engine.py:1725",
-                exc=_aurora_boundary_exc,
-                context={"function": "recalibrate_salience", "handler_line": 1725, "source_file": "aurora_consciousness_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'recalibrate_salience', 1725)
             pass
 
     def tick(self):
@@ -2073,13 +1979,7 @@ class ConsciousnessEngine:
             try:
                 _tensor_state = self._tensor_layer.behavioral_state(force_refresh=True)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_consciousness_engine.py:1751",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "tick", "handler_line": 1751, "source_file": "aurora_consciousness_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'tick', 1751)
                 _tensor_state = {}
 
         def _emotion_gate() -> bool:
@@ -2146,13 +2046,7 @@ class ConsciousnessEngine:
                     if _dissonance_heat > 0.2:
                         self._identity_field.ingest_internal_signal('tension', magnitude=_dissonance_heat * 0.35, source_axis='N')
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_consciousness_engine.py:1817",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "tick", "handler_line": 1817, "source_file": "aurora_consciousness_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'tick', 1817)
                 pass
 
         # 7. Idle simulation — dreaming (GAP 5)
@@ -2177,13 +2071,7 @@ class ConsciousnessEngine:
                         focus="dream"
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_consciousness_engine.py:1841",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "tick", "handler_line": 1841, "source_file": "aurora_consciousness_engine.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'tick', 1841)
                     pass  # Simulation not ready or errored
 
     def get_stats(self) -> Dict[str, Any]:
@@ -2635,25 +2523,13 @@ if __name__ == '__main__':
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_consciousness_engine.py:2292",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 2292, "source_file": "aurora_consciousness_engine.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2292)
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_consciousness_engine.py:2297",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 2297, "source_file": "aurora_consciousness_engine.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2297)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

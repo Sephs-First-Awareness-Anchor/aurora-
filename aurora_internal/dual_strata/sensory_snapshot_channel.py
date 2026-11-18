@@ -1,6 +1,7 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/sensory_snapshot_channel.py')
 
 import json
 import time
@@ -21,13 +22,7 @@ def _read_json(path: Path, default: Any) -> Any:
         try:
             return json.loads(path.read_text(encoding="utf-8"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/sensory_snapshot_channel.py:22",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_json", "handler_line": 22, "source_file": "aurora_internal/dual_strata/sensory_snapshot_channel.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_json', 22)
             pass
     return default
 

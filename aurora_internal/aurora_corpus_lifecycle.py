@@ -11,7 +11,8 @@ Handles the autonomous lifecycle of training corpora:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_corpus_lifecycle.py')
 
 import json
 import shutil
@@ -71,13 +72,7 @@ def rotate_corpora(keep: int = 2):
                 else:
                     old_item.unlink()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_corpus_lifecycle.py:74",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "rotate_corpora", "handler_line": 74, "source_file": "aurora_internal/aurora_corpus_lifecycle.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'rotate_corpora', 74)
                 pass
 
 # ---------------------------------------------------------------------------
@@ -100,13 +95,7 @@ def detect_corpus_format(path: Path) -> str:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             head = f.read(2048).strip()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_corpus_lifecycle.py:96",
-            exc=_aurora_boundary_exc,
-            context={"function": "detect_corpus_format", "handler_line": 96, "source_file": "aurora_internal/aurora_corpus_lifecycle.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'detect_corpus_format', 96)
         return "unknown"
 
     if not head:
@@ -170,13 +159,7 @@ def _parse_openai_json(path: Path):
             else:
                 pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_corpus_lifecycle.py:159",
-            exc=_aurora_boundary_exc,
-            context={"function": "_parse_openai_json", "handler_line": 159, "source_file": "aurora_internal/aurora_corpus_lifecycle.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_parse_openai_json', 159)
         pass
 
 def _parse_jsonl(path: Path):
@@ -190,13 +173,7 @@ def _parse_jsonl(path: Path):
                 if u and a:
                     yield (str(u), str(a))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_corpus_lifecycle.py:172",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_parse_jsonl", "handler_line": 172, "source_file": "aurora_internal/aurora_corpus_lifecycle.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_parse_jsonl', 172)
                 continue
 
 def _parse_csv(path: Path):

@@ -23,7 +23,8 @@ DNA DOCTRINE:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_behavioral_identity.py')
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import time
@@ -57,13 +58,7 @@ try:
     from aurora_constraint_manifold import ConstraintVector
     CONSTRAINT_MANIFOLD_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_behavioral_identity.py:59",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 59, "source_file": "aurora_behavioral_identity.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 59)
     pass
 
 # Layer 4 import (for AssemblyResult type hint in process_from_assembly)
@@ -71,13 +66,7 @@ try:
     from aurora_consciousness_engine import AssemblyResult as _AssemblyResult
     _ASSEMBLY_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_behavioral_identity.py:66",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 66, "source_file": "aurora_behavioral_identity.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 66)
     _ASSEMBLY_AVAILABLE = False
 
 # Constraint axis → trait pressure multipliers.
@@ -701,13 +690,7 @@ class DNASystem:
                     existence_mode=ExistenceMode.AGENTIC,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_behavioral_identity.py:676",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "create_anchor", "handler_line": 676, "source_file": "aurora_behavioral_identity.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'create_anchor', 676)
                 pass
         return anchor
 
@@ -1029,13 +1012,7 @@ class BehavioralIdentityEngine:
         try:
             snap_generation = int(getattr(snapshot, 'generation', 0) or 0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_behavioral_identity.py:997",
-                exc=_aurora_boundary_exc,
-                context={"function": "restore_from_snapshot", "handler_line": 997, "source_file": "aurora_behavioral_identity.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'restore_from_snapshot', 997)
             snap_generation = 0
         if snap_generation > 0:
             self.generation = snap_generation
@@ -1055,13 +1032,7 @@ class BehavioralIdentityEngine:
                 trait.last_modified_gen = self.generation
                 restored['traits'] += 1
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_behavioral_identity.py:1016",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "restore_from_snapshot", "handler_line": 1016, "source_file": "aurora_behavioral_identity.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'restore_from_snapshot', 1016)
                 continue
 
         for domain, facets in (getattr(snapshot, 'crystal_genomes', {}) or {}).items():
@@ -1076,13 +1047,7 @@ class BehavioralIdentityEngine:
                     facet.value = _clamp(float(value))
                     restored['crystals'] += 1
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_behavioral_identity.py:1030",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "restore_from_snapshot", "handler_line": 1030, "source_file": "aurora_behavioral_identity.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'restore_from_snapshot', 1030)
                     continue
 
         active_genes = set(getattr(snapshot, 'active_genes', []) or [])

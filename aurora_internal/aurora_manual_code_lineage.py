@@ -12,6 +12,8 @@ branch.
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_manual_code_lineage.py')
 
 import functools
 import hashlib
@@ -118,13 +120,7 @@ def _signature_counts_cached(signature: str) -> Tuple[Tuple[str, int], ...]:
         try:
             counts[axis] += max(0, int(float(str(value or "0").strip())))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:110",
-                exc=_aurora_boundary_exc,
-                context={"function": "_signature_counts", "handler_line": 110, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_signature_counts', 110)
             continue
     return tuple(counts.items())
 
@@ -172,13 +168,7 @@ class ManualCodeLineageAssimilator:
             with open(self.state_path, "r", encoding="utf-8") as fh:
                 raw = dict(json.load(fh) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:152",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_state", "handler_line": 152, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_state', 152)
             return
         self._state = {
             "initialized": bool(raw.get("initialized", False)),
@@ -198,13 +188,7 @@ class ManualCodeLineageAssimilator:
                 json.dump(payload, fh, ensure_ascii=True, indent=2, sort_keys=True)
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:171",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 171, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 171)
             return False
 
     def status(self) -> Dict[str, Any]:
@@ -238,13 +222,7 @@ class ManualCodeLineageAssimilator:
                 for chunk in iter(lambda: fh.read(131072), b""):
                     digest.update(chunk)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:204",
-                exc=_aurora_boundary_exc,
-                context={"function": "_file_sha1", "handler_line": 204, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_file_sha1', 204)
             return ""
         return digest.hexdigest()
 
@@ -263,13 +241,7 @@ class ManualCodeLineageAssimilator:
             try:
                 st = os.stat(path)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:214",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_scan_manifest", "handler_line": 214, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_scan_manifest', 214)
                 continue
             mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
             size = int(st.st_size)
@@ -357,13 +329,7 @@ class ManualCodeLineageAssimilator:
             mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
             size = int(st.st_size)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:256",
-                exc=_aurora_boundary_exc,
-                context={"function": "_descriptor_operations", "handler_line": 256, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_descriptor_operations', 256)
             return []
         cache = dict(self._descriptor_cache or {})
         if (
@@ -376,13 +342,7 @@ class ManualCodeLineageAssimilator:
             with open(path, "r", encoding="utf-8") as fh:
                 raw = dict(json.load(fh) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:268",
-                exc=_aurora_boundary_exc,
-                context={"function": "_descriptor_operations", "handler_line": 268, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_descriptor_operations', 268)
             return []
         ops = [dict(row) for row in (raw.get("operations", []) or []) if isinstance(row, dict)]
         self._descriptor_cache = {
@@ -520,13 +480,7 @@ class ManualCodeLineageAssimilator:
             if hasattr(journal, "record_event"):
                 journal.record_event(event)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:377",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_journal_event", "handler_line": 377, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_journal_event', 377)
             pass
 
     def _record_journal_events(self, systems: Any, events: List[Dict[str, Any]]) -> None:
@@ -616,13 +570,7 @@ class ManualCodeLineageAssimilator:
                     # file (per-file flush() was the multi-hundred-file hang).
                     reg = dict(genealogy.register_manual_code_assimilation(payload, flush=False) or {})
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:430",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "assimilate", "handler_line": 430, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'assimilate', 430)
                     reg = {"registered": False, "ability_id": matched_ability_id}
             if genealogy is not None:
                 self._refresh_ability_records(genealogy, records, positions,
@@ -682,13 +630,7 @@ class ManualCodeLineageAssimilator:
                         persistence_key=str(payload["target_modules"][0] or "")[:48],
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:487",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "assimilate", "handler_line": 487, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'assimilate', 487)
                     pass
 
         self._record_journal_events(systems, journal_events)
@@ -730,13 +672,7 @@ class ManualCodeLineageAssimilator:
             try:
                 genealogy.flush_files()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:561",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "assimilate", "handler_line": 561, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'assimilate', 561)
 
         history = list(self._state.get("history", []) or [])
         history.extend(results)

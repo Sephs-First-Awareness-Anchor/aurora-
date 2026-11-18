@@ -21,7 +21,8 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_specialized_avatar_synthesizer.py')
 
 import hashlib
 import json
@@ -479,13 +480,7 @@ class SpecializedAvatarSynthesizer:
             with open(self._policy_path, "w", encoding="utf-8") as f:
                 json.dump(payload, f, indent=2)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_specialized_avatar_synthesizer.py:481",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_policy", "handler_line": 481, "source_file": "aurora_internal/aurora_specialized_avatar_synthesizer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_save_policy', 481)
             pass
 
     def _normalize_policy(self, state: Dict[str, Any]) -> Dict[str, Any]:

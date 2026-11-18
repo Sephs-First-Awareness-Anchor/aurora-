@@ -2,7 +2,8 @@
 """Shared persistence utilities for Aurora."""
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_persistence_utils.py')
 
 import json
 import os
@@ -67,24 +68,12 @@ def atomic_write_json(path: Path, data: Dict[str, Any], *, indent: int = 2, defa
             os.replace(tmp, path)
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:34",
-                exc=_aurora_boundary_exc,
-                context={"function": "atomic_write_json", "handler_line": 34, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'atomic_write_json', 34)
             if tmp and os.path.exists(tmp):
                 try:
                     os.unlink(tmp)
                 except OSError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_persistence_utils.py:38",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "atomic_write_json", "handler_line": 38, "source_file": "aurora_persistence_utils.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'atomic_write_json', 38)
                     pass
             return False
 
@@ -100,13 +89,7 @@ def write_breach_report(state_dir: Path, report: Dict[str, Any]) -> Optional[Pat
         atomic_write_json(path, payload, indent=2, default=str)
         return path
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_persistence_utils.py:53",
-            exc=_aurora_boundary_exc,
-            context={"function": "write_breach_report", "handler_line": 53, "source_file": "aurora_persistence_utils.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'write_breach_report', 53)
         return None
 
 
@@ -261,13 +244,7 @@ class DeviceAwareness:
                 os.fsync(f.fileno())
             os.replace(tmp, self.device_log_path)
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:198",
-                exc=e,
-                context={"function": "save", "handler_line": 198, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), e, 'save', 198)
             logger.debug(f"[DeviceAwareness] Save failed: {e}")
 
     def load(self):
@@ -279,13 +256,7 @@ class DeviceAwareness:
             for h, d in data.get("devices", {}).items():
                 self._devices[h] = DeviceRecord.from_dict(d)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:209",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 209, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 209)
             pass
 
     def all_devices(self) -> List[Dict]:
@@ -322,13 +293,7 @@ class RcloneInterface:
                 if result.returncode == 0:
                     return candidate
             except (FileNotFoundError, subprocess.TimeoutExpired) as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_persistence_utils.py:245",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_find_rclone", "handler_line": 245, "source_file": "aurora_persistence_utils.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_find_rclone', 245)
                 continue
         return "rclone"  # will fail gracefully later
 
@@ -347,13 +312,7 @@ class RcloneInterface:
                 logger.info(f"[rclone] Remote '{self.remote_name}' not found. "
                             f"Run: rclone config")
         except (FileNotFoundError, subprocess.TimeoutExpired) as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:263",
-                exc=_aurora_boundary_exc,
-                context={"function": "is_available", "handler_line": 263, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'is_available', 263)
             self._available = False
             logger.info("[rclone] rclone not found. Install from https://rclone.org/install/")
         return self._available
@@ -397,22 +356,10 @@ class RcloneInterface:
                 "stderr": result.stderr[:500] if not success else "",
             }
         except subprocess.TimeoutExpired as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:306",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_sync", "handler_line": 306, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_sync', 306)
             return {"success": False, "reason": "timeout"}
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:308",
-                exc=e,
-                context={"function": "_run_sync", "handler_line": 308, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), e, '_run_sync', 308)
             return {"success": False, "reason": str(e)}
 
     def check_newer_remote(self) -> bool:
@@ -453,23 +400,11 @@ class RcloneInterface:
                 remote_mtime = remote_dt.timestamp()
                 return remote_mtime > local_mtime + 60  # 60s grace period
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_persistence_utils.py:348",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "check_newer_remote", "handler_line": 348, "source_file": "aurora_persistence_utils.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'check_newer_remote', 348)
                 return False
 
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:351",
-                exc=_aurora_boundary_exc,
-                context={"function": "check_newer_remote", "handler_line": 351, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'check_newer_remote', 351)
             return False
 
 
@@ -537,13 +472,7 @@ class DriveSync:
                     if pull_result.get("success"):
                         self.device.record_sync()
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_persistence_utils.py:418",
-                    exc=e,
-                    context={"function": "boot", "handler_line": 418, "source_file": "aurora_persistence_utils.py"},
-                )
+                _aurora_fault(locals(), e, 'boot', 418)
                 logger.debug(f"[DriveSync] Boot pull check failed: {e}")
         else:
             logger.info("[DriveSync] rclone unavailable — running from local state only")
@@ -596,13 +525,7 @@ class DriveSync:
                             logger.debug(f"[DriveSync] Background sync failed: "
                                          f"{result.get('reason', 'unknown')}")
                     except Exception as e:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_persistence_utils.py:470",
-                            exc=e,
-                            context={"function": "_loop", "handler_line": 470, "source_file": "aurora_persistence_utils.py"},
-                        )
+                        _aurora_fault(locals(), e, '_loop', 470)
                         logger.debug(f"[DriveSync] Background sync error: {e}")
 
         self._thread = threading.Thread(target=_loop, daemon=True,
@@ -680,13 +603,7 @@ class GitStateSync:
                 self._repo_root = r.stdout.strip()
                 return self._repo_root
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:547",
-                exc=_aurora_boundary_exc,
-                context={"function": "_find_repo_root", "handler_line": 547, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_find_repo_root', 547)
             pass
         return None
 
@@ -697,13 +614,7 @@ class GitStateSync:
             if r.returncode == 0:
                 return r.stdout.strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:557",
-                exc=_aurora_boundary_exc,
-                context={"function": "_get_current_branch", "handler_line": 557, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_get_current_branch', 557)
             pass
         return ""
 
@@ -732,13 +643,7 @@ class GitStateSync:
                 return {"performed": False,
                         "reason": f"fetch_failed: {fetch_r.stderr[:200]}"}
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:585",
-                exc=e,
-                context={"function": "boot", "handler_line": 585, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), e, 'boot', 585)
             return {"performed": False, "reason": f"fetch_error: {e}"}
 
         try:
@@ -748,13 +653,7 @@ class GitStateSync:
                 capture_output=True, text=True, timeout=10, cwd=root)
             behind = int(behind_r.stdout.strip() or "0")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:594",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot", "handler_line": 594, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot', 594)
             behind = 0
 
         if behind == 0:
@@ -782,13 +681,7 @@ class GitStateSync:
                 return {"performed": True, "success": False,
                         "reason": f"ff_failed: {pull_r.stderr[:200]}"}
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:621",
-                exc=e,
-                context={"function": "boot", "handler_line": 621, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), e, 'boot', 621)
             return {"performed": True, "success": False,
                     "reason": f"merge_error: {e}"}
 
@@ -810,13 +703,7 @@ class GitStateSync:
                 return {"performed": True, "success": True,
                         "reason": "nothing_to_commit", "committed": False}
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:642",
-                exc=e,
-                context={"function": "push_state", "handler_line": 642, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), e, 'push_state', 642)
             return {"performed": False, "reason": f"status_error: {e}"}
 
         try:
@@ -827,13 +714,7 @@ class GitStateSync:
                 return {"performed": True, "success": False,
                         "reason": f"add_failed: {add_r.stderr[:200]}"}
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:652",
-                exc=e,
-                context={"function": "push_state", "handler_line": 652, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), e, 'push_state', 652)
             return {"performed": True, "success": False,
                     "reason": f"add_error: {e}"}
 
@@ -858,13 +739,7 @@ class GitStateSync:
                         "reason": f"commit_failed: {commit_r.stderr[:200]}",
                         "committed": False}
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:676",
-                exc=e,
-                context={"function": "push_state", "handler_line": 676, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), e, 'push_state', 676)
             return {"performed": True, "success": False,
                     "reason": f"commit_error: {e}", "committed": False}
 
@@ -881,13 +756,7 @@ class GitStateSync:
                     "reason": "pushed" if success else
                     f"push_failed: {push_r.stderr[:200]}"}
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_persistence_utils.py:692",
-                exc=e,
-                context={"function": "push_state", "handler_line": 692, "source_file": "aurora_persistence_utils.py"},
-            )
+            _aurora_fault(locals(), e, 'push_state', 692)
             return {"performed": True, "success": False, "committed": True,
                     "reason": f"push_error: {e}"}
 

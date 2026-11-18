@@ -41,7 +41,8 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_strategic_horizon.py')
 
 import json
 import os
@@ -223,13 +224,7 @@ class StrategicHorizonLayer:
             deltas = [traj[i] - traj[i - 1] for i in range(1, len(traj))]
             return sum(deltas) / len(deltas)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_strategic_horizon.py:224",
-                exc=_aurora_boundary_exc,
-                context={"function": "_icc_trend", "handler_line": 224, "source_file": "aurora_internal/aurora_strategic_horizon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_icc_trend', 224)
             return 0.0
 
     # ------------------------------------------------------------------
@@ -305,13 +300,7 @@ class StrategicHorizonLayer:
                 self._journal(assessment)
             return assessment
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_strategic_horizon.py:299",
-                exc=exc,
-                context={"function": "assess", "handler_line": 299, "source_file": "aurora_internal/aurora_strategic_horizon.py"},
-            )
+            _aurora_fault(locals(), exc, 'assess', 299)
             return _denied(intake_id, immediate_worth, f"strategic horizon degraded: {exc}")
 
     def grant_bias(self, c: Constraint, tolerance: float) -> None:
@@ -321,13 +310,7 @@ class StrategicHorizonLayer:
         try:
             self._granted[c] = min(T_MAX, self._granted.get(c, 0.0) + max(0.0, float(tolerance)))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_strategic_horizon.py:308",
-                exc=_aurora_boundary_exc,
-                context={"function": "grant_bias", "handler_line": 308, "source_file": "aurora_internal/aurora_strategic_horizon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'grant_bias', 308)
             pass
 
     def flip_threshold_bias(self, c: Constraint) -> float:
@@ -352,13 +335,7 @@ class StrategicHorizonLayer:
                     fh.flush()
                     os.fsync(fh.fileno())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_strategic_horizon.py:332",
-                exc=_aurora_boundary_exc,
-                context={"function": "_journal", "handler_line": 332, "source_file": "aurora_internal/aurora_strategic_horizon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_journal', 332)
             pass
 
     def summary(self) -> Dict[str, Any]:
@@ -372,13 +349,7 @@ class StrategicHorizonLayer:
                 "t_max": T_MAX,
             }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_strategic_horizon.py:345",
-                exc=_aurora_boundary_exc,
-                context={"function": "summary", "handler_line": 345, "source_file": "aurora_internal/aurora_strategic_horizon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'summary', 345)
             return {"constraints_with_bias": [], "t_max": T_MAX}
 
 
@@ -438,13 +409,7 @@ def verify_strategic_horizon(tmp_state_dir: str) -> Dict[str, Any]:
         )
         check("assess() never raises on malformed input", a3.tolerance == 0.0)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_strategic_horizon.py:404",
-            exc=exc,
-            context={"function": "verify_strategic_horizon", "handler_line": 404, "source_file": "aurora_internal/aurora_strategic_horizon.py"},
-        )
+        _aurora_fault(locals(), exc, 'verify_strategic_horizon', 404)
         check("assess() never raises on malformed input", False, str(exc))
 
     summ = layer.summary()

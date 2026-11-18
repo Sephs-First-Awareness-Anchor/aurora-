@@ -37,7 +37,8 @@ Output file: aurora_state/query_bias.json
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_pressure_router.py')
 
 import json
 import os
@@ -351,13 +352,7 @@ class PressureRouter:
             with open(path, encoding="utf-8") as fh:
                 return json.load(fh)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_router.py:333",
-                exc=_aurora_boundary_exc,
-                context={"function": "load_query_bias", "handler_line": 333, "source_file": "aurora_internal/aurora_pressure_router.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load_query_bias', 333)
             return {}
 
     def status(self) -> Dict[str, Any]:
@@ -429,13 +424,7 @@ class PressureRouter:
                 "annotated_in": _EVOLVER_BIAS_REL,
             }
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_router.py:404",
-                exc=exc,
-                context={"function": "_route_evolution", "handler_line": 404, "source_file": "aurora_internal/aurora_pressure_router.py"},
-            )
+            _aurora_fault(locals(), exc, '_route_evolution', 404)
             return {"dispatched": False, "error": str(exc)}
 
     # ── Layer 2: Training ─────────────────────────────────────────────────────
@@ -497,26 +486,14 @@ class PressureRouter:
                     )
                     seeded += 1
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_pressure_router.py:465",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_route_training", "handler_line": 465, "source_file": "aurora_internal/aurora_pressure_router.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_route_training', 465)
                     pass
 
         if seeded > 0:
             try:
                 fail_ledger.save()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_pressure_router.py:471",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_route_training", "handler_line": 471, "source_file": "aurora_internal/aurora_pressure_router.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_route_training', 471)
                 pass
 
         return {
@@ -633,13 +610,7 @@ class PressureRouter:
                 "mode":         classification_mode,
             }
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_router.py:587",
-                exc=exc,
-                context={"function": "_route_gpt_bias", "handler_line": 587, "source_file": "aurora_internal/aurora_pressure_router.py"},
-            )
+            _aurora_fault(locals(), exc, '_route_gpt_bias', 587)
             return {"dispatched": False, "error": str(exc)}
 
 
@@ -652,11 +623,5 @@ def route_pressure(repo_root: str, fail_ledger: Any = None) -> Dict[str, Any]:
     try:
         return PressureRouter(repo_root).route(fail_ledger=fail_ledger)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_pressure_router.py:599",
-            exc=exc,
-            context={"function": "route_pressure", "handler_line": 599, "source_file": "aurora_internal/aurora_pressure_router.py"},
-        )
+        _aurora_fault(locals(), exc, 'route_pressure', 599)
         return {"error": str(exc)}

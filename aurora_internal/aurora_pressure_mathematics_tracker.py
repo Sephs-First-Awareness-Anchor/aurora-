@@ -26,7 +26,8 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_pressure_mathematics_tracker.py')
 
 import json
 import logging
@@ -333,13 +334,7 @@ class PressureMathematicsTracker:
                     snap.dmm_vitality = drift.get('dmm_vitality', 0.5)
                     snap.collective_balance = drift.get('collective_balance', 0.5)
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_mathematics_tracker.py:330",
-                exc=e,
-                context={"function": "_take_snapshot", "handler_line": 330, "source_file": "aurora_internal/aurora_pressure_mathematics_tracker.py"},
-            )
+            _aurora_fault(locals(), e, '_take_snapshot', 330)
             logger.debug(f"[PRESSURE-MATH] DPME read: {e}")
 
         # ---- Genealogy stats ----
@@ -370,13 +365,7 @@ class PressureMathematicsTracker:
                     vr = stats.get('validation_completeness_rate', 0.0)
                     snap.coupling_validation_rate = vr
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_mathematics_tracker.py:360",
-                exc=e,
-                context={"function": "_take_snapshot", "handler_line": 360, "source_file": "aurora_internal/aurora_pressure_mathematics_tracker.py"},
-            )
+            _aurora_fault(locals(), e, '_take_snapshot', 360)
             logger.debug(f"[PRESSURE-MATH] Genealogy read: {e}")
 
         # ---- Code evolution stats ----
@@ -402,13 +391,7 @@ class PressureMathematicsTracker:
                         )
                         snap.operator_gradients = cs.get('operator_gradients', {})
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_mathematics_tracker.py:385",
-                exc=e,
-                context={"function": "_take_snapshot", "handler_line": 385, "source_file": "aurora_internal/aurora_pressure_mathematics_tracker.py"},
-            )
+            _aurora_fault(locals(), e, '_take_snapshot', 385)
             logger.debug(f"[PRESSURE-MATH] Code evolution read: {e}")
 
         # ---- Dream evolution stats ----
@@ -427,13 +410,7 @@ class PressureMathematicsTracker:
                     'total_directives_generated', 0
                 )
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_mathematics_tracker.py:403",
-                exc=e,
-                context={"function": "_take_snapshot", "handler_line": 403, "source_file": "aurora_internal/aurora_pressure_mathematics_tracker.py"},
-            )
+            _aurora_fault(locals(), e, '_take_snapshot', 403)
             logger.debug(f"[PRESSURE-MATH] Dream evolution read: {e}")
 
         return snap
@@ -741,13 +718,7 @@ class PressureMathematicsTracker:
                     f"stagnation={dpme_guidance.get('score', 0):.2f}"
                 )
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_pressure_mathematics_tracker.py:710",
-                    exc=e,
-                    context={"function": "apply_feedback", "handler_line": 710, "source_file": "aurora_internal/aurora_pressure_mathematics_tracker.py"},
-                )
+                _aurora_fault(locals(), e, 'apply_feedback', 710)
                 logger.debug(f"[PRESSURE-MATH] DPME feedback skipped: {e}")
 
     # ================================================================
@@ -781,13 +752,7 @@ class PressureMathematicsTracker:
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_mathematics_tracker.py:743",
-                exc=e,
-                context={"function": "_save_state", "handler_line": 743, "source_file": "aurora_internal/aurora_pressure_mathematics_tracker.py"},
-            )
+            _aurora_fault(locals(), e, '_save_state', 743)
             logger.debug(f"[PRESSURE-MATH] Save failed: {e}")
 
     def _load_state(self):
@@ -803,12 +768,6 @@ class PressureMathematicsTracker:
             self._regime_start_idx = data.get("regime_start_idx", 0)
             # Don't reload full history — it rebuilds from live data
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_mathematics_tracker.py:758",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_state", "handler_line": 758, "source_file": "aurora_internal/aurora_pressure_mathematics_tracker.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_state', 758)
             pass
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")

@@ -70,6 +70,8 @@ THOUGHT INTEGRATION:
 """
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_braid_wiring.py')
 
 from typing import Any, Dict, Optional
 
@@ -84,13 +86,7 @@ def _get_braid():
         from aurora_thought_formation import get_braid
         return get_braid()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:79",
-            exc=_aurora_boundary_exc,
-            context={"function": "_get_braid", "handler_line": 79, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_get_braid', 79)
         return None
 
 
@@ -100,13 +96,7 @@ def _get_firewall():
         from aurora_thought_formation import get_firewall
         return get_firewall()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:88",
-            exc=_aurora_boundary_exc,
-            context={"function": "_get_firewall", "handler_line": 88, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_get_firewall', 88)
         return None
 
 
@@ -116,13 +106,7 @@ def _get_continuity():
         from aurora_thought_formation import get_continuity
         return get_continuity()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:97",
-            exc=_aurora_boundary_exc,
-            context={"function": "_get_continuity", "handler_line": 97, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_get_continuity', 97)
         return None
 
 
@@ -135,13 +119,7 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
     try:
         from aurora_thought_formation import make_process_context
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:109",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_turn_process_contexts", "handler_line": 109, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 109)
         return []
 
     contexts = []
@@ -164,13 +142,7 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
                         max_results=4,
                     ) or [])
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_braid_wiring.py:131",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_build_turn_process_contexts", "handler_line": 131, "source_file": "aurora_braid_wiring.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 131)
                     pass
             _sedi_context = (
                 f"recalled:{len(_recalled_strata)}_strata" if _recalled_strata
@@ -190,13 +162,7 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
             if _recalled_strata:
                 systems['_braid_sedi_recall'] = _recalled_strata
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:150",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_turn_process_contexts", "handler_line": 150, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 150)
         pass
 
     # Constraint process — open loops as unresolved pressure
@@ -214,13 +180,7 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
                 unresolved_tension_weight=min(1.0, len(open_loops) * 0.12),
             ))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:167",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_turn_process_contexts", "handler_line": 167, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 167)
         pass
 
     # Identity process — active identity predicates
@@ -237,13 +197,7 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
                 tick=tick,
             ))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:183",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_turn_process_contexts", "handler_line": 183, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 183)
         pass
 
     # Curiosity process — any pending open curiosity loops
@@ -262,13 +216,7 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
                 unresolved_tension_weight=0.3,
             ))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:201",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_turn_process_contexts", "handler_line": 201, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 201)
         pass
 
     # PF1.6 residue W1: the turn's own content, as real language, not a
@@ -294,13 +242,7 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
                 tick=tick,
             ))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:226",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_turn_process_contexts", "handler_line": 226, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 226)
         pass
 
     return contexts
@@ -336,25 +278,13 @@ def boot_thought_braid(systems: Dict[str, Any], *, verbose: bool = False) -> Non
                 if verbose:
                     print("  [L3.5 → BRAID] Wired to SediMemory for Warp traversal carving")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_braid_wiring.py:261",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "boot_thought_braid", "handler_line": 261, "source_file": "aurora_braid_wiring.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'boot_thought_braid', 261)
                 pass
         if systems.get('contradiction_ledger') is not None and hasattr(braid, 'connect_contradiction_ledger'):
             try:
                 braid.connect_contradiction_ledger(systems['contradiction_ledger'])
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_braid_wiring.py:266",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "boot_thought_braid", "handler_line": 266, "source_file": "aurora_braid_wiring.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'boot_thought_braid', 266)
                 pass
         # Register as a WARP actuator under the routing key it emits as
         # demand.source (its _warp_level_name() = 'braid_stream').
@@ -364,13 +294,7 @@ def boot_thought_braid(systems: Dict[str, Any], *, verbose: bool = False) -> Non
                 if verbose:
                     print("  [WARP] ThoughtBraid registered as actuator ('braid_stream')")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_braid_wiring.py:275",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "boot_thought_braid", "handler_line": 275, "source_file": "aurora_braid_wiring.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'boot_thought_braid', 275)
                 pass
 
         if verbose:
@@ -505,13 +429,7 @@ def begin_response_turn(
             try:
                 _cr.integrate(_constraint_trace, thought_state)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_braid_wiring.py:361",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "begin_response_turn", "handler_line": 361, "source_file": "aurora_braid_wiring.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'begin_response_turn', 361)
                 pass
 
         # ACTUALITY BOUNDARY. No candidate is lived before this line.
@@ -533,13 +451,7 @@ def begin_response_turn(
                 pass
 
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:370",
-            exc=_aurora_boundary_exc,
-            context={"function": "begin_response_turn", "handler_line": 370, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'begin_response_turn', 370)
         # Degrade gracefully — downstream pipeline continues without braid context
         systems['_current_thought_state'] = None
         systems['_current_braid_slice'] = None
@@ -574,13 +486,7 @@ def reset_proposition_frame_for_turn(systems: Dict[str, Any]) -> None:
         if composer is not None:
             composer.set_proposition_frame(None)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:404",
-            exc=_aurora_boundary_exc,
-            context={"function": "reset_proposition_frame_for_turn", "handler_line": 404, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'reset_proposition_frame_for_turn', 404)
         pass
 
 
@@ -630,13 +536,7 @@ def ensure_proposition_frame_for_turn(systems: Dict[str, Any]) -> None:
             systems['_proposition_frame'] = frame
             composer.set_proposition_frame(frame)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:443",
-            exc=_aurora_boundary_exc,
-            context={"function": "ensure_proposition_frame_for_turn", "handler_line": 443, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'ensure_proposition_frame_for_turn', 443)
         pass
 
 
@@ -812,13 +712,7 @@ def begin_expression(systems: Dict[str, Any]) -> None:
                 pipeline_state['braid_lane_lean'] = initial_guidance.lane_lean
                 pipeline_state['braid_anchor_axes'] = list(initial_guidance.anchor_axes)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_braid_wiring.py:481",
-                exc=_aurora_boundary_exc,
-                context={"function": "begin_expression", "handler_line": 481, "source_file": "aurora_braid_wiring.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'begin_expression', 481)
             pass
 
         # Wire SemanticIntentionBridge — drive composer from ThoughtState.
@@ -841,23 +735,11 @@ def begin_expression(systems: Dict[str, Any]) -> None:
             if composer is not None:
                 composer.set_expression_guidance(systems.get('_expression_guidance'))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_braid_wiring.py:512",
-                exc=_aurora_boundary_exc,
-                context={"function": "begin_expression", "handler_line": 512, "source_file": "aurora_braid_wiring.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'begin_expression', 512)
             pass
 
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:515",
-            exc=_aurora_boundary_exc,
-            context={"function": "begin_expression", "handler_line": 515, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'begin_expression', 515)
         systems['_expression_layer'] = None
         systems['_expression_guidance'] = None
 
@@ -921,25 +803,13 @@ def checkpoint_expression(
                 _ps['braid_nudge_lane'] = nudge_data['lane_lean']
                 _ps['braid_nudge_strength'] = nudge_data['nudge_strength']
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_braid_wiring.py:578",
-                exc=_aurora_boundary_exc,
-                context={"function": "checkpoint_expression", "handler_line": 578, "source_file": "aurora_braid_wiring.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'checkpoint_expression', 578)
             pass
 
         return nudge_data
 
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:583",
-            exc=_aurora_boundary_exc,
-            context={"function": "checkpoint_expression", "handler_line": 583, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'checkpoint_expression', 583)
         systems['_expression_nudge'] = None
         return None
 
@@ -977,13 +847,7 @@ def complete_expression(systems: Dict[str, Any], state: Any) -> None:
         try:
             final_text = str(getattr(state, 'response_content', '') or '').strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_braid_wiring.py:620",
-                exc=_aurora_boundary_exc,
-                context={"function": "complete_expression", "handler_line": 620, "source_file": "aurora_braid_wiring.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'complete_expression', 620)
             pass
 
         if not final_text:
@@ -999,23 +863,11 @@ def complete_expression(systems: Dict[str, Any], state: Any) -> None:
             )
             systems['_last_reentry_text_len'] = len(final_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_braid_wiring.py:635",
-                exc=_aurora_boundary_exc,
-                context={"function": "complete_expression", "handler_line": 635, "source_file": "aurora_braid_wiring.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'complete_expression', 635)
             pass
 
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:638",
-            exc=_aurora_boundary_exc,
-            context={"function": "complete_expression", "handler_line": 638, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'complete_expression', 638)
         pass
     finally:
         # Always clean up per-response state
@@ -1039,11 +891,5 @@ def shutdown_thought_braid(systems: Dict[str, Any]) -> None:
         systems['_thought_braid_thread'] = None
         systems['_thought_braid'] = None
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_braid_wiring.py:661",
-            exc=_aurora_boundary_exc,
-            context={"function": "shutdown_thought_braid", "handler_line": 661, "source_file": "aurora_braid_wiring.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'shutdown_thought_braid', 661)
         pass

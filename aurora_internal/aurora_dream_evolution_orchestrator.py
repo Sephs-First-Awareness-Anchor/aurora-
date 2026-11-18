@@ -20,7 +20,8 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_dream_evolution_orchestrator.py')
 
 import logging
 import os
@@ -260,13 +261,7 @@ class DreamEvolutionOrchestrator:
                 x = max(0.0, min(1.0, float(v)))
                 out[key] = x
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:262",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_extract_active_pressure_targets", "handler_line": 262, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_extract_active_pressure_targets', 262)
                 continue
         return out
 
@@ -364,13 +359,7 @@ class DreamEvolutionOrchestrator:
                 episode_fitness=episode_fitness,
             )
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:359",
-                exc=e,
-                context={"function": "post_episode", "handler_line": 359, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-            )
+            _aurora_fault(locals(), e, 'post_episode', 359)
             self._last_policy_feedback = {"updated": False, "reason": f"policy_feedback_error: {e}"}
 
         # ---- Generate avatar specs ----
@@ -567,13 +556,7 @@ class DreamEvolutionOrchestrator:
                     del self._pending_avatar_specs[:count]
             return count
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:555",
-                exc=e,
-                context={"function": "_apply_avatar_specs", "handler_line": 555, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-            )
+            _aurora_fault(locals(), e, '_apply_avatar_specs', 555)
             logger.debug(f"[DREAM-EVO] Avatar spec application skipped: {e}")
             return 0
 
@@ -597,13 +580,7 @@ class DreamEvolutionOrchestrator:
             )
             return True
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:578",
-                exc=e,
-                context={"function": "_apply_dpme", "handler_line": 578, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-            )
+            _aurora_fault(locals(), e, '_apply_dpme', 578)
             logger.debug(f"[DREAM-EVO] DPME guidance skipped: {e}")
             return False
 
@@ -643,13 +620,7 @@ class DreamEvolutionOrchestrator:
                         from aurora_internal.constraint_genealogy import PressureVec
                         PVec = PressureVec
                     except ImportError as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:617",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_apply_genealogy", "handler_line": 617, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_genealogy', 617)
                         continue
 
                 # Build TraceItem objects
@@ -660,13 +631,7 @@ class DreamEvolutionOrchestrator:
                         for t in trace
                     ]
                 except ImportError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:627",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_apply_genealogy", "handler_line": 627, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_apply_genealogy', 627)
                     continue
 
                 pv_before = PVec(
@@ -694,13 +659,7 @@ class DreamEvolutionOrchestrator:
                 )
                 count += 1
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:654",
-                    exc=e,
-                    context={"function": "_apply_genealogy", "handler_line": 654, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                )
+                _aurora_fault(locals(), e, '_apply_genealogy', 654)
                 logger.debug(f"[DREAM-EVO] Genealogy entry skipped: {e}")
 
         return count
@@ -737,13 +696,7 @@ class DreamEvolutionOrchestrator:
                         ecology.run_generation()
                         count += 1
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:690",
-                    exc=e,
-                    context={"function": "_apply_expression", "handler_line": 690, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                )
+                _aurora_fault(locals(), e, '_apply_expression', 690)
                 logger.debug(f"[DREAM-EVO] Expression hint skipped: {e}")
 
         return count
@@ -782,13 +735,7 @@ class DreamEvolutionOrchestrator:
             })
             return 1
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:728",
-                exc=e,
-                context={"function": "_apply_voice", "handler_line": 728, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-            )
+            _aurora_fault(locals(), e, '_apply_voice', 728)
             logger.debug(f"[DREAM-EVO] Voice evolution skipped: {e}")
             return 0
 
@@ -846,13 +793,7 @@ class DreamEvolutionOrchestrator:
                 learner.observe_outcome(selected, observation, context_type)
                 count += 1
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:785",
-                    exc=e,
-                    context={"function": "_apply_learner", "handler_line": 785, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                )
+                _aurora_fault(locals(), e, '_apply_learner', 785)
                 logger.debug(f"[DREAM-EVO] Learner observation skipped: {e}")
 
         return count
@@ -949,13 +890,7 @@ class DreamEvolutionOrchestrator:
                         else:
                             count += 1
                 except Exception as e:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:881",
-                        exc=e,
-                        context={"function": "_apply_code_evolution", "handler_line": 881, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                    )
+                    _aurora_fault(locals(), e, '_apply_code_evolution', 881)
                     logger.debug(f"[DREAM-EVO] Code evolution entry skipped: {e}")
 
         if count > 0:
@@ -979,13 +914,7 @@ class DreamEvolutionOrchestrator:
             try:
                 x = float(v)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:904",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_clamp01", "handler_line": 904, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_clamp01', 904)
                 x = 0.0
             return max(0.0, min(1.0, x))
 
@@ -1034,13 +963,7 @@ class DreamEvolutionOrchestrator:
                 if bool(res.get("registered", False)):
                     count += 1
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_dream_evolution_orchestrator.py:952",
-                    exc=e,
-                    context={"function": "_apply_code_evolution", "handler_line": 952, "source_file": "aurora_internal/aurora_dream_evolution_orchestrator.py"},
-                )
+                _aurora_fault(locals(), e, '_apply_code_evolution', 952)
                 logger.debug(f"[DREAM-EVO] Genealogy fallback code-evolution entry skipped: {e}")
 
         return count

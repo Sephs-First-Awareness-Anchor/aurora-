@@ -97,7 +97,8 @@ CREATED: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_leverage_scalar.py')
 
 import math
 import random
@@ -733,25 +734,13 @@ if __name__ == "__main__":
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_internal/aurora_leverage_scalar.py:734",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 734, "source_file": "aurora_internal/aurora_leverage_scalar.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 734)
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_internal/aurora_leverage_scalar.py:739",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 739, "source_file": "aurora_internal/aurora_leverage_scalar.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 739)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

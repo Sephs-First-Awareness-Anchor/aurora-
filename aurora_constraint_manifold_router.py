@@ -79,7 +79,8 @@ DIVISION OF LABOUR
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_constraint_manifold_router.py')
 
 import json
 import math
@@ -1040,13 +1041,7 @@ class ManifoldRouter:
             try:
                 return _RouterProfile.from_dict(signal.source_profile)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_manifold_router.py:1000",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_resolve_source_profile", "handler_line": 1000, "source_file": "aurora_constraint_manifold_router.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_resolve_source_profile', 1000)
                 pass
         phase = getattr(signal.source_profile, "phase_state", "stable") if signal.source_profile else "stable"
         return _coord_profile(

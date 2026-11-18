@@ -19,7 +19,8 @@ Design constraints:
 - No dependencies on heavy Aurora systems; imports are local to each method
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/predictive_stager.py')
 
 import json
 import math
@@ -143,13 +144,7 @@ def _as_items(value: Any) -> List[Any]:
     try:
         return list(value)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/predictive_stager.py:144",
-            exc=_aurora_boundary_exc,
-            context={"function": "_as_items", "handler_line": 144, "source_file": "aurora_internal/dual_strata/predictive_stager.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_as_items', 144)
         return [value]
 
 
@@ -289,13 +284,7 @@ def _load_queue() -> List[Dict[str, Any]]:
         if _QUEUE_PATH.exists():
             return json.loads(_QUEUE_PATH.read_text()) or []
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/predictive_stager.py:283",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_queue", "handler_line": 283, "source_file": "aurora_internal/dual_strata/predictive_stager.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_queue', 283)
         pass
     return []
 
@@ -307,13 +296,7 @@ def _save_queue(frames: List[Dict[str, Any]]) -> None:
             json.dump(frames, f, indent=2)
         os.replace(tmp, str(_QUEUE_PATH))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/predictive_stager.py:294",
-            exc=_aurora_boundary_exc,
-            context={"function": "_save_queue", "handler_line": 294, "source_file": "aurora_internal/dual_strata/predictive_stager.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_save_queue', 294)
         pass
 
 
@@ -410,13 +393,7 @@ class PredictiveStager:
                 systems["_staged_subsurface_frame"] = frames[0]
             return len(frames)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/predictive_stager.py:390",
-                exc=_aurora_boundary_exc,
-                context={"function": "harvest_into_systems", "handler_line": 390, "source_file": "aurora_internal/dual_strata/predictive_stager.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'harvest_into_systems', 390)
             return 0
 
     @staticmethod
@@ -456,13 +433,7 @@ class PredictiveStager:
                         try:
                             wm_snapshot[attr] = list(val) if hasattr(val, "__iter__") and not isinstance(val, str) else val
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_internal/dual_strata/predictive_stager.py:429",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "stage_hypothesis", "handler_line": 429, "source_file": "aurora_internal/dual_strata/predictive_stager.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'stage_hypothesis', 429)
                             pass
 
             # Consciousness frame excerpt
@@ -495,13 +466,7 @@ class PredictiveStager:
             PredictiveStager.push_staged_frame(projection)
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/predictive_stager.py:461",
-                exc=_aurora_boundary_exc,
-                context={"function": "stage_hypothesis", "handler_line": 461, "source_file": "aurora_internal/dual_strata/predictive_stager.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'stage_hypothesis', 461)
             return False
 
     @staticmethod
@@ -546,13 +511,7 @@ class PredictiveStager:
             next_offset = (offset + n) % len(PRESSURE_PERSPECTIVES)
             return staged, next_offset
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/predictive_stager.py:505",
-                exc=_aurora_boundary_exc,
-                context={"function": "stage_passes_for_tick", "handler_line": 505, "source_file": "aurora_internal/dual_strata/predictive_stager.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'stage_passes_for_tick', 505)
             return 0, perspective_offset
 
     @staticmethod

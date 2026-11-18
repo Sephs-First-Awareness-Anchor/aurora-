@@ -28,7 +28,8 @@ This module is the FOUNDATION: birth-from-history + 15D-oriented divergent repla
 Standalone-verifiable; not yet wired into the live boot / dream cycle.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_possibility_selves.py')
 
 import hashlib
 import json
@@ -234,13 +235,7 @@ class PossibilitySelf:
                 try:
                     self._warp(anchor, felt)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_possibility_selves.py:235",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "live", "handler_line": 235, "source_file": "aurora_possibility_selves.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'live', 235)
                     pass
 
         # Divergent resolution: a self resolves a tension only where it LEANS toward
@@ -274,13 +269,7 @@ class PossibilitySelf:
                 try:
                     self._warp(anchor, felt)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_possibility_selves.py:268",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "live", "handler_line": 268, "source_file": "aurora_possibility_selves.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'live', 268)
                     pass
 
         if self.entity is not None and hasattr(self.entity, "process_experience"):
@@ -288,13 +277,7 @@ class PossibilitySelf:
                 ch = {tone: min(1.0, 0.4 + felt), dom: min(1.0, 0.3 + max(0.0, resonance))}
                 self.entity.process_experience({"channels": ch, "tone": tone})
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_possibility_selves.py:275",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "live", "handler_line": 275, "source_file": "aurora_possibility_selves.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'live', 275)
                 pass
 
     def identity_signature(self) -> Dict[str, Any]:
@@ -337,22 +320,10 @@ def _load_pressure_history(state_dir: str, limit: int = 0) -> List[Dict[str, Any
                 try:
                     out.append(json.loads(ln))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_possibility_selves.py:317",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_load_pressure_history", "handler_line": 317, "source_file": "aurora_possibility_selves.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_load_pressure_history', 317)
                     continue
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:319",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_pressure_history", "handler_line": 319, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_pressure_history', 319)
         return []
     if limit and len(out) > limit:
         out = out[-limit:]
@@ -411,13 +382,7 @@ def birth_possibility_selves(
     try:
         from aurora_simulation_engine import InceptionEntity
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:377",
-            exc=_aurora_boundary_exc,
-            context={"function": "birth_possibility_selves", "handler_line": 377, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'birth_possibility_selves', 377)
         InceptionEntity = None
 
     selves: List[PossibilitySelf] = []
@@ -433,13 +398,7 @@ def birth_possibility_selves(
                     i_state=_LEADING_TO_ISTATE.get(lead, "i_is"),
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_possibility_selves.py:392",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "birth_possibility_selves", "handler_line": 392, "source_file": "aurora_possibility_selves.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'birth_possibility_selves', 392)
                 vessel = None
         ps = PossibilitySelf(self_id=prof.name, profile=prof, orientation=orient, entity=vessel)
         ps._warp = warp_guard
@@ -490,13 +449,7 @@ def birth_possibility_selves(
                             vessel = InceptionEntity(entity_id=f"possibility::{sid}",
                                                      i_state=_LEADING_TO_ISTATE.get(lead, "i_is"))
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_possibility_selves.py:442",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "birth_possibility_selves", "handler_line": 442, "source_file": "aurora_possibility_selves.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'birth_possibility_selves', 442)
                             vessel = None
                     ps = PossibilitySelf(self_id=sid, profile=prof, orientation=orient, entity=vessel)
                     ps._warp = warp_guard
@@ -509,13 +462,7 @@ def birth_possibility_selves(
                         selves.append(ps)
                         resumed_ids.append(sid)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_possibility_selves.py:454",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "birth_possibility_selves", "handler_line": 454, "source_file": "aurora_possibility_selves.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'birth_possibility_selves', 454)
                     continue
 
     sigs = [ps.identity_signature() for ps in selves]
@@ -629,13 +576,7 @@ def _her_current_capacity(systems) -> Dict[str, float]:
             for a in _AXES:
                 cap[a] = float(ap.get(a, 0.0) or 0.0)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:567",
-            exc=_aurora_boundary_exc,
-            context={"function": "_her_current_capacity", "handler_line": 567, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_her_current_capacity', 567)
         pass
     return cap
 
@@ -678,13 +619,7 @@ def _reexp_state_dir(systems) -> str:
             if sd:
                 return str(sd)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:609",
-            exc=_aurora_boundary_exc,
-            context={"function": "_reexp_state_dir", "handler_line": 609, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_reexp_state_dir', 609)
         pass
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_state")
 
@@ -695,13 +630,7 @@ def _load_track_record(state_dir: str) -> Dict[str, Any]:
         with open(path, "r", encoding="utf-8") as fh:
             return json.load(fh)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:619",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_track_record", "handler_line": 619, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_track_record', 619)
         return {}
 
 
@@ -714,13 +643,7 @@ def persist_reexperience(buckets: Dict[str, Any], state_dir: str) -> Dict[str, A
     try:
         os.makedirs(state_dir, exist_ok=True)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:631",
-            exc=_aurora_boundary_exc,
-            context={"function": "persist_reexperience", "handler_line": 631, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'persist_reexperience', 631)
         pass
     stamp = time.time()
 
@@ -740,13 +663,7 @@ def persist_reexperience(buckets: Dict[str, Any], state_dir: str) -> Dict[str, A
                   encoding="utf-8") as fh:
             fh.write(json.dumps(line) + "\n")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:650",
-            exc=_aurora_boundary_exc,
-            context={"function": "persist_reexperience", "handler_line": 650, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'persist_reexperience', 650)
         pass
 
     # 2. Fold into the cumulative per-anchor track record.
@@ -784,13 +701,7 @@ def persist_reexperience(buckets: Dict[str, Any], state_dir: str) -> Dict[str, A
                   encoding="utf-8") as fh:
             json.dump(track, fh, indent=2)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:687",
-            exc=_aurora_boundary_exc,
-            context={"function": "persist_reexperience", "handler_line": 687, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'persist_reexperience', 687)
         pass
 
     return {
@@ -877,13 +788,7 @@ def provoke_reexperience(selves: List[PossibilitySelf], systems,
                             persistence_key=str(anchor)[:48],
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_possibility_selves.py:773",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "provoke_reexperience", "handler_line": 773, "source_file": "aurora_possibility_selves.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'provoke_reexperience', 773)
                         pass
             elif her_strength >= cost:
                 # She could meet it, but her gentle dose for this dream is spent --
@@ -959,13 +864,7 @@ def _resolve_relief_sink(systems):
             ConstraintGenealogyLogger as _CGL, PressureVec as _PV,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:848",
-            exc=_aurora_boundary_exc,
-            context={"function": "_resolve_relief_sink", "handler_line": 848, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_resolve_relief_sink', 848)
         return None, None
     if not isinstance(systems, dict):
         return None, None
@@ -1012,13 +911,7 @@ def crystal_authority(systems) -> Dict[str, Any]:
             out = {"available": True, "total": s.get("total"), "grounded": s.get("grounded"),
                    "dream_crystals": dream_crystals, "dream_facets": dream_facets}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:894",
-            exc=_aurora_boundary_exc,
-            context={"function": "crystal_authority", "handler_line": 894, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'crystal_authority', 894)
         pass
     return out
 
@@ -1035,13 +928,7 @@ def _deposit_dream_crystal(systems, anchor: str, axis: str) -> bool:
         reg.observe_lsa(_ax_from_axis(axis), f"dream_earned:{str(anchor)[:40]}")
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:910",
-            exc=_aurora_boundary_exc,
-            context={"function": "_deposit_dream_crystal", "handler_line": 910, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_deposit_dream_crystal', 910)
         return False
 
 
@@ -1072,13 +959,7 @@ def _feed_her_growth(systems, crystallised: List[Dict[str, Any]]) -> int:
                 })
                 fed += 1
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_possibility_selves.py:940",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_feed_her_growth", "handler_line": 940, "source_file": "aurora_possibility_selves.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_feed_her_growth', 940)
                 pass
         # THE authoritative home: register it in her real concept crystal store, so
         # "check the crystals" reflects her dream growth -- not just my side-ledger.
@@ -1095,13 +976,7 @@ def _feed_her_growth(systems, crystallised: List[Dict[str, Any]]) -> int:
                     "axis": c.get("axis"), "met": c.get("met"),
                 }) + "\n")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:956",
-            exc=_aurora_boundary_exc,
-            context={"function": "_feed_her_growth", "handler_line": 956, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_feed_her_growth', 956)
         pass
     if crystallised:
         try:
@@ -1113,13 +988,7 @@ def _feed_her_growth(systems, crystallised: List[Dict[str, Any]]) -> int:
                 f"{crystals_deposited} to concept crystals)",
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_possibility_selves.py:967",
-                exc=_aurora_boundary_exc,
-                context={"function": "_feed_her_growth", "handler_line": 967, "source_file": "aurora_possibility_selves.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_feed_her_growth', 967)
             pass
     return {"genealogy_reliefs": fed, "crystals_deposited": crystals_deposited,
             "crystallised": len(crystallised)}
@@ -1204,13 +1073,7 @@ def dream_dialogue(selves: List[PossibilitySelf], systems, warp_guard: Any = Non
                                 persistence_key=str(anchor)[:48],
                             )
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_possibility_selves.py:1051",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "dream_dialogue", "handler_line": 1051, "source_file": "aurora_possibility_selves.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'dream_dialogue', 1051)
                             pass
                     break
                 if her_strength >= cost:
@@ -1318,13 +1181,7 @@ def save_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
             json.dump(data, fh, indent=2)
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:1158",
-            exc=_aurora_boundary_exc,
-            context={"function": "save_self_arc", "handler_line": 1158, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'save_self_arc', 1158)
         return False
 
 
@@ -1352,13 +1209,7 @@ def log_selves_development(selves: List[PossibilitySelf], state_dir: str) -> Non
                     "fingerprint": sig.get("fingerprint"),
                 }) + "\n")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:1185",
-            exc=_aurora_boundary_exc,
-            context={"function": "log_selves_development", "handler_line": 1185, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'log_selves_development', 1185)
         pass
 
 
@@ -1368,13 +1219,7 @@ def load_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
         with open(path, "r", encoding="utf-8") as fh:
             data = json.load(fh)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:1194",
-            exc=_aurora_boundary_exc,
-            context={"function": "load_self_arc", "handler_line": 1194, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'load_self_arc', 1194)
         return False
     try:
         if data.get("orientation"):
@@ -1398,13 +1243,7 @@ def load_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
         ps.born_from = data.get("born_from")
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:1217",
-            exc=_aurora_boundary_exc,
-            context={"function": "load_self_arc", "handler_line": 1217, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'load_self_arc', 1217)
         return False
 
 
@@ -1512,13 +1351,7 @@ def birth_from_stagnation(state_dir: str, existing_selves: List[PossibilitySelf]
             if fn.endswith(".json"):
                 used.add(fn.rsplit("_", 1)[0])
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:1324",
-            exc=_aurora_boundary_exc,
-            context={"function": "birth_from_stagnation", "handler_line": 1324, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'birth_from_stagnation', 1324)
         pass
     name = next((n for n in _EXTRA_NAMES if n not in used), None)
     if name is None:
@@ -1538,13 +1371,7 @@ def birth_from_stagnation(state_dir: str, existing_selves: List[PossibilitySelf]
         vessel = InceptionEntity(entity_id=f"possibility::{name}",
                                  i_state=_LEADING_TO_ISTATE.get(lead, "i_is"))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:1343",
-            exc=_aurora_boundary_exc,
-            context={"function": "birth_from_stagnation", "handler_line": 1343, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'birth_from_stagnation', 1343)
         vessel = None
     ps = PossibilitySelf(self_id=name, profile=prof, orientation=orient, entity=vessel)
     ps._warp = warp_guard
@@ -1622,13 +1449,7 @@ def _archive_self(retiree: PossibilitySelf, state_dir: str) -> None:
         if os.path.exists(live):
             os.replace(live, dest)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_possibility_selves.py:1420",
-            exc=_aurora_boundary_exc,
-            context={"function": "_archive_self", "handler_line": 1420, "source_file": "aurora_possibility_selves.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_archive_self', 1420)
         pass
 
 
@@ -1655,13 +1476,7 @@ def rebalance_council(selves: List[PossibilitySelf], systems, state_dir: str,
         try:
             selves.remove(retiree)
         except ValueError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_possibility_selves.py:1446",
-                exc=_aurora_boundary_exc,
-                context={"function": "rebalance_council", "handler_line": 1446, "source_file": "aurora_possibility_selves.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'rebalance_council', 1446)
             pass
         action["retired"] = retiree.self_id
     # The axis the council most over-resolves is where holding is most absent.

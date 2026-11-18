@@ -20,7 +20,8 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_dream_curriculum_queue.py')
 
 import json
 import os
@@ -103,13 +104,7 @@ class DreamCurriculumQueue:
                         requeue_recommended=rec.get("requeue_recommended", False),
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_dream_curriculum_queue.py:105",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_load_history", "handler_line": 105, "source_file": "aurora_internal/aurora_dream_curriculum_queue.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_load_history', 105)
                 pass
 
     def _save_history(self):

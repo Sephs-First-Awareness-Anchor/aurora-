@@ -24,7 +24,8 @@ threading positive/negative back in -- is deferred, same posture as
 this session's other Phase 4-6 deferrals).
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/variant_transition_predictor.py')
 
 import json
 import os
@@ -115,13 +116,7 @@ class VariantTransitionPredictor:
                 if rec.from_variant_id and rec.to_variant_id:
                     self._transitions[(rec.from_variant_id, rec.to_variant_id)] = rec
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/variant_transition_predictor.py:125",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load", "handler_line": 125, "source_file": "aurora_internal/dual_strata/variant_transition_predictor.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load', 125)
             pass
 
     def save(self) -> bool:
@@ -144,13 +139,7 @@ class VariantTransitionPredictor:
             self._dirty = False
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/variant_transition_predictor.py:147",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 147, "source_file": "aurora_internal/dual_strata/variant_transition_predictor.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 147)
             return False
 
     def observe(self, variant_id: Optional[str], *, positive: Optional[bool] = None) -> Optional[TransitionRecord]:

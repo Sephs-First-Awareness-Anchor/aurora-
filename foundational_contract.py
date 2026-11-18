@@ -63,7 +63,8 @@ Created: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'foundational_contract.py')
 from enum import IntEnum
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, FrozenSet, Set, List
@@ -79,13 +80,7 @@ try:
     )
     CONSTRAINT_MANIFOLD_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:foundational_contract.py:80",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 80, "source_file": "foundational_contract.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 80)
     CONSTRAINT_MANIFOLD_AVAILABLE = False
     # Fallback if running standalone
     class Constraint:
@@ -815,13 +810,7 @@ def verify_foundational_contract() -> Dict[str, Any]:
                 'mode': mode.name, 'passed': True
             })
         except AssertionError as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:foundational_contract.py:809",
-                exc=e,
-                context={"function": "verify_foundational_contract", "handler_line": 809, "source_file": "foundational_contract.py"},
-            )
+            _aurora_fault(locals(), e, 'verify_foundational_contract', 809)
             results['axiom_checks'].append({
                 'mode': mode.name, 'passed': False, 'error': str(e)
             })
@@ -893,13 +882,7 @@ def verify_foundational_contract() -> Dict[str, Any]:
             claim = contract.make_claim(mode, predicate)
             succeeded = True
         except OntologicalViolation as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:foundational_contract.py:880",
-                exc=_aurora_boundary_exc,
-                context={"function": "verify_foundational_contract", "handler_line": 880, "source_file": "foundational_contract.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'verify_foundational_contract', 880)
             succeeded = False
 
         passed = succeeded == should_succeed
@@ -955,13 +938,7 @@ def verify_foundational_contract() -> Dict[str, Any]:
                     if not count_match:
                         results['all_passed'] = False
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:foundational_contract.py:935",
-                    exc=e,
-                    context={"function": "verify_foundational_contract", "handler_line": 935, "source_file": "foundational_contract.py"},
-                )
+                _aurora_fault(locals(), e, 'verify_foundational_contract', 935)
                 results['constraint_alignment_checks'].append({
                     'mode': mode.name,
                     'check': 'ConstraintVector generation',

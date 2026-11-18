@@ -1,6 +1,7 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/subsurface_state.py')
 
 import time
 from dataclasses import dataclass, field
@@ -13,13 +14,7 @@ def clip01(value, default=0.0):
     try:
         return max(0.0, min(1.0, float(value or 0.0)))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/subsurface_state.py:14",
-            exc=_aurora_boundary_exc,
-            context={"function": "clip01", "handler_line": 14, "source_file": "aurora_internal/dual_strata/subsurface_state.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'clip01', 14)
         return max(0.0, min(1.0, float(default or 0.0)))
 
 def normalize_axis_map(values):

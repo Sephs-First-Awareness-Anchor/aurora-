@@ -8,6 +8,8 @@ operational abilities are not reclassified differently by module.
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/lineage_canonical.py')
 
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 import json
@@ -229,13 +231,7 @@ def _load_generated_constraints() -> Dict[str, Tuple[str, ...]]:
                 out[k] = tuple(labels)
         return out
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/lineage_canonical.py:156",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_generated_constraints", "handler_line": 156, "source_file": "aurora_internal/lineage_canonical.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_generated_constraints', 156)
         return {}
 
 
