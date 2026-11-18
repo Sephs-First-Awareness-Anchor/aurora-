@@ -11,6 +11,19 @@ _active_resolutions, resolution genealogy, SediMemory, or resolve_field().
 Only failure of the complete currently-relevant structural projection frontier
 permits the original Build 714 field-inquiry path to run.
 
+Pressure observation and projection-capable consumption are intentionally
+separate. A subsystem that merely reports consequence against a
+RepresentationalRef may increase inadequacy pressure, but it may not stage or
+complete a projection it never actually used. Real consumers opt into the
+ordinary provisional-resolution/effect/evaluation chain, so an inquiry opens
+from her own provisional read of something, not from raw traffic.
+
+The structural mirror search is intentionally amortized. One inadequacy episode
+builds a transient projection frontier once, consumes it one lens at a time,
+and performs at most one structural refresh when that frontier is exhausted.
+A hypothetical peek reads that cached frontier when one exists and otherwise
+scans without charging cost or caching.
+
 Authors: Sunni (Sir) Morningstar & Ceph
 """
 from __future__ import annotations
@@ -176,9 +189,9 @@ class RepresentationalResolutionEngine(_BaseEngine):
             self._projection_events = []
         if not hasattr(self, "_projection_resolution_hold"):
             self._projection_resolution_hold = False
-        # Optic episodes keyed by ref.  Nothing caches a frontier here any more
-        # (it is rebuilt from the real mirrors each time), but the episode-end
-        # hooks still clear this slot, so it must exist.
+        # One cached projection frontier per inadequacy episode, keyed by ref.
+        # Cleared when the episode ends (pressure resolved or a field inquiry
+        # completed).
         if not hasattr(self, "_projection_frontiers"):
             self._projection_frontiers = {}
 
@@ -188,6 +201,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         self._projection_events.append({
             "ref": ref.encode(),
             "projection_id": candidate.get("projection_id"),
+            "projection_view_key": candidate.get("projection_view_key"),
             "projected_ref": candidate.get("projected_ref"),
             "pressure_perspective": list(candidate.get("pressure_perspective") or ()),
             "exposed_fields": dict(candidate.get("exposed_fields") or {}),
@@ -303,6 +317,218 @@ class RepresentationalResolutionEngine(_BaseEngine):
             ref, self._projection_sources(candidates), max_projections=None,
         )
 
+    def _candidate_pool(self, ref: RepresentationalRef) -> List[Dict[str, Any]]:
+        """Ask Build 714 for the full typed candidate capacity when supported."""
+        capacity = max(1, _complete_candidate_capacity(ref))
+        try:
+            return list(
+                self.unresolved_field_candidates(ref, max_candidates=capacity) or []
+            )
+        except TypeError:
+            return list(self.unresolved_field_candidates(ref) or [])
+
+    def _projection_sources_from_candidates(
+        self, candidates: Sequence[Dict[str, Any]]
+    ) -> List[Tuple[str, RepresentationalRef, Dict[str, Any]]]:
+        sources: Dict[str, Tuple[str, RepresentationalRef, Dict[str, Any]]] = {}
+        for candidate in candidates:
+            if str(candidate.get("origin") or "") == "domain_hypothesis":
+                continue
+            source_id = str(candidate.get("counterpart_ability_id") or "")
+            if not source_id or source_id in sources:
+                continue
+            source_ref = self._ref_from_ability_id(source_id)
+            if source_ref is None:
+                continue
+            evidence = dict(candidate.get("evidence") or {})
+            evidence.setdefault(
+                "structural_pressure", float(candidate.get("pressure", 0.0) or 0.0)
+            )
+            evidence.setdefault("candidate_source", str(candidate.get("source") or ""))
+            sources[source_id] = (source_id, source_ref, evidence)
+        return list(sources.values())
+
+    @staticmethod
+    def _field_candidates_from_structural_sources(
+        ref: RepresentationalRef,
+        sources: Sequence[Tuple[str, RepresentationalRef, Dict[str, Any]]],
+    ) -> List[Dict[str, Any]]:
+        """Reuse the mirror scan as Build 714 field-candidate evidence.
+
+        After every structural perspective has genuinely failed, there is no
+        reason to rescan genealogy merely to recover the same counterpart
+        field/value pairs. This reconstructs the ordinary Build 714 candidate
+        shape from the already-returned real source refs and their native
+        inquiry provenance. It grants no authority; the normal staged inquiry
+        and consequence test still decide retention.
+        """
+        best: Dict[Tuple[str, Any], Dict[str, Any]] = {}
+        for source_id, source_ref, evidence in sources:
+            evidence = dict(evidence or {})
+            finder = str(evidence.get("structural_finder") or "structural")
+            inquiry_id = str(evidence.get("structural_inquiry_id") or "")
+            try:
+                pressure = float(evidence.get("structural_pressure", 0.0) or 0.0)
+            except Exception:
+                pressure = 0.0
+            for field_name in ref.unresolved_fields():
+                value = getattr(source_ref, field_name, None)
+                if value is None:
+                    continue
+                key = (field_name, value)
+                candidate = {
+                    "field": field_name,
+                    "candidate_value": value,
+                    "source": f"{finder}:{inquiry_id or source_id}",
+                    "inquiry_id": inquiry_id,
+                    "counterpart_ability_id": str(source_id),
+                    "evidence": dict(evidence),
+                    "pressure": pressure,
+                }
+                previous = best.get(key)
+                if previous is None or (
+                    -pressure,
+                    str(source_id),
+                ) < (
+                    -float(previous.get("pressure", 0.0) or 0.0),
+                    str(previous.get("counterpart_ability_id") or ""),
+                ):
+                    best[key] = candidate
+        return [best[key] for key in sorted(best, key=lambda item: (item[0], str(item[1])))]
+
+    def _native_structural_finders_available(self) -> bool:
+        return any(
+            callable(getattr(self.genealogy, name, None))
+            for name in (
+                "representation_collision_candidates",
+                "representation_gap_candidates",
+            )
+        )
+
+    def _projection_sources_for_ref(
+        self, ref: RepresentationalRef
+    ) -> List[Tuple[str, RepresentationalRef, Dict[str, Any]]]:
+        """Read the currently available real structural mirror sources.
+
+        Production prefers genealogy's native collision/gap search so a whole
+        counterpart representation remains visible even when several of its
+        fields duplicate values found elsewhere. Alternate/test genealogies
+        without those finder methods fall back to Build 714's candidate
+        surface. Domain hypotheses are never accepted as mirrors.
+        """
+        unresolved = ref.unresolved_fields()
+        if not unresolved or self.inadequacy_pressure(ref) <= 0.0:
+            return []
+
+        finder_specs = (
+            ("collision", getattr(self.genealogy, "representation_collision_candidates", None)),
+            ("gap", getattr(self.genealogy, "representation_gap_candidates", None)),
+        )
+        if not self._native_structural_finders_available():
+            return self._projection_sources_from_candidates(self._candidate_pool(ref))
+
+        ability_id = self.ensure_registered(ref)
+        coarse_key = ref.encode()
+        from aurora_internal.constraint_genealogy import TraceItem
+
+        sources: Dict[str, Tuple[str, RepresentationalRef, Dict[str, Any]]] = {}
+        for finder_name, finder in finder_specs:
+            if not callable(finder):
+                continue
+            try:
+                found = finder([TraceItem(kind="ABILITY", id=ability_id)])
+            except Exception:
+                found = []
+            self._cost_ledger[coarse_key] = (
+                self._cost_ledger.get(coarse_key, 0.0) + float(len(found))
+            )
+            for entry in found:
+                counterpart_id = str(entry.get("counterpart_representation_id", "") or "")
+                if not counterpart_id or counterpart_id in sources:
+                    continue
+                counterpart_ref = self._ref_from_ability_id(counterpart_id)
+                if counterpart_ref is None:
+                    continue
+                sources[counterpart_id] = (
+                    counterpart_id,
+                    counterpart_ref,
+                    {
+                        "structural_finder": finder_name,
+                        "structural_inquiry_id": str(
+                            entry.get("collision_id") or entry.get("gap_id") or ""
+                        ),
+                        "structural_pressure": float(entry.get("pressure", 0.0) or 0.0),
+                        **dict(entry.get("evidence", {}) or {}),
+                    },
+                )
+        return list(sources.values())
+
+    def _discover_projection_frontier(self, ref: RepresentationalRef) -> Dict[str, Any]:
+        sources = self._projection_sources_for_ref(ref)
+        projections = build_perspective_projections(
+            ref, sources, max_projections=None
+        )
+        return {
+            "projections": projections,
+            "sources": list(sources),
+            "structural_candidates": self._field_candidates_from_structural_sources(
+                ref, sources
+            ),
+            "source_count": len(sources),
+            "refresh_used": False,
+        }
+
+    def _frontier_for_ref(self, ref: RepresentationalRef) -> Dict[str, Any]:
+        self._projection_state()
+        key = ref.encode()
+        frontier = self._projection_frontiers.get(key)
+        if not isinstance(frontier, dict):
+            frontier = self._discover_projection_frontier(ref)
+            self._projection_frontiers[key] = frontier
+        return frontier
+
+    def _projection_was_attempted(self, projection: Dict[str, Any]) -> bool:
+        pid = str(projection.get("projection_id") or "")
+        view_key = str(projection.get("projection_view_key") or "")
+        return bool(
+            (pid and self._projection_attempt_counts.get(pid, 0) > 0)
+            or (view_key and self._projection_attempt_counts.get(view_key, 0) > 0)
+        )
+
+    def _refresh_frontier_once(
+        self, ref: RepresentationalRef, frontier: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        if frontier.get("refresh_used"):
+            return frontier
+        refreshed = self._discover_projection_frontier(ref)
+        refreshed["refresh_used"] = True
+        self._projection_frontiers[ref.encode()] = refreshed
+        return refreshed
+
+    def _stage_projection(
+        self,
+        ref: RepresentationalRef,
+        candidate: Dict[str, Any],
+        *,
+        consumer: str,
+        context_scope: Optional[str],
+        available_projection_count: int,
+    ) -> Dict[str, Any]:
+        key = ref.encode()
+        self._active_stage_for_ref[key] = {
+            "mode": "perspective_projection",
+            "stage": None,
+            "candidate": candidate,
+            "consumer": consumer,
+            "context_scope": context_scope,
+            "candidate_selection": "progressive_least_dimensional_then_structural_pressure",
+            "available_projection_count": int(available_projection_count),
+        }
+        self._provisional_reads[key] = 0
+        self._candidate_downstream_effects.pop(key, None)
+        self._projection_event(ref, self._active_stage_for_ref[key], "staged")
+        return self._active_stage_for_ref[key]
+
     def _stage_field_after_projection(self, ref, candidates, consumer, context_scope):
         if not candidates:
             return None
@@ -339,19 +565,26 @@ class RepresentationalResolutionEngine(_BaseEngine):
     def _field_candidates_after_frontier(
         self, ref: RepresentationalRef, frontier: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
+        if not self._native_structural_finders_available():
+            # The frontier came from Build 714's candidate surface, not a
+            # native scan, so ask that surface again at full typed capacity.
+            return self._candidate_pool(ref)
         structural = list(frontier.get("structural_candidates") or [])
         if structural:
             return structural
-        if self._native_structural_finders_available():
-            # We already performed the native structural scan and found no real
-            # mirror. Go directly to Build 714's lawful-domain bootstrap rather
-            # than paying for the same empty search again.
-            return list(self._bootstrap_domain_hypotheses(
-                ref,
-                ref.unresolved_fields(),
-                max(1, _complete_candidate_capacity(ref)),
-            ) or [])
-        return self._candidate_pool(ref)
+        # We already performed the native structural scan and found no real
+        # mirror. Go directly to Build 714's lawful-domain bootstrap rather
+        # than paying for the same empty search again, with Build 714's own
+        # per-pass bound.  Domain hypotheses are not evidence, and the bound is
+        # what walks them one field at a time: at full capacity every
+        # unresolved field is offered at once, and a finer field (sub_law_d,
+        # col_law_d) can be staged before the field it refines, where its
+        # provisional view changes nothing downstream and is never evaluated.
+        return list(self._bootstrap_domain_hypotheses(
+            ref,
+            ref.unresolved_fields(),
+            _base.MAX_CANDIDATE_FIELDS_PER_PASS,
+        ) or [])
 
     def investigate_if_pressured(self, ref, *, consumer="auto", context_scope=None):
         self._projection_state()
@@ -361,79 +594,58 @@ class RepresentationalResolutionEngine(_BaseEngine):
         if key in self._active_stage_for_ref or self.inadequacy_pressure(ref) <= 0.0:
             return None
 
-        # Structural mirrors are searched without the old five-candidate
-        # epistemic cutoff. One cheapest untried view is staged at a time.
-        structural = self._structural_projection_candidates(ref, charge_cost=True)
-        if structural:
-            staged = self._stage_next_projection(ref, structural, consumer, context_scope)
-            if staged is not None:
-                return staged
-
-            # Real structural mirrors existed and every lawful projection over
-            # them has been tried. Only now may one of those structural field
-            # candidates enter Build 714's retained-resolution inquiry.
-            return self._stage_field_after_projection(
-                ref, structural, consumer, context_scope,
+        # Discover mirrors once, then progressively spend only one projected
+        # view at a time. Failed lenses do not trigger another genealogy scan.
+        frontier = self._frontier_for_ref(ref)
+        projections = list(frontier.get("projections") or [])
+        untried = [
+            projection for projection in projections
+            if not self._projection_was_attempted(projection)
+        ]
+        if untried:
+            return self._stage_projection(
+                ref,
+                untried[0],
+                consumer=consumer,
+                context_scope=context_scope,
+                available_projection_count=len(projections),
             )
 
-        # No real structural mirror exists. There is nothing to project. Hand
-        # control back to Build 714's original bounded candidate generator,
-        # which may form explicitly non-evidentiary lawful-domain hypotheses.
-        candidates = self.unresolved_field_candidates(ref)
+        # At the apparent end of the cached frontier, permit exactly one fresh
+        # structural scan. If a newly available view appears, consume it before
+        # resolution. Otherwise this inadequacy episode has genuinely exhausted
+        # every structural perspective currently available to Aurora.
+        if projections and not frontier.get("refresh_used"):
+            frontier = self._refresh_frontier_once(ref, frontier)
+            projections = list(frontier.get("projections") or [])
+            untried = [
+                projection for projection in projections
+                if not self._projection_was_attempted(projection)
+            ]
+            if untried:
+                return self._stage_projection(
+                    ref,
+                    untried[0],
+                    consumer=consumer,
+                    context_scope=context_scope,
+                    available_projection_count=len(projections),
+                )
+
+        if projections:
+            self._projection_frontier_event(
+                ref,
+                outcome="frontier_exhausted",
+                projection_count=len(projections),
+                attempted_count=sum(
+                    1 for projection in projections
+                    if self._projection_was_attempted(projection)
+                ),
+            )
+
+        candidates = self._field_candidates_after_frontier(ref, frontier)
         if not candidates:
             return None
-        # Ordering-invariant guard.  The two generators use the same collision
-        # and gap finders, so today a real mirror found here was also found by
-        # the uncapped scan above.  But the invariant must not depend on the
-        # two staying in agreement: a candidate backed by a REAL structural
-        # counterpart is a mirror whichever generator surfaced it, and a
-        # mirror is projected before any field inquiry.  Domain hypotheses are
-        # never mirrors and never take this path.
-        mirrors = [
-            c for c in candidates
-            if str(c.get("origin") or "") in ("collision", "gap")
-            and self._ref_from_ability_id(str(c.get("counterpart_ability_id") or "")) is not None
-        ]
-        if mirrors:
-            staged = self._stage_next_projection(ref, mirrors, consumer, context_scope)
-            if staged is not None:
-                return staged
-        return self._stage_field_after_projection(
-            ref, candidates, consumer, context_scope,
-        )
-
-    def _stage_next_projection(self, ref, mirrors, consumer, context_scope):
-        """Stage the cheapest untried lawful projection over real mirrors.
-
-        Returns the staged record, or None when every lawful projection over
-        these mirrors has already been tried (the frontier is exhausted and
-        field inquiry may proceed).  One implementation, used by both the
-        primary structural route and the compatibility guard, so the two can
-        never stage projection differently.
-        """
-        key = ref.encode()
-        projections = self._projection_frontier(ref, mirrors)
-        untried = [
-            p for p in projections
-            if self._projection_attempt_counts.get(p["projection_id"], 0) == 0
-        ]
-        if not untried:
-            return None
-        candidate = dict(untried[0])
-        candidate["projection_frontier_size"] = len(projections)
-        candidate["projection_frontier_remaining"] = len(untried)
-        self._active_stage_for_ref[key] = {
-            "mode": "perspective_projection",
-            "stage": None,
-            "candidate": candidate,
-            "consumer": consumer,
-            "context_scope": context_scope,
-            "candidate_selection": "progressive_least_dimensional_lawful_projection",
-        }
-        self._provisional_reads[key] = 0
-        self._candidate_downstream_effects.pop(key, None)
-        self._projection_event(ref, self._active_stage_for_ref[key], "staged")
-        return self._active_stage_for_ref[key]
+        return self._stage_field_after_projection(ref, candidates, consumer, context_scope)
 
     def _projection_view_record(self, ref, candidate, *, consumer, context_scope, observed):
         try:
@@ -484,14 +696,15 @@ class RepresentationalResolutionEngine(_BaseEngine):
         if self.inadequacy_pressure(ref) <= 0.0:
             return None
 
-        structural = self._structural_projection_candidates(ref, charge_cost=False)
-        if not structural:
-            return None
-        projections = self._projection_frontier(ref, structural)
-        untried = [
-            p for p in projections
-            if self._projection_attempt_counts.get(p["projection_id"], 0) == 0
-        ]
+        frontier = self._projection_frontiers.get(key)
+        if isinstance(frontier, dict):
+            projections = list(frontier.get("projections") or [])
+        else:
+            structural = self._structural_projection_candidates(ref, charge_cost=False)
+            if not structural:
+                return None
+            projections = self._projection_frontier(ref, structural)
+        untried = [p for p in projections if not self._projection_was_attempted(p)]
         if not untried:
             return None
         candidate = dict(untried[0])
@@ -722,8 +935,15 @@ class RepresentationalResolutionEngine(_BaseEngine):
         notes=None,
         consumer="observer",
     ):
-        """Record consequence pressure without claiming projection consumption."""
+        """Record consequence pressure without claiming projection consumption.
+
+        An observation is not a read: a real consumer's pending projection and
+        its provisional read count stay exactly as that consumer left them.
+        """
         self._projection_state()
+        key = ref.encode()
+        pending = self._active_stage_for_ref.get(key)
+        reads_before = int(self._provisional_reads.get(key, 0) or 0)
         previous_hold = self._projection_resolution_hold
         self._projection_resolution_hold = True
         try:
@@ -741,6 +961,9 @@ class RepresentationalResolutionEngine(_BaseEngine):
             )
         finally:
             self._projection_resolution_hold = previous_hold
+        if pending is not None and pending.get("mode") == "perspective_projection":
+            self._active_stage_for_ref[key] = pending
+            self._provisional_reads[key] = reads_before
         self._clear_frontier_if_pressure_resolved(ref)
         return result
 
@@ -752,7 +975,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
         if pending is None or pending.get("mode") != "perspective_projection":
-            return super().record_participation(
+            result = super().record_participation(
                 ref,
                 pressure_before=pressure_before,
                 pressure_after=pressure_after,
@@ -763,6 +986,8 @@ class RepresentationalResolutionEngine(_BaseEngine):
                 consumer=consumer,
                 candidate_evaluation=candidate_evaluation,
             )
+            self._clear_frontier_if_pressure_resolved(ref)
+            return result
 
         self._active_stage_for_ref.pop(key, None)
         previous_hold = self._projection_resolution_hold
@@ -785,6 +1010,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         outcome = self._projection_consequence(ref, pending, candidate_evaluation)
         if outcome == "adequate" and self.inadequacy_pressure(ref) <= 0.0:
             self._projection_event(ref, pending, "released_pressure_resolved")
+            self._projection_frontiers.pop(key, None)
         elif outcome in ("adequate", "untested", "pending_evidence"):
             self._active_stage_for_ref[key] = pending
         else:
@@ -872,7 +1098,15 @@ def actualize_projection_for_ref(systems, peeked_view, *, consumer="cognition",
 def record_ref_participation_from_scores(systems, ref_encoded, dimension_scores, *, source,
                                          context_tag="", extra_trace_ids=None,
                                          candidate_evaluation=None):
-    """Original Build 714 bridge, routed through the perspective-aware factory."""
+    """Bridge real evaluation scores into resolution pressure.
+
+    With ``candidate_evaluation`` the caller already supplies the causal
+    before/after record that tests a provisional view, so the full
+    projection/refinement path runs.  Without it the caller is an
+    observational pressure source: its scores update the genealogy
+    consequence profile, and the next real ``provisional_resolution()``
+    reader opens the perspective frontier.
+    """
     if not ref_encoded or not dimension_scores:
         return
     engine = get_or_create_engine(systems)
@@ -903,20 +1137,29 @@ def record_ref_participation_from_scores(systems, ref_encoded, dimension_scores,
         for trace_id in (extra_trace_ids or [])
     ]
     try:
-        # Every score still goes to record_participation, as on main: raw
-        # Habitat traffic keeps staging inquiry from pressure alone.  The
-        # progressive branch routed scores without a candidate evaluation to
-        # record_pressure_observation instead, so only her own provisional
-        # reads open an inquiry; that is a change in when she inquires, left
-        # for Sir to choose (record_pressure_observation is kept for it).
-        engine.record_participation(
-            ref,
-            pressure_before=before,
-            pressure_after=after,
-            source=source,
-            context_tag=context_tag,
-            extra_trace=trace,
-            candidate_evaluation=candidate_evaluation,
-        )
+        # Scores with no candidate evaluation are observation: they build
+        # inadequacy pressure but cannot stage or complete an inquiry.  Her
+        # next real provisional read of this ref is the demand edge that opens
+        # one.  Scores that carry a candidate evaluation come from a consumer
+        # that used the provisional view, so they take the full path.
+        if candidate_evaluation is None:
+            engine.record_pressure_observation(
+                ref,
+                pressure_before=before,
+                pressure_after=after,
+                source=source,
+                context_tag=context_tag,
+                extra_trace=trace,
+            )
+        else:
+            engine.record_participation(
+                ref,
+                pressure_before=before,
+                pressure_after=after,
+                source=source,
+                context_tag=context_tag,
+                extra_trace=trace,
+                candidate_evaluation=candidate_evaluation,
+            )
     except Exception:
         pass
