@@ -573,7 +573,10 @@ class StrataLinkServer:
                 "migrations": [m for m in (data.get("migrations") or []) if isinstance(m, dict)][-20:],
                 "owner_epochs": self._owner_epochs(data),
                 # epoch -> the last lived seq its holder had when it froze
-                "sealed": {str(k): int(v or 0) for k, v in dict(data.get("sealed") or {}).items()}}
+                "sealed": {str(k): int(v or 0) for k, v in dict(data.get("sealed") or {}).items()},
+                # surface_id -> its first-pairing migration (strata_migration)
+                "first_pairing": {str(k): dict(v) for k, v in dict(data.get("first_pairing") or {}).items()
+                                  if isinstance(v, dict)}}
 
     @staticmethod
     def _owner_epochs(data: Mapping[str, Any]) -> Dict[str, str]:
@@ -592,6 +595,9 @@ class StrataLinkServer:
         state["owner"] = surface_id
         state["claimed_at"] = now
         state["owner_epochs"][str(state["epoch"])] = surface_id
+        if (state["first_pairing"].get(surface_id) or {}).get("tail_open"):
+            # From here its records are the holder's and are applied directly.
+            state["first_pairing"][surface_id]["tail_open"] = False
         # Staged downlink was prepared for the previous owner's numbering; the
         # new owner starts its own.
         self.outbox.ack(10 ** 18)
@@ -605,7 +611,9 @@ class StrataLinkServer:
         late).  Anything else waits on the device, unacknowledged, exactly as
         a standby device's records always have: kept, never dropped."""
         owned = {int(e) for e, sid in state["owner_epochs"].items() if sid == surface_id}
-        if not owned:
+        tail = state["first_pairing"].get(surface_id) or {}
+        tail_from = int(tail.get("lived_seq", 0) or 0) if tail.get("tail_open") else None
+        if not owned and tail_from is None:
             return up_ack
         for record in sorted(records, key=lambda r: int(r.get("seq", 0) or 0)):
             seq = int(record.get("seq", 0) or 0)
@@ -617,11 +625,24 @@ class StrataLinkServer:
                 break
             if str(payload.get("surface_id") or surface_id) != surface_id:
                 break
-            if payload.get("epoch") is not None:
+            lived_seq = int(payload.get("seq", 0) or 0)
+            if tail_from is not None and lived_seq and lived_seq <= tail_from:
+                # Lived before its first-pairing snapshot: already home in the
+                # migrated stores.
+                self.counters["duplicates"] += 1
+                up_ack = seq
+                state["applied"][surface_id] = seq
+                _atomic_write_json(self._state_path, state)
+                continue
+            if tail_from is not None and lived_seq > tail_from:
+                pass  # lived as a whole mind while its migration waited: integrate once
+            elif payload.get("epoch") is not None:
                 lived_epoch = int(payload.get("epoch") or 0)
                 sealed = state["sealed"].get(str(lived_epoch))
-                if lived_epoch not in owned or (sealed is not None and int(payload.get("seq", 0) or 0) > int(sealed)):
+                if lived_epoch not in owned or (sealed is not None and lived_seq > int(sealed)):
                     break
+            elif not owned:
+                break
             try:
                 outcome = apply_uplink_record(self.state_dir, record, late=True)
             except Exception as exc:
@@ -750,7 +771,18 @@ class StrataLinkServer:
                 self._take_ownership(state, surface_id, now)
                 self._drop_handoff()
                 return {"ok": True, "cancelled": True}
-            if not active:
+            if name == "migration_status":
+                from aurora_internal.dual_strata import strata_migration as sm
+                status = sm.status_for(self.state_dir, surface_id)
+                record = state["first_pairing"].get(surface_id)
+                if status.get("status") == "applied" and record and record.get("status") != "applied":
+                    record.update(status="applied", tail_open=True,
+                                  lived_seq=int((status.get("receipt") or {}).get("lived_seq", 0) or 0))
+                return {"ok": True, **status}
+            tid_hint = str(op.get("transfer_id") or "")
+            migrating = (name == "offer" and str(op.get("purpose") or "") == "migrate") or \
+                (name in ("chunk", "commit") and tid_hint.startswith("migrate-"))
+            if not active and not migrating:
                 return {"ok": False, "error": "not_active_surface"}
             if name in ("offer", "chunk", "commit"):
                 tid = "".join(c for c in str(op.get("transfer_id") or "") if c.isalnum() or c in "-_")[:80]
@@ -759,8 +791,10 @@ class StrataLinkServer:
                 transfer = st.IncomingTransfer(self._staging_root(), tid)
                 if name == "offer":
                     purpose = str(op.get("purpose") or "")
-                    if purpose not in ("seed", "handoff"):
-                        return {"ok": False, "error": "purpose must be seed or handoff"}
+                    if purpose not in ("seed", "handoff", "migrate"):
+                        return {"ok": False, "error": "purpose must be seed, handoff or migrate"}
+                    if purpose == "migrate" and not tid.startswith("migrate-"):
+                        return {"ok": False, "error": "a migration's transfer id starts with migrate-"}
                     manifest = st.validate_manifest(op.get("manifest"))
                     digest = st.manifest_digest(manifest)
                     if transfer.exists() and st.manifest_digest(transfer.raw_manifest()) != digest:
@@ -768,7 +802,8 @@ class StrataLinkServer:
                     if not transfer.exists():
                         transfer.begin(manifest, meta={"purpose": purpose, "from": surface_id,
                                                        "epoch": state["epoch"], "at": now,
-                                                       "digest": digest})
+                                                       "digest": digest,
+                                                       "lived_seq": int(op.get("lived_seq", 0) or 0)})
                     complete = set(transfer.complete_paths())
                     if purpose == "seed":
                         for row in manifest:
@@ -782,6 +817,9 @@ class StrataLinkServer:
                     return {"ok": True, "have": sorted(complete), "digest": digest}
                 if not transfer.exists():
                     return {"ok": False, "error": "unknown_transfer"}
+                if migrating and (transfer.meta().get("purpose") != "migrate"
+                                  or transfer.meta().get("from") != surface_id):
+                    return {"ok": False, "error": "not_this_devices_migration"}
                 if name == "chunk":
                     return transfer.put_chunk(str(op.get("path") or ""), int(op.get("offset", 0) or 0),
                                               str(op.get("data") or ""))
@@ -789,6 +827,15 @@ class StrataLinkServer:
                 if bad:
                     return {"ok": False, "error": "incomplete", "bad": bad[:20], "bad_count": len(bad)}
                 meta, manifest = transfer.meta(), transfer.raw_manifest()
+                if meta.get("purpose") == "migrate":
+                    # Staged only: home's live state is untouched until Sir's
+                    # choices are made and it is applied cold.
+                    from aurora_internal.dual_strata import strata_migration as sm
+                    staged = sm.stage_received(self.state_dir, transfer.root, tid, meta=meta, manifest=manifest)
+                    state["first_pairing"][surface_id] = {"migration_id": tid, "status": "staged", "at": now,
+                                                          "lived_seq": int(meta.get("lived_seq", 0) or 0),
+                                                          "tail_open": False}
+                    return {"ok": True, "purpose": "migrate", **staged}
                 if meta.get("purpose") == "handoff" and not op.get("source_frozen"):
                     # One holder at a time: the source must already be fenced
                     # on its own disk before home holds its checkpoint.
@@ -1214,7 +1261,9 @@ class StrataLinkClient:
         from aurora_internal.dual_strata.strata_state_transfer import TransferError
         response = self._call({"state_op": op, **extra})
         result = response.get("state_result")
-        if response.get("role") != "active":
+        # A first-pairing migration is staged from a standby device.
+        standby_ok = op.get("op") == "migration_status" or str(op.get("transfer_id") or "").startswith("migrate-")
+        if response.get("role") != "active" and not standby_ok:
             raise TransferError(f"this device is not the active Surface ({response.get('error') or 'standby'})")
         if isinstance(result, dict) and "expected_offset" in result:
             return result  # a resumable disagreement about where a file stands, not a failure
@@ -1244,6 +1293,10 @@ class StrataLinkClient:
         purpose "handoff"  the Subsurface holds it as a checkpoint for the next
                            Surface device, and returns the token that device
                            must present.
+        purpose "migrate"  first pairing of a phone that lived as a whole mind
+                           (strata_migration): home stages it and reports how
+                           the two copies differ.  Allowed from a standby
+                           device; nothing at home changes until applied.
 
         Everything lived so far is flushed first, the files are snapshotted so
         the hashes describe the bytes sent, and the transfer resumes after an
@@ -1251,15 +1304,27 @@ class StrataLinkClient:
         from aurora_internal.dual_strata import strata_state_transfer as st
         chunk = int(chunk_bytes or st.CHUNK_BYTES)
         try:
-            if not self.flush_outbox():
-                return {"ok": False, "error": "unacknowledged_continuity; state transfer must wait"}
-            probe = self._call({})
-            if probe.get("role") != "active":
-                return {"ok": False, "error": f"not the active Surface ({probe.get('error') or 'standby'})"}
+            lived_at_snapshot = 0
+            if purpose == "migrate":
+                # What it lived after this point stays in its outbox and is
+                # integrated at home after the receipt (the first-pairing tail).
+                self._call({})
+                lived_at_snapshot = lived_high_water(self.state_dir)
+            else:
+                if not self.flush_outbox():
+                    return {"ok": False, "error": "unacknowledged_continuity; state transfer must wait"}
+                probe = self._call({})
+                if probe.get("role") != "active":
+                    return {"ok": False, "error": f"not the active Surface ({probe.get('error') or 'standby'})"}
             snap = link_dir(self.state_dir) / "snapshots" / "current"
             if purpose == "handoff":
+                # Her present goes with her: the working frame and her habitat
+                # (aurora_store_ownership.MOVES_WITH_HER).  Deep stores are
+                # home's and never ride a handoff.
                 from aurora_internal.dual_strata.surface_working_state import FILENAME
-                manifest = st.snapshot_state(self.state_dir, snap, rel_paths=[FILENAME])
+                from aurora_internal.aurora_store_ownership import moves_with_her
+                rel_paths = sorted({FILENAME, *moves_with_her(self.state_dir)})
+                manifest = st.snapshot_state(self.state_dir, snap, rel_paths=rel_paths)
             else:
                 manifest = st.snapshot_state(self.state_dir, snap)
             if not manifest:
@@ -1267,7 +1332,7 @@ class StrataLinkClient:
             digest = st.manifest_digest(manifest)
             tid = f"{purpose}-{digest[:16]}"
             offered = self._state_call({"op": "offer", "transfer_id": tid, "purpose": purpose,
-                                        "manifest": manifest})
+                                        "manifest": manifest, "lived_seq": lived_at_snapshot})
             have = set(offered.get("have") or [])
             sent = 0
             total = sum(int(m["size"]) for m in manifest if m["path"] not in have)
@@ -1312,6 +1377,9 @@ class StrataLinkClient:
                 self.surface_ready = False
             else:
                 done = self._state_call({"op": "commit", "transfer_id": tid})
+                if purpose == "migrate":
+                    self._save_client_state(migration={"id": tid, "digest": digest,
+                                                       "lived_seq": lived_at_snapshot, "at": time.time()})
             shutil.rmtree(snap, ignore_errors=True)
             return {"ok": True, "purpose": purpose, "transfer_id": tid, "digest": digest,
                     "files": len(manifest), "skipped_already_there": len(have),
@@ -1319,6 +1387,49 @@ class StrataLinkClient:
         except st.TransferError as exc:
             self.last_error = f"push_state: {exc}"[:200]
             return {"ok": False, "error": str(exc)}
+
+    def migrate(self, *, progress: Optional[Callable[[str, int, int], None]] = None) -> Dict[str, Any]:
+        """First pairing: send this whole mind home to be staged and compared.
+        This device keeps running as it is until the receipt is accepted."""
+        return self.push_state("migrate", progress=progress)
+
+    def check_migration(self) -> Dict[str, Any]:
+        """Ask home how the first pairing stands.  When home has applied it,
+        check the receipt against the snapshot this device sent; only a
+        matching receipt is kept, and it takes effect at the next start."""
+        from aurora_internal.dual_strata import strata_migration as sm
+        from aurora_internal.dual_strata import strata_state_transfer as st
+        mine = dict(self._load_client_state().get("migration") or {})
+        if not mine.get("id"):
+            return {"ok": False, "status": "not_started"}
+        with self._sync_lock:
+            try:
+                status = self._state_call({"op": "migration_status"})
+            except st.TransferError as exc:
+                return {"ok": False, "status": "unreachable", "error": str(exc)}
+        if status.get("migration_id") != mine["id"]:
+            return {"ok": False, "status": "unknown_at_home"}
+        if status.get("status") != "applied":
+            return {"ok": True, **{k: v for k, v in status.items() if k != "ok"}}
+        accepted = sm.accept_receipt(self.state_dir, status.get("receipt") or {},
+                                     migration_id=mine["id"], source_digest=str(mine.get("digest") or ""))
+        if not accepted.get("ok"):
+            return {"ok": False, "status": "receipt_refused", "error": accepted.get("error")}
+        self._drop_migrated_from_outbox(int(mine.get("lived_seq", 0) or 0))
+        return {"ok": True, "status": "applied", "surface_only_at_next_start": True,
+                "restart_required": True}
+
+    def _drop_migrated_from_outbox(self, lived_seq: int) -> None:
+        """Continuity lived up to the snapshot is already home in the migrated
+        stores; it must not be lived a second time there."""
+        last = 0
+        for record in self.outbox.pending(10 ** 6):
+            payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
+            if record.get("channel") == "continuity" and int(payload.get("seq", 0) or 0) > lived_seq:
+                break
+            last = int(record.get("seq", 0) or 0)
+        if last:
+            self.outbox.ack(last)
 
     def cancel_handoff(self, token: str) -> Dict[str, Any]:
         with self._sync_lock:

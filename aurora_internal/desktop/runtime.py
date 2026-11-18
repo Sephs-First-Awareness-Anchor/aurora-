@@ -63,6 +63,7 @@ class DesktopRuntime:
         self.acm = None
         self.surface_id = "desktop"
         self._diagnostics = {}
+        self.first_pairing_applied = None
 
     def _persist_jobs(self):
         with self._jobs_lock:
@@ -118,6 +119,16 @@ class DesktopRuntime:
         os.environ["AURORA_SKIP_DEP_INSTALL"] = "1"
         from aurora_internal.aurora_state_context import set_active_state_dir
         set_active_state_dir(str(self.state_dir))
+        # A first-pairing migration whose choices are all made is installed
+        # here, cold: before her stores are open in this process.
+        try:
+            from aurora_internal.dual_strata.strata_migration import apply_pending_migration
+            applied = apply_pending_migration(self.state_dir)
+            if applied is not None:
+                self.first_pairing_applied = {k: applied.get(k) for k in
+                                              ("ok", "migration_id", "error", "installed", "moved")}
+        except Exception as exc:
+            self.errors["first_pairing"] = f"{type(exc).__name__}: {exc}"[:300]
         if self._boot is None:
             import aurora
             self._boot, self._turn = aurora.boot_aurora, aurora.process_external_user_turn
@@ -519,11 +530,28 @@ class DesktopRuntime:
                     snapshot[name] = {"error": str(exc)}
         self._diagnostics = snapshot
 
+    def _first_pairing_status(self):
+        """A phone's first pairing as home sees it: waiting for Sir's choices,
+        ready to apply at the next start, or applied."""
+        try:
+            from aurora_internal.dual_strata.strata_migration import load_pending
+            pending = load_pending(self.state_dir)
+        except Exception as exc:
+            return {"status": "unreadable", "error": str(exc)[:200]}
+        if not pending:
+            return {"status": "none"}
+        report = pending.get("report") or {}
+        return {"status": pending.get("status"), "migration_id": pending.get("migration_id"),
+                "choices_needed": len(report.get("choices_needed") or []),
+                "choices_made": len(pending.get("choices") or {}),
+                "applied_this_start": self.first_pairing_applied, "error": pending.get("error")}
+
     def status(self):
         return {"stage": self.stage, "active_job": self.active_job, "queued": self._queue.qsize(),
                 "errors": dict(self.errors), "organs": dict(self._diagnostics),
                 "hardware": self.services.status(), "clone_harvest": self.systems.get("_clone_harvest_absorb"),
                 "strata": self.link.status() if self.link else {"status": "not_started"},
+                "first_pairing": self._first_pairing_status(),
                 "acm": {**self.acm.status(), "coalesced_observations": self._coalesced_kernel} if self.acm else {"status": "not_configured"},
                 "surface": "local" if not self.link or self.link.surface_ready(self.surface_id) else "standby",
                 "owner_console": "available", "at": time.time()}
