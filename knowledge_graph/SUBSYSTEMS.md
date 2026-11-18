@@ -1,7 +1,7 @@
 # Aurora's crystal ladder: declared responsibility against implemented and observed behaviour
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `d9a335038080`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
+Source commit `b649850b28ff`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
 
 The repository is the king quasi. Each domain is a quasi, each declared subsystem a higher-order unit, and every file a base unit. Domains and subsystems are claims from the ownership mapping. A composite is promoted only when the graph shows its files bound by calls, instantiation, inheritance, spawns, callbacks, value flow or shared state; the mapping's own composites (built from imports) are listed beside them with how much of that binding their links carry. A conflict means the evidence points beyond the declared subsystem; it is a question to review, not a correction.
 

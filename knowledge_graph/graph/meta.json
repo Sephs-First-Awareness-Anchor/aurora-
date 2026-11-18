@@ -1,6 +1,6 @@
 {
  "authors": "Sunni (Sir) Morningstar & Cael Devo",
- "content_hash": "8446695df5432029dd6442b171fc8305c00a16b71d3a61342357cc37e2014ccc",
+ "content_hash": "f6c492b4564daec77094ec04ffc9b27ba4b1b2c492eeb796067696a741eae4bd",
  "coverage": {
   "claim_checks": {
    "conflict": 3,
@@ -9,7 +9,7 @@
   },
   "edge_basis": {
    "declared": 13045,
-   "implemented": 137478,
+   "implemented": 137484,
    "implemented+inferred": 2,
    "implemented+observed": 3801,
    "inferred": 1548,
@@ -23,29 +23,29 @@
    "scanned_references": 107
   },
   "observed_nodes": 7289,
-  "unresolved_internal_calls": 35009,
+  "unresolved_internal_calls": 35011,
   "unresolved_reasons": {
-   "builtin_value": 19693,
+   "builtin_value": 19697,
    "dynamic_receiver": 5337,
-   "external": 12461,
+   "external": 12463,
    "organ_receiver": 724,
    "unknown_member": 1288,
-   "untyped_attribute": 3686,
-   "untyped_local": 20789,
+   "untyped_attribute": 3687,
+   "untyped_local": 20790,
    "untyped_module_state": 1986,
    "untyped_parameter": 1199
   }
  },
- "edge_count": 160696,
+ "edge_count": 160702,
  "edge_types": {
-  "CALLS": 28067,
+  "CALLS": 28068,
   "CITES": 344,
   "COMPOSED_OF": 300,
-  "CONTAINS": 29934,
+  "CONTAINS": 29935,
   "DOCUMENTS": 9838,
   "EMITS": 10,
   "EXPRESSES": 5113,
-  "FEEDS": 33182,
+  "FEEDS": 33184,
   "GOVERNS": 716,
   "HANDLES": 47,
   "IMPLEMENTED_BY": 151,
@@ -61,7 +61,7 @@
   "PASSES_CALLBACK": 589,
   "PERSISTS_TO": 104,
   "PRECEDES": 15,
-  "READS": 21391,
+  "READS": 21393,
   "REFERENCES": 1466,
   "REGISTERS": 604,
   "ROUTES_TO": 120,
@@ -72,10 +72,10 @@
   "USES_ORGAN": 1432,
   "WRITES": 9233
  },
- "generated_at": "2026-11-18T16:58:36Z",
+ "generated_at": "2026-11-18T17:44:11Z",
  "generator": "scripts/aurora_knowledge_graph.py",
  "generator_version": "2.0.0",
- "node_count": 34504,
+ "node_count": 34505,
  "node_types": {
   "BusChannel": 341,
   "Class": 1723,
@@ -88,7 +88,7 @@
   "EnvVar": 53,
   "ExternalDependency": 126,
   "Field": 7052,
-  "Function": 17555,
+  "Function": 17556,
   "IStatePair": 5,
   "Layer": 10,
   "ManifoldEntry": 125,
@@ -142,8 +142,8 @@
  ],
  "schema_version": "2.0.0",
  "source_branch": "claude/knowledge-graph",
- "source_commit": "d9a335038080ed137cd9641621440dd2e74fc7cf",
- "static_content_hash": "c7d9fcc5031cc11b3194ea09bc47231afa7fcfff43a5c47ce7310e17d22dfb79",
+ "source_commit": "b649850b28ff7e94f4da2447bb23c3804ea68450",
+ "static_content_hash": "7b2dc2a25d531c59411f9e59f61d741bd2ba8c10d7aee86a8dfd2254ee9a7b8b",
  "title": "Aurora codebase knowledge graph",
  "warnings": []
 }

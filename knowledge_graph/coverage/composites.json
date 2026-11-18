@@ -133,7 +133,7 @@
      "fn:aurora_desktop_agent.get_agent"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.success",
+     "field:aurora_internal.tool_registry.ToolResult.note",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
@@ -143,7 +143,7 @@
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.note",
+     "field:aurora_internal.tool_registry.ToolResult.success",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ]
@@ -359,12 +359,12 @@
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior.aspects",
+     "fn:aurora_internal.crystal_interior._profile",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior._profile",
+     "fn:aurora_internal.crystal_interior.aspects",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ]
@@ -712,7 +712,7 @@
      "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
     ],
     [
-     "field:aurora_ivm.RecursionLevel.SURFACE",
+     "field:aurora_ivm.RecursionLevel.CORE",
      "FEEDS",
      "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
     ],
@@ -1087,12 +1087,12 @@
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
+     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._best_family",
+     "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
@@ -1982,17 +1982,17 @@
      "fn:aurora_expression_perception.infer_word_role"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.pressure_relief",
-     "FEEDS",
-     "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
-    ],
-    [
      "field:aurora_articulation.ArticulationDecision.accepted",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.original_pressure",
+     "field:aurora_articulation.ArticulationDecision.candidate_pressure",
+     "FEEDS",
+     "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
+    ],
+    [
+     "field:aurora_articulation.ArticulationDecision.pressure_relief",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ]
@@ -2558,12 +2558,12 @@
     [
      "mod:aurora",
      "SHARES",
-     "organ:ExistenceMode"
+     "organ:StreamType"
     ],
     [
      "mod:aurora",
      "SHARES",
-     "organ:identity"
+     "organ:grammar_engine"
     ]
    ],
    "external_binding": 4159,
@@ -2667,7 +2667,7 @@
      "fn:aurora_internal.dual_strata.prediction_field.build_prediction_signal"
     ],
     [
-     "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.source",
+     "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.confidence",
      "FEEDS",
      "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.persist_cers_detail"
     ],
@@ -5234,17 +5234,17 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
-       "FEEDS",
-       "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
-      ],
-      [
        "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
       [
        "field:aurora_internal.scouting.contracts.ScoutRequest.inquiry",
+       "FEEDS",
+       "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
+      ],
+      [
+       "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ]
@@ -5311,7 +5311,7 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
+       "field:aurora_internal.scouting.contracts.ScoutReport.evidence_items"
       ],
       [
        "mod:aurora_internal.scouting.contracts",
@@ -5321,7 +5321,7 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.contradictions"
+       "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
       ]
      ],
      "link": [
@@ -5747,12 +5747,12 @@
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior.aspects",
+       "fn:aurora_internal.crystal_interior._profile",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior._profile",
+       "fn:aurora_internal.crystal_interior.aspects",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ]
@@ -6942,7 +6942,7 @@
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.X",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.N",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ]
@@ -7107,7 +7107,7 @@
        "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
       ],
       [
-       "field:aurora_ivm.RecursionLevel.SURFACE",
+       "field:aurora_ivm.RecursionLevel.CORE",
        "FEEDS",
        "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
       ]
@@ -7574,12 +7574,12 @@
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
+       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._best_family",
+       "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ]
@@ -11391,7 +11391,7 @@
        "fn:aurora_internal.dual_strata.prediction_field.build_prediction_signal"
       ],
       [
-       "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.source",
+       "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.confidence",
        "FEEDS",
        "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.persist_cers_detail"
       ]
@@ -12280,7 +12280,7 @@
        "fn:aurora_internal.dual_strata.topology_tracker.TopologyFingerprint.from_signature"
       ],
       [
-       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.regime",
+       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.sources",
        "FEEDS",
        "fn:aurora_internal.dual_strata.semantic_variant_registry.TopologyProfile.from_signature"
       ]

@@ -1,26 +1,25 @@
 # Architectural comparison
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Base `f5c7beb50201` (main), head `a660a6123216` (HEAD). Static content hashes 221b5e418353 and 6f19be596135.
+Base `f5c7beb50201` (main), head `75f1cef9c9dd` (HEAD). Static content hashes f48600c91994 and 79a3263b0a60.
 
 ## 1. Function lineage
 
-17515 functions in base, 17510 in head. 1435 kept their identity with a changed body; 12 changed identity (moved or renamed); 26 were removed; 32 are new.
+17516 functions in base, 17513 in head. 1398 kept their identity with a changed body; 11 changed identity (moved or renamed); 25 were removed; 32 are new.
 
 A changed identity breaks any record keyed by the old id (lineage, provenance, fault and test references).
 
-- moved: `fn:aurora_autonomy.DailyQuotas.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_checkpoint.CorpusCursor.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_checkpoint.RollingStats.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_internal.aurora_correspondence_loop.CommittedPrediction.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_internal.constraint_genealogy.PressureVec.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_ivm.ContradictionRecord.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_language_field.LSAEntry.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_persistence_utils.DeviceRecord.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_vision_clustering.VisualCluster.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
-- moved: `fn:aurora_vision_clustering.VisualFeatureVector.to_dict` -> `fn:aurora_persistence_utils.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_autonomy.DailyQuotas.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_checkpoint.CorpusCursor.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_checkpoint.RollingStats.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_internal.aurora_correspondence_loop.CommittedPrediction.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_internal.constraint_genealogy.PressureVec.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_ivm.ContradictionRecord.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_language_field.LSAEntry.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_vision_clustering.VisualCluster.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_vision_clustering.VisualFeatureVector.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
 - removed: `fn:aurora_behavioral_identity._clamp`; still-present callers in base: `fn:aurora_behavioral_identity.BehavioralIdentityEngine._apply_identity_homeostasis`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._constraint_axes`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._identity_floor_ratio`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._pressure_axes`; ran in desktop_boot,desktop_turns
 - removed: `fn:aurora_checkpoint.CorpusCursor.from_dict`; still-present callers in base: `fn:aurora_checkpoint.CheckpointManager.restore`; ran in desktop_boot
 - removed: `fn:aurora_checkpoint.RollingStats.from_dict`; still-present callers in base: `fn:aurora_checkpoint.CheckpointManager.restore`; ran in desktop_boot
@@ -42,15 +41,14 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - removed: `fn:aurora_internal.constraint_genealogy._clamp`; still-present callers in base: `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger.__init__`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._compression_efficiency_for_pair`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._maintenance_discount`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._record_promotion_outcome`; ran in desktop_boot,desktop_turns
 - removed: `fn:aurora_ivm.ContradictionRecord.from_dict`; still-present callers in base: `fn:aurora_ivm.ContradictionLedger.load`
 - removed: `fn:aurora_language_field.LSAEntry.from_dict`; still-present callers in base: `fn:aurora_language_field.LanguageField._load_lsa`
-- removed: `fn:aurora_persistence_utils.DeviceRecord.from_dict`; still-present callers in base: `fn:aurora_persistence_utils.DeviceAwareness.load`; ran in desktop_boot
 - removed: `fn:aurora_runtime._clamp`; still-present callers in base: `fn:aurora_runtime.ChainSimBridge._forward_to_sim`
 - removed: `fn:aurora_simulation_engine._clamp`; still-present callers in base: `fn:aurora_simulation_engine.ConsciousLearner.generate_pool`, `fn:aurora_simulation_engine.ConsciousLearner.import_state`, `fn:aurora_simulation_engine.SimulatedAvatar._behavior_adjustment`, `fn:aurora_simulation_engine.SimulatedAvatar._dimension_pressure_adjustment`; ran in desktop_turns
 - removed: `fn:aurora_vision_clustering.VisualCluster.from_dict`; still-present callers in base: `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`; ran in desktop_boot
 - removed: `fn:aurora_vision_clustering.VisualFeatureVector.from_dict`; still-present callers in base: `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`; ran in desktop_boot
-- new: `fn:aurora_internal.aurora_pressure_mathematics_tracker.clamp`, called by `fn:aurora_behavioral_identity.BehavioralIdentityEngine._apply_identity_homeostasis`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._constraint_axes`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._identity_floor_ratio`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._pressure_axes`
 - new: `fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder`, called by `mod:aurora`, `mod:aurora_acm_bridge`, `mod:aurora_articulation`, `mod:aurora_autonomy`
-- new: `fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder._aurora_fault`, called by `fn:aurora_consciousness_engine.ConsciousnessEngine.process`, `fn:aurora_hardware_io.detect_platform`, `fn:aurora_internal.aurora_ontological_scaffolding.ResearchStudyMode._research_word`, `fn:aurora_live_vision._try_import_pipeline`
-- new: `fn:aurora_persistence_utils.DictRecord.from_dict`, called by `fn:aurora_checkpoint.CheckpointManager.restore`, `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`, `fn:aurora_ivm.ContradictionLedger.load`, `fn:aurora_language_field.LanguageField._load_lsa`
+- new: `fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder._aurora_fault`, called by `fn:aurora.AxisProjector.project`, `fn:aurora.ConstraintFieldBalancer._inject_to_genealogy`, `fn:aurora.ConstraintFieldBalancer.update`, `fn:aurora.ReasoningEngine._update_memory_from_reasoning`
+- new: `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`, called by `fn:aurora_checkpoint.CheckpointManager.restore`, `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`, `fn:aurora_ivm.ContradictionLedger.load`, `fn:aurora_language_field.LanguageField._load_lsa`
+- new: `fn:aurora_internal.aurora_shared_helpers.clamp`, called by `fn:aurora_behavioral_identity.BehavioralIdentityEngine._apply_identity_homeostasis`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._constraint_axes`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._identity_floor_ratio`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._pressure_axes`
 - new: `fn:aurora_runtime.RuntimeCLI._cmd_actions`, called by `fn:aurora_runtime.RuntimeCLI._dispatch`
 - new: `fn:aurora_runtime.RuntimeCLI._cmd_answer`, called by `fn:aurora_runtime.RuntimeCLI._dispatch`
 - new: `fn:aurora_runtime.RuntimeCLI._cmd_bridge`, called by `fn:aurora_runtime.RuntimeCLI._dispatch`
@@ -82,78 +80,54 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 ## 2. Relationships: consolidated against lost
 
-2022 relationships of base are not in head (structure and documentation edges left out). 87 are consolidated: the same source still reaches the same target through a helper within two calls. 315 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 1320 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 73 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 1 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 99 went with code that was removed. 127 are lost: the source still exists and no longer reaches the target by any of those routes. 693 relationships are new.
+1984 relationships of base are not in head (structure and documentation edges left out). 1372 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 0 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 73 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 1 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 98 went with code that was removed. 127 are lost: the source still exists and no longer reaches the target by any of those routes. 2077 relationships are new.
 
-### Retargeted: 315
+### Retargeted: 313
 
-- 189 FEEDS to `clamp` now through `fn:aurora_internal.aurora_pressure_mathematics_tracker.clamp`
-- 113 CALLS to `clamp` now through `fn:aurora_internal.aurora_pressure_mathematics_tracker.clamp`
-- 7 CALLS to `from_dict` now through `fn:aurora_persistence_utils.DictRecord.from_dict`
-- 5 FEEDS to `from_dict` now through `fn:aurora_persistence_utils.DictRecord.from_dict`
-- 1 FEEDS to `from_dict` now through `fn:aurora_internal.aurora_persistence_utils.DeviceRecord.from_dict`
+- 189 FEEDS to `clamp` now through `fn:aurora_internal.aurora_shared_helpers.clamp`
+- 113 CALLS to `clamp` now through `fn:aurora_internal.aurora_shared_helpers.clamp`
+- 6 CALLS to `from_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`
+- 5 FEEDS to `from_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`
 
-### Delegated through a module binding: 1320
+### Delegated through a module binding: 0
 
-- 963 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder`
-- 135 CALLS to `record_exception_from_locals` now through `fn:aurora._aurora_make_override`
-- 72 CALLS to `record_exception_from_locals` now through `fn:aurora_daemon.main`
-- 61 CALLS to `record_exception_from_locals` now through `fn:aurora_hardware_io.detect_platform`
-- 28 CALLS to `record_exception_from_locals` now through `fn:aurora_expression_perception._aurora_make_override`
-- 17 CALLS to `record_exception_from_locals` now through `fn:aurora_dimensional_systems._aurora_make_override`
-- 6 CALLS to `record_exception_from_locals` now through `fn:aurora_governance_persistence_gateway._aurora_bind_owner_attribute`
-- 6 CALLS to `record_exception_from_locals` now through `fn:aurora_consciousness_engine.ConsciousnessEngine.process`
-- 5 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_evolution_chamber._aurora_make_override`
-- 5 CALLS to `record_exception_from_locals` now through `fn:aurora_diag.main`
-- 4 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_code_evolution_chamber._aurora_bind_owner_attribute`
-- 3 CALLS to `record_exception_from_locals` now through `fn:aurora_behavioral_identity.verify_layer6`
-- 2 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_energy_layer_costs._aurora_make_override`
-- 2 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_intake_metabolism._aurora_make_override`
-- 2 CALLS to `record_exception_from_locals` now through `fn:aurora_experiential_sim.run_sim`
-- 2 CALLS to `record_exception_from_locals` now through `fn:aurora_explore.main`
-- 1 CALLS to `record_exception_from_locals` now through `fn:aurora.boot_aurora`
-- 1 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_noncomp_registry._aurora_make_override`
-- 1 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_entropy_detector._aurora_make_override`
-- 1 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_leverage_scalar._aurora_make_override`
-- 1 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_primitive_extractor._aurora_make_override`
-- 1 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_polarity_gradient._aurora_make_override`
-- 1 CALLS to `record_exception_from_locals` now through `fn:aurora_internal.aurora_cost_diff_score._aurora_make_override`
 
 ### Folded into a shared function: 73
 
-- 28 FEEDS to `to_dict` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 2 READS to `created_at` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `T` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `study_cycles_used` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `dreams_used` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `transition_type` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `outcome_positive` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `certainty_band` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `intent_type` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `committed_at` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `outcome_negative` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `first_seen` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `edge_id` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `child_id` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `parent_order` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `claim_a` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `last_seen` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `inquiries_used` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `date` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `X` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `status` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `projected_accuracy` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `to_variant_id` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `source_a` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `B` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `files_read` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `claim_b` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `resolution_note` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `speakups_count` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
-- 1 READS to `affect` now through `fn:aurora_persistence_utils.DictRecord.to_dict`
+- 28 FEEDS to `to_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 2 READS to `created_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `topic` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `affect` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `N` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `speakups_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `source_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `child_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `outcome_negative` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `source_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `T` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `observation_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `outcome_positive` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `child_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `date` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `study_cycles_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `transition_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `from_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `observations_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `status` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `axis_signature` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `certainty_band` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `intent_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `projected_accuracy` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 
 ### Seen only in the base run: 1
 
-- 1 CALLS to `strengthen` now through ``
+- 1 CALLS to `rebuild` now through ``
 
 ### Lost (review each): IMPORTS 127
 
@@ -285,7 +259,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `mod:tests.test_universal_function_lineage_freshness_fast_path` IMPORTS `ext:shutil` [base tests/test_universal_function_lineage_freshness_fast_path.py:26]
 - `mod:tests.test_universal_function_lineage_freshness_fast_path` IMPORTS `ext:tempfile` [base tests/test_universal_function_lineage_freshness_fast_path.py:28]
 
-### Removed with deleted code: FEEDS 99
+### Removed with deleted code: FEEDS 98
 
 - `field:aurora_internal.aurora_correspondence_loop.CommittedPrediction.committed_at` FEEDS `fn:aurora_internal.aurora_correspondence_loop.CommittedPrediction.to_dict` [base aurora_internal/aurora_correspondence_loop.py:220]
 - `field:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.first_seen` FEEDS `fn:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.to_dict` [base aurora_internal/dual_strata/variant_transition_predictor.py:59]
@@ -368,95 +342,94 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `fn:aurora_internal.constraint_genealogy._clamp` FEEDS `field:aurora_internal.constraint_genealogy.GenealogyDilationGovernor._relief_history` [base aurora_internal/constraint_genealogy.py:1687]
 - `fn:aurora_internal.constraint_genealogy._clamp` FEEDS `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._compression_efficiency_for_pair` [base aurora_internal/constraint_genealogy.py:8959]
 
-### Consolidated: CALLS 79, FEEDS 5, READS 2, WRITES 1
+### Consolidated: CALLS 1364, FEEDS 5, READS 2, WRITES 1
 
 - `fn:aurora.AxisProjector.project` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:3646]
+- `fn:aurora.ConstraintFieldBalancer._inject_to_genealogy` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:4347]
+- `fn:aurora.ConstraintFieldBalancer.update` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:4236]
+- `fn:aurora.ReasoningEngine._update_memory_from_reasoning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1084]
+- `fn:aurora.ReasoningEngine.reason` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:694]
+- `fn:aurora.SearchAdapter.concept_search` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1439]
+- `fn:aurora.SearchAdapter.ddg_web_search` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1581]
+- `fn:aurora.SearchAdapter.deep_search` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1717]
+- `fn:aurora.SearchAdapter.lookup_word` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1378]
+- `fn:aurora.SearchAdapter.test_connectivity` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1747]
+- `fn:aurora.SearchAdapter.wikipedia_search` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1614]
+- `fn:aurora.SearchAdapter.wikipedia_summary` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1480]
 - `fn:aurora.TeachingEngine.process_teaching_input` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:579]
+- `fn:aurora._ability_guided_context_answer` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:8569]
+- `fn:aurora._absorb_definition_into_self_model` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:11525]
+- `fn:aurora._advance_intake_pipeline._pol` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:33561]
+- `fn:aurora._answer_from_session_readdress_request` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:8111]
+- `fn:aurora._answer_live_sensory_question` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:9977]
+- `fn:aurora._answer_relational_role_question` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16295]
+- `fn:aurora._apply_interaction_quasi_route` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:6525]
 - `fn:aurora._apply_noncomp_input_guidance` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:13170]
+- `fn:aurora._apply_noncomp_output_guidance` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:13276]
+- `fn:aurora._apply_pipeline_modulation` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:18198]
+- `fn:aurora._apply_poedex_learning_result` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:12245]
+- `fn:aurora._apply_poedex_representation_result` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:12458]
+- `fn:aurora._apply_response_pressure_training_plan` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:2243]
+- `fn:aurora._apply_word_meaning_learning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:13610]
+- `fn:aurora._attach_live_response_simulation_bridge` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38306]
+- `fn:aurora._axis_live_pressure` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5688]
+- `fn:aurora._broadcast_poedex_result` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:11929]
+- `fn:aurora._build_articulation_perspective_context` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:7784]
 - `fn:aurora._build_comprehension_response` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:26623]
 - `fn:aurora._build_established_strata_evidence` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16952]
+- `fn:aurora._build_established_strata_evidence._learn_gap` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17478]
+- `fn:aurora._build_established_strata_evidence._prefetch_gap` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17423]
+- `fn:aurora._build_established_strata_evidence._represent_gap` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17538]
 - `fn:aurora._build_grounded_fallback_response` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:10184]
+- `fn:aurora._build_live_subsurface_projection` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17732]
+- `fn:aurora._build_lookup_query` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:14262]
 - `fn:aurora._build_research_callback._fetch_definition` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1819]
+- `fn:aurora._build_response_pressure_training_plan` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:2030]
+- `fn:aurora._build_simulation_live_bridge_context` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38110]
+- `fn:aurora._capture_hardware_voice_state` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38335]
+- `fn:aurora._capture_pressure_snapshot` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:15571]
+- `fn:aurora._capture_waveform_deposit` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5451]
 - `fn:aurora._chain_down1_information` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:21855]
 - `fn:aurora._chain_down2_belief` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:21649]
 - `fn:aurora._chain_down3_purpose` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:21608]
+- `fn:aurora._chain_up4_meaning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:19887]
+- `fn:aurora._chain_up5_understanding` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:20022]
+- `fn:aurora._clear_pending_hypothesis_offer` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:14061]
+- `fn:aurora._clear_pending_lookup_offer` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:14045]
+- `fn:aurora._collect_response_pressure_guides` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1974]
+- `fn:aurora._compose_structural_meaning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5612]
+- `fn:aurora._compress_at_crest` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5874]
+- `fn:aurora._confess_low_confidence_parse` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:18709]
+- `fn:aurora._constraint_emission_is_substantive` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:2869]
+- `fn:aurora._constraint_state_snapshot` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:213]
+- `fn:aurora._contribution_charge` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5502]
+- `fn:aurora._deposit_poedex_result_into_crystals` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:11831]
+- `fn:aurora._derive_applied_effects` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16243]
+- `fn:aurora._derive_problem_solving_drive` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17992]
+- `fn:aurora._describe_live_lineage_emergence` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:6374]
+- `fn:aurora._describe_pending_code_proposals` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:7501]
+- `fn:aurora._discourse_anchor_context` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:15302]
+- `fn:aurora._dispatch_user_directive` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:33809]
+- `fn:aurora._enforce_emission_discipline` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5394]
+- `fn:aurora._ensure_claim_relief_abilities` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:18440]
+- `fn:aurora._ensure_pipeline_abilities` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:18312]
+- `fn:aurora._ensure_seeded_sensory_crystal_state` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:440]
+- `fn:aurora._evolutionary_response_refinement` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16408]
+- `fn:aurora._extract_pipeline_signals` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16606]
+- `fn:aurora._flush_quasiarch_runtime_events` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:7631]
 - `fn:aurora._full_save` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38508]
+- `fn:aurora._gather_subsurface_contributions` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5551]
 - `fn:aurora._generate_from_manifold` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:20812]
+- `fn:aurora._generate_identity_response` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:3340]
 - `fn:aurora._generate_perspective_from_core` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:9213]
-- `fn:aurora._queue_poedex_representation_followup._worker` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:12801]
-- `fn:aurora._render_runtime_intent` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:7717]
-- `fn:aurora._repair_discourse_coherence` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:15445]
-- `fn:aurora._repair_unknown_vocabulary_inline` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:13953]
-- `fn:aurora._sediment_validated_fact` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5930]
-- `fn:aurora._stage_noncomp_prefetch._prefetch_worker` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:12158]
-- `fn:aurora._stage_poedex_learning_request._learning_worker` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:12557]
-- `fn:aurora._stage_poedex_representation_request._representation_worker` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:12671]
-- `fn:aurora.boot_aurora._h_seek` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:29649]
-- `fn:aurora.chat` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38968]
-- `fn:aurora_braid_wiring.begin_expression` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_braid_wiring.py:816]
-- `fn:aurora_braid_wiring.ensure_proposition_frame_for_turn` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_braid_wiring.py:634]
-- `fn:aurora_consciousness_engine.ConsciousnessEngine._attach_dual_strata_snapshot` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_consciousness_engine.py:1458]
-- `fn:aurora_consciousness_engine.ConsciousnessEngine.tick` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_consciousness_engine.py:2079]
-- `fn:aurora_daemon._maybe_consume_low_resource_evolution_relief` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_daemon.py:2771]
-- `fn:aurora_daemon._poedex_deliver_tutorial` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_daemon.py:4235]
-- `fn:aurora_daemon._poedex_post_study_scan` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_daemon.py:4268]
-- `fn:aurora_daemon._stage_low_resource_evolution_relief` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_daemon.py:2530]
-- `fn:aurora_daemon.main` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_daemon.py:10329]
-- `fn:aurora_diag._run_prompt` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_diag.py:246]
-- `fn:aurora_dream_trainer.DreamTrainer._record_fail_dimension` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_dream_trainer.py:3128]
-- `fn:aurora_dream_trainer.DreamTrainer._witness_directed_training_samples` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_dream_trainer.py:3312]
-- `fn:aurora_dream_trainer.DreamTrainer.audit_chronic_weaknesses` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_dream_trainer.py:3579]
-- `fn:aurora_dream_trainer.DreamTrainer.flush_lessons_to_simulation` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_dream_trainer.py:3409]
-- `fn:aurora_dream_trainer.DreamTrainer.record_relational_probe_outcomes` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_dream_trainer.py:2985]
-- `fn:aurora_dream_trainer.DreamTrainer.record_sensory_tension` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_dream_trainer.py:2617]
-- `fn:aurora_explore._run_prompt` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_explore.py:212]
-- `fn:aurora_explore.main` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_explore.py:418]
-- `fn:aurora_expression_perception.ExpressionPerceptionEngine._build_expression` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_expression_perception.py:5805]
-- `fn:aurora_expression_perception.SentenceComposer._compose_from_motif` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_expression_perception.py:3023]
-- `fn:aurora_expression_perception.SentenceComposer.compose` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_expression_perception.py:2818]
-- `fn:aurora_hardware_io.detect_platform` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_hardware_io.py:121]
-- `fn:aurora_internal.aurora_ontological_scaffolding.ResearchStudyMode._research_word` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_internal/aurora_ontological_scaffolding.py:2189]
-- `fn:aurora_internal.aurora_pressure_ledger.PressureExperienceLedger.record` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_internal/aurora_pressure_ledger.py:297]
-- `fn:aurora_internal.aurora_proposition_frame._frame_from_claims` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_internal/aurora_proposition_frame.py:462]
-- `fn:aurora_internal.aurora_proposition_frame._frame_from_turn_local_claims` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_internal/aurora_proposition_frame.py:524]
-- `fn:aurora_language_field.LanguageField._tensor_state` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_language_field.py:389]
-- `fn:aurora_live_vision._try_import_pipeline` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_live_vision.py:91]
-- `fn:aurora_offline_resilience.check_connectivity` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_offline_resilience.py:102]
-- `fn:aurora_persistence_utils.RcloneInterface._find_rclone` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_persistence_utils.py:323]
-- `fn:aurora_persistence_utils.RcloneInterface.is_available` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_persistence_utils.py:348]
-- `fn:aurora_runtime.AuroraRuntime.boot` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_runtime.py:5411]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.code_autoevolve_once` [base aurora_runtime.py:7533]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.code_mutation_status` [base aurora_runtime.py:7415]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.code_operator_specs` [base aurora_runtime.py:7405]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.code_pressure_report` [base aurora_runtime.py:7439]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.code_simulate_mutation` [base aurora_runtime.py:7495]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.finalize_code_mutation` [base aurora_runtime.py:7515]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.save` [base aurora_runtime.py:7552]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.stage_code_mutation` [base aurora_runtime.py:7473]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` CALLS `fn:aurora_runtime.AuroraRuntime.uptime` [base aurora_runtime.py:7401]
-- `fn:aurora_runtime._soft` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_runtime.py:172]
-- `fn:aurora_runtime.mode_test` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_runtime.py:7643]
-- `fn:aurora_simulation_engine.SimulationSession.run_epoch_grounding` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_simulation_engine.py:2069]
-- `fn:aurora_surface_daemon.run` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_surface_daemon.py:717]
-- `fn:aurora_working_memory.WorkingMemory.align_response_to_active_meaning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_working_memory.py:4336]
-- `fn:aurora_working_memory.WorkingMemory.answer_from_behavior_alignment` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_working_memory.py:2269]
-- `fn:aurora_working_memory.WorkingMemory.answer_from_meanings` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_working_memory.py:4081]
-- `fn:aurora_working_memory.WorkingMemory.answer_from_recent_utterance_recall` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_working_memory.py:2422]
-- `fn:aurora_working_memory.WorkingMemory.answer_from_speaker_owned_facts` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_working_memory.py:2347]
-- `fn:aurora_working_memory.WorkingMemory.compose_context_control_response` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_working_memory.py:1513]
-- `fn:run_probe_battery.run_probe_battery` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base run_probe_battery.py:208]
-- `mod:aurora_consciousness_engine` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora_consciousness_engine.py:171]
-- `mod:aurora_expression_perception` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_expression_perception.py:107]
-- `mod:aurora_hardware_io` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_hardware_io.py:70]
-- `mod:aurora_live_vision` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` (ran) [base aurora_live_vision.py:60]
-- `fn:aurora_runtime.RuntimeCLI._dispatch` FEEDS `fn:aurora_runtime.AuroraRuntime.code_autoevolve_once` [base aurora_runtime.py:7533]
+- `fn:aurora._get_stored_user_name` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:6294]
+- `fn:aurora._grounded_topic_contribution` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5732]
 
 ## 2b. Composites promoted on evidence
 
-52 in base, 53 in head. Each base composite is matched to the head composite sharing the most files; a composite that splits, loses files or disappears means the binding between those files changed.
+52 in base, 52 in head. Each base composite is matched to the head composite sharing the most files; a composite that splits, loses files or disappears means the binding between those files changed.
 
-- `subsys:composite:foundation:d3ead140` (2 files) -> `subsys:composite:foundation:e56fdb66` (overlap 0.50); joined: `aurora_internal/aurora_pressure_mathematics_tracker.py`, `aurora_internal/aurora_structural_pressure_steering.py`
-- `subsys:composite:governance:01effd21` (17 files) -> `subsys:composite:governance:ce0a2779` (overlap 0.53); left: `aurora_dev_telemetry.py`, `aurora_internal/aurora_identity_persistence.py`, `aurora_internal/aurora_leverage_relief.py`, `aurora_internal/aurora_persistence_audit.py`, `aurora_internal/aurora_persistence_utils.py`, `aurora_internal/aurora_runtime_constraint_governor.py`
+- `subsys:composite:governance:01effd21` (17 files) -> `subsys:composite:governance:16699d84` (overlap 0.94); joined: `aurora_internal/aurora_energy_layer_costs.py`
 
 ## 3. Stored state
 
@@ -559,30 +532,36 @@ None changed writers or readers.
 - import gone: `mod:scripts.append_to_doc` -> `ext:os`
 - import gone: `mod:scripts.aurora_state_compress` -> `ext:os`
 - import gone: `mod:scripts.chat_daemon` -> `ext:os`
-- import new: `mod:aurora_autonomy` -> `mod:aurora_persistence_utils`
-- import new: `mod:aurora_behavioral_identity` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_checkpoint` -> `mod:aurora_persistence_utils`
-- import new: `mod:aurora_expression_perception` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_governance_persistence_gateway` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_grammar_engine` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_hardware_io` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_braided_substrate` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_conversation_rubric_engine` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_correspondence_loop` -> `mod:aurora_persistence_utils`
-- import new: `mod:aurora_internal.aurora_dream_genealogy_bridge` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_language_state` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_ontological_scaffolding` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_primitive_extractor` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_rubric_influence_graph` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_semantic_probe_battery` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_specialized_avatar_synthesizer` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.aurora_structural_pressure_steering` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.constraint_genealogy` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_internal.dual_strata.variant_transition_predictor` -> `mod:aurora_persistence_utils`
-- import new: `mod:aurora_internal.quasiarch_observer.dimensional_memory` -> `mod:aurora_persistence_utils`
-- import new: `mod:aurora_ivm` -> `mod:aurora_persistence_utils`
-- import new: `mod:aurora_runtime` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
-- import new: `mod:aurora_simulation_engine` -> `mod:aurora_internal.aurora_pressure_mathematics_tracker`
+- import new: `mod:aurora_autonomy` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_behavioral_identity` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_checkpoint` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_expression_perception` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_governance_persistence_gateway` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_grammar_engine` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_hardware_io` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_braided_substrate` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_conversation_rubric_engine` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_correspondence_loop` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_dream_genealogy_bridge` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_language_state` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_ontological_scaffolding` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_pressure_mathematics_tracker` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_primitive_extractor` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_rubric_influence_graph` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_semantic_probe_battery` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_shared_helpers` -> `ext:__future__`
+- import new: `mod:aurora_internal.aurora_shared_helpers` -> `ext:dataclasses`
+- import new: `mod:aurora_internal.aurora_shared_helpers` -> `ext:typing`
+- import new: `mod:aurora_internal.aurora_specialized_avatar_synthesizer` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_structural_pressure_steering` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.constraint_genealogy` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.dual_strata.variant_transition_predictor` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.quasiarch_observer.dimensional_memory` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_ivm` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_language_field` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_runtime` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_simulation_engine` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_vision_clustering` -> `mod:aurora_internal.aurora_shared_helpers`
 
 ## 7. Diagnostic evidence
 
@@ -592,7 +571,7 @@ Logging calls: 431 in base, 431 in head.
 
 ### Interaction handling
 
-1 seed node(s); 69476 relationships around them in base, 63645 in head; 127 lost (not consolidated), 638 new.
+1 seed node(s); 69492 relationships around them in base, 69887 in head; 127 lost (not consolidated), 2036 new.
 - lost: `mod:aurora-acm.native.aurora_acm_native` IMPORTS `ext:math`
 - lost: `mod:aurora_625_pressure_map` IMPORTS `ext:math`
 - lost: `mod:aurora_acm_bridge` IMPORTS `ext:os`
@@ -640,7 +619,7 @@ Logging calls: 431 in base, 431 in head.
 
 ### Surface and subsurface coordination
 
-1083 seed node(s); 5531 relationships around them in base, 5495 in head; 0 lost (not consolidated), 51 new.
+1083 seed node(s); 5531 relationships around them in base, 5568 in head; 0 lost (not consolidated), 124 new.
 
 ### State hand-offs (bus slots and pipeline signals)
 

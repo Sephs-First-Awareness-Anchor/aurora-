@@ -1,7 +1,7 @@
 # What the knowledge graph covers, and what it does not
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `d9a335038080`, generator 2.0.0.
+Source commit `b649850b28ff`, generator 2.0.0.
 
 Nothing here is hidden by a summary: every unresolved call site is in `unresolved_calls.jsonl`, every file's status in `files.jsonl`, every claim check in `claims.json`, and every statically reachable function that no recorded run entered in `unobserved.json`.
 
@@ -17,15 +17,15 @@ Nothing here is hidden by a summary: every unresolved call site is in `unresolve
 
 ## Calls without a resolved target
 
-35009 method calls inside Aurora's code have no static target. External library calls and calls on built-in values are listed with their reason but not counted as gaps.
+35011 method calls inside Aurora's code have no static target. External library calls and calls on built-in values are listed with their reason but not counted as gaps.
 
 | reason | sites | what would resolve it |
 |---|---:|---|
-| untyped_local | 20789 | a type the code does not state (assignment from an untyped call) |
-| builtin_value | 19693 | nothing: str, dict, list and similar |
-| external | 12461 | nothing: a library outside the repo |
+| untyped_local | 20790 | a type the code does not state (assignment from an untyped call) |
+| builtin_value | 19697 | nothing: str, dict, list and similar |
+| external | 12463 | nothing: a library outside the repo |
 | dynamic_receiver | 5337 | the result of a call or subscript; runtime evidence |
-| untyped_attribute | 3686 | self.x whose class is never stated; an annotation or runtime evidence |
+| untyped_attribute | 3687 | self.x whose class is never stated; an annotation or runtime evidence |
 | untyped_module_state | 1986 | a module global whose type is not stated |
 | unknown_member | 1288 | a name the target class or module does not define (dynamic or inherited from outside) |
 | untyped_parameter | 1199 | a parameter without an annotation |
@@ -37,7 +37,7 @@ Every edge says how it is known. implemented: read from code. declared: stated i
 
 | basis | edges |
 |---|---:|
-| implemented | 137478 |
+| implemented | 137484 |
 | declared | 13045 |
 | observed | 4822 |
 | implemented+observed | 3801 |

@@ -1493,6 +1493,7 @@ class Builder:
         """A module-level `name = known_function` (or a class) binds name to the same definition, so call sites
         that keep the old name still resolve (for example `_clamp = clamp`)."""
         n = 0
+        n_closures = 0
         for m in self.mods.values():
             if m.tree is None:
                 continue
@@ -1507,7 +1508,44 @@ class Builder:
                     if r and r.startswith(("fn:", "cls:")):
                         m.defs[tgt] = r
                         n += 1
-        self.log(f"pass 3b: {n} module-level aliases bound to their definitions")
+                elif isinstance(st, ast.Assign) and len(st.targets) == 1 and isinstance(st.targets[0], ast.Name) \
+                        and isinstance(st.value, ast.Call) and isinstance(st.value.func, (ast.Name, ast.Attribute)):
+                    # `name = factory(...)` where the factory returns one of its own nested functions binds name to
+                    # that closure (for example `_aurora_fault = bind_fault_recorder(__name__, "x.py")`)
+                    tgt = st.targets[0].id
+                    if tgt in m.defs:
+                        continue
+                    r = self.resolve_chain(m, ast.unparse(st.value.func))
+                    closure = self._returned_closure(r) if r and r.startswith("fn:") else None
+                    if closure:
+                        m.defs[tgt] = closure
+                        n_closures += 1
+        self.log(f"pass 3b: {n} module-level aliases and {n_closures} factory closures bound to their definitions")
+
+    def _returned_closure(self, fid: str) -> Optional[str]:
+        """The nested function a factory returns by name, when every return in its own body returns that one."""
+        fn = self.func_by_id.get(fid) if hasattr(self, "func_by_id") else None
+        node = getattr(fn, "node", None)
+        if node is None:
+            return None
+        nested = {st.name for st in node.body if isinstance(st, (ast.FunctionDef, ast.AsyncFunctionDef))}
+        if not nested:
+            return None
+        names: Set[str] = set()
+        stack = list(node.body)
+        while stack:
+            st = stack.pop()
+            if isinstance(st, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+                continue
+            if isinstance(st, ast.Return):
+                if not (isinstance(st.value, ast.Name) and st.value.id in nested):
+                    return None
+                names.add(st.value.id)
+            stack.extend(ast.iter_child_nodes(st))
+        if len(names) != 1:
+            return None
+        cid = f"{fid}.{names.pop()}"
+        return cid if cid in self.g.nodes else None
 
     def pass_dispatch_tables(self) -> None:
         """A class that maps command strings to method names in a class-level dict, and calls
