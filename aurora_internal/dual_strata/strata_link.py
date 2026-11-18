@@ -118,6 +118,50 @@ def publish_raw_input(state_dir, text):
         _CLIENT.outbox.append("raw_input", "state", packet)
 
 
+# What the surface may ask home to do.  Growth work runs at home; a request
+# only brings the next scheduled pass forward, home's own pacing decides.
+HOME_REQUEST_KINDS = ("curiosity_cycle", "evo_cycle", "embodiment_move")
+_HOME_REQUESTS_FILENAME = "home_requests.jsonl"
+
+
+def request_home(state_dir: Any, kind: str, payload: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+    """Surface side: queue a request for home in the durable outbox.  It
+    crosses when the link is up and is applied once at home."""
+    if kind not in HOME_REQUEST_KINDS:
+        return {"ok": False, "error": f"unknown_request: {kind}"}
+    client = _CLIENT
+    if client is None or client.state_dir.resolve() != Path(str(state_dir)).resolve():
+        return {"ok": False, "error": "not_paired"}
+    request_id = uuid.uuid4().hex
+    client.outbox.append("home_request", "event", {"request_id": request_id, "kind": kind,
+                                                   "payload": dict(payload or {}), "at": time.time(),
+                                                   "from": client.surface_id})
+    return {"ok": True, "request_id": request_id, "queued": True, "online": client.online}
+
+
+def read_home_requests(state_dir: Any, offset: int = 0) -> Tuple[List[Dict[str, Any]], int]:
+    """Home side: requests appended since ``offset`` (a byte offset)."""
+    path = link_dir(state_dir) / _HOME_REQUESTS_FILENAME
+    if not path.exists():
+        return [], 0
+    size = path.stat().st_size
+    if offset > size:
+        offset = 0
+    out: List[Dict[str, Any]] = []
+    with open(path, "rb") as handle:
+        handle.seek(offset)
+        data = handle.read()
+    complete = data[:data.rfind(b"\n") + 1]     # a line still being written waits
+    for raw in complete.splitlines():
+        try:
+            item = json.loads(raw.decode("utf-8")) if raw.strip() else None
+        except ValueError:
+            item = None
+        if isinstance(item, dict):
+            out.append(item)
+    return out, offset + len(complete)
+
+
 def require_surface_admission(systems):
     """Fence actual conscious turns, not just their outbound transport."""
     source = str(systems.get("_turn_source_label") or "")
@@ -442,6 +486,17 @@ def apply_uplink_record(state_dir: Any, record: Mapping[str, Any], *, late: bool
         from aurora_internal.dual_strata.surface_continuity_feed import deposit_continuity_packet
         return "applied" if deposit_continuity_packet(state_dir, dict(record.get("payload") or {}),
                                                       late=late) else "duplicate"
+    if channel == "home_request" and isinstance(record.get("payload"), dict):
+        payload = dict(record["payload"])
+        if payload.get("kind") not in HOME_REQUEST_KINDS or not payload.get("request_id"):
+            return "unknown_channel"
+        path = link_dir(state_dir) / _HOME_REQUESTS_FILENAME
+        seen = path.read_text(encoding="utf-8")[-200000:] if path.exists() else ""
+        if f'"request_id": "{payload["request_id"]}"' in seen:
+            return "duplicate"
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, sort_keys=True) + "\n")
+        return "applied"
     if channel == "sensory_snapshot" and isinstance(record.get("payload"), dict):
         from aurora_internal.dual_strata.sensory_snapshot_channel import snapshot_path
         path = snapshot_path(state_dir)

@@ -64,6 +64,8 @@ class DesktopRuntime:
         self.surface_id = "desktop"
         self._diagnostics = {}
         self.first_pairing_applied = None
+        self.home_requests_seen = {}
+        self.pending_moves = []
 
     def _persist_jobs(self):
         with self._jobs_lock:
@@ -193,6 +195,8 @@ class DesktopRuntime:
         self._due["evo_tick"] = 15
         self._tasks["sensing"] = (5, self._sensing_tick)
         self._due["sensing"] = 5
+        self._tasks["home_requests"] = (3, self._home_requests_tick)
+        self._due["home_requests"] = 3
         # Mutation remains governed by the organism's existing self-modification
         # boundary, not enabled merely by installing a desktop interface.
         autonomy = self.systems.get("autonomy")
@@ -290,6 +294,37 @@ class DesktopRuntime:
         systems["_predictive_stager_offset"] = offset
         from aurora_internal.dual_strata.activation_field import run_activation_cycle
         run_activation_cycle(systems)
+
+    def _home_requests_tick(self, systems):
+        """What her surface asked home for.  A request brings the next pass of
+        that work forward; home's own schedule and governor still decide."""
+        from aurora_internal.dual_strata.strata_link import link_dir, read_home_requests
+        offset_path = link_dir(self.state_dir) / "home_requests.offset"
+        try:
+            offset = int(offset_path.read_text(encoding="utf-8").strip() or 0)
+        except (OSError, ValueError):
+            offset = 0
+        requests, offset = read_home_requests(self.state_dir, offset)
+        done = self.home_requests_seen
+        for req in requests:
+            kind = str(req.get("kind") or "")
+            task = {"curiosity_cycle": "curiosity", "evo_cycle": "evo_tick"}.get(kind)
+            if task and task in self._due:
+                self._due[task] = 0
+                done[kind] = done.get(kind, 0) + 1
+            elif kind == "embodiment_move":
+                self._embodiment_move_requested(req)
+                done[kind] = done.get(kind, 0) + 1
+            else:
+                done["not_runnable_here"] = done.get("not_runnable_here", 0) + 1
+        if requests:
+            offset_path.write_text(str(offset), encoding="utf-8")
+        return {"requests": len(requests)}
+
+    def _embodiment_move_requested(self, req):
+        """Her own request to move (3c) is carried out by home; filled in by
+        the move orchestration."""
+        self.pending_moves.append(dict(req))
 
     def _sensing_tick(self, systems):
         if self.link and not self.link.surface_ready(self.surface_id):
@@ -552,6 +587,7 @@ class DesktopRuntime:
                 "hardware": self.services.status(), "clone_harvest": self.systems.get("_clone_harvest_absorb"),
                 "strata": self.link.status() if self.link else {"status": "not_started"},
                 "first_pairing": self._first_pairing_status(),
+                "home_requests": dict(self.home_requests_seen),
                 "acm": {**self.acm.status(), "coalesced_observations": self._coalesced_kernel} if self.acm else {"status": "not_configured"},
                 "surface": "local" if not self.link or self.link.surface_ready(self.surface_id) else "standby",
                 "owner_console": "available", "at": time.time()}
