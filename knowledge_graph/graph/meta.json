@@ -1,18 +1,18 @@
 {
  "authors": "Sunni (Sir) Morningstar & Cael Devo",
- "content_hash": "9fb8194374954fb332479438c767fef35152ef1020f21eced673bc05edf00221",
+ "content_hash": "d99e7fa5f6611d750fe6d8648ac1d7d93f3ce3ffa1aec83bdec27d6e662c5c36",
  "coverage": {
   "claim_checks": {
    "conflict": 1,
-   "consistent": 346,
-   "unverified": 560
+   "consistent": 347,
+   "unverified": 566
   },
   "edge_basis": {
-   "declared": 12822,
+   "declared": 12845,
    "implemented": 137883,
    "implemented+inferred": 2,
    "implemented+observed": 3721,
-   "inferred": 1561,
+   "inferred": 1555,
    "observed": 4858
   },
   "files": {
@@ -36,13 +36,13 @@
    "untyped_parameter": 1227
   }
  },
- "edge_count": 160847,
+ "edge_count": 160864,
  "edge_types": {
   "CALLS": 28410,
   "CITES": 345,
   "COMPOSED_OF": 300,
   "CONTAINS": 29964,
-  "DOCUMENTS": 9613,
+  "DOCUMENTS": 9620,
   "EMITS": 10,
   "EXPRESSES": 5119,
   "FEEDS": 33194,
@@ -54,10 +54,10 @@
   "INSTANTIATES": 5318,
   "INVOKES": 101,
   "MAPS_TO": 5,
-  "MEMBER_OF": 3243,
+  "MEMBER_OF": 3256,
   "OVERRIDES": 106,
   "OWNED_BY": 18,
-  "PART_OF": 157,
+  "PART_OF": 154,
   "PASSES_CALLBACK": 589,
   "PERSISTS_TO": 104,
   "PRECEDES": 15,
@@ -72,10 +72,10 @@
   "USES_ORGAN": 1432,
   "WRITES": 9248
  },
- "generated_at": "2026-11-18T19:15:51Z",
+ "generated_at": "2026-11-18T19:25:04Z",
  "generator": "scripts/aurora_knowledge_graph.py",
  "generator_version": "2.0.0",
- "node_count": 34533,
+ "node_count": 34532,
  "node_types": {
   "BusChannel": 340,
   "Class": 1727,
@@ -101,13 +101,13 @@
   "Signal": 233,
   "SourceFile": 78,
   "StateStore": 2927,
-  "Subsystem": 256
+  "Subsystem": 255
  },
  "noncomp_channels": 25,
  "noncomp_interaction_slots": 625,
  "ownership_mapping": {
   "covers": "every source file in the repository",
-  "declared_files": 985,
+  "declared_files": 993,
   "not_covered": [
    {
     "path": "aurora_state/, aurora_state_test/, aurora_logs/, vector_data/, lessons/, aurora_genealogy/",
@@ -133,7 +133,7 @@
   "path": "docs/module_ownership.json",
   "schema": "aurora.module_ownership/2",
   "scope": "Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.",
-  "sha256": "d60eb40815d2dd1b",
+  "sha256": "8c829b0b5d4f38be",
   "version": 2
  },
  "runtime_scenarios": [
@@ -142,8 +142,8 @@
  ],
  "schema_version": "2.0.0",
  "source_branch": "claude/aurora-integration-20261118",
- "source_commit": "cd12c6e5dfdf5ab857322d08d108684fadd22291",
- "static_content_hash": "dfcc369b4025119b129a62033f2214c2a8e7fbcdc99862b263eb6cb40027e45a",
+ "source_commit": "bf87856e82e66807aa23760c13a48ade5d7754e0",
+ "static_content_hash": "14a388c1de1254d36b86fceb52282603695d88e8c12b4b08c288fb37abba3c21",
  "title": "Aurora codebase knowledge graph",
  "warnings": []
 }

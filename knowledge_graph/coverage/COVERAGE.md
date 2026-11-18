@@ -1,7 +1,7 @@
 # What the knowledge graph covers, and what it does not
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `cd12c6e5dfdf`, generator 2.0.0.
+Source commit `bf87856e82e6`, generator 2.0.0.
 
 Nothing here is hidden by a summary: every unresolved call site is in `unresolved_calls.jsonl`, every file's status in `files.jsonl`, every claim check in `claims.json`, and every statically reachable function that no recorded run entered in `unobserved.json`.
 
@@ -38,10 +38,10 @@ Every edge says how it is known. implemented: read from code. declared: stated i
 | basis | edges |
 |---|---:|
 | implemented | 137883 |
-| declared | 12822 |
+| declared | 12845 |
 | observed | 4858 |
 | implemented+observed | 3721 |
-| inferred | 1561 |
+| inferred | 1555 |
 | implemented+inferred | 2 |
 
 ## Runtime evidence
@@ -54,7 +54,7 @@ Paths no recording covers: the phone runtime past the boot stages listed, the AC
 
 ## Declared ownership and its boundary
 
-Layer and category come from `docs/module_ownership.json` (aurora.module_ownership/2, sha256 d60eb40815d2dd1b). They are claims, kept apart from what the code and the runs show.
+Layer and category come from `docs/module_ownership.json` (aurora.module_ownership/2, sha256 8c829b0b5d4f38be). They are claims, kept apart from what the code and the runs show.
 
 > Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.
 
@@ -65,7 +65,9 @@ Not covered by the mapping:
 - `Cargo.toml, pubspec.yaml, Gradle files, buildozer.spec, requirements and pytest.ini`: Build and dependency configuration
 - `flutter_app/android/ resources and manifests`: Android resources and XML configuration
 
-Claim checks: conflict 1, consistent 346, unverified 560.
+Claim checks: conflict 1, consistent 347, unverified 566.
+
+1 mapped path(s) have no module in the tree: `knowledge_graph/index.html`
 
 ## Reading impact
 

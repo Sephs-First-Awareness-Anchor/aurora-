@@ -1,7 +1,7 @@
 # Architectural comparison
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Base `b649850b28ff` (claude/knowledge-graph), head `cd12c6e5dfdf` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and dfcc369b4025.
+Base `b649850b28ff` (claude/knowledge-graph), head `bf87856e82e6` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and 14a388c1de12.
 
 ## 1. Function lineage
 
@@ -118,7 +118,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 ## 2. Relationships: consolidated against lost
 
-2263 relationships of base are not in head (structure and documentation edges left out). 1424 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 3 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 73 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 214 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 98 went with code that was removed. 138 are lost: the source still exists and no longer reaches the target by any of those routes. 2600 relationships are new.
+2264 relationships of base are not in head (structure and documentation edges left out). 1424 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 3 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 73 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 214 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 98 went with code that was removed. 139 are lost: the source still exists and no longer reaches the target by any of those routes. 2609 relationships are new.
 
 ### Retargeted: 313
 
@@ -130,76 +130,76 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 ### Delegated through a module binding: 3
 
 - 1 CALLS to `projection_event` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
-- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `investigate_if_pressured` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 
 ### Folded into a shared function: 73
 
 - 28 FEEDS to `to_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 2 READS to `created_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `committed_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `T` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `N` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `to_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `date` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `projected_accuracy` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `axis_signature` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `source_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `transition_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `prev_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `claim_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `inquiries_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `certainty_band` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `observation_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `child_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `topic` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `parent_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `X` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `source_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `intent_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `resolution_note` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `axis_signature` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `certainty_band` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `B` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `observation_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `inquiries_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `to_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `speakups_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `from_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `affect` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `dreams_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `resolution_note` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `contradiction_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `intent_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `source_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `transition_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `edge_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `last_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 
 ### Seen only in the base run: 214
 
 - 5 CALLS to `to_dict` now through ``
-- 3 CALLS to `strengthen` now through ``
 - 3 CALLS to `get_stats` now through ``
-- 2 CALLS to `activation` now through ``
+- 3 CALLS to `strengthen` now through ``
 - 2 CALLS to `load` now through ``
-- 2 CALLS to `attach_live_response_simulation_bridge` now through ``
-- 2 CALLS to `is_identity_question` now through ``
-- 2 CALLS to `constraint_axes` now through ``
-- 2 CALLS to `semantic_coherence` now through ``
-- 2 CALLS to `representation_discrepancy` now through ``
-- 2 CALLS to `coherence_index` now through ``
-- 2 CALLS to `warp_params` now through ``
+- 2 CALLS to `activation` now through ``
 - 2 CALLS to `looks_like_correction` now through ``
-- 1 CALLS to `aggregate_warp_signals` now through ``
-- 1 CALLS to `apply_relief_tolerance` now through ``
-- 1 CALLS to `constraint_signature` now through ``
+- 2 CALLS to `is_identity_question` now through ``
+- 2 CALLS to `warp_params` now through ``
+- 2 CALLS to `representation_discrepancy` now through ``
+- 2 CALLS to `semantic_coherence` now through ``
+- 2 CALLS to `coherence_index` now through ``
+- 2 CALLS to `constraint_axes` now through ``
+- 2 CALLS to `attach_live_response_simulation_bridge` now through ``
 - 1 CALLS to `run_live_response_turn` now through ``
-- 1 CALLS to `weighted_persistence_tax_factor` now through ``
-- 1 CALLS to `state_signature` now through ``
-- 1 CALLS to `variance` now through ``
-- 1 CALLS to `record_validation_issues` now through ``
-- 1 CALLS to `causal_score` now through ``
-- 1 CALLS to `infer_comparison_type` now through ``
-- 1 CALLS to `answer_from_claims` now through ``
-- 1 CALLS to `get_personality` now through ``
-- 1 CALLS to `classify_input_intent` now through ``
-- 1 CALLS to `get_response_hints` now through ``
-- 1 CALLS to `derive_noncomp_behavior_actuation` now through ``
-- 1 CALLS to `classify_turn_type` now through ``
-- 1 CALLS to `update` now through ``
+- 1 CALLS to `init__` now through ``
+- 1 CALLS to `check_and_extend` now through ``
+- 1 CALLS to `inject_into_oets` now through ``
+- 1 CALLS to `should_prefer_live_perspective` now through ``
+- 1 CALLS to `record` now through ``
+- 1 CALLS to `perspective_retention` now through ``
+- 1 CALLS to `coarse_pos` now through ``
+- 1 CALLS to `should_suppress_surface_meta_answer` now through ``
+- 1 CALLS to `active_axis_count` now through ``
+- 1 CALLS to `chain_up1_information` now through ``
+- 1 CALLS to `surface_recent_context_horizon` now through ``
+- 1 CALLS to `apply_relief_tolerance` now through ``
+- 1 CALLS to `descriptions_overlap` now through ``
+- 1 CALLS to `update_coupling_roots` now through ``
+- 1 CALLS to `generic_response_penalty` now through ``
+- 1 CALLS to `h_seek` now through ``
 
-### Lost (review each): IMPORTS 127, FEEDS 9, READS 1, MEMBER_OF 1
+### Lost (review each): IMPORTS 127, FEEDS 9, MEMBER_OF 1, PART_OF 1, READS 1
 
 - `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context` [base aurora_braid_wiring.py:255]
 - `fn:aurora_representational_address.RepresentationalRef.for_c1` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base tests/test_habitat_discovery_canary_build717.py:286]
@@ -338,6 +338,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `mod:tests.test_universal_function_lineage_freshness_fast_path` IMPORTS `ext:shutil` [base tests/test_universal_function_lineage_freshness_fast_path.py:26]
 - `mod:tests.test_universal_function_lineage_freshness_fast_path` IMPORTS `ext:tempfile` [base tests/test_universal_function_lineage_freshness_fast_path.py:28]
 - `mod:reply_aurora` MEMBER_OF `subsys:category:runtime` [base docs/module_ownership.json:0]
+- `subsys:area:scripts` PART_OF `subsys:quasi:desktop` [base ?:0]
 - `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output` [base aurora.py:35899]
 
 ### Removed with deleted code: FEEDS 98
@@ -508,8 +509,10 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 ## 2b. Composites promoted on evidence
 
-52 in base, 52 in head. Each base composite is matched to the head composite sharing the most files; a composite that splits, loses files or disappears means the binding between those files changed.
+52 in base, 51 in head. Each base composite is matched to the head composite sharing the most files; a composite that splits, loses files or disappears means the binding between those files changed.
 
+- `subsys:composite:foundation:6f0cf83a` (9 files) -> `subsys:composite:foundation:5e482b6c` (overlap 0.64); joined: `aurora_internal/aurora_ontological_scaffolding.py`, `aurora_internal/aurora_pressure_ledger.py`, `aurora_internal/aurora_pressure_mathematics_tracker.py`, `aurora_internal/aurora_shared_helpers.py`, `aurora_internal/aurora_structural_pressure_steering.py`
+- `subsys:composite:foundation:d3ead140` (2 files) -> `subsys:composite:foundation:5e482b6c` (overlap 0.14); joined: `aurora_constraint_engine.py`, `aurora_constraint_manifold_compiler.py`, `aurora_constraint_unit_adapter.py`, `aurora_internal/aurora_constraint_manifold_patched.py`, `aurora_internal/aurora_leverage_scalar.py`, `aurora_internal/aurora_noncomp_registry.py`
 - `subsys:composite:governance:01effd21` (17 files) -> `subsys:composite:governance:16699d84` (overlap 0.94); joined: `aurora_internal/aurora_energy_layer_costs.py`
 
 ## 3. Stored state
@@ -678,7 +681,7 @@ Logging calls: 431 in base, 431 in head.
 
 ### Interaction handling
 
-1 seed node(s); 69516 relationships around them in base, 70307 in head; 135 lost (not consolidated), 2555 new.
+1 seed node(s); 69516 relationships around them in base, 70317 in head; 136 lost (not consolidated), 2579 new.
 - lost: `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context`
 - lost: `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output`
 - lost: `fn:aurora_representational_address.RepresentationalRef.for_c1` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`

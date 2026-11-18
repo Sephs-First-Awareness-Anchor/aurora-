@@ -410,10 +410,6 @@
      "corpus_runner.py"
     ],
     [
-     "aurora_internal/__init__.py",
-     "aurora_runtime.py"
-    ],
-    [
      "aurora_runtime.py",
      "corpus_runner.py"
     ],
@@ -440,6 +436,9 @@
     "aurora_internal/aurora_ontological_scaffolding.py",
     "aurora_internal/aurora_polarity_gradient.py",
     "aurora_internal/aurora_pressure_ledger.py",
+    "aurora_internal/aurora_pressure_mathematics_tracker.py",
+    "aurora_internal/aurora_shared_helpers.py",
+    "aurora_internal/aurora_structural_pressure_steering.py",
     "aurora_ivm.py",
     "aurora_noncomp_layer_compiler.py",
     "aurora_noncomp_manifold_compiler.py",
@@ -520,10 +519,26 @@
     ],
     [
      "aurora_internal/aurora_ontological_scaffolding.py",
+     "aurora_internal/aurora_shared_helpers.py"
+    ],
+    [
+     "aurora_internal/aurora_ontological_scaffolding.py",
      "foundational_contract.py"
     ],
     [
      "aurora_internal/aurora_polarity_gradient.py",
+     "aurora_ivm.py"
+    ],
+    [
+     "aurora_internal/aurora_pressure_mathematics_tracker.py",
+     "aurora_internal/aurora_shared_helpers.py"
+    ],
+    [
+     "aurora_internal/aurora_shared_helpers.py",
+     "aurora_internal/aurora_structural_pressure_steering.py"
+    ],
+    [
+     "aurora_internal/aurora_shared_helpers.py",
      "aurora_ivm.py"
     ],
     [
@@ -4403,7 +4418,7 @@
    "domain": "desktop",
    "subsystem": "foundation",
    "also": [],
-   "composite": null,
+   "composite": "foundation.1",
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -4711,6 +4726,17 @@
    "basis": "name_and_docstring",
    "duties": null
   },
+  "aurora_internal/aurora_shared_helpers.py": {
+   "domain": "desktop",
+   "subsystem": "foundation",
+   "also": [],
+   "composite": "foundation.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
   "aurora_internal/aurora_solidification.py": {
    "domain": "desktop",
    "subsystem": "memory",
@@ -4783,7 +4809,7 @@
    "domain": "desktop",
    "subsystem": "foundation",
    "also": [],
-   "composite": null,
+   "composite": "foundation.1",
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -6850,6 +6876,17 @@
    "basis": "name_and_docstring",
    "duties": null
   },
+  "knowledge_graph/index.html": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "html",
+   "basis": "location",
+   "duties": null
+  },
   "reply_aurora.py": {
    "domain": "desktop",
    "subsystem": "tooling",
@@ -7062,6 +7099,28 @@
    "duties": null
   },
   "scripts/aurora_fault_instrumentation_injector.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null
+  },
+  "scripts/aurora_kg_observe.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null
+  },
+  "scripts/aurora_knowledge_graph.py": {
    "domain": "desktop",
    "subsystem": "tooling",
    "also": [],
@@ -9015,6 +9074,21 @@
    "exercises": [
     "aurora_internal/aurora_code_evolution_chamber.py",
     "aurora_internal/aurora_universal_function_lineage.py"
+   ]
+  },
+  "tests/test_cognition_gap_wiring.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_braid_wiring.py",
+    "aurora_curiosity_engine.py"
    ]
   },
   "tests/test_cognitive_experience_causal_evaluator.py": {
@@ -12535,6 +12609,22 @@
     "aurora.py"
    ]
   },
+  "tests/test_perspective_merge_repair.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/constraint_genealogy.py",
+    "aurora_representational_address.py",
+    "aurora_representational_resolution.py"
+   ]
+  },
   "tests/test_perspective_representation_birth.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -12869,6 +12959,20 @@
    ]
   },
   "tests/test_praxis_same_device_loop.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_praxis_bridge.py"
+   ]
+  },
+  "tests/test_praxis_shared_state_and_discovery.py": {
    "domain": "desktop",
    "subsystem": "tests",
    "also": [],
@@ -14963,6 +15067,18 @@
     "flutter_app/android/app/src/main/python/aurora_bridge.py"
    ]
   },
+  "tests/test_undefined_names_in_live_paths.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": []
+  },
   "tests/test_understanding_genealogy_preservation.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -15515,6 +15631,9 @@
      "aurora_internal/aurora_ontological_scaffolding.py",
      "aurora_internal/aurora_polarity_gradient.py",
      "aurora_internal/aurora_pressure_ledger.py",
+     "aurora_internal/aurora_pressure_mathematics_tracker.py",
+     "aurora_internal/aurora_shared_helpers.py",
+     "aurora_internal/aurora_structural_pressure_steering.py",
      "aurora_ivm.py",
      "aurora_noncomp_layer_compiler.py",
      "aurora_noncomp_manifold_compiler.py",

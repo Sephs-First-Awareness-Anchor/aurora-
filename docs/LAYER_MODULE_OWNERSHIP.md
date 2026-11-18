@@ -18,7 +18,7 @@ The record is `docs/module_ownership.json`. Change a domain, subsystem, layer or
 
 ## Coverage
 
-Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 985 files.
+Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 993 files.
 
 Covered: files ending in `.py`, `.dart`, `.rs`, `.kt`, `.java`, `.sh`, `.bat`, `.ps1`, `.jsx`, `.html`, `.service`, and files under `.github/workflows/`, skipping folders named `.git`, `__pycache__`, `node_modules`, `build`, `.dart_tool`, `target`, `aurora_state`, `aurora_state_test`, `aurora_logs`, `vector_data`, `lessons`, `aurora_genealogy`.
 
@@ -36,7 +36,7 @@ Not covered:
 
 | Quasi (domain) | Holds | Subsystems | Composites | Files |
 |---|---|---|---|---|
-| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 43 | 927 |
+| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 43 | 935 |
 | Phone app | The Flutter app with its Android services and on-device Python. | 5 | 4 | 22 |
 | ACM | The Rust kernel, its runner and the native Python ACM runtime. | 8 | 3 | 30 |
 | Repository and CI | Workflows that build, test and run the other domains. | 1 | 0 | 6 |
@@ -46,7 +46,7 @@ Not covered:
 | Higher order (subsystem) | Holds | Composites | Files in composites | Base files |
 |---|---|---|---|---|
 | Entry and runtime | Entry points, the turn loop, process orchestration, launchers and service units. | 1 | 7 | 21 |
-| Foundation and constraint layers | Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonComp, pressure and leverage. | 4 | 21 | 16 |
+| Foundation and constraint layers | Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonComp, pressure and leverage. | 4 | 24 | 14 |
 | Beings and dimensional systems | I-State beings, dimensional systems, consciousness assembly and simulation (the L2 to L4 and L7 layer files). | 1 | 4 | 1 |
 | Crystal ops | The concept-crystal store, its evidence-based growth, ingestion and persistence, interaction crystals, and the crystal types QuasiArch shares with live processing. | 4 | 24 | 2 |
 | Memory | SediMemory, working and interaction memory, turn and resolution records. | 1 | 2 | 10 |
@@ -59,8 +59,8 @@ Not covered:
 | Dual strata (surface and subsurface) | The dual-strata package and the surface/subsurface daemons and substrate. | 2 | 39 | 7 |
 | Bridges and external tools | Praxis, ACM, scouting, research dispatch and tool registries. | 3 | 9 | 8 |
 | Investigative and diagnostic | Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here. | 5 | 12 | 23 |
-| Tests | The pytest suite. Each test lists the files it exercises. | 2 | 4 | 461 |
-| Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 0 | 0 | 86 |
+| Tests | The pytest suite. Each test lists the files it exercises. | 2 | 4 | 465 |
+| Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 0 | 0 | 89 |
 
 ## Quasi: Phone app
 
@@ -213,7 +213,7 @@ Support is the knowledge graph's verdict: `supported` and `partly_supported` mea
 | Composite | Subsystem | Hub | Files | Support |
 |---|---|---|---|---|
 | `runtime.1` | Entry and runtime | `aurora.py` | 7 | partly_supported |
-| `foundation.1` | Foundation and constraint layers | `aurora_internal/aurora_noncomp_registry.py` | 15 | partly_supported |
+| `foundation.1` | Foundation and constraint layers | `aurora_internal/aurora_noncomp_registry.py` | 18 | partly_supported |
 | `foundation.2` | Foundation and constraint layers | `aurora_computational_model.py` | 2 | supported |
 | `foundation.3` | Foundation and constraint layers | `aurora_internal/aurora_pressure_classifier.py` | 2 | supported |
 | `foundation.4` | Foundation and constraint layers | `aurora_manifold_directory_reader.py` | 2 | supported |
@@ -398,9 +398,10 @@ Composite is blank for a base file that no import joins to another file in its s
 | `aurora_internal/aurora_pressure_adapter.py` |  |  | name_and_docstring |
 | `aurora_internal/aurora_pressure_classifier.py` | foundation.3 |  | name_and_docstring |
 | `aurora_internal/aurora_pressure_ledger.py` | foundation.1 |  | name_and_docstring |
-| `aurora_internal/aurora_pressure_mathematics_tracker.py` |  |  | name_and_docstring |
+| `aurora_internal/aurora_pressure_mathematics_tracker.py` | foundation.1 |  | name_and_docstring |
 | `aurora_internal/aurora_pressure_router.py` | foundation.3 |  | name_and_docstring |
-| `aurora_internal/aurora_structural_pressure_steering.py` |  |  | name_and_docstring |
+| `aurora_internal/aurora_shared_helpers.py` | foundation.1 |  | name_and_docstring |
+| `aurora_internal/aurora_structural_pressure_steering.py` | foundation.1 |  | name_and_docstring |
 | `aurora_internal/aurora_tensor_expressions.py` |  |  | name_and_docstring |
 | `aurora_ivm.py` | foundation.1 | L1 | name_and_docstring |
 | `aurora_manifold_directory/__init__.py` |  |  | name_and_docstring |
@@ -847,6 +848,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_clock_restart_accounting.py` |  |  | location |
 | `tests/test_clone_harvest.py` |  |  | location |
 | `tests/test_code_evolution_restart_heredity.py` |  |  | location |
+| `tests/test_cognition_gap_wiring.py` |  |  | location |
 | `tests/test_cognitive_experience_causal_evaluator.py` |  |  | location |
 | `tests/test_cognitive_experience_counterfactual_transfer.py` |  |  | location |
 | `tests/test_cognitive_experience_episode_loop.py` |  |  | location |
@@ -1070,6 +1072,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_perception_evolution_boundary.py` |  |  | location |
 | `tests/test_perspective_before_resolution.py` |  |  | location |
 | `tests/test_perspective_live_birth.py` |  |  | location |
+| `tests/test_perspective_merge_repair.py` |  |  | location |
 | `tests/test_perspective_representation_birth.py` |  |  | location |
 | `tests/test_perturbation_probe.py` |  |  | location |
 | `tests/test_pf1_1_proposition_frame.py` |  |  | location |
@@ -1093,6 +1096,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_praxis_messenger.py` |  |  | location |
 | `tests/test_praxis_physics_routing.py` |  |  | location |
 | `tests/test_praxis_same_device_loop.py` |  |  | location |
+| `tests/test_praxis_shared_state_and_discovery.py` |  |  | location |
 | `tests/test_prediction_field_manifold.py` |  |  | location |
 | `tests/test_preoutcome_pressure_capture.py` |  |  | location |
 | `tests/test_presence_metrics.py` |  |  | location |
@@ -1225,6 +1229,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_turn_compute_graph.py` |  |  | location |
 | `tests/test_turn_write_behind.py` |  |  | location |
 | `tests/test_ui_observation_journal.py` |  |  | location |
+| `tests/test_undefined_names_in_live_paths.py` |  |  | location |
 | `tests/test_understanding_genealogy_preservation.py` |  |  | location |
 | `tests/test_understanding_sediment_overlay.py` |  |  | location |
 | `tests/test_unformed_patterns.py` |  |  | location |
@@ -1259,6 +1264,7 @@ Composite is blank for a base file that no import joins to another file in its s
 |---|---|---|---|
 | `constraint_prototype.html` |  |  | location |
 | `constraint_prototype.jsx` |  |  | location |
+| `knowledge_graph/index.html` |  |  | location |
 | `reply_aurora.py` |  |  | reviewed |
 | `scripts/analyze_cross_generational_representations.py` |  |  | location |
 | `scripts/analyze_native_representation_inquiries.py` |  |  | location |
@@ -1270,6 +1276,8 @@ Composite is blank for a base file that no import joins to another file in its s
 | `scripts/aurora_ci_segment.py` |  |  | location |
 | `scripts/aurora_cold_archive.py` |  |  | location |
 | `scripts/aurora_fault_instrumentation_injector.py` |  |  | location |
+| `scripts/aurora_kg_observe.py` |  |  | location |
+| `scripts/aurora_knowledge_graph.py` |  |  | location |
 | `scripts/aurora_stack_exporter.py` |  |  | location |
 | `scripts/aurora_state_compress.py` |  |  | location |
 | `scripts/backfill_noncomp_and_relations.py` |  |  | location |

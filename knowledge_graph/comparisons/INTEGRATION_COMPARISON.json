@@ -1,6 +1,6 @@
 {
  "base": "b649850b28ff7e94f4da2447bb23c3804ea68450",
- "head": "cd12c6e5dfdf5ab857322d08d108684fadd22291",
+ "head": "bf87856e82e66807aa23760c13a48ade5d7754e0",
  "lineage": {
   "moved": [
    [
@@ -3393,6 +3393,14 @@
       28
      ]
     ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "subsys:area:scripts",
+    "type": "PART_OF",
+    "target": "subsys:quasi:desktop",
+    "evidence": [],
     "observed": false,
     "via": null
    }
@@ -46563,6 +46571,11 @@
     "target": "mod:aurora_internal.aurora_shared_helpers"
    },
    {
+    "source": "mod:aurora_internal.aurora_pressure_mathematics_tracker",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:foundation.1"
+   },
+   {
     "source": "mod:aurora_internal.aurora_pressure_router",
     "type": "CALLS",
     "target": "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
@@ -46650,6 +46663,16 @@
    {
     "source": "mod:aurora_internal.aurora_shared_helpers",
     "type": "MEMBER_OF",
+    "target": "subsys:category:foundation"
+   },
+   {
+    "source": "mod:aurora_internal.aurora_shared_helpers",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:foundation.1"
+   },
+   {
+    "source": "mod:aurora_internal.aurora_shared_helpers",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -46681,6 +46704,11 @@
     "source": "mod:aurora_internal.aurora_structural_pressure_steering",
     "type": "IMPORTS",
     "target": "mod:aurora_internal.aurora_shared_helpers"
+   },
+   {
+    "source": "mod:aurora_internal.aurora_structural_pressure_steering",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:foundation.1"
    },
    {
     "source": "mod:aurora_internal.aurora_surface_dispatcher",
@@ -47213,6 +47241,16 @@
     "target": "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
    },
    {
+    "source": "mod:scripts.aurora_kg_observe",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tooling"
+   },
+   {
+    "source": "mod:scripts.aurora_knowledge_graph",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tooling"
+   },
+   {
     "source": "mod:tensor_occupancy_hook",
     "type": "CALLS",
     "target": "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
@@ -47280,6 +47318,11 @@
    {
     "source": "mod:tests.test_cognition_gap_wiring",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_cognition_gap_wiring",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -47321,6 +47364,11 @@
     "source": "mod:tests.test_perspective_merge_repair",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_perspective_merge_repair",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_perspective_merge_repair",
@@ -47385,6 +47433,11 @@
    {
     "source": "mod:tests.test_praxis_shared_state_and_discovery",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_praxis_shared_state_and_discovery",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -47435,6 +47488,11 @@
    {
     "source": "mod:tests.test_undefined_names_in_live_paths",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_undefined_names_in_live_paths",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -47446,11 +47504,6 @@
     "source": "store:vision_index.json",
     "type": "FEEDS",
     "target": "fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict"
-   },
-   {
-    "source": "subsys:area:tests",
-    "type": "PART_OF",
-    "target": "subsys:quasi:desktop"
    }
   ]
  }

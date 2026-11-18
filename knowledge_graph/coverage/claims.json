@@ -1104,6 +1104,12 @@
    "observations": [],
    "status": "consistent"
   },
+  "mod:aurora_internal.aurora_shared_helpers": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
   "mod:aurora_internal.aurora_solidification": {
    "claim_basis": "name_and_docstring",
    "notes": [],
@@ -2175,7 +2181,7 @@
   "mod:run_gauntlet": {
    "claim_basis": "reviewed",
    "notes": [
-    "writes state that production code outside investigative work reads: store:daemon.log (read by aurora_metabolic_distiller)"
+    "writes state that production code outside investigative work reads: store:daemon.log (read by aurora_hub)"
    ],
    "observations": [],
    "status": "conflict"
@@ -2270,6 +2276,22 @@
    "status": "unverified"
   },
   "mod:scripts.aurora_fault_instrumentation_injector": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:scripts.aurora_kg_observe": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:scripts.aurora_knowledge_graph": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -3338,6 +3360,14 @@
    "status": "unverified"
   },
   "mod:tests.test_code_evolution_restart_heredity": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_cognition_gap_wiring": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -5105,6 +5135,14 @@
    "observations": [],
    "status": "unverified"
   },
+  "mod:tests.test_perspective_merge_repair": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
   "mod:tests.test_perspective_representation_birth": {
    "claim_basis": "location",
    "notes": [
@@ -5274,6 +5312,14 @@
    "status": "unverified"
   },
   "mod:tests.test_praxis_same_device_loop": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_praxis_shared_state_and_discovery": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -6323,6 +6369,14 @@
    "observations": [],
    "status": "unverified"
   },
+  "mod:tests.test_undefined_names_in_live_paths": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
   "mod:tests.test_understanding_genealogy_preservation": {
    "claim_basis": "location",
    "notes": [],
@@ -6528,11 +6582,13 @@
    "status": "unverified"
   }
  },
- "claimed_paths_missing": [],
+ "claimed_paths_missing": [
+  "knowledge_graph/index.html"
+ ],
  "disagreements": [],
  "ownership": {
   "covers": "every source file in the repository",
-  "declared_files": 985,
+  "declared_files": 993,
   "not_covered": [
    {
     "path": "aurora_state/, aurora_state_test/, aurora_logs/, vector_data/, lessons/, aurora_genealogy/",
@@ -6558,7 +6614,7 @@
   "path": "docs/module_ownership.json",
   "schema": "aurora.module_ownership/2",
   "scope": "Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.",
-  "sha256": "d60eb40815d2dd1b",
+  "sha256": "8c829b0b5d4f38be",
   "version": 2
  }
 }

@@ -133,17 +133,17 @@
      "fn:aurora_desktop_agent.get_agent"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.data",
-     "FEEDS",
-     "fn:aurora_tool_mind.ingest_tool_result"
-    ],
-    [
      "field:aurora_internal.tool_registry.ToolResult.note",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
      "field:aurora_internal.tool_registry.ToolResult.success",
+     "FEEDS",
+     "fn:aurora_tool_mind.ingest_tool_result"
+    ],
+    [
+     "field:aurora_internal.tool_registry.ToolResult.data",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ]
@@ -359,12 +359,12 @@
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior.aspects",
+     "fn:aurora_internal.crystal_interior._profile",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior._profile",
+     "fn:aurora_internal.crystal_interior.aspects",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ]
@@ -649,13 +649,29 @@
   },
   {
    "binding": {
-    "CALLS": 40,
-    "FEEDS": 107,
-    "INSTANTIATES": 26,
+    "CALLS": 68,
+    "FEEDS": 158,
+    "INHERITS": 1,
+    "INSTANTIATES": 29,
     "SHARED_STATE": 3
    },
-   "cohesion": 0.141,
+   "cohesion": 0.122,
    "evidence": [
+    [
+     "cls:aurora_ivm.ContradictionRecord",
+     "INHERITS",
+     "cls:aurora_internal.aurora_shared_helpers.DictRecord"
+    ],
+    [
+     "fn:aurora_ivm.ContradictionLedger.load",
+     "CALLS",
+     "fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict"
+    ],
+    [
+     "fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict",
+     "FEEDS",
+     "field:aurora_ivm.ContradictionLedger._records"
+    ],
     [
      "mod:aurora_constraint_engine",
      "INSTANTIATES",
@@ -702,6 +718,26 @@
      "cls:aurora_internal.aurora_constraint_manifold_patched.ConstraintVector"
     ],
     [
+     "fn:aurora_internal.aurora_ontological_scaffolding.SemanticNode._recalculate_depth",
+     "CALLS",
+     "fn:aurora_internal.aurora_shared_helpers.clamp"
+    ],
+    [
+     "fn:aurora_internal.aurora_ontological_scaffolding.SemanticNode._update_comprehension_confidence",
+     "CALLS",
+     "fn:aurora_internal.aurora_shared_helpers.clamp"
+    ],
+    [
+     "fn:aurora_internal.aurora_ontological_scaffolding.SemanticNode._recalculate_priority",
+     "CALLS",
+     "fn:aurora_internal.aurora_shared_helpers.clamp"
+    ],
+    [
+     "fn:aurora_internal.aurora_ontological_scaffolding.OntologicalScaffoldingEngine.__init__",
+     "INSTANTIATES",
+     "cls:foundational_contract.FoundationalContract"
+    ],
+    [
      "fn:aurora_internal.aurora_polarity_gradient.verify_polarity_gradient",
      "INSTANTIATES",
      "cls:aurora_ivm.ToroidalVertexSystem"
@@ -717,90 +753,6 @@
      "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
     ],
     [
-     "mod:aurora_ivm",
-     "INSTANTIATES",
-     "cls:foundational_contract.FoundationalContract"
-    ],
-    [
-     "fn:aurora_ivm.ToroidalVertexSystem.inject_stimulus",
-     "CALLS",
-     "fn:foundational_contract.ExistencePredicate.axis_for"
-    ],
-    [
-     "fn:aurora_ivm.ToroidalVertexSystem.inject_stimulus",
-     "CALLS",
-     "fn:foundational_contract.ExistencePredicate.polarity"
-    ],
-    [
-     "fn:aurora_ivm.IVMCoordinate.to_constraint_vector",
-     "INSTANTIATES",
-     "cls:aurora_internal.aurora_constraint_manifold_patched.ConstraintVector"
-    ],
-    [
-     "fn:aurora_ivm.IVMNode.compute_constraint_vector",
-     "INSTANTIATES",
-     "cls:aurora_internal.aurora_constraint_manifold_patched.ConstraintVector"
-    ],
-    [
-     "fn:aurora_ivm.IVMLattice.__init__",
-     "INSTANTIATES",
-     "cls:aurora_internal.aurora_constraint_manifold_patched.ConstraintField"
-    ],
-    [
-     "fn:foundational_contract.ExistenceMode.to_constraint_vector",
-     "INSTANTIATES",
-     "cls:aurora_internal.aurora_constraint_manifold_patched.ConstraintVector"
-    ],
-    [
-     "fn:foundational_contract.FoundationalContract.constraint_profile",
-     "INSTANTIATES",
-     "cls:aurora_internal.aurora_constraint_manifold_patched.ConstraintVector"
-    ],
-    [
-     "fn:foundational_contract.FoundationalContract._unit_profile",
-     "CALLS",
-     "fn:aurora_constraint_unit_adapter.build_constraint_profile"
-    ],
-    [
-     "fn:foundational_contract.FoundationalContract._constraint_axes",
-     "FEEDS",
-     "fn:aurora_constraint_unit_adapter.build_constraint_profile"
-    ],
-    [
-     "fn:foundational_contract.FoundationalContract._pressure_axes",
-     "FEEDS",
-     "fn:aurora_constraint_unit_adapter.build_constraint_profile"
-    ],
-    [
-     "field:aurora_internal.aurora_noncomp_registry.NonCompDimension.POLARITY",
-     "FEEDS",
-     "fn:aurora_constraint_engine.SedimentBasin.__init__"
-    ]
-   ],
-   "external_binding": 1074,
-   "higher_order": "subsys:category:foundation",
-   "id": "subsys:composite:foundation:6f0cf83a",
-   "members": [
-    "aurora_constraint_engine.py",
-    "aurora_constraint_manifold_compiler.py",
-    "aurora_constraint_unit_adapter.py",
-    "aurora_internal/aurora_constraint_manifold_patched.py",
-    "aurora_internal/aurora_leverage_scalar.py",
-    "aurora_internal/aurora_noncomp_registry.py",
-    "aurora_internal/aurora_polarity_gradient.py",
-    "aurora_ivm.py",
-    "foundational_contract.py"
-   ],
-   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
-  },
-  {
-   "binding": {
-    "CALLS": 3,
-    "INSTANTIATES": 2
-   },
-   "cohesion": 0.013,
-   "evidence": [
-    [
      "fn:aurora_internal.aurora_pressure_ledger.PressureExperienceLedger._bridge_to_oets",
      "INSTANTIATES",
      "cls:aurora_internal.aurora_ontological_scaffolding.UsageExample"
@@ -814,14 +766,36 @@
      "fn:aurora_internal.aurora_pressure_ledger.PressureExperienceLedger._bridge_to_oets",
      "CALLS",
      "fn:aurora_internal.aurora_ontological_scaffolding.OntologicalWeb.get_node"
+    ],
+    [
+     "fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._compute_metrics",
+     "CALLS",
+     "fn:aurora_internal.aurora_shared_helpers.clamp"
+    ],
+    [
+     "fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._compute_gradient_health",
+     "CALLS",
+     "fn:aurora_internal.aurora_shared_helpers.clamp"
     ]
    ],
-   "external_binding": 382,
+   "external_binding": 1862,
    "higher_order": "subsys:category:foundation",
-   "id": "subsys:composite:foundation:d3ead140",
+   "id": "subsys:composite:foundation:5e482b6c",
    "members": [
+    "aurora_constraint_engine.py",
+    "aurora_constraint_manifold_compiler.py",
+    "aurora_constraint_unit_adapter.py",
+    "aurora_internal/aurora_constraint_manifold_patched.py",
+    "aurora_internal/aurora_leverage_scalar.py",
+    "aurora_internal/aurora_noncomp_registry.py",
     "aurora_internal/aurora_ontological_scaffolding.py",
-    "aurora_internal/aurora_pressure_ledger.py"
+    "aurora_internal/aurora_polarity_gradient.py",
+    "aurora_internal/aurora_pressure_ledger.py",
+    "aurora_internal/aurora_pressure_mathematics_tracker.py",
+    "aurora_internal/aurora_shared_helpers.py",
+    "aurora_internal/aurora_structural_pressure_steering.py",
+    "aurora_ivm.py",
+    "foundational_contract.py"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -1087,12 +1061,12 @@
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._scan_manifest",
+     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
+     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator.assimilate",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
@@ -1948,7 +1922,7 @@
      "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
     ],
     [
-     "fn:aurora_expression_perception.build_layer5_associative_modules",
+     "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
      "FEEDS",
      "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
     ],
@@ -1983,7 +1957,7 @@
      "fn:aurora_expression_perception.infer_word_role"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.candidate_pressure",
+     "field:aurora_articulation.ArticulationDecision.selected",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
@@ -2559,12 +2533,12 @@
     [
      "mod:aurora",
      "SHARES",
-     "organ:checkpoint"
+     "organ:sensory_crystal"
     ],
     [
      "mod:aurora",
      "SHARES",
-     "organ:grammar_engine"
+     "organ:identity"
     ]
    ],
    "external_binding": 4197,
@@ -2668,7 +2642,7 @@
      "fn:aurora_internal.dual_strata.prediction_field.build_prediction_signal"
     ],
     [
-     "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.confidence",
+     "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.source",
      "FEEDS",
      "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.persist_cers_detail"
     ],
@@ -5235,17 +5209,17 @@
      },
      "evidence": [
       [
+       "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
+       "FEEDS",
+       "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
+      ],
+      [
        "field:aurora_internal.scouting.contracts.ScoutRequest.inquiry",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
       [
        "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
-       "FEEDS",
-       "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
-      ],
-      [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ]
@@ -5317,12 +5291,12 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.evidence_items"
+       "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
       ],
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.fit_rationales"
+       "field:aurora_internal.scouting.contracts.ScoutReport.evidence_items"
       ]
      ],
      "link": [
@@ -5748,12 +5722,12 @@
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior.aspects",
+       "fn:aurora_internal.crystal_interior._profile",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior._profile",
+       "fn:aurora_internal.crystal_interior.aspects",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ]
@@ -6729,20 +6703,21 @@
    "subsystem": "dimensional"
   },
   {
-   "best_evidence_composite": "subsys:composite:foundation:6f0cf83a",
+   "best_evidence_composite": "subsys:composite:foundation:5e482b6c",
    "candidate": false,
-   "cohesion": 0.105,
-   "declared_links": 21,
+   "cohesion": 0.116,
+   "declared_links": 25,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_noncomp_registry.py",
    "id": "foundation.1",
    "internal_binding": {
-    "CALLS": 49,
-    "FEEDS": 107,
+    "CALLS": 73,
+    "FEEDS": 158,
+    "INHERITS": 1,
     "INSTANTIATES": 30,
     "SHARED_STATE": 3
    },
-   "jaccard": 0.6,
+   "jaccard": 0.778,
    "links": [
     {
      "binding": {
@@ -6933,17 +6908,17 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.B",
-       "FEEDS",
-       "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
-      ],
-      [
        "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.T",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.X",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.N",
+       "FEEDS",
+       "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
+      ],
+      [
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.B",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ]
@@ -7075,6 +7050,33 @@
     },
     {
      "binding": {
+      "CALLS": 13,
+      "FEEDS": 26
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.aurora_ontological_scaffolding.SemanticNode._recalculate_depth",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ],
+      [
+       "fn:aurora_internal.aurora_ontological_scaffolding.SemanticNode._update_comprehension_confidence",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ],
+      [
+       "fn:aurora_internal.aurora_ontological_scaffolding.SemanticNode._recalculate_priority",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_ontological_scaffolding.py",
+      "aurora_internal/aurora_shared_helpers.py"
+     ]
+    },
+    {
+     "binding": {
       "INSTANTIATES": 1
      },
      "evidence": [
@@ -7121,6 +7123,88 @@
     {
      "binding": {
       "CALLS": 7,
+      "FEEDS": 18
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._compute_metrics",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ],
+      [
+       "fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._compute_gradient_health",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ],
+      [
+       "fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._detect_flip_proximity",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_pressure_mathematics_tracker.py",
+      "aurora_internal/aurora_shared_helpers.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 3,
+      "FEEDS": 6
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.aurora_structural_pressure_steering.StructuralPressureSteering._build_directive",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ],
+      [
+       "fn:aurora_internal.aurora_structural_pressure_steering.StructuralPressureSteering._build_accumulated_directive",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ],
+      [
+       "fn:aurora_internal.aurora_structural_pressure_steering.StructuralPressureSteering.apply_to_dpme",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.clamp"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_shared_helpers.py",
+      "aurora_internal/aurora_structural_pressure_steering.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 1,
+      "INHERITS": 1
+     },
+     "evidence": [
+      [
+       "cls:aurora_ivm.ContradictionRecord",
+       "INHERITS",
+       "cls:aurora_internal.aurora_shared_helpers.DictRecord"
+      ],
+      [
+       "fn:aurora_ivm.ContradictionLedger.load",
+       "CALLS",
+       "fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict"
+      ],
+      [
+       "fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict",
+       "FEEDS",
+       "field:aurora_ivm.ContradictionLedger._records"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_shared_helpers.py",
+      "aurora_ivm.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 7,
       "FEEDS": 23,
       "INSTANTIATES": 4
      },
@@ -7147,7 +7231,7 @@
      ]
     }
    ],
-   "links_with_binding": 15,
+   "links_with_binding": 19,
    "members": [
     "aurora_constraint_emission.py",
     "aurora_constraint_engine.py",
@@ -7160,6 +7244,9 @@
     "aurora_internal/aurora_ontological_scaffolding.py",
     "aurora_internal/aurora_polarity_gradient.py",
     "aurora_internal/aurora_pressure_ledger.py",
+    "aurora_internal/aurora_pressure_mathematics_tracker.py",
+    "aurora_internal/aurora_shared_helpers.py",
+    "aurora_internal/aurora_structural_pressure_steering.py",
     "aurora_ivm.py",
     "aurora_noncomp_layer_compiler.py",
     "aurora_noncomp_manifold_compiler.py",
@@ -7575,12 +7662,12 @@
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._scan_manifest",
+       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
+       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator.assimilate",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ]
@@ -9702,7 +9789,7 @@
        "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
       ],
       [
-       "fn:aurora_expression_perception.build_layer5_associative_modules",
+       "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
        "FEEDS",
        "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
       ]
@@ -10824,7 +10911,7 @@
    "best_evidence_composite": "subsys:composite:runtime:0414c162",
    "candidate": false,
    "cohesion": 0.029,
-   "declared_links": 8,
+   "declared_links": 7,
    "domain": "desktop",
    "hub": "aurora.py",
    "id": "runtime.1",
@@ -10952,14 +11039,6 @@
      "link": [
       "aurora_daemon.py",
       "corpus_runner.py"
-     ]
-    },
-    {
-     "binding": {},
-     "evidence": [],
-     "link": [
-      "aurora_internal/__init__.py",
-      "aurora_runtime.py"
      ]
     },
     {
@@ -11420,7 +11499,7 @@
        "fn:aurora_internal.dual_strata.prediction_field.build_prediction_signal"
       ],
       [
-       "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.confidence",
+       "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.source",
        "FEEDS",
        "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.persist_cers_detail"
       ]
@@ -12249,12 +12328,12 @@
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.context_families",
+       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.observation_count",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
+       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.context_families",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ]
@@ -12309,7 +12388,7 @@
        "fn:aurora_internal.dual_strata.topology_tracker.TopologyFingerprint.from_signature"
       ],
       [
-       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.sources",
+       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.regime",
        "FEEDS",
        "fn:aurora_internal.dual_strata.semantic_variant_registry.TopologyProfile.from_signature"
       ]
