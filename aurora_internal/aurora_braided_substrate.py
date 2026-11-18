@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from typing import Any, Deque, Dict, List, Tuple
 
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 @dataclass

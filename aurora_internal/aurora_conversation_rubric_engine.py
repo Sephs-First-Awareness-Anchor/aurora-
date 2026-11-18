@@ -53,7 +53,7 @@ def _zero_rubric() -> Dict[str, float]:
     return {d: 0.0 for d in RUBRIC_DIMENSIONS}
 
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 _CONTENT_STOPWORDS = {

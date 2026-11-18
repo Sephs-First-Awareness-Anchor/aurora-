@@ -83,7 +83,7 @@ INFLUENCE_EDGES: List[Tuple[str, str, float]] = [
 ]
 
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 # ============================================================================

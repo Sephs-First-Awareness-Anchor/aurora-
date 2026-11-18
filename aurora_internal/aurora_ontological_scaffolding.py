@@ -88,7 +88,7 @@ from foundational_contract import (
 # SHARED UTILITIES
 # ============================================================================
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _generate_id(prefix: str) -> str:

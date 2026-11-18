@@ -42,7 +42,7 @@ import threading
 import time
 from collections import OrderedDict, defaultdict, deque
 from dataclasses import dataclass, field, replace
-from aurora_persistence_utils import DictRecord
+from aurora_internal.aurora_shared_helpers import DictRecord
 from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 # ---------------------------------------------------------------------------
@@ -217,7 +217,7 @@ def _consume_semantic_dim_tags(dominant_axis: str) -> List[str]:
     return tags_out
 
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _generation_role_name(gen: int) -> str:

@@ -27,7 +27,7 @@ import os
 import shutil
 import uuid
 from dataclasses import dataclass, field
-from aurora_persistence_utils import DictRecord
+from aurora_internal.aurora_shared_helpers import DictRecord
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple

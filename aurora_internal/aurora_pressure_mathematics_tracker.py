@@ -46,12 +46,7 @@ logger = logging.getLogger("aurora.pressure_math")
 AXES = ("X", "T", "N", "B", "A")
 
 
-def clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    """Bound v to [lo, hi]. Shared by every module that used its own _clamp copy."""
-    return max(lo, min(hi, v))
-
-
-_clamp = clamp  # this module's existing call sites keep their name
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 # ============================================================================

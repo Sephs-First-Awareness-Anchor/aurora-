@@ -40,7 +40,7 @@ from enum import Enum
 # SHARED UTILITIES
 # ============================================================================
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 def _gen_id(prefix: str) -> str:
     return f"{prefix}_{hashlib.md5(f'{time.time()}{random.random()}'.encode()).hexdigest()[:10]}"

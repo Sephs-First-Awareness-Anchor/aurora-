@@ -27,7 +27,7 @@ import threading
 import logging
 from typing import Dict, Optional, List, Callable
 from dataclasses import dataclass, field, asdict
-from aurora_persistence_utils import DictRecord
+from aurora_internal.aurora_shared_helpers import DictRecord
 from enum import Enum
 
 logger = logging.getLogger(__name__)

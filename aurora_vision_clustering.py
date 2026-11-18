@@ -39,7 +39,7 @@ import urllib.parse
 from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field, asdict
-from aurora_persistence_utils import DictRecord
+from aurora_internal.aurora_shared_helpers import DictRecord
 
 logger = logging.getLogger(__name__)
 

@@ -358,7 +358,7 @@ _ESCALATION_PROFILES: Dict[str, Dict[str, float]] = {
 }
 
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _clamp_signed(v: float, lim: float) -> float:

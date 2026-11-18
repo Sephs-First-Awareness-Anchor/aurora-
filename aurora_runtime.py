@@ -448,7 +448,7 @@ def _env_float(name: str, default: float) -> float:
         return float(default)
 
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _normalize_ancestry_constraints(constraints: Optional[Iterable[str]]) -> FrozenSet[str]:

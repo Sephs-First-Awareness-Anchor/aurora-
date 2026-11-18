@@ -88,7 +88,7 @@ import json
 import os
 import time
 from dataclasses import dataclass
-from aurora_persistence_utils import DictRecord
+from aurora_internal.aurora_shared_helpers import DictRecord
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 

@@ -50,7 +50,7 @@ from aurora_internal.aurora_turn_persistence import batch_defer
 # Utilities
 # ---------------------------------------------------------------------------
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 # ---------------------------------------------------------------------------

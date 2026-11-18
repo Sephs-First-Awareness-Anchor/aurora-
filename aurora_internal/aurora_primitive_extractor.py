@@ -108,7 +108,7 @@ _AXIS_SHORT: Dict[str, str] = {
 }
 
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _norm(vec: Dict[str, float]) -> Dict[str, float]:

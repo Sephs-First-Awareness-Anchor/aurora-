@@ -69,7 +69,7 @@ _HEDGE_THRESHOLD = 0.34               # ~1 marker hit on the shared detector
 _BOUNDARY_CALIBRATION_THRESHOLD = 0.45
 
 
-from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _hash_text(text: str) -> str:

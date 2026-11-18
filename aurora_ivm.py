@@ -112,7 +112,7 @@ import hashlib
 import numpy as np
 from typing import Dict, List, Any, Optional, Tuple, Set, FrozenSet
 from dataclasses import dataclass, field
-from aurora_persistence_utils import DictRecord
+from aurora_internal.aurora_shared_helpers import DictRecord
 from collections import defaultdict
 from enum import Enum, IntEnum
 
