@@ -20,7 +20,6 @@ from there, uniformly for both single-line and multi-line handlers.
 import ast
 import os
 import sys
-import tempfile
 from pathlib import Path
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -63,7 +62,7 @@ def test_single_line_handler_body_is_split_not_prepended():
     assert "except Exception as _aurora_boundary_exc:\n" in result
     lines = result.splitlines()
     except_idx = next(i for i, l in enumerate(lines) if "except Exception as _aurora_boundary_exc:" in l)
-    assert "_aurora_record_exception_from_locals(" in lines[except_idx + 1]
+    assert "_aurora_fault(locals()," in lines[except_idx + 1]
     # original inline body ("pass") must survive, after the injected block
     tail = "\n".join(lines[except_idx:])
     assert tail.rstrip().endswith("pass")
@@ -80,10 +79,10 @@ def test_multiline_handler_body_unaffected_in_placement():
     count, result = _instrument_source(source, REPO_ROOT_PATH)
     assert count == 1
     ast.parse(result)
-    assert "_aurora_record_exception_from_locals(" in result
+    assert "_aurora_fault(locals()," in result
     assert "do_fallback()" in result
     # the original body statement must still come after the injected block
-    block_idx = result.index("_aurora_record_exception_from_locals(")
+    block_idx = result.index("_aurora_fault(locals(),")
     fallback_idx = result.index("do_fallback()")
     assert block_idx < fallback_idx
 
@@ -104,7 +103,7 @@ def test_existing_as_clause_is_reused_not_duplicated():
     # own "import X as Y" alias is a separate, expected occurrence.
     body = result[result.index("def f():"):]
     assert body.count(" as ") == 1
-    assert "exc=original_name," in result
+    assert "_aurora_fault(locals(), original_name," in result
 
 
 def test_multiline_tuple_exception_header_is_handled():
@@ -126,7 +125,7 @@ def test_multiline_tuple_exception_header_is_handled():
     count, result = _instrument_source(source, REPO_ROOT_PATH)
     assert count == 1
     ast.parse(result)
-    assert "_aurora_record_exception_from_locals(" in result
+    assert "_aurora_fault(locals()," in result
     assert " as _aurora_boundary_exc:" in result
 
 
@@ -140,7 +139,7 @@ def test_intentional_marker_comment_is_respected():
     )
     count, result = _instrument_source(source, REPO_ROOT_PATH)
     assert count == 0
-    assert "_aurora_record_exception_from_locals(" not in result
+    assert "_aurora_fault(locals()," not in result
 
 
 def test_already_visible_handler_is_left_alone():
@@ -154,7 +153,7 @@ def test_already_visible_handler_is_left_alone():
     )
     count, result = _instrument_source(source, REPO_ROOT_PATH)
     assert count == 0
-    assert "_aurora_record_exception_from_locals(" not in result
+    assert "_aurora_fault(locals()," not in result
 
 
 def test_import_line_inserted_once_after_module_docstring():

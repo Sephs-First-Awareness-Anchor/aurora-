@@ -18,7 +18,7 @@ from __future__ import annotations
 import gzip
 import json
 import os
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, List
 
 from aurora_internal.crystal_facets import FacetBook
 from aurora_internal.crystal_associations import AssociationStore

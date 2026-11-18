@@ -53,7 +53,8 @@ separate runs of scripts/bridge_tensor_occupancy_to_warp.py -- it does not
 reset to empty each time the way it did before this was added.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'tensor_occupancy_warp_bridge.py')
 
 import json
 import time
@@ -218,13 +219,7 @@ class TensorOccupancyWarpBridge(WarpCapable):
             }
             self._integrated = list(self._warp_trials.values()) + list(self._warp_promoted.values())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:tensor_occupancy_warp_bridge.py:219",
-                exc=_aurora_boundary_exc,
-                context={"function": "load_state", "handler_line": 219, "source_file": "tensor_occupancy_warp_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load_state', 219)
             pass  # corrupt/incompatible state file -- start fresh rather than crash
 
     def save_state(self, path: Optional[str] = None) -> None:
@@ -244,13 +239,7 @@ class TensorOccupancyWarpBridge(WarpCapable):
             with open(p, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:tensor_occupancy_warp_bridge.py:238",
-                exc=_aurora_boundary_exc,
-                context={"function": "save_state", "handler_line": 238, "source_file": "tensor_occupancy_warp_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save_state', 238)
             pass
 
     # ── WarpCapable required overrides ────────────────────────────────────────
@@ -278,13 +267,7 @@ class TensorOccupancyWarpBridge(WarpCapable):
                     "sixth_axis_signal": component.sixth_axis_signal,
                 }) + "\n")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:tensor_occupancy_warp_bridge.py:265",
-                exc=_aurora_boundary_exc,
-                context={"function": "_integrate_warp", "handler_line": 265, "source_file": "tensor_occupancy_warp_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_integrate_warp', 265)
             pass  # visibility log is best-effort; never break Warp lifecycle on it
 
     def _score_trial(self, component: WarpComponent) -> float:

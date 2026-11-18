@@ -267,6 +267,27 @@ def record_exception_from_locals(scope: Mapping[str, Any], *, module: str, opera
         return {}
 
 
+def bind_fault_recorder(module: str, source_file: str):
+    """Return a one-line exception recorder bound to one module.
+
+    ``_aurora_fault(locals(), exc, "fn", 34)`` produces exactly the record that
+    the seven-line ``record_exception_from_locals(...)`` block produced:
+    operation ``exception_handler:<source_file>:<line>`` and context
+    ``{"function", "handler_line", "source_file"}`` in that key order.
+    Hand-written call sites pass ``operation=`` / ``context=`` to keep theirs.
+    """
+    def _aurora_fault(scope: Mapping[str, Any], exc: BaseException, function: str = "<module>",
+                      line: Optional[int] = None, *, operation: Optional[str] = None,
+                      context: Optional[Dict[str, Any]] = None, severity: str = "auto") -> Dict[str, Any]:
+        if context is None:
+            context = {"function": function, "handler_line": line, "source_file": source_file}
+        if operation is None:
+            operation = f"exception_handler:{source_file}:{line}"
+        return record_exception_from_locals(scope, module=module, operation=operation, exc=exc,
+                                            context=context, severity=severity)
+    return _aurora_fault
+
+
 def _read_persisted_faults(target: Mapping[str, Any]) -> list:
     path = _active_state_dir(target) / "runtime_faults.jsonl"
     if not path.exists(): return []
@@ -340,4 +361,4 @@ def fault_summary(systems: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]
 
 
 __all__ = ["EXPECTED_FALLBACK_SEVERITIES", "INVARIANT_SEVERITIES", "SUBSYSTEM_DEGRADATION_SEVERITIES",
-           "fault_summary", "record_exception_from_locals", "record_runtime_fault"]
+           "bind_fault_recorder", "fault_summary", "record_exception_from_locals", "record_runtime_fault"]

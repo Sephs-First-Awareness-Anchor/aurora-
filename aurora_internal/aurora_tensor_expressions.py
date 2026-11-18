@@ -54,8 +54,9 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_tensor_expressions.py')
 
-import math
 import time
 from typing import Dict, Optional, Any, List
 
@@ -477,13 +478,7 @@ class TensorExpressionLayer:
             # present, rather than assuming either shape unconditionally.
             return dict(self._field.pressure_topology())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_tensor_expressions.py:377",
-                exc=_aurora_boundary_exc,
-                context={"function": "_axis_pressures", "handler_line": 377, "source_file": "aurora_internal/aurora_tensor_expressions.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_axis_pressures', 377)
             return {ax: 0.3 for ax in ('X', 'T', 'N', 'B', 'A')}
 
     _TENSOR_NAMES = {
@@ -506,13 +501,7 @@ class TensorExpressionLayer:
             try:
                 levels[name] = crystal.compute(pressures)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_tensor_expressions.py:399",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "tick", "handler_line": 399, "source_file": "aurora_internal/aurora_tensor_expressions.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'tick', 399)
                 levels[name] = 0.0
         self._update_count += 1
         self._cached_state = None   # invalidate cache
@@ -666,13 +655,7 @@ class TensorExpressionLayer:
             try:
                 crystal.receive_cascade(understanding)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_tensor_expressions.py:520",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "receive_understanding", "handler_line": 520, "source_file": "aurora_internal/aurora_tensor_expressions.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'receive_understanding', 520)
                 pass
         self._cached_state = None   # force recompute next tick
         try:
@@ -790,13 +773,7 @@ class TensorExpressionLayer:
         try:
             self.salience.recalibrate(understanding)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_tensor_expressions.py:531",
-                exc=_aurora_boundary_exc,
-                context={"function": "recalibrate_salience", "handler_line": 531, "source_file": "aurora_internal/aurora_tensor_expressions.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'recalibrate_salience', 531)
             pass
 
     def reset_prediction_priors(self, understanding: Dict[str, Any]) -> None:
@@ -807,13 +784,7 @@ class TensorExpressionLayer:
         try:
             self.prediction.reset_priors(understanding, pressures=self._axis_pressures())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_tensor_expressions.py:541",
-                exc=_aurora_boundary_exc,
-                context={"function": "reset_prediction_priors", "handler_line": 541, "source_file": "aurora_internal/aurora_tensor_expressions.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'reset_prediction_priors', 541)
             pass
 
     def recalibrate_constraint_basis(self, understanding: Dict[str, Any], systems: Dict[str, Any]) -> None:
@@ -833,13 +804,7 @@ class TensorExpressionLayer:
                 elif hasattr(dimensional, 'der') and hasattr(dimensional.der, 'register_understanding'):
                     dimensional.der.register_understanding(understanding)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_tensor_expressions.py:560",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "recalibrate_constraint_basis", "handler_line": 560, "source_file": "aurora_internal/aurora_tensor_expressions.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'recalibrate_constraint_basis', 560)
                 pass
 
     def status(self) -> Dict[str, Any]:

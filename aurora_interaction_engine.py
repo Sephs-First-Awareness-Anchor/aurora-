@@ -3,6 +3,8 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_interaction_engine.py')
 
 import hashlib
 import json
@@ -847,13 +849,7 @@ class InteractionEngine:
         try:
             return float(value)
         except (TypeError, ValueError) as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_interaction_engine.py:738",
-                exc=_aurora_boundary_exc,
-                context={"function": "_safe_float", "handler_line": 738, "source_file": "aurora_interaction_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_safe_float', 738)
             return default
 
     def _dedupe_preserve_order(self, values: Iterable[str]) -> List[str]:

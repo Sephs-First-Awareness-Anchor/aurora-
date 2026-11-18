@@ -14,10 +14,10 @@ All integrated with the constraint axis system (X, T, N, B, A),
 dimensional systems, and the language pipeline in aurora.py.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_self_grounding.py')
 
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -136,13 +136,7 @@ class SelfGroundingFallback:
                                 grounding_source=f"sedimemory recall: {str(recalled)[:60]}",
                             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_self_grounding.py:137",
-                exc=_aurora_boundary_exc,
-                context={"function": "ground", "handler_line": 137, "source_file": "aurora_self_grounding.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'ground', 137)
             pass
 
         # 2. Known external structures (OETS semantic web)
@@ -158,13 +152,7 @@ class SelfGroundingFallback:
                             grounding_source=f"OETS concept: {str(c)[:60]}",
                         )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_self_grounding.py:152",
-                exc=_aurora_boundary_exc,
-                context={"function": "ground", "handler_line": 152, "source_file": "aurora_self_grounding.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'ground', 152)
             pass
 
         # 3. Prior relational context (working memory / session)
@@ -179,13 +167,7 @@ class SelfGroundingFallback:
                         grounding_source=f"working memory topic: {topic[:60]}",
                     )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_self_grounding.py:166",
-                exc=_aurora_boundary_exc,
-                context={"function": "ground", "handler_line": 166, "source_file": "aurora_self_grounding.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'ground', 166)
             pass
 
         # 4. FALLBACK: compare against self-state and process continuity
@@ -225,13 +207,7 @@ class SelfGroundingFallback:
                     grounding_source=f"self-state fallback: {name_anchor}, {dominant}-axis dominant",
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_self_grounding.py:205",
-                exc=_aurora_boundary_exc,
-                context={"function": "ground", "handler_line": 205, "source_file": "aurora_self_grounding.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'ground', 205)
             pass
 
         return SelfGroundedInterpretation(anchor_type="unresolved", confidence=0.0)
@@ -317,13 +293,7 @@ class EmbodiedStateTranslator:
                 return None  # High novelty → don't project embodied state, stay curious
             return None
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_self_grounding.py:290",
-                exc=_aurora_boundary_exc,
-                context={"function": "translate", "handler_line": 290, "source_file": "aurora_self_grounding.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'translate', 290)
             return None
 
 
@@ -398,13 +368,7 @@ class CoherenceTensionMonitor:
                         tensions.append(0.7)
                         break
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_self_grounding.py:364",
-                exc=_aurora_boundary_exc,
-                context={"function": "measure_tension", "handler_line": 364, "source_file": "aurora_self_grounding.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'measure_tension', 364)
             pass
 
         # Response drift: topic diverged from input

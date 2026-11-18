@@ -27,6 +27,8 @@ Nothing enters without validation. Nothing exits without personality.
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora.py')
 from aurora_internal.aurora_metabolic_clock import MetabolicClock as _MetabolicClock, turn_gated as _turn_gated
 from aurora_internal.aurora_metabolic_steps import register_default_steps as _register_default_steps
 # Authors: Sunni (Sir) Morningstar & Cael Devo
@@ -210,13 +212,7 @@ def _constraint_state_snapshot(obj: Any) -> Dict[str, Any]:
                 if isinstance(data, dict):
                     return dict(data)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:209",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_constraint_state_snapshot", "handler_line": 209, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_constraint_state_snapshot', 209)
                 continue
     raw = getattr(obj, "__dict__", None)
     if isinstance(raw, dict):
@@ -321,24 +317,12 @@ def _meaning_profile_for_value(value: str) -> Dict[str, Any]:
     try:
         from aurora_internal.aurora_meaning_evolution import meaning_profile_for_signature
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:313",
-            exc=_aurora_boundary_exc,
-            context={"function": "_meaning_profile_for_value", "handler_line": 313, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_meaning_profile_for_value', 313)
         return {}
     try:
         return dict(meaning_profile_for_signature(str(value or "")) or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:317",
-            exc=_aurora_boundary_exc,
-            context={"function": "_meaning_profile_for_value", "handler_line": 317, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_meaning_profile_for_value', 317)
         return {}
 
 
@@ -386,13 +370,7 @@ def _sensory_crystal_needs_seeding(state_dir: str) -> bool:
         )
         return checked == 0 or concept_nodes == 0
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:364",
-            exc=_aurora_boundary_exc,
-            context={"function": "_sensory_crystal_needs_seeding", "handler_line": 364, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_sensory_crystal_needs_seeding', 364)
         return True
 
 
@@ -437,13 +415,7 @@ def _ensure_seeded_sensory_crystal_state(state_dir: str, *, verbose: bool = Fals
         profile = meaning_profile_for_signature(value)
         return dict(profile or {}) if profile else {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:408",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ensure_seeded_sensory_crystal_state", "handler_line": 408, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_seeded_sensory_crystal_state', 408)
         return {}
 
 
@@ -576,13 +548,7 @@ class TeachingEngine:
                     if gen:
                         _log_learning_relief(gen, "A", 0.4, notes=f"learned_concept:{term}")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:538",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "process_teaching_input", "handler_line": 538, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'process_teaching_input', 538)
                     pass
                 return f"I've integrated that understanding of {term}. Thank you for teaching me."
         
@@ -691,13 +657,7 @@ class ReasoningEngine:
                 if not answer:
                     answer = self._reason_from_active_claim(user_text, understood, working_memory)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:646",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "reason", "handler_line": 646, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'reason', 646)
                 pass
             if answer:
                 self._update_memory_from_reasoning(answer, topic, systems)
@@ -795,13 +755,7 @@ class ReasoningEngine:
                 if causal_claim_answer:
                     return causal_claim_answer
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:733",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "reason", "handler_line": 733, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'reason', 733)
                 pass
 
         if working_memory and topic_words:
@@ -929,13 +883,7 @@ class ReasoningEngine:
                     # they no longer write a sentence here.
                     _rels = []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:851",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "reason", "handler_line": 851, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'reason', 851)
                 pass
 
         # resolve/merge_conflict: surface contradictions in OETS definitions
@@ -949,13 +897,7 @@ class ReasoningEngine:
                     # without forcing a resolution." frame is gone (binding rule 2).
                     _competing = bool(_d0 and _d1 and _d0[:60] != _d1[:60])
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:867",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "reason", "handler_line": 867, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'reason', 867)
                 pass
 
         # reclassify/reindex: consider alternative categories for the concept
@@ -967,13 +909,7 @@ class ReasoningEngine:
                     # FIX-A114: "<topic> can be understood as: ..." frame removed.
                     _cats = _cats
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:878",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "reason", "handler_line": 878, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'reason', 878)
                 pass
 
         # Step 4: Direct extraction from evidence
@@ -1081,13 +1017,7 @@ class ReasoningEngine:
                     existence_mode=ExistenceMode.PERSISTENT
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1062",
-                exc=_aurora_boundary_exc,
-                context={"function": "_update_memory_from_reasoning", "handler_line": 1062, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_update_memory_from_reasoning', 1062)
             pass
 
 
@@ -1375,13 +1305,7 @@ class SearchAdapter:
                 self._search_successes += 1
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1349",
-                exc=e,
-                context={"function": "lookup_word", "handler_line": 1349, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), e, 'lookup_word', 1349)
             result["error"] = f"Dictionary API: {type(e).__name__}: {e}"
             self._last_error = result["error"]
 
@@ -1436,13 +1360,7 @@ class SearchAdapter:
                 self._search_successes += 1
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1403",
-                exc=e,
-                context={"function": "concept_search", "handler_line": 1403, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), e, 'concept_search', 1403)
             result["error"] = f"DuckDuckGo API: {type(e).__name__}: {e}"
             self._last_error = result["error"]
 
@@ -1477,13 +1395,7 @@ class SearchAdapter:
                 self._search_successes += 1
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1437",
-                exc=e,
-                context={"function": "wikipedia_summary", "handler_line": 1437, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), e, 'wikipedia_summary', 1437)
             result["error"] = f"Wikipedia API: {type(e).__name__}: {e}"
             self._last_error = result["error"]
 
@@ -1578,13 +1490,7 @@ class SearchAdapter:
                 })
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1531",
-                exc=e,
-                context={"function": "ddg_web_search", "handler_line": 1531, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), e, 'ddg_web_search', 1531)
             self._last_error = f"DDG web search: {type(e).__name__}: {e}"
 
         return results
@@ -1611,13 +1517,7 @@ class SearchAdapter:
                         "source": "wikipedia",
                     })
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1557",
-                exc=e,
-                context={"function": "wikipedia_search", "handler_line": 1557, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), e, 'wikipedia_search', 1557)
             self._last_error = f"Wikipedia search: {type(e).__name__}: {e}"
 
         return results
@@ -1714,13 +1614,7 @@ class SearchAdapter:
                         ev["snippet"] = text[:max_chars]
                         ev["source"] = "direct_fetch"
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:1653",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "deep_search", "handler_line": 1653, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'deep_search', 1653)
                     pass
 
         return evidence
@@ -1744,39 +1638,21 @@ class SearchAdapter:
             d = self.lookup_word("hello")
             results["dictionary_api"] = "OK" if d["success"] else f"FAIL: {d.get('error', 'no data')}"
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1676",
-                exc=e,
-                context={"function": "test_connectivity", "handler_line": 1676, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), e, 'test_connectivity', 1676)
             results["dictionary_api"] = f"FAIL: {e}"
 
         try:
             c = self.concept_search("artificial intelligence")
             results["duckduckgo_api"] = "OK" if c["success"] else f"FAIL: {c.get('error', 'no data')}"
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1682",
-                exc=e,
-                context={"function": "test_connectivity", "handler_line": 1682, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), e, 'test_connectivity', 1682)
             results["duckduckgo_api"] = f"FAIL: {e}"
 
         try:
             w = self.wikipedia_summary("consciousness")
             results["wikipedia_api"] = "OK" if w["success"] else f"FAIL: {w.get('error', 'no data')}"
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1688",
-                exc=e,
-                context={"function": "test_connectivity", "handler_line": 1688, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), e, 'test_connectivity', 1688)
             results["wikipedia_api"] = f"FAIL: {e}"
 
         results["all_ok"] = all(v == "OK" for k, v in results.items() if k != "all_ok")
@@ -1816,13 +1692,7 @@ def _build_research_callback(search_adapter: SearchAdapter, systems: Optional[Di
                 _try_poedex_lookup(word, systems or {}, timeout=12.0, use_researcher=True) or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1727",
-                exc=_aurora_boundary_exc,
-                context={"function": "_fetch_definition", "handler_line": 1727, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_fetch_definition', 1727)
             poedex_text = ""
 
         if not poedex_text:
@@ -1971,13 +1841,7 @@ def _collect_response_pressure_guides(
         try:
             guides.append(('autonomy', tuner.guidance(window)))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1875",
-                exc=_aurora_boundary_exc,
-                context={"function": "_collect_response_pressure_guides", "handler_line": 1875, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_collect_response_pressure_guides', 1875)
             pass
 
     chat_tuner = systems.get('_chat_response_pressure_tuner')
@@ -1985,13 +1849,7 @@ def _collect_response_pressure_guides(
         try:
             guides.append(('chat', chat_tuner.guidance(window)))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1882",
-                exc=_aurora_boundary_exc,
-                context={"function": "_collect_response_pressure_guides", "handler_line": 1882, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_collect_response_pressure_guides', 1882)
             pass
 
     corpus_tuner = systems.get('_corpus_response_pressure_tuner')
@@ -1999,13 +1857,7 @@ def _collect_response_pressure_guides(
         try:
             guides.append(('corpus', corpus_tuner.guidance(window)))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1889",
-                exc=_aurora_boundary_exc,
-                context={"function": "_collect_response_pressure_guides", "handler_line": 1889, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_collect_response_pressure_guides', 1889)
             pass
 
     return guides
@@ -2027,13 +1879,7 @@ def _build_response_pressure_training_plan(
         try:
             contract_guidance = dict(understanding_contract.training_guidance(systems=systems) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1910",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_response_pressure_training_plan", "handler_line": 1910, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_response_pressure_training_plan', 1910)
             contract_guidance = {}
         if contract_guidance:
             pressure_targets = dict(plan.get('pressure_targets', {}) or {})
@@ -2069,13 +1915,7 @@ def _build_response_pressure_training_plan(
         try:
             top_fails = list(dream_trainer.ledger.get_top_fails(5) or [])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:1945",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_response_pressure_training_plan", "handler_line": 1945, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_response_pressure_training_plan', 1945)
             top_fails = []
         if top_fails:
             fail_rank_intensity = [0.9, 0.84, 0.78, 0.72]
@@ -2159,13 +1999,7 @@ def _build_response_pressure_training_plan(
         try:
             plan = quasiarch.advise_training_plan(plan, phase=phase)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:2028",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_response_pressure_training_plan", "handler_line": 2028, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_response_pressure_training_plan', 2028)
             pass
     return plan
 
@@ -2240,13 +2074,7 @@ def _apply_response_pressure_training_plan(
             try:
                 autonomy.add_study_topic(topic)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:2102",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_apply_response_pressure_training_plan", "handler_line": 2102, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_apply_response_pressure_training_plan', 2102)
                 pass
 
     return queued
@@ -2275,13 +2103,7 @@ def _record_training_epoch_fail_points(
     try:
         from aurora_internal.aurora_conversation_rubric_engine import ConversationRubricEngine
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:2130",
-            exc=_aurora_boundary_exc,
-            context={"function": "_record_training_epoch_fail_points", "handler_line": 2130, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_record_training_epoch_fail_points', 2130)
         return out
 
     rubric_engine = ConversationRubricEngine()
@@ -2339,13 +2161,7 @@ def _record_training_epoch_fail_points(
                 conversation_contexts=conversation_contexts,
             ) or [])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:2187",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_training_epoch_fail_points", "handler_line": 2187, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_training_epoch_fail_points', 2187)
             recorded = []
 
     relational_probe = {}
@@ -2359,13 +2175,7 @@ def _record_training_epoch_fail_points(
                 ) or {}
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:2200",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_training_epoch_fail_points", "handler_line": 2200, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_training_epoch_fail_points', 2200)
             relational_probe = {}
 
     weakest = sorted(weakest_rollup.items(), key=lambda kv: kv[1])[:4]
@@ -2469,13 +2279,7 @@ def _normalize_surface_anchor_label(anchor: str, working_memory: Any = None) -> 
                 return ""
             return normalized
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:2303",
-                exc=_aurora_boundary_exc,
-                context={"function": "_normalize_surface_anchor_label", "handler_line": 2303, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_normalize_surface_anchor_label', 2303)
             pass
     normalized = " ".join(re.findall(r"[a-z0-9_\-]+", raw)).strip()
     if normalized in contraction_shards:
@@ -2866,13 +2670,7 @@ def _constraint_emission_is_substantive(text: str, result: Any = None, input_fra
         act = getattr(result, "speech_act", None)
         act_name = str(getattr(act, "name", act) or "").upper()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:2677",
-            exc=_aurora_boundary_exc,
-            context={"function": "_constraint_emission_is_substantive", "handler_line": 2677, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_constraint_emission_is_substantive', 2677)
         act_name = ""
 
     is_question = bool(getattr(input_frame, "is_question", False))
@@ -2956,13 +2754,7 @@ def _repair_unarticulated_surface_response(
         try:
             return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:2760",
-                exc=_aurora_boundary_exc,
-                context={"function": "_repair_unarticulated_surface_response", "handler_line": 2760, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_repair_unarticulated_surface_response', 2760)
             return normalized
 
     if has_context_need:
@@ -2973,13 +2765,7 @@ def _repair_unarticulated_surface_response(
         try:
             return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:2770",
-                exc=_aurora_boundary_exc,
-                context={"function": "_repair_unarticulated_surface_response", "handler_line": 2770, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_repair_unarticulated_surface_response', 2770)
             return normalized
 
     if parts:
@@ -3001,13 +2787,7 @@ def _is_surface_meta_anchor_label(anchor: str, working_memory: Any = None) -> bo
         try:
             return bool(working_memory._is_broad_surface_meta_anchor(normalized))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:2791",
-                exc=_aurora_boundary_exc,
-                context={"function": "_is_surface_meta_anchor_label", "handler_line": 2791, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_is_surface_meta_anchor_label', 2791)
             pass
     words = [word for word in re.findall(r"[a-z]{3,}", normalized) if word]
     return len(words) == 1 and words[0] in set(getattr(WorkingMemory, "_SURFACE_META_ANCHORS", set()))
@@ -3023,13 +2803,7 @@ def _is_explicit_meaning_or_continuity_request(
         try:
             return bool(working_memory._is_explicit_meaning_or_continuity_request(user_text, understood))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:2806",
-                exc=_aurora_boundary_exc,
-                context={"function": "_is_explicit_meaning_or_continuity_request", "handler_line": 2806, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_is_explicit_meaning_or_continuity_request', 2806)
             pass
     text_low = str(user_text or "").lower()
     understood = dict(understood or {})
@@ -3337,13 +3111,7 @@ def _generate_identity_response(
                 if rendered:
                     return str(rendered).strip()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:3096",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_generate_identity_response", "handler_line": 3096, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_generate_identity_response', 3096)
                 pass
         return None
 
@@ -3643,13 +3411,7 @@ class AxisProjector:
                         # receptivity: high when polarity near 0 (transition)
                         ivm_vec[letter] = 1.0 - abs(polarity) * 0.5
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:3351",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "project", "handler_line": 3351, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'project', 3351)
                 pass
 
         # --- 3. Evolutionary signal (genealogy) — two complementary sub-signals ---
@@ -3675,25 +3437,13 @@ class AxisProjector:
                     if letter in gen_vec:
                         gen_vec[letter] = float(corr)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:3369",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "project", "handler_line": 3369, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'project', 3369)
                 pass
             try:
                 if hasattr(genealogy, "axis_relief_state"):
                     relief_vec = genealogy.axis_relief_state()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:3374",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "project", "handler_line": 3374, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'project', 3374)
                 pass
 
         # --- 4. Contextual signal (DCE situational frame axis weights) -----------
@@ -3716,13 +3466,7 @@ class AxisProjector:
                                 # Blend toward flat 0.2 when success_rate is low
                                 dce_vec[letter] = float(w) * sr + 0.2 * (1.0 - sr)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:3396",
-                exc=_aurora_boundary_exc,
-                context={"function": "project", "handler_line": 3396, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'project', 3396)
             pass
 
         # --- 5. Blend: 55% utterance (pragmatic + semantic words combined),
@@ -3813,13 +3557,7 @@ def _load_manifold_inventory() -> None:
                 with open(os.path.join(dir_path, fname), "r", encoding="utf-8") as fh:
                     data = json.load(fh)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:3486",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_load_manifold_inventory", "handler_line": 3486, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_load_manifold_inventory', 3486)
                 continue
             target = str(data.get("nc_target", "") or "").strip()
             if not target:
@@ -4233,13 +3971,7 @@ class ConstraintFieldBalancer:
                 if gen:
                     self._inject_to_genealogy(gen)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:3899",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "update", "handler_line": 3899, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'update', 3899)
                 pass
 
         # Cache current genealogy axis relief for use by rebalanced_activation().
@@ -4251,13 +3983,7 @@ class ConstraintFieldBalancer:
             if gen and hasattr(gen, "axis_relief_state"):
                 self._relief_cache = gen.axis_relief_state()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:3910",
-                exc=_aurora_boundary_exc,
-                context={"function": "update", "handler_line": 3910, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'update', 3910)
             pass
 
         # Nudge LSV via grammar engine / perception to rebalance expression structure
@@ -4280,13 +4006,7 @@ class ConstraintFieldBalancer:
                         outlet = self._ema.get("A", 0.2) / 0.2   # relative to ideal
                         perception.evo.nudge_lsv_from_axes(lsv_orient, outlet)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:3932",
-                exc=_aurora_boundary_exc,
-                context={"function": "update", "handler_line": 3932, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'update', 3932)
             pass
 
     def field_gradient(self) -> Dict[str, float]:
@@ -4344,13 +4064,7 @@ class ConstraintFieldBalancer:
                     difference_snapshot=None,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:3983",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_inject_to_genealogy", "handler_line": 3983, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_inject_to_genealogy', 3983)
                 pass
 
     def set_corpus_mode(self, enabled: bool) -> None:
@@ -4485,13 +4199,7 @@ def _project_utterance_axes(text: str, systems: dict, parsed: Optional[Dict[str,
 
         return projection
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4105",
-            exc=_aurora_boundary_exc,
-            context={"function": "_project_utterance_axes", "handler_line": 4105, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_project_utterance_axes', 4105)
         return {"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2}
 
 
@@ -4818,13 +4526,7 @@ def _persist_user_identity_name(
                 confidence=1.0,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:4372",
-                exc=_aurora_boundary_exc,
-                context={"function": "_persist_user_identity_name", "handler_line": 4372, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_persist_user_identity_name', 4372)
             pass
         try:
             conversation_memory.add_relationship_note(
@@ -4832,13 +4534,7 @@ def _persist_user_identity_name(
                 f"Introduced themselves as {clean_name}",
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:4379",
-                exc=_aurora_boundary_exc,
-                context={"function": "_persist_user_identity_name", "handler_line": 4379, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_persist_user_identity_name', 4379)
             pass
         try:
             conversation_memory.instantiate_lineage_trace(
@@ -4856,13 +4552,7 @@ def _persist_user_identity_name(
                 tick=int(time.time()),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:4396",
-                exc=_aurora_boundary_exc,
-                context={"function": "_persist_user_identity_name", "handler_line": 4396, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_persist_user_identity_name', 4396)
             pass
 
     if working_memory is not None:
@@ -4872,13 +4562,7 @@ def _persist_user_identity_name(
                 working_memory.note_user_identity_fact("name", clean_name, source="user")
                 stored = True
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:4405",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_persist_user_identity_name", "handler_line": 4405, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_persist_user_identity_name', 4405)
                 stored = False
         if not stored:
             try:
@@ -4887,13 +4571,7 @@ def _persist_user_identity_name(
                 user_bucket["identity_label"] = clean_name
                 stored = True
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:4413",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_persist_user_identity_name", "handler_line": 4413, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_persist_user_identity_name', 4413)
                 stored = False
         if stored:
             result["working_memory"] = True
@@ -4908,13 +4586,7 @@ def _persist_user_identity_name(
                 ) or {}
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:4427",
-                exc=_aurora_boundary_exc,
-                context={"function": "_persist_user_identity_name", "handler_line": 4427, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_persist_user_identity_name', 4427)
             guidance_result = {}
     if guidance_result:
         existing = dict(systems.get("_latest_surface_guidance_result") or {})
@@ -4994,13 +4666,7 @@ def _input_references_anchor(inp: str, working_memory) -> bool:
             if cur.get("is_callback") or str(cur.get("intent", "")) == "recall_question":
                 return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4506",
-            exc=_aurora_boundary_exc,
-            context={"function": "_input_references_anchor", "handler_line": 4506, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_input_references_anchor', 4506)
         pass
     if any(p in low for p in (
         "my name", "who am i", "what did i", "what's my", "you said",
@@ -5041,13 +4707,7 @@ def _response_is_leaked_anchor(user_text: str, response: str, working_memory) ->
     try:
         stored_name = str(working_memory.get_stated_fact("user", "name") or "").strip().lower()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4546",
-            exc=_aurora_boundary_exc,
-            context={"function": "_response_is_leaked_anchor", "handler_line": 4546, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_response_is_leaked_anchor', 4546)
         stored_name = ""
     if (
         stored_name and len(stored_name) > 1
@@ -5067,13 +4727,7 @@ def _response_is_leaked_anchor(user_text: str, response: str, working_memory) ->
     try:
         anchor_txt = str(working_memory._claim_to_text(anchor) or "").strip().lower()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4565",
-            exc=_aurora_boundary_exc,
-            context={"function": "_response_is_leaked_anchor", "handler_line": 4565, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_response_is_leaked_anchor', 4565)
         anchor_txt = ""
     resp_carries_anchor = (
         (len(anchor_val) > 2 and anchor_val in resp) or
@@ -5108,26 +4762,14 @@ def _seed_abstained_gap(user_text: str, systems) -> None:
                     "sought the base meaning of an unmet gap on first contact",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:4599",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_seed_abstained_gap", "handler_line": 4599, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_seed_abstained_gap', 4599)
                 pass
         loops = systems.setdefault("_open_loops", [])
         if isinstance(loops, list):
             loops.append({"tension": f"unmet base meaning: {subject[:80]}", "source": "abstain"})
             loops[:] = loops[-40:]
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4605",
-            exc=_aurora_boundary_exc,
-            context={"function": "_seed_abstained_gap", "handler_line": 4605, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_seed_abstained_gap', 4605)
         pass
 
 
@@ -5154,13 +4796,7 @@ def _log_constraint_fallback(systems, trigger: str, output: str) -> None:
         with open(state_dir / "constraint_fallback_log.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4631",
-            exc=_aurora_boundary_exc,
-            context={"function": "_log_constraint_fallback", "handler_line": 4631, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_log_constraint_fallback', 4631)
         pass
 
 
@@ -5184,13 +4820,7 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str =
             severity=0.55, persistence_key=str(user_text or "")[:48],
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4654",
-            exc=_aurora_boundary_exc,
-            context={"function": "_emit_honest_abstain_and_seek", "handler_line": 4654, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_emit_honest_abstain_and_seek', 4654)
         pass
     # RW3 (Architecture Wiring Audit, 2026-07-20, F4): the honest-abstain
     # chokepoint is the system's clearest, most concentrated failure
@@ -5214,13 +4844,7 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str =
                 phase=f"abstain_{trigger}", consumer="runtime",
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4677",
-            exc=_aurora_boundary_exc,
-            context={"function": "_emit_honest_abstain_and_seek", "handler_line": 4677, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_emit_honest_abstain_and_seek', 4677)
         pass
     _seed_abstained_gap(user_text, systems)
     _abstain = ""
@@ -5317,13 +4941,7 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str =
                             )
                             pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4695",
-            exc=_aurora_boundary_exc,
-            context={"function": "_emit_honest_abstain_and_seek", "handler_line": 4695, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_emit_honest_abstain_and_seek', 4695)
         _abstain = ""
     state.response_content = _abstain
     state.response_tone = "honest"
@@ -5391,13 +5009,7 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
                         "held the grounding anchor internally instead of leaking it to output",
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:4762",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_enforce_emission_discipline", "handler_line": 4762, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_enforce_emission_discipline', 4762)
                     pass
         # D2.1 (Directive D2, ratified 2026-07-17): the abstain-on-empty
         # fallback formerly fired right here too -- before the campaign-
@@ -5411,13 +5023,7 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
         if isinstance(systems, dict):
             systems["_last_waveform"] = list(getattr(state, "waveform", []) or [])
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4775",
-            exc=_aurora_boundary_exc,
-            context={"function": "_enforce_emission_discipline", "handler_line": 4775, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_enforce_emission_discipline', 4775)
         pass
 
 
@@ -5448,13 +5054,7 @@ def _capture_waveform_deposit(state, level: str, systems) -> None:
         try:
             pressure = float((getattr(state, "axis_activation", {}) or {}).get(axis, 0.0) or 0.0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:4805",
-                exc=_aurora_boundary_exc,
-                context={"function": "_capture_waveform_deposit", "handler_line": 4805, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_capture_waveform_deposit', 4805)
             pressure = 0.0
         wf = getattr(state, "waveform", None)
         if not isinstance(wf, list):
@@ -5466,13 +5066,7 @@ def _capture_waveform_deposit(state, level: str, systems) -> None:
         })
         state._last_waveform_content = content
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4816",
-            exc=_aurora_boundary_exc,
-            context={"function": "_capture_waveform_deposit", "handler_line": 4816, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_capture_waveform_deposit', 4816)
         pass
 
 
@@ -5499,13 +5093,7 @@ def _contribution_charge(content: str, user_text: str, state, systems) -> float:
         if str(es.get("drive", "") or "") not in ("", "steady", "neutral"):
             charge += 0.10
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4842",
-            exc=_aurora_boundary_exc,
-            context={"function": "_contribution_charge", "handler_line": 4842, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_contribution_charge', 4842)
         pass
     # Her own perspective / question.
     if c.endswith("?"):
@@ -5548,13 +5136,7 @@ def _gather_subsurface_contributions(systems) -> list:
             out.append({"level": "subsurface", "axis": "B", "content": guidance[:240],
                         "pressure": 0.55, "source": "subsurface_crest"})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4884",
-            exc=_aurora_boundary_exc,
-            context={"function": "_gather_subsurface_contributions", "handler_line": 4884, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_gather_subsurface_contributions', 4884)
         pass
     return out
 
@@ -5609,13 +5191,7 @@ def _compose_structural_meaning(concept: str, node: Any, seed: str, web: Any,
                 if prev is None or dc > prev[0]:
                     best_by_word[other] = (dc, rt_val)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:4938",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_compose_structural_meaning", "handler_line": 4938, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_compose_structural_meaning', 4938)
                 continue
         if not best_by_word:
             return seed
@@ -5645,13 +5221,7 @@ def _compose_structural_meaning(concept: str, node: Any, seed: str, web: Any,
                     neighbour_gloss = f"{word}, {nm.split(';')[0].strip()}"
                     break
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:4967",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_compose_structural_meaning", "handler_line": 4967, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_compose_structural_meaning', 4967)
                 continue
 
         content = seed if seed_low.startswith(concept) else f"{concept} is {seed}"
@@ -5661,13 +5231,7 @@ def _compose_structural_meaning(concept: str, node: Any, seed: str, web: Any,
             content += f"; and {neighbour_gloss}"
         return content[:240]
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4976",
-            exc=_aurora_boundary_exc,
-            context={"function": "_compose_structural_meaning", "handler_line": 4976, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_compose_structural_meaning', 4976)
         return seed
 
 
@@ -5685,13 +5249,7 @@ def _axis_live_pressure(concept: str, base: float, systems: Dict[str, Any]) -> f
         intensity = abs(float(profile.get(axis, 0.5)) - 0.5) * 2.0   # 0 at neutral, 1 at pole
         return round(min(0.98, max(0.82, base - 0.06 + 0.12 * intensity)), 3)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:4993",
-            exc=_aurora_boundary_exc,
-            context={"function": "_axis_live_pressure", "handler_line": 4993, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_axis_live_pressure', 4993)
         return base
 
 
@@ -5729,13 +5287,7 @@ def _grounded_topic_contribution(user_text: str, systems) -> Optional[dict]:
                     node = web.get_node(key)
                     break
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:5030",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_grounded_topic_contribution", "handler_line": 5030, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_grounded_topic_contribution', 5030)
                 continue
         if node is None:
             node = (getattr(web, "nodes", {}) or {}).get(concept)
@@ -5749,13 +5301,7 @@ def _grounded_topic_contribution(user_text: str, systems) -> Optional[dict]:
         try:
             meaning = str(node.best_definition() or "").strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:5043",
-                exc=_aurora_boundary_exc,
-                context={"function": "_grounded_topic_contribution", "handler_line": 5043, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_grounded_topic_contribution', 5043)
             _defs = getattr(node, "definitions", []) or []
             meaning = str((_defs[0] or {}).get("text", "")) if _defs else ""
         if not _meaning_text_is_grounded(meaning, term=concept):
@@ -5767,13 +5313,7 @@ def _grounded_topic_contribution(user_text: str, systems) -> Optional[dict]:
         return {"level": "subsurface", "axis": "B", "content": _content[:240],
                 "pressure": _pressure, "source": "grounded_concept"}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5054",
-            exc=_aurora_boundary_exc,
-            context={"function": "_grounded_topic_contribution", "handler_line": 5054, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_grounded_topic_contribution', 5054)
         return None
 
 
@@ -5871,13 +5411,7 @@ def _compress_at_crest(user_text: str, systems, state) -> str:
             joined_parts.append(part)
         return " ".join(joined_parts).strip()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5102",
-            exc=_aurora_boundary_exc,
-            context={"function": "_compress_at_crest", "handler_line": 5102, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_compress_at_crest', 5102)
         return ""
 
 
@@ -5927,13 +5461,7 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
                     oets.teach(term, definition)
                     sedimented += 1
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:5149",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_sediment_validated_fact", "handler_line": 5149, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_sediment_validated_fact', 5149)
                     pass
                 # 1b. Form relations from the claim structure. Relations are the
                 #     biggest ontological-depth contributor (IS_A weight 0.9), so
@@ -5958,13 +5486,7 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
                             web.add_relation(term, _w, _rt, strength=0.6,
                                              confidence=0.7, knowledge_source="conversation")
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:5173",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_sediment_validated_fact", "handler_line": 5173, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_sediment_validated_fact', 5173)
                         pass
             # 2. Constraint genealogy — relief/lineage grounding (mirrors the
             #    explicit-teaching path so the fact settles into the constraint
@@ -5978,13 +5500,7 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
                 try:
                     _log_learning_relief(gen, _axis, 0.3, notes=f"learned_fact:{term}")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:5183",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_sediment_validated_fact", "handler_line": 5183, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_sediment_validated_fact', 5183)
                     pass
         if sedimented and isinstance(systems, dict):
             systems["_facts_sedimented"] = int(systems.get("_facts_sedimented", 0) or 0) + sedimented
@@ -5995,22 +5511,10 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
                     "wrote a validated taught fact into OETS + genealogy so the field can compress it",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:5193",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_sediment_validated_fact", "handler_line": 5193, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_sediment_validated_fact', 5193)
                 pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5195",
-            exc=_aurora_boundary_exc,
-            context={"function": "_sediment_validated_fact", "handler_line": 5195, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_sediment_validated_fact', 5195)
         pass
     return sedimented
 
@@ -6058,25 +5562,13 @@ def _validate_fact_through_use(systems, user_text: str, state) -> int:
                                      i_state="i_is", fitness=0.6)
                 boosted += 1
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:5242",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_validate_fact_through_use", "handler_line": 5242, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_validate_fact_through_use', 5242)
                 continue
         if boosted:
             systems["_facts_validated_through_use"] = int(
                 systems.get("_facts_validated_through_use", 0) or 0) + boosted
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5247",
-            exc=_aurora_boundary_exc,
-            context={"function": "_validate_fact_through_use", "handler_line": 5247, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_validate_fact_through_use', 5247)
         pass
     return boosted
 
@@ -6168,13 +5660,7 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
                             source_a="taught_meaning", source_b="live_use",
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:5333",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_track_concept_use_outcome", "handler_line": 5333, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_track_concept_use_outcome', 5333)
                         pass
             elif multivariable_signal:
                 # Speaker framed this as an additional/alternative sense -> broaden.
@@ -6186,13 +5672,7 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
                                        source="use_expansion", confidence=0.4,
                                        context_clues=new_tokens)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:5344",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_track_concept_use_outcome", "handler_line": 5344, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_track_concept_use_outcome', 5344)
                         pass
             elif fits_taught:
                 verdict = "aligned"
@@ -6211,13 +5691,7 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
                                        source="use_expansion", confidence=0.4,
                                        context_clues=new_tokens)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:5362",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_track_concept_use_outcome", "handler_line": 5362, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_track_concept_use_outcome', 5362)
                         pass
             outcomes[subject] = verdict
             entry = ledger.setdefault(subject, [])
@@ -6244,22 +5718,10 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
                             systems, "concept_misuse_tracked",
                             "a use conflicted with the taught meaning -> tracked as a failed application")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:5388",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_track_concept_use_outcome", "handler_line": 5388, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_track_concept_use_outcome', 5388)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5390",
-            exc=_aurora_boundary_exc,
-            context={"function": "_track_concept_use_outcome", "handler_line": 5390, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_track_concept_use_outcome', 5390)
         pass
     return outcomes
 
@@ -6291,13 +5753,7 @@ def _get_stored_user_name(conversation_memory, systems=None) -> str:
                 if wm_name:
                     return wm_name.capitalize()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:5421",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_get_stored_user_name", "handler_line": 5421, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_get_stored_user_name', 5421)
                 pass
         sedi_results = _recall_semantic_sedimemory(
             systems,
@@ -6317,13 +5773,7 @@ def _get_stored_user_name(conversation_memory, systems=None) -> str:
         try:
             recent = list(getattr(wm, "recent_user_utterances", []) or [])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:5440",
-                exc=_aurora_boundary_exc,
-                context={"function": "_get_stored_user_name", "handler_line": 5440, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_get_stored_user_name', 5440)
             recent = []
         for item in recent:
             raw_text = str((item or {}).get("text", "") or "").strip()
@@ -6350,13 +5800,7 @@ def _observe_live_lineage_emergence(
     try:
         return list(journal.observe_systems(systems, source=source) or [])
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5466",
-            exc=_aurora_boundary_exc,
-            context={"function": "_observe_live_lineage_emergence", "handler_line": 5466, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_observe_live_lineage_emergence', 5466)
         return []
 
 
@@ -6371,13 +5815,7 @@ def _describe_live_lineage_emergence(
     try:
         return str(journal.describe_recent(limit=limit) or "").strip()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5480",
-            exc=_aurora_boundary_exc,
-            context={"function": "_describe_live_lineage_emergence", "handler_line": 5480, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_describe_live_lineage_emergence', 5480)
         return ""
 
 
@@ -6395,13 +5833,7 @@ def _write_interaction_status(
         from aurora_persistence_utils import atomic_write_json as _atomic_write_json
         _atomic_write_json(_Path(_interaction_status_path(systems)), dict(status or {}), indent=2, default=str)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5497",
-            exc=_aurora_boundary_exc,
-            context={"function": "_write_interaction_status", "handler_line": 5497, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_write_interaction_status', 5497)
         pass
 
 
@@ -6483,13 +5915,7 @@ def _record_interaction_lineage_event(
     try:
         journal.record_event(event)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5578",
-            exc=_aurora_boundary_exc,
-            context={"function": "_record_interaction_lineage_event", "handler_line": 5578, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_record_interaction_lineage_event', 5578)
         pass
 
 
@@ -6522,13 +5948,7 @@ def _apply_interaction_quasi_route(
             min_confidence=0.55,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5610",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_interaction_quasi_route", "handler_line": 5610, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_interaction_quasi_route', 5610)
         route = {}
     summary = _summarize_interaction_route(route)
     summary["session_id"] = str(session_id or systems.get("session_id") or "")
@@ -6633,26 +6053,14 @@ def _observe_interaction_runtime_turn(
             auto_promote=True,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5714",
-            exc=_aurora_boundary_exc,
-            context={"function": "_observe_interaction_runtime_turn", "handler_line": 5714, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_observe_interaction_runtime_turn', 5714)
         observed = {}
     status = {}
     try:
         if hasattr(interaction_processing, "get_status"):
             status = dict(interaction_processing.get_status() or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5720",
-            exc=_aurora_boundary_exc,
-            context={"function": "_observe_interaction_runtime_turn", "handler_line": 5720, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_observe_interaction_runtime_turn', 5720)
         status = {}
     base = dict(observed or {}).get("base") if isinstance(observed, dict) else None
     advance = dict(observed or {}).get("advance") if isinstance(observed, dict) else None
@@ -7498,13 +6906,7 @@ def _describe_pending_code_proposals(
         with open(path, "r", encoding="utf-8") as handle:
             payload = dict(json.load(handle) or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5780",
-            exc=_aurora_boundary_exc,
-            context={"function": "_describe_pending_code_proposals", "handler_line": 5780, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_describe_pending_code_proposals', 5780)
         return ""
     proposals = [
         dict(rec or {})
@@ -7584,13 +6986,7 @@ def _queue_quasiarch_runtime_event(resp: Any, event: Dict[str, Any]) -> None:
     try:
         resp._quasiarch_events = events
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5859",
-            exc=_aurora_boundary_exc,
-            context={"function": "_queue_quasiarch_runtime_event", "handler_line": 5859, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_queue_quasiarch_runtime_event', 5859)
         pass
 
 
@@ -7628,13 +7024,7 @@ def _flush_quasiarch_runtime_events(
                 rotate_doctrine=False,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:5896",
-                exc=_aurora_boundary_exc,
-                context={"function": "_flush_quasiarch_runtime_events", "handler_line": 5896, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_flush_quasiarch_runtime_events', 5896)
             record = None
         if item.get("reason_about") and hasattr(quasiarch, "reason_about_event"):
             try:
@@ -7651,13 +7041,7 @@ def _flush_quasiarch_runtime_events(
                     consumer="runtime",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:5912",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_flush_quasiarch_runtime_events", "handler_line": 5912, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_flush_quasiarch_runtime_events', 5912)
                 reasoning = None
         flushed.append(
             {
@@ -7670,13 +7054,7 @@ def _flush_quasiarch_runtime_events(
     try:
         resp._quasiarch_runtime_records = flushed
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:5924",
-            exc=_aurora_boundary_exc,
-            context={"function": "_flush_quasiarch_runtime_events", "handler_line": 5924, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_flush_quasiarch_runtime_events', 5924)
         pass
     systems["_last_quasiarch_runtime_records"] = list(flushed[-8:])
     return flushed
@@ -7714,13 +7092,7 @@ def _render_runtime_intent(
             if rendered and _constraint_emission_is_substantive(rendered):
                 return rendered
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:5961",
-                exc=_aurora_boundary_exc,
-                context={"function": "_render_runtime_intent", "handler_line": 5961, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_render_runtime_intent', 5961)
             pass
     if isinstance(systems, dict):
         systems['_rendered_from_comprehension_intent'] = True
@@ -7781,13 +7153,7 @@ def _build_articulation_perspective_context(
         try:
             user_bucket = dict(getattr(working_memory, "stated_facts", {}).get("user", {}) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6010",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_articulation_perspective_context", "handler_line": 6010, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_articulation_perspective_context', 6010)
             user_bucket = {}
         user_name = str(user_bucket.get("name", "") or user_bucket.get("identity_label", "") or "").strip()
         try:
@@ -7795,26 +7161,14 @@ def _build_articulation_perspective_context(
                 getattr(working_memory, "last_behavior_alignment_request", {}).get("requested_behavior", "") or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6017",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_articulation_perspective_context", "handler_line": 6017, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_articulation_perspective_context', 6017)
             behavior_request = ""
         try:
             focus_claim_source = str(
                 getattr(working_memory, "last_claim_resolution", {}).get("focus_claim", {}).get("source", "") or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6023",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_articulation_perspective_context", "handler_line": 6023, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_articulation_perspective_context', 6023)
             focus_claim_source = ""
 
     text_low = str(candidate_text or "").lower()
@@ -7924,13 +7278,7 @@ def _repair_unproductive_echo(
         try:
             meaning_answer = working_memory.answer_from_meanings(user_text, understood, systems=systems)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6132",
-                exc=_aurora_boundary_exc,
-                context={"function": "_repair_unproductive_echo", "handler_line": 6132, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_repair_unproductive_echo', 6132)
             meaning_answer = ""
         if meaning_answer and not _response_is_unproductive_echo(user_text, meaning_answer):
             return {
@@ -7941,13 +7289,7 @@ def _repair_unproductive_echo(
         try:
             claim_answer = working_memory.answer_from_claims(user_text, understood, systems=systems)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6142",
-                exc=_aurora_boundary_exc,
-                context={"function": "_repair_unproductive_echo", "handler_line": 6142, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_repair_unproductive_echo', 6142)
             claim_answer = ""
         if claim_answer and not _response_is_unproductive_echo(user_text, claim_answer):
             return {
@@ -8108,13 +7450,7 @@ def _answer_from_session_readdress_request(
             or {}
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:6302",
-            exc=_aurora_boundary_exc,
-            context={"function": "_answer_from_session_readdress_request", "handler_line": 6302, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_answer_from_session_readdress_request', 6302)
         return None
     if not resolution.get("matched"):
         return None
@@ -8354,13 +7690,7 @@ def _recall_semantic_sedimemory(
             or []
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:6542",
-            exc=_aurora_boundary_exc,
-            context={"function": "_recall_semantic_sedimemory", "handler_line": 6542, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_recall_semantic_sedimemory', 6542)
         return []
 
 
@@ -8566,13 +7896,7 @@ def _ability_guided_context_answer(
             _arm_literal_response_preservation(systems)
         return answer
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:6727",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ability_guided_context_answer", "handler_line": 6727, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ability_guided_context_answer', 6727)
         return ""
 
 
@@ -8609,13 +7933,7 @@ def _run_understanding_self_audit(
             or {}
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:6763",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_understanding_self_audit", "handler_line": 6763, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_understanding_self_audit', 6763)
         audit = {}
     if not audit.get("should_revise"):
         return {"changed": False, "text": clean, "events": [], "audit": audit}
@@ -8645,13 +7963,7 @@ def _run_understanding_self_audit(
                 or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6792",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_understanding_self_audit", "handler_line": 6792, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_understanding_self_audit', 6792)
             revised = ""
 
     if not revised and preferred_repair in {'semantic_frame', 'meaning'}:
@@ -8665,13 +7977,7 @@ def _run_understanding_self_audit(
                 or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6805",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_understanding_self_audit", "handler_line": 6805, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_understanding_self_audit', 6805)
             revised = ""
         if not revised:
             try:
@@ -8684,13 +7990,7 @@ def _run_understanding_self_audit(
                     or ""
                 ).strip()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:6817",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_understanding_self_audit", "handler_line": 6817, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run_understanding_self_audit', 6817)
                 revised = ""
 
     if not revised and preferred_repair == 'claim':
@@ -8704,13 +8004,7 @@ def _run_understanding_self_audit(
                 or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6830",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_understanding_self_audit", "handler_line": 6830, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_understanding_self_audit', 6830)
             revised = ""
 
     if not revised:
@@ -8724,13 +8018,7 @@ def _run_understanding_self_audit(
                 or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6843",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_understanding_self_audit", "handler_line": 6843, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_understanding_self_audit', 6843)
             revised = ""
     if not revised:
         try:
@@ -8743,13 +8031,7 @@ def _run_understanding_self_audit(
                 or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6855",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_understanding_self_audit", "handler_line": 6855, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_understanding_self_audit', 6855)
             revised = ""
     if not revised:
         try:
@@ -8762,13 +8044,7 @@ def _run_understanding_self_audit(
                 or ""
             ).strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:6867",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_understanding_self_audit", "handler_line": 6867, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_understanding_self_audit', 6867)
             revised = ""
 
     if not revised or revised.lower() == clean.lower():
@@ -9210,13 +8486,7 @@ def _generate_perspective_from_core(
                 _raw = _project_utterance_axes(user_text, systems)
                 _axis = _field_balancer.rebalanced_activation(_raw)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:7308",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_generate_perspective_from_core", "handler_line": 7308, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_generate_perspective_from_core', 7308)
                 _axis = {"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2}
         _sorted_axes = sorted(_axis.items(), key=lambda kv: kv[1], reverse=True)
         _dom_letter  = _sorted_axes[0][0] if _sorted_axes else "X"
@@ -9240,13 +8510,7 @@ def _generate_perspective_from_core(
             elif not _latt:
                 _report_missing_required_organ(systems, "lattice", operation="heat_status")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:7329",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate_perspective_from_core", "handler_line": 7329, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate_perspective_from_core', 7329)
             pass
 
         # ---- Genealogy pressure orientation ----
@@ -9260,13 +8524,7 @@ def _generate_perspective_from_core(
             elif not _gen:
                 _report_missing_required_organ(systems, "genealogy", operation="pressure_orientation")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:7340",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate_perspective_from_core", "handler_line": 7340, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate_perspective_from_core', 7340)
             pass
 
         # ---- OETS knowledge about the anchor ----
@@ -9292,13 +8550,7 @@ def _generate_perspective_from_core(
                                 if _other and _other != anchor_low:
                                     _oets_relations.append(str(_other))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:7359",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_generate_perspective_from_core", "handler_line": 7359, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_generate_perspective_from_core', 7359)
                 pass
 
         # ---- Sensory crystal state ----
@@ -9323,13 +8575,7 @@ def _generate_perspective_from_core(
                 _sc_recs = dict(_sc_state.get("recognitions") or {})
                 _sc_recognitions = [str(r) for r in list(_sc_recs.get("recent") or []) if r][:4]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:7383",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate_perspective_from_core", "handler_line": 7383, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate_perspective_from_core', 7383)
             pass
 
         # ---- Understanding contract — accumulated meaning from interactions ----
@@ -9349,13 +8595,7 @@ def _generate_perspective_from_core(
                 _uc_concepts = [str(c) for c in list(_uc_M.get('concepts', []) or []) if c][:5]
                 _uc_semantic_pressure = float(_uc_M.get('semantic_pressure', 0.0) or 0.0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:7402",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate_perspective_from_core", "handler_line": 7402, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate_perspective_from_core', 7402)
             pass
 
         # ---- Build semantic data from modules — no template sentences, no percentages ----
@@ -9485,13 +8725,7 @@ def _generate_perspective_from_core(
             try:
                 result = _evolutionary_response_refinement(systems, user_text, result, tone="reflective")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:7531",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_generate_perspective_from_core", "handler_line": 7531, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_generate_perspective_from_core', 7531)
                 pass
             if _prefer_live_perspective and not _response_addresses_live_question(
                 user_text,
@@ -9517,13 +8751,7 @@ def _generate_perspective_from_core(
                     )
             return result.strip()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:7556",
-            exc=_aurora_boundary_exc,
-            context={"function": "_generate_perspective_from_core", "handler_line": 7556, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_generate_perspective_from_core', 7556)
         pass
     return ""
 
@@ -9803,13 +9031,7 @@ def _response_guard_seed(
         try:
             parts.append(f"accuracy {float(acc):.2f}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:7768",
-                exc=_aurora_boundary_exc,
-                context={"function": "_response_guard_seed", "handler_line": 7768, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_response_guard_seed', 7768)
             pass
         stage = str(ps.get("understanding_stage", "") or "").strip()
         if stage:
@@ -9838,13 +9060,7 @@ def _read_surface_daemon_status_runtime(systems: Dict[str, Any]) -> Dict[str, An
             if isinstance(payload, dict):
                 return payload
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:7796",
-            exc=_aurora_boundary_exc,
-            context={"function": "_read_surface_daemon_status_runtime", "handler_line": 7796, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_read_surface_daemon_status_runtime', 7796)
         pass
     return {}
 
@@ -9860,13 +9076,7 @@ def _surface_snapshot_is_live(
     try:
         updated_at = float(snapshot.get("updated_at", 0.0) or 0.0)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:7811",
-            exc=_aurora_boundary_exc,
-            context={"function": "_surface_snapshot_is_live", "handler_line": 7811, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_surface_snapshot_is_live', 7811)
         updated_at = 0.0
     if updated_at <= 0.0 or (time.time() - updated_at) > max_age_s:
         return False
@@ -9947,13 +9157,7 @@ def _read_surface_snapshot_runtime(
                     return {}
                 return payload
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:7891",
-            exc=_aurora_boundary_exc,
-            context={"function": "_read_surface_snapshot_runtime", "handler_line": 7891, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_read_surface_snapshot_runtime', 7891)
         pass
     return {}
 
@@ -9974,13 +9178,7 @@ def _answer_live_sensory_question(
                 if isinstance(payload, dict):
                     snapshot = payload
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:7911",
-                exc=_aurora_boundary_exc,
-                context={"function": "_answer_live_sensory_question", "handler_line": 7911, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_answer_live_sensory_question', 7911)
             pass
     present = dict(snapshot.get("present_sensory_perspective") or {})
     camera_live = bool(present.get("camera_live", snapshot.get("camera_live", False)))
@@ -10181,13 +9379,7 @@ def _build_grounded_fallback_response(
         try:
             understood = UtteranceParser().parse(user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:8110",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_grounded_fallback_response", "handler_line": 8110, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_grounded_fallback_response', 8110)
             understood = {}
 
     _raw_turn_text = _strip_conversation_context_prefix(user_text) or str(user_text or '')
@@ -10349,13 +9541,7 @@ def _build_grounded_fallback_response(
                     ),
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:8271",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_grounded_fallback_response", "handler_line": 8271, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_grounded_fallback_response', 8271)
             pass
         # OETS reasoning returned nothing — engage from the present-turn state before
         # falling through to abstract gap handling when the user is asking for Aurora's
@@ -10588,13 +9774,7 @@ def _build_grounded_fallback_response(
                         _lookup_query, systems, timeout=2.0, use_researcher=True,
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:8487",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_build_grounded_fallback_response", "handler_line": 8487, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_build_grounded_fallback_response', 8487)
                     pass
                 if not _lookup_result and anchor:
                     # Retry with full user text if anchor-only missed
@@ -10603,13 +9783,7 @@ def _build_grounded_fallback_response(
                             user_text, systems, timeout=2.0, use_researcher=True,
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:8495",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_build_grounded_fallback_response", "handler_line": 8495, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_build_grounded_fallback_response', 8495)
                         pass
 
                 if _lookup_result:
@@ -10656,13 +9830,7 @@ def _build_grounded_fallback_response(
                             anchor or user_text, _lookup_result, systems
                         ) or ""
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:8541",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_build_grounded_fallback_response", "handler_line": 8541, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_build_grounded_fallback_response', 8541)
                         pass
 
                     # Run the lookup result through ReasoningEngine to build real understanding
@@ -10682,13 +9850,7 @@ def _build_grounded_fallback_response(
                             _evidence_list, systems=systems,
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:8560",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_build_grounded_fallback_response", "handler_line": 8560, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_build_grounded_fallback_response', 8560)
                         pass
                     if not _absorbed_answer:
                         # ReasoningEngine couldn't synthesize — use raw lookup as data for SIC
@@ -11223,13 +10385,7 @@ def _build_grounded_fallback_response(
                 try:
                     captured_claims = working_memory.note_claims(user_text, source='user', understood=understood)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:9077",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_build_grounded_fallback_response", "handler_line": 9077, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_build_grounded_fallback_response', 9077)
                     captured_claims = []
                 # Ground validated facts into the field substrate (OETS + genealogy)
                 # and test the used concept against the taught meaning (aligned /
@@ -11332,13 +10488,7 @@ def _grounding_gap_strategy(
         try:
             understood = UtteranceParser().parse(user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9179",
-                exc=_aurora_boundary_exc,
-                context={"function": "_grounding_gap_strategy", "handler_line": 9179, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_grounding_gap_strategy', 9179)
             understood = {}
 
     text_low = str(user_text or '').lower()
@@ -11522,13 +10672,7 @@ def _absorb_definition_into_self_model(
             if _node is not None and hasattr(_node, "add_definition"):
                 _node.add_definition(definition_text, source="poedex")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:9362",
-            exc=_aurora_boundary_exc,
-            context={"function": "_absorb_definition_into_self_model", "handler_line": 9362, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_absorb_definition_into_self_model', 9362)
         pass
 
     if not present:
@@ -11558,13 +10702,7 @@ def _absorb_definition_into_self_model(
                     "note": note,
                 }
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:9391",
-            exc=_aurora_boundary_exc,
-            context={"function": "_absorb_definition_into_self_model", "handler_line": 9391, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_absorb_definition_into_self_model', 9391)
         pass
 
     # 4. Record in systems dict for this turn (DCE can pick it up from evidence)
@@ -11573,13 +10711,7 @@ def _absorb_definition_into_self_model(
         _prior.append({"concept": anchor, "systems": present[:3], "note": note})
         systems["_self_groundings"] = _prior[-6:]  # keep last 6
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:9399",
-            exc=_aurora_boundary_exc,
-            context={"function": "_absorb_definition_into_self_model", "handler_line": 9399, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_absorb_definition_into_self_model', 9399)
         pass
 
     return note
@@ -11656,13 +10788,7 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                     if _topic_kw and len(_topic_kw & (_q_kw | _r_kw)) >= max(2, len(_topic_kw) // 2):
                         return _r
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:9460",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_try_poedex_lookup", "handler_line": 9460, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_try_poedex_lookup', 9460)
                 pass
 
         # ── 2. Non-blocking evidence_need publication (Build 694 step 9) ─────
@@ -11710,13 +10836,7 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
 
         return ''
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:9529",
-            exc=_aurora_boundary_exc,
-            context={"function": "_try_poedex_lookup", "handler_line": 9529, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_try_poedex_lookup', 9529)
         return ''
 
 
@@ -11789,13 +10909,7 @@ def _queue_warp_poedex_study_target(
         }
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:9601",
-            exc=_aurora_boundary_exc,
-            context={"function": "_queue_warp_poedex_study_target", "handler_line": 9601, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_queue_warp_poedex_study_target', 9601)
         return False
 
 
@@ -11828,13 +10942,7 @@ def _deposit_poedex_result_into_crystals(
             crystal.use()
             crystal.evolve()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9633",
-                exc=_aurora_boundary_exc,
-                context={"function": "_deposit_poedex_result_into_crystals", "handler_line": 9633, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_deposit_poedex_result_into_crystals', 9633)
             pass
 
     # Sensory crystal novelty/recognition tracking only (no DPS re-write).
@@ -11844,13 +10952,7 @@ def _deposit_poedex_result_into_crystals(
             if hasattr(sensory_crystal, "observe_semantic"):
                 sensory_crystal.observe_semantic(concept_clean, weight=1.0, source=source)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9642",
-                exc=_aurora_boundary_exc,
-                context={"function": "_deposit_poedex_result_into_crystals", "handler_line": 9642, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_deposit_poedex_result_into_crystals', 9642)
             pass
 
     # Deepen OETS immediately with the definition — knowledge is here now.
@@ -11860,13 +10962,7 @@ def _deposit_poedex_result_into_crystals(
         if _oets is not None and hasattr(_oets, "teach"):
             _oets.teach(concept_clean, distilled)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:9651",
-            exc=_aurora_boundary_exc,
-            context={"function": "_deposit_poedex_result_into_crystals", "handler_line": 9651, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_deposit_poedex_result_into_crystals', 9651)
         pass
 
 
@@ -11926,13 +11022,7 @@ def _broadcast_poedex_result(
                     confidence=0.9,
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9695",
-                exc=_aurora_boundary_exc,
-                context={"function": "_broadcast_poedex_result", "handler_line": 9695, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_broadcast_poedex_result', 9695)
             pass
 
     working_memory = systems.get("working_memory")
@@ -11959,22 +11049,10 @@ def _broadcast_poedex_result(
                         "confidence": 0.9,
                     })
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:9721",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_broadcast_poedex_result", "handler_line": 9721, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_broadcast_poedex_result', 9721)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9723",
-                exc=_aurora_boundary_exc,
-                context={"function": "_broadcast_poedex_result", "handler_line": 9723, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_broadcast_poedex_result', 9723)
             pass
 
     understanding_contract = systems.get("understanding_contract")
@@ -11993,13 +11071,7 @@ def _broadcast_poedex_result(
                 session_id=str(systems.get("session_id") or ""),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9741",
-                exc=_aurora_boundary_exc,
-                context={"function": "_broadcast_poedex_result", "handler_line": 9741, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_broadcast_poedex_result', 9741)
             pass
 
     return packet
@@ -12087,13 +11159,7 @@ def _sync_noncomp_runtime_band(systems: Dict[str, Any]) -> str:
         if bias_engine is not None:
             band_pos = str(getattr(bias_engine, "band_position", band_pos) or band_pos)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:9826",
-            exc=_aurora_boundary_exc,
-            context={"function": "_sync_noncomp_runtime_band", "handler_line": 9826, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_sync_noncomp_runtime_band', 9826)
         band_pos = "inside"
     nudges = dict(systems.get("_last_bias_nudges") or {})
     router = systems.get("noncomp_manifold_router")
@@ -12101,26 +11167,14 @@ def _sync_noncomp_runtime_band(systems: Dict[str, Any]) -> str:
         try:
             router.update_band(band_pos, nudges)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9833",
-                exc=_aurora_boundary_exc,
-                context={"function": "_sync_noncomp_runtime_band", "handler_line": 9833, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_sync_noncomp_runtime_band', 9833)
             pass
     interpreter = systems.get("noncomp_reflexive_interpreter")
     if interpreter is not None and hasattr(interpreter, "update_band"):
         try:
             interpreter.update_band(band_pos)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9839",
-                exc=_aurora_boundary_exc,
-                context={"function": "_sync_noncomp_runtime_band", "handler_line": 9839, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_sync_noncomp_runtime_band', 9839)
             pass
     systems["noncomp_runtime_band"] = band_pos
     return band_pos
@@ -12155,13 +11209,7 @@ def _stage_noncomp_prefetch(
                         poedex_fn(concept, cat="researcher", lane="self", timeout=12.0) or ""
                     ).strip()
                 except TypeError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:9873",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_prefetch_worker", "handler_line": 9873, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_prefetch_worker', 9873)
                     result = str(poedex_fn(concept, cat="researcher", lane="self") or "").strip()
             else:
                 result = str(
@@ -12180,24 +11228,12 @@ def _stage_noncomp_prefetch(
                         pipeline_state=pipeline_state,
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:9891",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_prefetch_worker", "handler_line": 9891, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_prefetch_worker', 9891)
                     pass
             else:
                 pipeline_state["poedex_prefetch_status"] = "empty"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9895",
-                exc=_aurora_boundary_exc,
-                context={"function": "_prefetch_worker", "handler_line": 9895, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_prefetch_worker', 9895)
             pipeline_state["poedex_prefetch_status"] = "error"
 
     threading.Thread(
@@ -12242,13 +11278,7 @@ def _apply_poedex_learning_result(
         try:
             grounded = _meaning_text_is_grounded(result_clean, term=concept_clean) if concept_clean else False
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9939",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_poedex_learning_result", "handler_line": 9939, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_poedex_learning_result', 9939)
             grounded = False
 
         if grounded and concept_clean:
@@ -12321,13 +11351,7 @@ def _apply_poedex_learning_result(
                             working_memory._semantic_frame_from_concept(concept_entry)
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:10011",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_apply_poedex_learning_result", "handler_line": 10011, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_poedex_learning_result', 10011)
                         pass
                 applied["applied"] = True
                 applied["systems_updated"] = ["working_memory.concept_meanings", "working_memory.stated_facts"]
@@ -12345,13 +11369,7 @@ def _apply_poedex_learning_result(
                     reason="poedex_learning_result",
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:10028",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_poedex_learning_result", "handler_line": 10028, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_poedex_learning_result', 10028)
             pass
 
     try:
@@ -12370,13 +11388,7 @@ def _apply_poedex_learning_result(
             source="poedex_learning",
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:10046",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_poedex_learning_result", "handler_line": 10046, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_poedex_learning_result', 10046)
         pass
 
     return applied
@@ -12455,25 +11467,13 @@ def _apply_poedex_representation_result(
                 working_memory._semantic_frame_from_concept(entry)
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:10124",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_poedex_representation_result", "handler_line": 10124, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_poedex_representation_result', 10124)
         pass
     try:
         if hasattr(working_memory, "_register_mention"):
             working_memory._register_mention(concept_clean or term_key, "concept", "poedex_representation", 0.88)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:10129",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_poedex_representation_result", "handler_line": 10129, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_poedex_representation_result', 10129)
         pass
     systems["_poedex_representation"] = {
         "concept": concept_clean or term_key,
@@ -12491,13 +11491,7 @@ def _apply_poedex_representation_result(
             source="poedex_representation",
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:10146",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_poedex_representation_result", "handler_line": 10146, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_poedex_representation_result', 10146)
         pass
     _deposit_poedex_result_into_crystals(
         systems,
@@ -12554,13 +11548,7 @@ def _stage_poedex_learning_request(
                         poedex_fn(request_text, cat="researcher", lane="self", timeout=12.0) or ""
                     ).strip()
                 except TypeError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:10202",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_learning_worker", "handler_line": 10202, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_learning_worker', 10202)
                     result = str(poedex_fn(request_text, cat="researcher", lane="self") or "").strip()
             if not result:
                 result = str(
@@ -12601,13 +11589,7 @@ def _stage_poedex_learning_request(
                         "reason": str(reason or "").strip(),
                     }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:10242",
-                exc=_aurora_boundary_exc,
-                context={"function": "_learning_worker", "handler_line": 10242, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_learning_worker', 10242)
             pipeline_state["poedex_learning_status"] = "error"
             if isinstance(systems, dict):
                 systems["_poedex_learning"] = {
@@ -12668,13 +11650,7 @@ def _stage_poedex_representation_request(
                         poedex_fn(request_text, cat="researcher", lane="self", timeout=12.0) or ""
                     ).strip()
                 except TypeError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:10302",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_representation_worker", "handler_line": 10302, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_representation_worker', 10302)
                     result = str(poedex_fn(request_text, cat="researcher", lane="self") or "").strip()
             if not result:
                 result = str(
@@ -12711,13 +11687,7 @@ def _stage_poedex_representation_request(
                     "source": "poedex_representation",
                 }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:10338",
-                exc=_aurora_boundary_exc,
-                context={"function": "_representation_worker", "handler_line": 10338, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_representation_worker', 10338)
             pipeline_state["poedex_representation_status"] = "error"
             systems["_poedex_representation"] = {
                 "concept": concept,
@@ -12761,13 +11731,7 @@ def _queue_poedex_representation_followup(
             if list(existing.get("representation_variants", []) or []):
                 return
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:10381",
-                exc=_aurora_boundary_exc,
-                context={"function": "_queue_poedex_representation_followup", "handler_line": 10381, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_queue_poedex_representation_followup', 10381)
             pass
 
     current = dict(systems.get("_poedex_representation") or {})
@@ -12798,13 +11762,7 @@ def _queue_poedex_representation_followup(
                         poedex_fn(request_text, cat="researcher", lane="self", timeout=12.0) or ""
                     ).strip()
                 except TypeError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:10411",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_worker", "handler_line": 10411, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_worker', 10411)
                     result = str(poedex_fn(request_text, cat="researcher", lane="self") or "").strip()
             if not result:
                 result = str(
@@ -12838,13 +11796,7 @@ def _queue_poedex_representation_followup(
                 "reason": str(reason or "").strip(),
             }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:10444",
-                exc=_aurora_boundary_exc,
-                context={"function": "_worker", "handler_line": 10444, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_worker', 10444)
             systems["_poedex_representation"] = {
                 "concept": concept_clean,
                 "request": request_text,
@@ -13167,13 +12119,7 @@ def _apply_noncomp_input_guidance(
     try:
         summary = dict(interpreter.interpret(user_text).to_dict() or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:10580",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_noncomp_input_guidance", "handler_line": 10580, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_noncomp_input_guidance', 10580)
         return {}
 
     summary["context"] = "input"
@@ -13273,13 +12219,7 @@ def _apply_noncomp_output_guidance(
     try:
         summary = dict(interpreter.interpret(response_text).to_dict() or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:10677",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_noncomp_output_guidance", "handler_line": 10677, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_noncomp_output_guidance', 10677)
         return {}
 
     summary["context"] = "output"
@@ -13381,13 +12321,7 @@ def _apply_noncomp_output_guidance(
             state.response_tone = tone2
             state.response_confidence = conf2
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:10778",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_noncomp_output_guidance", "handler_line": 10778, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_noncomp_output_guidance', 10778)
             pass
 
     return summary
@@ -13514,13 +12448,7 @@ def _lookup_local_grounded_definition(term: str, systems: Dict[str, Any]) -> str
                 node = web.get_node(key)
                 break
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:10892",
-                exc=_aurora_boundary_exc,
-                context={"function": "_lookup_local_grounded_definition", "handler_line": 10892, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_lookup_local_grounded_definition', 10892)
             continue
     if node is None:
         return ""
@@ -13607,13 +12535,7 @@ def _apply_word_meaning_learning(
             GapType,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:10978",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_word_meaning_learning", "handler_line": 10978, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_word_meaning_learning', 10978)
         return {}
 
     applicator = GapResolutionApplicator()
@@ -13645,13 +12567,7 @@ def _apply_word_meaning_learning(
         try:
             gap_memory.store_resolved(resolved)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11009",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_word_meaning_learning", "handler_line": 11009, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_word_meaning_learning', 11009)
             pass
 
     working_memory = systems.get("working_memory")
@@ -13673,25 +12589,13 @@ def _apply_word_meaning_learning(
                     understood=understood,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:11030",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_apply_word_meaning_learning", "handler_line": 11030, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_apply_word_meaning_learning', 11030)
                 pass
         try:
             if clean_term in getattr(working_memory, "concept_meanings", {}):
                 working_memory.concept_meanings[clean_term]["turn"] = next_turn
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11035",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_word_meaning_learning", "handler_line": 11035, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_word_meaning_learning', 11035)
             pass
         try:
             concept_meanings = getattr(working_memory, "concept_meanings", None)
@@ -13726,22 +12630,10 @@ def _apply_word_meaning_learning(
                             stated_facts[clean_term] = {}
                         stated_facts[clean_term]["meaning"] = definition
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:11069",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_apply_word_meaning_learning", "handler_line": 11069, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_apply_word_meaning_learning', 11069)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11071",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_word_meaning_learning", "handler_line": 11071, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_word_meaning_learning', 11071)
             pass
     try:
         if hasattr(working_memory, "_register_mention"):
@@ -13763,13 +12655,7 @@ def _apply_word_meaning_learning(
                 working_memory._semantic_frame_from_concept(concept)
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11092",
-            exc=_aurora_boundary_exc,
-            context={"function": "_apply_word_meaning_learning", "handler_line": 11092, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_word_meaning_learning', 11092)
         pass
     _deposit_poedex_result_into_crystals(
         systems,
@@ -13950,13 +12836,7 @@ def _repair_unknown_vocabulary_inline(
             VolatilityDetector,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11167",
-            exc=_aurora_boundary_exc,
-            context={"function": "_repair_unknown_vocabulary_inline", "handler_line": 11167, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_repair_unknown_vocabulary_inline', 11167)
         return {}
 
     perception = systems.get("perception")
@@ -14042,13 +12922,7 @@ def _clear_pending_lookup_offer(working_memory: Any) -> None:
     try:
         working_memory.pending_lookup_offer = {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11252",
-            exc=_aurora_boundary_exc,
-            context={"function": "_clear_pending_lookup_offer", "handler_line": 11252, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_clear_pending_lookup_offer', 11252)
         pass
 
 
@@ -14058,13 +12932,7 @@ def _clear_pending_hypothesis_offer(working_memory: Any) -> None:
     try:
         working_memory.pending_hypothesis_offer = {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11261",
-            exc=_aurora_boundary_exc,
-            context={"function": "_clear_pending_hypothesis_offer", "handler_line": 11261, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_clear_pending_hypothesis_offer', 11261)
         pass
 
 
@@ -14194,13 +13062,7 @@ def _store_pending_hypothesis_offer(
     try:
         working_memory.pending_hypothesis_offer = offer
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11384",
-            exc=_aurora_boundary_exc,
-            context={"function": "_store_pending_hypothesis_offer", "handler_line": 11384, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_store_pending_hypothesis_offer', 11384)
         pass
     return offer
 
@@ -14259,13 +13121,7 @@ def _build_lookup_query(
         try:
             understood = UtteranceParser().parse(user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11442",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_lookup_query", "handler_line": 11442, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_lookup_query', 11442)
             understood = {}
 
     working_memory = systems.get('working_memory')
@@ -15021,13 +13877,7 @@ def _store_pending_lookup_offer(
     try:
         working_memory.pending_lookup_offer = offer
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11517",
-            exc=_aurora_boundary_exc,
-            context={"function": "_store_pending_lookup_offer", "handler_line": 11517, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_store_pending_lookup_offer', 11517)
         pass
     return offer
 
@@ -15041,13 +13891,7 @@ def _resolve_lookup_request(
         try:
             understood = UtteranceParser().parse(user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11530",
-                exc=_aurora_boundary_exc,
-                context={"function": "_resolve_lookup_request", "handler_line": 11530, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_resolve_lookup_request', 11530)
             understood = {}
 
     working_memory = systems.get('working_memory')
@@ -15299,25 +14143,13 @@ def _discourse_anchor_context(
         try:
             understood = UtteranceParser().parse(user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11639",
-                exc=_aurora_boundary_exc,
-                context={"function": "_discourse_anchor_context", "handler_line": 11639, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_discourse_anchor_context', 11639)
             understood = {}
 
     try:
         claim_resolution = working_memory.resolve_claims(user_text, understood) or {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11644",
-            exc=_aurora_boundary_exc,
-            context={"function": "_discourse_anchor_context", "handler_line": 11644, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_discourse_anchor_context', 11644)
         claim_resolution = getattr(working_memory, 'last_claim_resolution', {}) or {}
     focus_claim = dict(claim_resolution.get('focus_claim', {}) or {})
     focus_summary = ""
@@ -15327,13 +14159,7 @@ def _discourse_anchor_context(
             focus_summary = working_memory._claim_to_text(focus_claim)
             anchor_terms = set(working_memory._claim_terms(focus_claim))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11653",
-                exc=_aurora_boundary_exc,
-                context={"function": "_discourse_anchor_context", "handler_line": 11653, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_discourse_anchor_context', 11653)
             focus_summary = str(focus_claim.get('summary', '') or '')
             anchor_terms = {
                 word for word in re.findall(r"[a-z]{3,}", focus_summary.lower())
@@ -15344,26 +14170,14 @@ def _discourse_anchor_context(
         referent_resolution = working_memory.resolve_referents(user_text, understood) or {}
         referent_topic = str(referent_resolution.get('topic', '') or '')
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11663",
-            exc=_aurora_boundary_exc,
-            context={"function": "_discourse_anchor_context", "handler_line": 11663, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_discourse_anchor_context', 11663)
         referent_topic = str(getattr(working_memory, 'last_referent_resolution', {}).get('topic', '') or '')
 
     active_topic = ""
     try:
         active_topic = str(working_memory.resolve_topic(understood) or working_memory.current_topic or '')
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11669",
-            exc=_aurora_boundary_exc,
-            context={"function": "_discourse_anchor_context", "handler_line": 11669, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_discourse_anchor_context', 11669)
         active_topic = str(getattr(working_memory, 'current_topic', '') or '')
 
     if active_topic:
@@ -15442,13 +14256,7 @@ def _repair_discourse_coherence(
         try:
             meaning_answer = str(working_memory.answer_from_meanings(user_text, understood, systems=systems) or '').strip()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11747",
-                exc=_aurora_boundary_exc,
-                context={"function": "_repair_discourse_coherence", "handler_line": 11747, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_repair_discourse_coherence', 11747)
             meaning_answer = ""
         meaning_low = meaning_answer.lower()
         if meaning_low and (
@@ -15491,13 +14299,7 @@ def _repair_discourse_coherence(
         try:
             claim_answer = working_memory.answer_from_claims(user_text, understood, systems=systems)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:11789",
-                exc=_aurora_boundary_exc,
-                context={"function": "_repair_discourse_coherence", "handler_line": 11789, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_repair_discourse_coherence', 11789)
             claim_answer = ""
 
     if (
@@ -15568,22 +14370,10 @@ def _capture_pressure_snapshot(systems: Dict[str, Any]) -> Dict[str, Any]:
                 try:
                     snap["slot_polarity"][c.name] = float(accountant.slot(c).polarity)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:11895",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_capture_pressure_snapshot", "handler_line": 11895, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_capture_pressure_snapshot', 11895)
                     snap["slot_polarity"][c.name] = 0.0
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11897",
-            exc=_aurora_boundary_exc,
-            context={"function": "_capture_pressure_snapshot", "handler_line": 11897, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_capture_pressure_snapshot', 11897)
         pass
 
     try:
@@ -15595,13 +14385,7 @@ def _capture_pressure_snapshot(systems: Dict[str, Any]) -> Dict[str, Any]:
                 "level": str(hs.get("level", "")),
             }
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:11908",
-            exc=_aurora_boundary_exc,
-            context={"function": "_capture_pressure_snapshot", "handler_line": 11908, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_capture_pressure_snapshot', 11908)
         pass
     return snap
 
@@ -16105,13 +14889,7 @@ def _select_active_abilities(
                 try:
                     meta["viable_band_alignment"] = float(text.split(":", 1)[1] or 0.0)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:12308",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_ability_metadata", "handler_line": 12308, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_ability_metadata', 12308)
                     pass
             elif text.startswith("ontological_status:"):
                 meta["ontological_status"] = str(text.split(":", 1)[1] or "").strip().lower()
@@ -16119,13 +14897,7 @@ def _select_active_abilities(
                 try:
                     meta["overall_grade"] = float(text.split(":", 1)[1] or 0.0)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:12315",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_ability_metadata", "handler_line": 12315, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_ability_metadata', 12315)
                     pass
         return meta
 
@@ -16240,13 +15012,7 @@ def _derive_applied_effects(
         ha = float(((pressure_after or {}).get("heat", {}) or {}).get("score", 0.0) or 0.0)
         out["heat_delta"] = ha - hb
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12391",
-            exc=_aurora_boundary_exc,
-            context={"function": "_derive_applied_effects", "handler_line": 12391, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_derive_applied_effects', 12391)
         out["heat_delta"] = 0.0
     return out
 
@@ -16292,13 +15058,7 @@ def _answer_relational_role_question(user_text: str, systems: Dict[str, Any]) ->
                 if creator:
                     return (f"My creator is {creator.name}.", "precise", 0.98)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:12436",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_answer_relational_role_question", "handler_line": 12436, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_answer_relational_role_question', 12436)
                 pass
             return (core_identity.who_made_me(), "self-aware", 0.97)
         return ("My creator is Sunni (Sir) Morningstar.", "precise", 0.95)
@@ -16405,13 +15165,7 @@ def _evolutionary_response_refinement(
                 stats.get('understanding', {}).get('understanding_index', 0.0)
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12542",
-            exc=_aurora_boundary_exc,
-            context={"function": "_evolutionary_response_refinement", "handler_line": 12542, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_evolutionary_response_refinement', 12542)
         pass
 
     understanding_contract = systems.get('understanding_contract')
@@ -16419,13 +15173,7 @@ def _evolutionary_response_refinement(
         try:
             contract_state = dict(understanding_contract.snapshot() or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:12549",
-                exc=_aurora_boundary_exc,
-                context={"function": "_evolutionary_response_refinement", "handler_line": 12549, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_evolutionary_response_refinement', 12549)
             contract_state = {}
 
     try:
@@ -16435,13 +15183,7 @@ def _evolutionary_response_refinement(
             evo_cycles = int(lsv.get('evolution_cycles', 0) or 0)
             sentence_target = int(lsv.get('sentence_length_target', 10) or 10)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12558",
-            exc=_aurora_boundary_exc,
-            context={"function": "_evolutionary_response_refinement", "handler_line": 12558, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_evolutionary_response_refinement', 12558)
         pass
 
     growth_score = understanding_idx + min(1.0, evo_cycles / 50.0)
@@ -16463,26 +15205,14 @@ def _evolutionary_response_refinement(
                 ctx_type = "philosophy"
             learned_hints = dream_trainer.get_response_hints(ctx_type, topic_words, systems)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12579",
-            exc=_aurora_boundary_exc,
-            context={"function": "_evolutionary_response_refinement", "handler_line": 12579, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_evolutionary_response_refinement', 12579)
         pass
 
     if working_memory:
         try:
             claim_resolution = working_memory.resolve_claims(user_text) or {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:12585",
-                exc=_aurora_boundary_exc,
-                context={"function": "_evolutionary_response_refinement", "handler_line": 12585, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_evolutionary_response_refinement', 12585)
             claim_resolution = {}
         focus_claim = dict(claim_resolution.get('focus_claim', {}) or {})
         if focus_claim:
@@ -16490,13 +15220,7 @@ def _evolutionary_response_refinement(
                 focus_summary = working_memory._claim_to_text(focus_claim)
                 anchor_terms.update(working_memory._claim_terms(focus_claim))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:12592",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_evolutionary_response_refinement", "handler_line": 12592, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_evolutionary_response_refinement', 12592)
                 focus_summary = str(focus_claim.get('summary', '') or '')
                 anchor_terms.update(re.findall(r"[a-z]{3,}", focus_summary.lower()))
             if focus_summary and focus_summary.lower() in base_low:
@@ -16603,13 +15327,7 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
     try:
         signals['comprehension_rendered'] = bool(systems.pop('_rendered_from_comprehension_intent', False))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12681",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_pipeline_signals", "handler_line": 12681, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12681)
         signals['comprehension_rendered'] = False
     try:
         consciousness = systems.get('consciousness')
@@ -16619,13 +15337,7 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
             signals['stagnation'] = float(es.stagnation_score)
             signals['novelty'] = float(es.novelty)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12690",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_pipeline_signals", "handler_line": 12690, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12690)
         pass
     try:
         dimensional = systems.get('dimensional')
@@ -16646,13 +15358,7 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
                 signals['dmm_alignment'] = float(dimensional.dmm.state.alignment)
                 signals['dmm_vitality'] = float(dimensional.dmm.state.vitality)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12710",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_pipeline_signals", "handler_line": 12710, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12710)
         pass
     try:
         last_pipeline = dict(systems.get("_last_pipeline_state") or {})
@@ -16670,13 +15376,7 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
             if value:
                 signals[key] = dict(value) if isinstance(value, dict) else value
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12727",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_pipeline_signals", "handler_line": 12727, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12727)
         pass
     try:
         contract = systems.get('understanding_contract')
@@ -16708,13 +15408,7 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
                     return 0.0
             signals['meaning_axes'] = {axis: _axis_scalar(axes_map.get(axis)) for axis in axes_map}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12745",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_pipeline_signals", "handler_line": 12745, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12745)
         pass
     # Inject subsurface projection so comprehension paths can use deep state
     try:
@@ -16734,13 +15428,7 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
                 if _sig:
                     signals["subsurface_signal_label"] = str(_sig.get("label", "") or "")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12764",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_pipeline_signals", "handler_line": 12764, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12764)
         pass
     # ---- PRESENT-FRAME — attach sensory snapshot taken at turn-start ----
     try:
@@ -16763,22 +15451,10 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
                     if _pf.get("audio_description") or _pf.get("recent_speech"):
                         _ifield_pf.ingest_sensory_event('auditory', intensity=0.4, novelty=0.3, valence=0.0)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:12786",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_extract_pipeline_signals", "handler_line": 12786, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12786)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12788",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_pipeline_signals", "handler_line": 12788, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12788)
         pass
     # ---- Internal signal pump — consciousness emotional/entropy state → identity field ----
     # Run every tick so the field continuously reflects her inner state.
@@ -16809,13 +15485,7 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
                 _ifield_sig.ingest_sensory_event('internal', intensity=_intensity, valence=_valence) \
                     if hasattr(_ifield_sig, 'ingest_sensory_event') else None
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:12818",
-            exc=_aurora_boundary_exc,
-            context={"function": "_extract_pipeline_signals", "handler_line": 12818, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_extract_pipeline_signals', 12818)
         pass
     return signals
 
@@ -16949,13 +15619,7 @@ def _build_established_strata_evidence(
         try:
             setattr(state, "pipeline_state", pipeline_state_ref)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:12841",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_established_strata_evidence", "handler_line": 12841, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 12841)
             pass
     pipeline_state = dict(pipeline_state_ref or {})
     parsed = dict(getattr(state, "parsed", {}) or {})
@@ -17027,13 +15691,7 @@ def _build_established_strata_evidence(
                 if str(label).strip()
             ][:4]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:12908",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_established_strata_evidence", "handler_line": 12908, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 12908)
             active_context_labels = []
 
     understanding_observation = dict(getattr(state, "understanding_observation", {}) or {})
@@ -17133,13 +15791,7 @@ def _build_established_strata_evidence(
                 or {}
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:13007",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_established_strata_evidence", "handler_line": 13007, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13007)
             working_memory_snapshot = {}
     if working_memory_snapshot:
         evidence["working_memory_snapshot"] = working_memory_snapshot
@@ -17174,13 +15826,7 @@ def _build_established_strata_evidence(
         try:
             conversation_summary = dict(conversation_memory.memory_sweep_summary() or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:13041",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_established_strata_evidence", "handler_line": 13041, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13041)
             conversation_summary = {}
     if not conversation_summary and isinstance(working_memory_snapshot.get("conversation_memory"), dict):
         conversation_summary = dict(working_memory_snapshot.get("conversation_memory", {}) or {})
@@ -17207,13 +15853,7 @@ def _build_established_strata_evidence(
                     if str(item).strip()
                 ][:2]
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:13067",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_established_strata_evidence", "handler_line": 13067, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13067)
                 recalls = []
             if recalls:
                 continuity_recall.append({"anchor": anchor, "recalls": recalls})
@@ -17236,13 +15876,7 @@ def _build_established_strata_evidence(
             if hasattr(oets, "get_stats"):
                 oets_stats = dict(oets.get_stats() or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:13089",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_established_strata_evidence", "handler_line": 13089, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13089)
             oets_stats = {}
         understanding = dict(oets_stats.get("understanding", {}) or {})
         active_concepts = [
@@ -17280,13 +15914,7 @@ def _build_established_strata_evidence(
                               for ax in ('X', 'T', 'N', 'B', 'A')},
             }
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13126",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_established_strata_evidence", "handler_line": 13126, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13126)
         pass
 
     # SediMemory recall snapshot (5-axis stratigraphic memory)
@@ -17308,13 +15936,7 @@ def _build_established_strata_evidence(
                 for r in list(_sedi_rec or [])[:4]
             ]
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13147",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_established_strata_evidence", "handler_line": 13147, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13147)
         pass
 
     # Grammar state hint (discourse mode from grammar engine)
@@ -17325,13 +15947,7 @@ def _build_established_strata_evidence(
             if _disc:
                 evidence['grammar_discourse_hint'] = str(_disc)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13157",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_established_strata_evidence", "handler_line": 13157, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13157)
         pass
 
     # Poedex pre-fetch: if OETS has flagged an active concept gap, stage a
@@ -17420,13 +16036,7 @@ def _build_established_strata_evidence(
                             'status': 'empty',
                         }
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:13245",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_prefetch_gap", "handler_line": 13245, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_prefetch_gap', 13245)
                     _ps_now['poedex_prefetch_status'] = 'error'
                     evidence['poedex_prefetch'] = {
                         'concept': gap,
@@ -17475,13 +16085,7 @@ def _build_established_strata_evidence(
                             'status': 'empty',
                         }
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:13293",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_learn_gap", "handler_line": 13293, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_learn_gap', 13293)
                     _ps_now['poedex_learning_status'] = 'error'
                     evidence['poedex_learning'] = {
                         'concept': gap,
@@ -17535,13 +16139,7 @@ def _build_established_strata_evidence(
                             'variants': [],
                         }
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:13346",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_represent_gap", "handler_line": 13346, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_represent_gap', 13346)
                     _ps_now['poedex_representation_status'] = 'error'
                     evidence['poedex_representation'] = {
                         'concept': gap,
@@ -17551,13 +16149,7 @@ def _build_established_strata_evidence(
                     }
             _pth.Thread(target=_represent_gap, daemon=True).start()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13355",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_established_strata_evidence", "handler_line": 13355, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13355)
         pass
 
     if dict(evidence.get('poedex_prefetch') or {}).get('result'):
@@ -17633,13 +16225,7 @@ def _build_established_strata_evidence(
                     notes=f"reflexive_understanding:{_ri_state.frame}:{_ri_state.representational_ref or ''}",
                 )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13406",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_established_strata_evidence", "handler_line": 13406, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13406)
         pass
 
     evidence["established_stack_sources"] = [
@@ -17682,13 +16268,7 @@ def _read_dual_strata_json(path: Path, default: Any) -> Any:
         try:
             return json.loads(path.read_text(encoding="utf-8"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:13448",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_dual_strata_json", "handler_line": 13448, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_dual_strata_json', 13448)
             pass
     return default
 
@@ -17703,13 +16283,7 @@ def _write_dual_strata_json(path: Path, payload: Any) -> None:
         )
         tmp.replace(path)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13462",
-            exc=_aurora_boundary_exc,
-            context={"function": "_write_dual_strata_json", "handler_line": 13462, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_write_dual_strata_json', 13462)
         pass
 
 
@@ -17729,13 +16303,7 @@ def _build_live_subsurface_projection(
             import json
             projection = dict(json.loads(_proj_path.read_text()) or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13481",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_live_subsurface_projection", "handler_line": 13481, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_live_subsurface_projection', 13481)
         projection = {}
 
     if not projection:
@@ -17799,13 +16367,7 @@ def _read_cers_salience(systems: Dict[str, Any]) -> Dict[str, Any]:
             "response_bias": max(0.0, min(1.0, float(mtsl_semantic.get("response_bias", 0.0) or 0.0))),
         }
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13544",
-            exc=_aurora_boundary_exc,
-            context={"function": "_read_cers_salience", "handler_line": 13544, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_read_cers_salience', 13544)
         return {
             "cers_salience": 0.0, "cers_hesitation": False,
             "semantic_salience": 0.0, "semantic_hesitation": False,
@@ -17862,13 +16424,7 @@ def _refresh_live_dual_strata_runtime(
     try:
         from aurora_internal.dual_strata.dce_bridge import DualStrataBridge, recursion_weights_from_lattice
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13593",
-            exc=_aurora_boundary_exc,
-            context={"function": "_refresh_live_dual_strata_runtime", "handler_line": 13593, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_live_dual_strata_runtime', 13593)
         return _read_live_dual_strata_runtime(systems)
 
     try:
@@ -17889,13 +16445,7 @@ def _refresh_live_dual_strata_runtime(
             recursion_weights=_recursion_weights,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13613",
-            exc=_aurora_boundary_exc,
-            context={"function": "_refresh_live_dual_strata_runtime", "handler_line": 13613, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_live_dual_strata_runtime', 13613)
         return _read_live_dual_strata_runtime(systems)
 
     # CERS shadow pass — read-only, never authoritative, same pattern as the
@@ -17950,13 +16500,7 @@ def _refresh_live_dual_strata_runtime(
             systems["_toroidal_signature"] = dict(_mtsl_coordinator.latest_snapshot.toroidal_signature or {})
             systems["_mtsl_snapshot"] = _mtsl_coordinator.latest_snapshot.to_dict()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13667",
-            exc=_aurora_boundary_exc,
-            context={"function": "_refresh_live_dual_strata_runtime", "handler_line": 13667, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_live_dual_strata_runtime', 13667)
         pass
 
     _cf = dict(snapshot.conscious_frame or {})
@@ -17989,35 +16533,17 @@ def _derive_problem_solving_drive(
     try:
         coherence = float(signals.get("coherence", 1.0))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13699",
-            exc=_aurora_boundary_exc,
-            context={"function": "_derive_problem_solving_drive", "handler_line": 13699, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_derive_problem_solving_drive', 13699)
         coherence = 1.0
     try:
         stagnation = float(signals.get("stagnation", 0.0))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13703",
-            exc=_aurora_boundary_exc,
-            context={"function": "_derive_problem_solving_drive", "handler_line": 13703, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_derive_problem_solving_drive', 13703)
         stagnation = 0.0
     try:
         thermal_load = float(signals.get("thermal_load", 0.0))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13707",
-            exc=_aurora_boundary_exc,
-            context={"function": "_derive_problem_solving_drive", "handler_line": 13707, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_derive_problem_solving_drive', 13707)
         thermal_load = 0.0
     spike_detected = bool(signals.get("spike_detected"))
 
@@ -18195,13 +16721,7 @@ def _apply_pipeline_modulation(
         try:
             conf = min(conf, float(problem_drive.get("confidence_cap", conf)))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:13884",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_pipeline_modulation", "handler_line": 13884, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_pipeline_modulation', 13884)
             pass
 
     # ---- Paradoxes: opposing I-State beings both activated ----
@@ -18309,13 +16829,7 @@ def _ensure_pipeline_abilities(genealogy: Any) -> None:
             genealogy.abilities[_mod_ap.id] = _augment_ability_profile_with_origin(_mod_ap)
         _PIPELINE_ABILITIES_REGISTERED = True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:13991",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ensure_pipeline_abilities", "handler_line": 13991, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_pipeline_abilities', 13991)
         pass
 
 
@@ -18392,13 +16906,7 @@ def _log_modulation_event(
             },
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14051",
-            exc=_aurora_boundary_exc,
-            context={"function": "_log_modulation_event", "handler_line": 14051, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_log_modulation_event', 14051)
         pass
 
 
@@ -18437,13 +16945,7 @@ def _ensure_claim_relief_abilities(genealogy: Any) -> None:
             genealogy.abilities[_branch_ap.id] = _augment_ability_profile_with_origin(_branch_ap)
         _CLAIM_RELIEF_ABILITIES_REGISTERED = True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14089",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ensure_claim_relief_abilities", "handler_line": 14089, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_claim_relief_abilities', 14089)
         pass
 
 
@@ -18501,13 +17003,7 @@ def _log_claim_resolution_relief(
             },
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14140",
-            exc=_aurora_boundary_exc,
-            context={"function": "_log_claim_resolution_relief", "handler_line": 14140, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_log_claim_resolution_relief', 14140)
         pass
 
 
@@ -18706,13 +17202,7 @@ def _confess_low_confidence_parse(user_text: str, parsed: Dict[str, Any]) -> Non
             persistence_key=str(user_text or "")[:48],
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14200",
-            exc=_aurora_boundary_exc,
-            context={"function": "_confess_low_confidence_parse", "handler_line": 14200, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_confess_low_confidence_parse', 14200)
         pass
 
 
@@ -18726,13 +17216,7 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
         else:
             state.parsed = UtteranceParser().parse(user_text)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14208",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up1_information", "handler_line": 14208, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up1_information', 14208)
         state.parsed = {}
     state.relational_form = dict((state.parsed or {}).get("relational_form") or {})
     if isinstance(state.pipeline_state, dict):
@@ -18765,13 +17249,7 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                 if node:
                     state.oets_concepts.append({"word": word, "node": str(node)[:120]})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14220",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up1_information", "handler_line": 14220, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up1_information', 14220)
         pass
     # ---- IStateCollective — ontological existence gate ----
     # Feed the input through all 10 I-State beings. Each being asserts what is
@@ -18845,13 +17323,7 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                 if _net:
                     state.pipeline_state["collective_axis_net"] = _net
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14247",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up1_information", "handler_line": 14247, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up1_information', 14247)
         pass
 
     # ── SediMemory recall: pull relevant stratigraphic memory for this turn ──
@@ -18871,13 +17343,7 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                         for f in _recalled[:4]
                     ]
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14278",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up1_information", "handler_line": 14278, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up1_information', 14278)
         pass
 
     # ── Waveform pre-injection — field shaped BEFORE comprehension runs ────────
@@ -18911,13 +17377,7 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                     qao=systems.get('quasiarch_observer'),
                 )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14306",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up1_information", "handler_line": 14306, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up1_information', 14306)
         pass
 
     # ── Sensory context injection ──
@@ -18953,13 +17413,7 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                                 valence=0.0,
                             )
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:14341",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_chain_up1_information", "handler_line": 14341, "source_file": "aurora.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up1_information', 14341)
                             pass
 
             _sc = systems.get('sensory_crystal')
@@ -19008,22 +17462,10 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                                     valence=0.0,
                                 )
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:14389",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_chain_up1_information", "handler_line": 14389, "source_file": "aurora.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up1_information', 14389)
                             pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14391",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up1_information", "handler_line": 14391, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up1_information', 14391)
         pass
 
 
@@ -19038,24 +17480,12 @@ def _chain_up2_belief(user_text: str, systems: dict, state: Any) -> None:
     try:
         state.referent_map = working_memory.resolve_referents(user_text) or {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14405",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up2_belief", "handler_line": 14405, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up2_belief', 14405)
         state.referent_map = {}
     try:
         state.claim_resolution = working_memory.resolve_claims(user_text) or {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14409",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up2_belief", "handler_line": 14409, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up2_belief', 14409)
         state.claim_resolution = {}
     # Context control (explicit memory commands, "forget X", etc.)
     try:
@@ -19074,13 +17504,7 @@ def _chain_up2_belief(user_text: str, systems: dict, state: Any) -> None:
             state.response_src = "context_control"
             return
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14427",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up2_belief", "handler_line": 14427, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up2_belief', 14427)
         pass
     # Behavior alignment answer
     try:
@@ -19094,13 +17518,7 @@ def _chain_up2_belief(user_text: str, systems: dict, state: Any) -> None:
             state.response_src = "behavior_alignment"
             return
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14440",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up2_belief", "handler_line": 14440, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up2_belief', 14440)
         pass
     # Session re-address (continuity)
     try:
@@ -19117,13 +17535,7 @@ def _chain_up2_belief(user_text: str, systems: dict, state: Any) -> None:
             state.response_src = "session_continuity"
             return
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14456",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up2_belief", "handler_line": 14456, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up2_belief', 14456)
         pass
     state.session_continuity = float(getattr(working_memory, "turn_count", 0) or 0)
     try:
@@ -19150,13 +17562,7 @@ def _chain_up2_belief(user_text: str, systems: dict, state: Any) -> None:
                 "scope": "live_surface_conversation_frame",
             }
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14482",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up2_belief", "handler_line": 14482, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up2_belief', 14482)
         state.working_memory_snapshot = {}
 
     # T-axis reference continuity acts on the SAME relational form rather than
@@ -19186,13 +17592,7 @@ def _measure_polarity_gradient_snapshot(systems: Dict[str, Any]) -> Dict[str, An
     try:
         from aurora_internal.aurora_polarity_gradient import PolarityGradientSensor
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14492",
-            exc=_aurora_boundary_exc,
-            context={"function": "_measure_polarity_gradient_snapshot", "handler_line": 14492, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_measure_polarity_gradient_snapshot', 14492)
         return {}
     sensor = systems.get("_dialogue_polarity_sensor")
     if sensor is None or not hasattr(sensor, "measure"):
@@ -19203,23 +17603,11 @@ def _measure_polarity_gradient_snapshot(systems: Dict[str, Any]) -> Dict[str, An
         report_obj = sensor.measure(lattice.vertices, tick=tick)
         report = report_obj.to_dict() if hasattr(report_obj, "to_dict") else report_obj
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14502",
-            exc=_aurora_boundary_exc,
-            context={"function": "_measure_polarity_gradient_snapshot", "handler_line": 14502, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_measure_polarity_gradient_snapshot', 14502)
         try:
             report_obj = sensor.measure(lattice.vertices, tick=int(getattr(lattice, "total_ticks", 0) or 0))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:14505",
-                exc=_aurora_boundary_exc,
-                context={"function": "_measure_polarity_gradient_snapshot", "handler_line": 14505, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_measure_polarity_gradient_snapshot', 14505)
             return {}
         report = {
             "tick": int(getattr(report_obj, "tick", 0) or 0),
@@ -19422,13 +17810,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
                     _lane_contrib = min(1.0, float(_sc_lanes) / 10.0)
                     _raw["B"] = min(1.0, float(_raw.get("B", 0.2)) + _lane_contrib * _w)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14692",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14692, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14692)
         pass
 
     # ---- Collective axis blend ----
@@ -19463,13 +17845,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
                     _cur = float(_raw.get(_ax, 0.2))
                     _raw[_ax] = max(0.0, min(1.0, _cur + _norm * _coll_w))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14713",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14713, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14713)
         pass
 
     # ---- Subsurface braid blend (per Sunni, 2026-08-19) ----
@@ -19692,26 +18068,14 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
                 "A": float(getattr(state, "a_axis", state.axis_activation.get("A", 0.5)) or 0.5),
             })
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14738",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14738, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14738)
         pass
     # Telemetry
     try:
         from aurora_telemetry import get_telemetry as _gt
         _gt().set_axis_context(state.axis_activation)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14744",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14744, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14744)
         pass
     # Populate pipeline_state with axis vector
     ps = state.pipeline_state
@@ -19727,13 +18091,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
                 if _ta is not None:
                     _polarity = round(float(getattr(_ta, "polarity", 0.0)), 4)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:14759",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chain_up3_purpose", "handler_line": 14759, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14759)
             pass
         ps["axis_activation"]         = state.axis_activation
         ps["dominant_axis"]           = state.dominant_axis
@@ -19753,13 +18111,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
             cst = contract.state or {}
             state.belief_tension = _belief_tension_from_n_cost(cst.get("N"))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14778",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14778, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14778)
         pass
     # DER emotional state -- energy drives emotion (N axis)
     try:
@@ -19768,13 +18120,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
             _heat = getattr(systems.get("lattice"), "get_global_heat", lambda: 0.0)()
             state.emotional_state = dim.update_emotional_state(state.axis_activation, _heat) or {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14786",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14786, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14786)
         state.emotional_state = {}
     # Intent classification -- derived from axis state + parsed utterance, not keyword patterns
     state.intent = _classify_input_intent(
@@ -19790,13 +18136,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
             cst = contract.state or {}
             state.goal_stack = list((cst.get("P") or {}).get("goal_stack", []) or [])
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14800",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14800, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14800)
         pass
     try:
         (
@@ -19810,13 +18150,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
             state.emotional_state["deep"] = dict(state.deep_emotional_state or {})
             state.emotional_state["bridge"] = dict(_emotion_bridge or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14813",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14813, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14813)
         state.surface_reactive_emotion = {}
         state.deep_emotional_state = {}
         state.polarity_gradient = {}
@@ -19832,13 +18166,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
                 axis_depth={"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}.get(state.dominant_axis, 2),
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14828",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up3_purpose", "handler_line": 14828, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up3_purpose', 14828)
         pass
     ps = state.pipeline_state
     if isinstance(ps, dict):
@@ -19884,13 +18212,7 @@ def _chain_up4_meaning(user_text: str, systems: dict, state: Any) -> None:
             cst = contract.state or {}
             state.semantic_pressure = float((cst.get("B") or {}).get("boundary_pressure", 0.0) or 0.0)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14873",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up4_meaning", "handler_line": 14873, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up4_meaning', 14873)
         pass
     # Salient concepts -- what falls within the boundary of significance
     state.salient_concepts = list((state.parsed or {}).get("topic_words", []))[:6]
@@ -19924,13 +18246,7 @@ def _chain_up4_meaning(user_text: str, systems: dict, state: Any) -> None:
             except Exception:
                 pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14883",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up4_meaning", "handler_line": 14883, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up4_meaning', 14883)
         pass
     # Outcome variance check -- for each salient concept, query the pressure ledger
     # to see if its causal history shows split outcomes for the same action.
@@ -19951,13 +18267,7 @@ def _chain_up4_meaning(user_text: str, systems: dict, state: Any) -> None:
                         _sig["outcome_entropy"],
                     )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14903",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up4_meaning", "handler_line": 14903, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up4_meaning', 14903)
         pass
     if _conditional_notes:
         ps = state.pipeline_state
@@ -20019,13 +18329,7 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
                 ) or {}
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14958",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up5_understanding", "handler_line": 14958, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up5_understanding', 14958)
         pass
     # Developmental stage
     try:
@@ -20034,13 +18338,7 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
             assess_developmental_stage(state.meaning_forms or []) or {}
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14964",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up5_understanding", "handler_line": 14964, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up5_understanding', 14964)
         pass
     # Dream trainer learned hints
     try:
@@ -20051,13 +18349,7 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
             hints = dt.get_response_hints(_ctx, _tw, systems) or []
             state.learned_hints.extend([str(h) for h in hints if h])
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14974",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up5_understanding", "handler_line": 14974, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up5_understanding', 14974)
         pass
     # ConsciousLearner shards
     try:
@@ -20071,13 +18363,7 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
                             or ("basis=" in _sc and "target=" in _sc)):
                         state.learned_hints.append(_sc[:80])
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:14987",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_up5_understanding", "handler_line": 14987, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_up5_understanding', 14987)
         pass
 
 
@@ -20192,13 +18478,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
         _turn_id_t2 = int(getattr(_wm_t2, "turn_count", 0) or 0) if _wm_t2 is not None else 0
         log_relation_pairs_from_turn(user_text, systems, turn_id=_turn_id_t2, source="input")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15013",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down5_understanding", "handler_line": 15013, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15013)
         pass
     # P1 Track CP (Directive P1, 2026-07-18): contradiction perception via
     # pair collision. Runs AFTER the Tier-2 write above so the recent-
@@ -20214,13 +18494,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
         _turn_id_cp = int(getattr(_wm_cp, "turn_count", 0) or 0) if _wm_cp is not None else 0
         perceive_contradictions(user_text, systems, turn_id=_turn_id_cp)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15028",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down5_understanding", "handler_line": 15028, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15028)
         pass
     # B1.1 (Directive B1, 2026-07-18): Boundary Envelope shadow scoring.
     # Rides beside the Tier-2 logger above, same contract -- read-only
@@ -20234,13 +18508,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
         _turn_id_b1 = int(getattr(_wm_b1, "turn_count", 0) or 0) if _wm_b1 is not None else 0
         log_envelope_shadow(user_text, systems, turn_id=_turn_id_b1)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15041",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down5_understanding", "handler_line": 15041, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15041)
         pass
     # Propagate learned hints into pipeline_state for downstream stages
     if state.learned_hints:
@@ -20282,13 +18550,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             ps["intent_override"] = _rstrat
             ps["interaction_strategy_applied"] = True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15082",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down5_understanding", "handler_line": 15082, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15082)
         pass
     # Grammar engine discourse hint
     try:
@@ -20298,13 +18560,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             if _ge_disc:
                 ps["grammar_discourse_hint"] = _ge_disc
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15091",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down5_understanding", "handler_line": 15091, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15091)
         pass
     try:
         if isinstance(state.pipeline_state, dict):
@@ -20314,13 +18570,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             if _st_d and str(_st_d) not in ("neutral", ""):
                 state.pipeline_state["user_stance"] = str(_st_d)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15100",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down5_understanding", "handler_line": 15100, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15100)
         pass
     # Intent dispatch using full upward context
     # Prepend recent conversation context so the comprehension response
@@ -20331,13 +18581,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             f"[Conversation so far:\n{_rcx}\n]\n\n{user_text}" if _rcx else user_text
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15110",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down5_understanding", "handler_line": 15110, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15110)
         _user_text_for_comp = user_text
 
     # Inject live sensory context into the comprehension input so the response
@@ -20375,13 +18619,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     "derivation_signature": "X^1*N^1*B^1",
                 }
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15137",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down5_understanding", "handler_line": 15137, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15137)
         pass
     # Constraint-semantic candidate: the SAME proposition that traversed
     # X/T/N/B/A is allowed to supply a grounded response candidate.  This is
@@ -20557,13 +18795,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                         str(comp_text)[:80],
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:15238",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_chain_down5_understanding", "handler_line": 15238, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down5_understanding', 15238)
                 pass
         elif (
             state.learned_hints
@@ -20809,13 +19041,7 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                 law_bindings = [b.to_dict() if hasattr(b, "to_dict") else b
                                 for b in (_nmo.law_bindings or [])]
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:15284",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_generate_from_manifold", "handler_line": 15284, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_generate_from_manifold', 15284)
                 pass
     if not law_bindings:
         _nm = dict(systems.get("_native_meaning") or {})
@@ -21009,13 +19235,7 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                         systems.setdefault("_fgae_selected_entries", []).append(record)
                     
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:15458",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate_from_manifold", "handler_line": 15458, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate_from_manifold', 15458)
             pass
             
     if not tokens:
@@ -21113,13 +19333,7 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
             systems["_fgae_language_projection"] = _language_projection
             _dominant_channel = str(_language_projection.get("dominant_channel") or "selection")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:15555",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate_from_manifold", "handler_line": 15555, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate_from_manifold', 15555)
             _dominant_channel = "selection"
 
         # Identify anchor names in tokens (person references) — address naturally
@@ -21131,13 +19345,7 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                 _anch = getattr(_dna, "anchors", None) or {}
                 _known_anchors = {str(k).lower() for k in (_anch if isinstance(_anch, dict) else {})}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:15566",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate_from_manifold", "handler_line": 15566, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate_from_manifold', 15566)
             pass
         _anchor_refs = [w for w in tokens if w.lower() in _known_anchors]
         _non_anchor_tokens = [w for w in tokens if w.lower() not in _known_anchors]
@@ -21268,13 +19476,7 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                 if _suggestion and _suggestion.get("applied_text"):
                     combined = _suggestion["applied_text"]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:15696",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate_from_manifold", "handler_line": 15696, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate_from_manifold', 15696)
             pass
 
     conf = min(0.95, 0.4 + intensity)
@@ -21313,13 +19515,7 @@ def _chain_down4_meaning(user_text: str, systems: dict, state: Any, *, auto_sear
                 _nm["law_bindings"] = _existing
                 systems["_native_meaning"] = _nm
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15734",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down4_meaning", "handler_line": 15734, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down4_meaning', 15734)
         pass
 
     # Downward traversal — surface the waveform sub-crests behind this turn's
@@ -21355,13 +19551,7 @@ def _chain_down4_meaning(user_text: str, systems: dict, state: Any, *, auto_sear
             _nm["law_bindings"] = _existing
             systems["_native_meaning"] = _nm
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15769",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down4_meaning", "handler_line": 15769, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down4_meaning', 15769)
         pass
 
     # Sensory observation — consume a pending proactive-comment packet staged
@@ -21391,22 +19581,10 @@ def _chain_down4_meaning(user_text: str, systems: dict, state: Any, *, auto_sear
             try:
                 _so_path.write_text(json.dumps({}))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:15798",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_chain_down4_meaning", "handler_line": 15798, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down4_meaning', 15798)
                 pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:15800",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down4_meaning", "handler_line": 15800, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down4_meaning', 15800)
         pass
 
     response_already_set = bool(state.response_content)
@@ -21523,13 +19701,7 @@ def _chain_down4_meaning(user_text: str, systems: dict, state: Any, *, auto_sear
                 state.response_confidence = 0.72 if _cond_notes else 0.82
                 state.response_src = "reasoning"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:15858",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chain_down4_meaning", "handler_line": 15858, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down4_meaning', 15858)
             pass
 
 
@@ -21605,13 +19777,7 @@ def _chain_down3_purpose(user_text: str, systems: dict, state: Any, *, auto_sear
                 state.response_src = "search"
                 _record_response_revision(state, "chain_down3_reasoning_engine", "", 0.0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:15907",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chain_down3_purpose", "handler_line": 15907, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down3_purpose', 15907)
             pass
 
 
@@ -21646,13 +19812,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     # her own renderer) or silence takes the turn instead.
                     state.response_content = ""
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:15947",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chain_down2_belief", "handler_line": 15947, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down2_belief', 15947)
             pass
     # ── SediMemory-informed response: use recalled fragments as context ──
     if not state.response_content:
@@ -21686,13 +19846,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                         state.response_src = 'sedimemory_recall'
                         _record_response_revision(state, "chain_down2_sedimemory_recall", "", 0.0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:15979",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chain_down2_belief", "handler_line": 15979, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down2_belief', 15979)
             pass
     if not state.response_content:
         try:
@@ -21722,13 +19876,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.quasiarch_events.append(dict(fb_event))
                 _record_response_revision(state, "chain_down2_grounded_fallback", "", 0.0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16002",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chain_down2_belief", "handler_line": 16002, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down2_belief', 16002)
             pass
     # Build 694 step 13 (spec section 22): last of the "internal
     # resolution first" fallback stages -- only reached when pressure-
@@ -21762,13 +19910,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         )
         _record_response_revision(state, "chain_down2_evolutionary_refinement", _before_evo, _before_evo_conf)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16020",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down2_belief", "handler_line": 16020, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down2_belief', 16020)
         pass
     # Coherence repair
     _before_coh, _before_coh_conf = state.response_content, state.response_confidence
@@ -21784,13 +19926,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
             state.quasiarch_events.append(dict(coh_event))
         _record_response_revision(state, "chain_down2_coherence_repair", _before_coh, _before_coh_conf)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16033",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down2_belief", "handler_line": 16033, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down2_belief', 16033)
         pass
     # Meaning alignment
     working_memory = systems.get("working_memory")
@@ -21815,13 +19951,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.defer_save = True
                 _record_response_revision(state, "chain_down2_meaning_alignment", _before_ma, _before_ma_conf)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16055",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chain_down2_belief", "handler_line": 16055, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down2_belief', 16055)
             pass
 
 
@@ -21852,13 +19982,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
             )
             _record_response_revision(state, "chain_down1_pipeline_modulation", _orig, _orig_conf)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16082",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chain_down1_information", "handler_line": 16082, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down1_information', 16082)
             pass
     # Problem drive event
     try:
@@ -21866,13 +19990,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         if pde:
             state.quasiarch_events.append(pde)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16089",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down1_information", "handler_line": 16089, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down1_information', 16089)
         pass
     # Self-audit
     _before_audit, _before_audit_conf = state.response_content, state.response_confidence
@@ -21897,13 +20015,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                 state.quasiarch_events.append(dict(ev))
             _record_response_revision(state, "chain_down1_self_audit", _before_audit, _before_audit_conf)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16111",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down1_information", "handler_line": 16111, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down1_information', 16111)
         pass
     # Echo repair
     _before_echo, _before_echo_conf = state.response_content, state.response_confidence
@@ -21928,13 +20040,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
             )
             _record_response_revision(state, "chain_down1_echo_repair", _before_echo, _before_echo_conf)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16133",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down1_information", "handler_line": 16133, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down1_information', 16133)
         pass
     # Question-attunement repair
     _before_qr, _before_qr_conf = state.response_content, state.response_confidence
@@ -21953,13 +20059,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                     understood=state.parsed or {},
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:16150",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_chain_down1_information", "handler_line": 16150, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down1_information', 16150)
                 pass
             state.quasiarch_events.append(
                 _make_quasiarch_runtime_event(
@@ -21979,13 +20079,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                 systems.get("_last_question_alignment_audit") or {}
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16168",
-            exc=_aurora_boundary_exc,
-            context={"function": "_chain_down1_information", "handler_line": 16168, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_chain_down1_information', 16168)
         pass
     # Constraint emission — shape final surface output through IVM pressure lens
     # Also clears internal-format strings that must never reach the speaker.
@@ -22058,13 +20152,7 @@ def _record_pressure_experience(state: Any, systems: dict) -> None:
             elif getattr(node, "role", ""):
                 meaning_text = f"{anchor} ({node.role})"
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16239",
-            exc=_aurora_boundary_exc,
-            context={"function": "_record_pressure_experience", "handler_line": 16239, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_record_pressure_experience', 16239)
         oets = None
 
     # pursuing
@@ -22121,13 +20209,7 @@ def _record_pressure_experience(state: Any, systems: dict) -> None:
             oets=oets,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16295",
-            exc=_aurora_boundary_exc,
-            context={"function": "_record_pressure_experience", "handler_line": 16295, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_record_pressure_experience', 16295)
         pass
 
 
@@ -24351,13 +22433,7 @@ def _run_reasoning_pipeline(
             if _umeta2.get("pragmatic_signals"):
                 state.pipeline_state["pragmatic_signals"] = _umeta2["pragmatic_signals"]
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16360",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16360, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16360)
         pass
 
     # PF3.1 (2026-07-21): see aurora_braid_wiring.reset_proposition_frame_
@@ -24369,13 +22445,7 @@ def _run_reasoning_pipeline(
         from aurora_braid_wiring import reset_proposition_frame_for_turn
         reset_proposition_frame_for_turn(systems)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16371",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16371, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16371)
         pass
 
     # Directive P2/P1 Track ST: same unconditional per-turn reset as
@@ -24440,13 +22510,7 @@ def _run_reasoning_pipeline(
             # Also expose the raw frags for any subsystem that wants richer detail
             state.pipeline_state["sedi_surface_recall_count"] = len(_sedi_frags)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16394",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16394, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16394)
         pass
 
     # ---- STRATA-INTEGRATED REASONING: Frame the Turn with Vitals ----
@@ -24466,13 +22530,7 @@ def _run_reasoning_pipeline(
             if _crest_intensity >= 0.72:
                 state.pipeline_state["subsurface_reactive_priority"] = True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16413",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16413, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16413)
         pass
 
     # Waveform accumulator for this turn (Step 1 capture; the crest compresses it).
@@ -24530,13 +22588,7 @@ def _run_reasoning_pipeline(
     try:
         _apply_noncomp_input_guidance(systems, state, _rr_subject_text)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16435",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16435, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16435)
         pass
 
     try:
@@ -24546,13 +22598,7 @@ def _run_reasoning_pipeline(
             if _perc_result and isinstance(state.pipeline_state, dict):
                 state.pipeline_state["perception_result"] = _perc_result if isinstance(_perc_result, dict) else {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16444",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16444, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16444)
         pass
 
     # Read the result from process() that fired BEFORE the upward chain.
@@ -24594,22 +22640,10 @@ def _run_reasoning_pipeline(
                         priority=0.75,
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:16485",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_reasoning_pipeline", "handler_line": 16485, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16485)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16487",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16487, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16487)
         pass
 
     # ---- ABILITY SELECTION — wire live thinking patterns into the pipeline ----
@@ -24658,25 +22692,13 @@ def _run_reasoning_pipeline(
                 state.pipeline_state["active_ability_effect_unhandled"] = list(_ab_summary.get("unhandled_effects") or [])
                 state.pipeline_state["ability_runtime_flags"] = dict(_ab_summary.get("runtime_flags") or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16518",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16518, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16518)
         pass
 
     try:
         _apply_noncomp_behavior_actuation(systems, state, context="input")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16523",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16523, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16523)
         pass
 
     # ---- PRESSURE-BEFORE stamp (first-person comparison) ----
@@ -24688,13 +22710,7 @@ def _run_reasoning_pipeline(
         if _pb_stamp and isinstance(state.pipeline_state, dict):
             state.pipeline_state["pressure_before"] = dict(_pb_stamp)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16534",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16534, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16534)
         pass
 
     # ---- GAP 1 FIX: SUBSURFACE PROJECTION PRE-GENERATION INJECTION ----
@@ -24732,22 +22748,10 @@ def _run_reasoning_pipeline(
                 try:
                     state.dominant_axis = _dom_hint
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:16571",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_reasoning_pipeline", "handler_line": 16571, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16571)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16573",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16573, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16573)
         pass
 
     # ---- GAP 5 FIX: PRE-GENERATION CONSCIOUS FRAME ----
@@ -24777,23 +22781,11 @@ def _run_reasoning_pipeline(
                     try:
                         state.dominant_axis = _pss_axis
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:16602",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 16602, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16602)
                         pass
             systems["_pre_generation_conscious_frame"] = _pre_cf
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16605",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16605, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16605)
         pass
 
     # ---- DOWNWARD PASS ----
@@ -24871,13 +22863,7 @@ def _run_reasoning_pipeline(
                     from aurora_braid_wiring import begin_expression
                     begin_expression(systems)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:16637",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_reasoning_pipeline", "handler_line": 16637, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16637)
                     pass
                 # Run the draft through the expression evolution orchestra
                 # (SIC → multi-draft). perception.express() requires an
@@ -24902,13 +22888,7 @@ def _run_reasoning_pipeline(
                         if _evo_text_a5:
                             _expressed = _evo_text_a5
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:16656",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 16656, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16656)
                         pass
                 if _expressed and isinstance(_expressed, str) and len(_expressed.split()) >= 4:
                     state.response_content = _expressed
@@ -24917,13 +22897,7 @@ def _run_reasoning_pipeline(
                         from aurora_braid_wiring import checkpoint_expression
                         checkpoint_expression(systems, expression_text=_expressed)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:16664",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 16664, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16664)
                         pass
                     # ---- LANGUAGE STRUCTURE FITNESS — score expression against intention ----
                     try:
@@ -24966,22 +22940,10 @@ def _run_reasoning_pipeline(
                                             source='expression_misfit',
                                         )
                             except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:16696",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "_run_reasoning_pipeline", "handler_line": 16696, "source_file": "aurora.py"},
-                                )
+                                _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16696)
                                 pass
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:16698",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 16698, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16698)
                         pass
 
                     # ---- LANGUAGE FIELD — re-entry loop (fidelity + tone prosody) ----
@@ -25002,13 +22964,7 @@ def _run_reasoning_pipeline(
                             if _prosody_tone and _cur_resp_tone == 'neutral' and _prosody_tone != 'neutral':
                                 state.response_tone = _prosody_tone
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:16718",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 16718, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16718)
                         pass
 
                     # ---- WARP — advance LanguageField WARP trials ----
@@ -25022,23 +22978,11 @@ def _run_reasoning_pipeline(
                                     'dissolved': list(_warp_dissolved),
                                 }
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:16731",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 16731, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16731)
                         pass
 
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16734",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16734, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16734)
             pass
 
     # ---- SURFACE DISPATCHER — fire evolved surfaces on axis pressure ----
@@ -25063,13 +23007,7 @@ def _run_reasoning_pipeline(
                 if _sd_evidence and isinstance(state.pipeline_state, dict):
                     state.pipeline_state['surface_dispatcher_fires'] = len(_sd_evidence)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16754",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16754, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16754)
         pass
 
     # Record pressure experience -- anchor + meaning + effect triplet in OETS
@@ -25105,13 +23043,7 @@ def _run_reasoning_pipeline(
                                 state.pipeline_state["grammar_motif_id"]       = str(_gs.get("motif_id", "") or "")
                                 state.pipeline_state["grammar_constraint_fit"] = _cfit
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16789",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16789, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16789)
             pass
 
     # ---- GRAMMAR ENGINE — delayed receiver attribution ----
@@ -25145,13 +23077,7 @@ def _run_reasoning_pipeline(
                     state.pipeline_state["grammar_role_sequence"] = list(_grammar_trace.get("role_sequence") or [])
                     state.pipeline_state["grammar_constraint_fit"] = float(_grammar_trace.get("constraint_fit", 0.0) or 0.0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16821",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16821, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16821)
             pass
 
     # ---- LEXICON PERSISTENCE — vocabulary survives shutdown (FIX-A009) ----
@@ -25163,13 +23089,7 @@ def _run_reasoning_pipeline(
             if hasattr(_perc_lex.lexicon, "save"):
                 _perc_lex.lexicon.save()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:16832",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 16832, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16832)
         pass
 
     # Expression perception tone reconciliation
@@ -25207,13 +23127,7 @@ def _run_reasoning_pipeline(
                 if isinstance(state.pipeline_state, dict):
                     state.pipeline_state["perception_tone_applied"] = _mapped
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16869",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16869, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16869)
             pass
 
     # Response pressure tuner — record decision and apply guidance
@@ -25233,13 +23147,7 @@ def _run_reasoning_pipeline(
                         import json as _rpt_json
                         _rpt.load_state(_rpt_json.loads(_rpt_path.read_text(encoding="utf-8")))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:16885",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_reasoning_pipeline", "handler_line": 16885, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16885)
                     pass
             _rpt_kind_map = {
                 "recall_question": "followup", "fact_assertion": "reply",
@@ -25271,13 +23179,7 @@ def _run_reasoning_pipeline(
                 if isinstance(state.pipeline_state, dict):
                     state.pipeline_state["pressure_tuner_kind"] = _rpt_kind
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16916",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16916, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16916)
             pass
 
     # ---- RENDER RUNTIME INTENT — communicative intent shaping ----
@@ -25317,36 +23219,18 @@ def _run_reasoning_pipeline(
             if _rendered and _rendered.strip() and _rendered.strip() != state.response_content.strip():
                 state.response_content = _rendered
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16955",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16955, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16955)
             pass
     if not _preserve_literal_response:
         try:
             _apply_noncomp_output_guidance(systems, state, user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16960",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16960, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16960)
             pass
         try:
             _apply_noncomp_behavior_actuation(systems, state, context="output")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16964",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16964, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16964)
             pass
 
     # Final anti-echo guard: if the reply still looks like a mirror of the
@@ -25372,13 +23256,7 @@ def _run_reasoning_pipeline(
                     state.response_src = "anti_echo_rebuild"
                 state.response_confidence = max(float(getattr(state, "response_confidence", 0.0) or 0.0), 0.58)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:16989",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 16989, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 16989)
             pass
 
     if (
@@ -25424,13 +23302,7 @@ def _run_reasoning_pipeline(
                     )
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:17034",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 17034, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17034)
             pass
 
     # SINGLE EMISSION CHOKEPOINT — every reasoning-path response converges here.
@@ -25487,13 +23359,7 @@ def _run_reasoning_pipeline(
                 )
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17076",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17076, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17076)
         pass
     # Coherence must be explicitly carried from the assembly pipeline state onto resp_A.
     # Without this, every downstream reader (dce_bridge, continuity feed, enforcer) sees 0.0,
@@ -25549,13 +23415,7 @@ def _run_reasoning_pipeline(
         except Exception:
             pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17121",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17121, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17121)
         pass
     from aurora_governance_persistence_gateway import InboundPacket, _generate_id, StreamType as _ST
     packet = InboundPacket(
@@ -25579,13 +23439,7 @@ def _run_reasoning_pipeline(
             if _f_text:
                 return _MiniResp(_f_text, "firm", 0.9), None, offered_lookup
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:17144",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 17144, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17144)
             pass
         return None, None, offered_lookup
     processed2 = getattr(validation, "filtered_content", None) or processed
@@ -25600,13 +23454,7 @@ def _run_reasoning_pipeline(
             if _rpkts:
                 processed2 = processed2 + "\n" + " ".join(r.as_context_fragment() for r in _rpkts[:3])
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17158",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17158, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17158)
         pass
     _strata_evidence = _build_established_strata_evidence(systems, state, user_text)
     try:
@@ -25614,37 +23462,19 @@ def _run_reasoning_pipeline(
         if _uc is not None and hasattr(_uc, "snapshot"):
             _strata_evidence["understanding_contract"] = dict(_uc.snapshot() or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17165",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17165, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17165)
         pass
     try:
         _strata_evidence["pressure_snapshot"] = _capture_pressure_snapshot(systems)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17169",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17169, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17169)
         pass
     try:
         _local_projection = _build_live_subsurface_projection(systems, state, user_text)
         if _local_projection:
             _strata_evidence["subsurface_projection"] = dict(_local_projection)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17175",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17175, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17175)
         pass
     try:
         _projection = dict(systems.get("_subsurface_projection") or {})
@@ -25656,13 +23486,7 @@ def _run_reasoning_pipeline(
         if _projection:
             _strata_evidence["subsurface_projection"] = _projection
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17186",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17186, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17186)
         pass
     try:
         _af_data = dict(systems.get("_activation_field") or {})
@@ -25678,13 +23502,7 @@ def _run_reasoning_pipeline(
         if _af_data:
             _strata_evidence["activation_field"] = _af_data
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17201",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17201, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17201)
         pass
     try:
         synthesis = gw._synthesize(
@@ -25699,13 +23517,7 @@ def _run_reasoning_pipeline(
             extra_evidence={**(_strata_evidence or {}), "input_already_registered": True},
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17211",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17211, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17211)
         synthesis = None
     # Enrich pipeline_state with post-synthesis signals
     _asm = getattr(synthesis, "assembly", None)
@@ -25751,13 +23563,7 @@ def _run_reasoning_pipeline(
                 if _ax_fb:
                     _ifield_ident.ingest_external_input(_ax_fb, intensity=0.20, source="trait_feedback")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:17256",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 17256, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17256)
             pass
     # Gap 6: QUASI crystal function dispatch — when the CPM head is at a QUASI crystal,
     # dispatch function-class-specific axis pressure into the identity field.
@@ -25786,13 +23592,7 @@ def _run_reasoning_pipeline(
                             intensity=0.25, source="quasi_entity_model_dispatch",
                         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17284",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17284, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17284)
         pass
     # Gap 7: Ability lineage manifest synthesis-time lookup — check if current axis
     # state crosses thresholds that unlock a compiled capability, then route new
@@ -25811,13 +23611,7 @@ def _run_reasoning_pipeline(
                     try:
                         _outlet_g7 = float(_gen_g7._outlet_fraction() or 0.0)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:17302",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 17302, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17302)
                         pass
                 # Unlock condition: outlet fraction > 0.35 (capability active, not blocked)
                 if _outlet_g7 > 0.35:
@@ -25830,24 +23624,12 @@ def _run_reasoning_pipeline(
                             intensity=0.22, source="lineage_capability_unlock",
                         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17314",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17314, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17314)
         pass
     try:
         _requested_frame = str(gw._mode_to_frame(mode) if hasattr(gw, "_mode_to_frame") else "balanced")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17318",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17318, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17318)
         _requested_frame = "balanced"
     _dual_strata_runtime = _refresh_live_dual_strata_runtime(
         systems,
@@ -25886,13 +23668,7 @@ def _run_reasoning_pipeline(
             list(_inline_lookup.get("applied") or [])
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17356",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17356, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17356)
         _inline_definition_turn = False
     suppress_afterthought = (
         _expr_low.startswith("i don't have a stable grounding") or
@@ -25918,13 +23694,7 @@ def _run_reasoning_pipeline(
         from aurora_braid_wiring import ensure_proposition_frame_for_turn
         ensure_proposition_frame_for_turn(systems)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17381",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17381, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17381)
         pass
     # Directive P2/P1 Track ST: same "call it here too, this compose()
     # site is reached even when begin_expression() was skipped earlier"
@@ -25964,38 +23734,20 @@ def _run_reasoning_pipeline(
     try:
         resp_B = None if (suppress_afterthought or synthesis is None) else gw._express(packet, synthesis, mode)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17385",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17385, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17385)
         resp_B = None
     try:
         if synthesis is not None:
             gw._integrate(packet, synthesis, mode)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17390",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17390, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17390)
         pass
     try:
         if resp_B is not None:
             setattr(resp_B, "_internal_only", True)
             setattr(resp_B, "_surface_channel", "internal_afterthought")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17396",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17396, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17396)
         pass
     try:
         if resp_B and not _response_is_grounded(getattr(resp_B, "content", ""), user_text, systems):
@@ -26003,13 +23755,7 @@ def _run_reasoning_pipeline(
             resp_B.emotional_tone = "neutral"
             resp_B.confidence = min(float(getattr(resp_B, "confidence", 0.5) or 0.5), 0.35)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17403",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17403, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17403)
         pass
     # One final articulation authority for this turn -- see
     # _finalize_articulation's own docstring (D2.1 voice transplant).
@@ -26063,13 +23809,7 @@ def _run_reasoning_pipeline(
                 name="aurora_afterthought_episode",
             ).start()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:17471",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 17471, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17471)
             pass
     if resp_B is not None:
         gw.response_log.append(resp_B)
@@ -26089,25 +23829,13 @@ def _run_reasoning_pipeline(
                     state.pipeline_state["observation_text"] = _observation_text[:300]
                 systems["_last_other_model"] = dict(_other_model)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17490",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17490, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17490)
         pass
     # Stamp state onto systems for downstream consumers
     try:
         systems["_last_turn_state"] = state
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17495",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17495, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17495)
         pass
     try:
         _bt = float(getattr(state, "belief_tension", 0.0) or 0.0)
@@ -26141,22 +23869,10 @@ def _run_reasoning_pipeline(
                 try:
                     _g2.note_observation({"other_model": _om, "turn": int(systems.get("_turn_tick", 0))})
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:17523",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_reasoning_pipeline", "handler_line": 17523, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17523)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17525",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17525, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17525)
         pass
     # Autonomous message to Sunni — surface high-confidence insights
     try:
@@ -26181,13 +23897,7 @@ def _run_reasoning_pipeline(
                     try:
                         _rs = _json.loads(_rsp.read_text())
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:17549",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 17549, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17549)
                         pass
                 _rs.setdefault("pending", [])
                 _rs["pending"].append({
@@ -26204,22 +23914,10 @@ def _run_reasoning_pipeline(
                     _rsp.write_text(_json.dumps(_rs, indent=2))
                     systems["_last_auto_message_ts"] = float(_time.time())
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:17565",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_reasoning_pipeline", "handler_line": 17565, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17565)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17567",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17567, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17567)
         pass
 
     # ── SediMemory deposit: every turn becomes a stratigraphic event ──
@@ -26291,13 +23989,7 @@ def _run_reasoning_pipeline(
                 if not systems.get('metabolic_clock'):
                     _sedi.tick(1.0)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17602",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17602, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17602)
         pass
 
     # ── Identity Field — external input pump (user text as constraint pressure) ──
@@ -26330,13 +24022,7 @@ def _run_reasoning_pipeline(
                     valence=0.0,
                 )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17634",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17634, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17634)
         pass
 
     # Surface -> subsurface continuity handoff.
@@ -26360,22 +24046,10 @@ def _run_reasoning_pipeline(
                     if abs(float(_axis_val or 0.0)) >= 0.35:
                         _tensions.append(f"{_axis_name}:{float(_axis_val):+.2f}")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:17657",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_reasoning_pipeline", "handler_line": 17657, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17657)
                     continue
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:17659",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_reasoning_pipeline", "handler_line": 17659, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17659)
             _tensions = []
         _bindings = list(getattr(state, "goal_stack", []) or [])[:4]
         write_continuity_packet(
@@ -26396,13 +24070,7 @@ def _run_reasoning_pipeline(
             source=str(systems.get("_pipeline_source", "aurora_turn") or "aurora_turn"),
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17679",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17679, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17679)
         pass
 
     # ---- THOUGHT BRAID — RE-ENTRY: close the expression loop ----
@@ -26410,13 +24078,7 @@ def _run_reasoning_pipeline(
         from aurora_braid_wiring import complete_expression
         complete_expression(systems, state)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17686",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17686, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17686)
         pass
 
     # ---- CURIOSITY ENGINE — clear interruptible flag (re-entry complete) ----
@@ -26424,13 +24086,7 @@ def _run_reasoning_pipeline(
         from aurora_curiosity_engine import _CYCLE_INTERRUPTIBLE as _CE_INT_CLR
         _CE_INT_CLR.clear()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17693",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17693, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_reasoning_pipeline', 17693)
         pass
 
     return resp_A, resp_B, offered_lookup
@@ -26469,13 +24125,7 @@ def _run_observation_pipeline(
     try:
         obs.parsed = UtteranceParser().parse(other_text)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17731",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_observation_pipeline", "handler_line": 17731, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_observation_pipeline', 17731)
         obs.parsed = {}
     # Inferred X-axis information: what claims / topic words did they select?
     inferred_info = list((obs.parsed or {}).get("topic_words", []))[:8]
@@ -26498,13 +24148,7 @@ def _run_observation_pipeline(
             obs.referent_map = wm.resolve_referents(other_text, record=False) or {}
             inferred_belief["referents"] = dict(obs.referent_map)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17745",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_observation_pipeline", "handler_line": 17745, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_observation_pipeline', 17745)
         pass
     # Do they repeat Aurora's own prior referents? (belief overlap with Aurora's T-axis)
     own_refs = set(str(v) for v in (own_state.referent_map or {}).values() if v)
@@ -26524,13 +24168,7 @@ def _run_observation_pipeline(
             _heat = getattr(systems.get("lattice"), "get_global_heat", lambda: 0.0)()
             obs.emotional_state = dim.update_emotional_state(obs.axis_activation, _heat) or {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17764",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_observation_pipeline", "handler_line": 17764, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_observation_pipeline', 17764)
         pass
     inferred_purpose_energy = float((obs.emotional_state or {}).get("energy", 0.0) or 0.0)
 
@@ -26542,13 +24180,7 @@ def _run_observation_pipeline(
             obs.meaning_forms = list(contract.rank_meaning_forms(obs.axis_activation) or [])
             obs.dominant_meaning_form = obs.meaning_forms[0] if obs.meaning_forms else {}
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17775",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_observation_pipeline", "handler_line": 17775, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_observation_pipeline', 17775)
         pass
     inferred_meaning = list(obs.salient_concepts)
     inferred_boundary_form = str((obs.dominant_meaning_form or {}).get("form", "") or "")
@@ -26620,13 +24252,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         try:
             working_memory._ensure_runtime_deques()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:17846",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_comprehension_response", "handler_line": 17846, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17846)
             pass
     search_adapter = systems.get('search_adapter')
     perception = systems.get('perception')
@@ -26645,24 +24271,12 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         try:
             referent_resolution = working_memory.resolve_referents(user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:17864",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_comprehension_response", "handler_line": 17864, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17864)
             referent_resolution = {}
         try:
             claim_resolution = working_memory.resolve_claims(user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:17868",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_comprehension_response", "handler_line": 17868, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17868)
             claim_resolution = {}
 
     _raw_user_text = _strip_surface_invocation_prefix(
@@ -26685,13 +24299,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         from aurora_telemetry import get_telemetry as _get_tel
         _get_tel().set_axis_context(_axis_activation)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17890",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 17890, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17890)
         pass
 
     # ---- PUSH AXIS CONTEXT TO EXPRESSION ENGINE --------------------------------
@@ -26708,13 +24316,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 axis_depth=_axis_depth_map_early.get(_dominant_axis, 2),
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17906",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 17906, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17906)
         pass
 
     # ---- DER EMOTION WIRING ----------------------------------------
@@ -26727,13 +24329,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             _lattice_heat = getattr(systems.get("lattice"), "get_global_heat", lambda: 0.0)()
             _der_emotional_state = _dim.update_emotional_state(_axis_activation, _lattice_heat)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17918",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 17918, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17918)
         pass
 
     # Update perception's axis context now that DER has run — emotion is known.
@@ -26747,13 +24343,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 axis_depth={"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}.get(_dominant_axis, 2),
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17931",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 17931, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17931)
         pass
 
     # Persist current-turn axis/emotion so the NEXT turn can express deltas
@@ -26762,13 +24352,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         systems["_prev_emotional_state"] = dict(_der_emotional_state)
         systems["_prev_dominant_axis"] = str(_dominant_axis)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17939",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 17939, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17939)
         pass
 
     # ── Fix 1: Feed utterance axes into identity field substrate ──────────────
@@ -26784,13 +24368,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 source="user_utterance",
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17954",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 17954, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17954)
         pass
 
     # ── Fix 2: Language field ignition + proto-language extraction ────────────
@@ -26820,35 +24398,17 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                             if isinstance(_ps_ign, dict):
                                 _ps_ign['ignition_held'] = True
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:17979",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_build_comprehension_response", "handler_line": 17979, "source_file": "aurora.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17979)
                             pass
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:17981",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 17981, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17981)
                 pass
             if hasattr(_lf_ign, "extract_proto_language"):
                 _lf_ign.extract_proto_language(
                     user_text=_raw_user_text, source="comprehension"
                 )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17987",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 17987, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 17987)
         pass
 
     _native_meaning_obj = _build_native_meaning(
@@ -26867,13 +24427,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         if _sensory_native_meaning_obj is not None:
             systems["_sensory_native_meaning"] = _sensory_native_meaning_obj.to_dict()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:18005",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 18005, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18005)
         systems["_native_meaning"] = {}
         systems["_native_meaning_obj"] = None
         systems["_native_meaning_bundle"] = {}
@@ -26909,13 +24463,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             try:
                 _known_name = str(_wm.get_stated_fact("user", "name") or "").strip()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18039",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18039, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18039)
                 pass
         # 2. Fall back to core_identity creator entry
         if not _known_name and _ci is not None:
@@ -26924,13 +24472,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 if _sunni:
                     _known_name = str(getattr(_sunni, "name", "") or "").strip()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18047",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18047, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18047)
                 pass
         if _known_name:
             # Directive 3.9: "in relation to you how do you know me?" is a
@@ -27008,13 +24550,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 if _ta is not None:
                     _axis_polarity = round(float(getattr(_ta, "polarity", 0.0)), 4)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:18085",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_comprehension_response", "handler_line": 18085, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18085)
             pass
         # Direct assignment — _extract_pipeline_signals() pre-fills '' for
         # dominant_axis so setdefault() would silently skip these fields.
@@ -27048,13 +24584,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 systems=systems,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:18118",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_comprehension_response", "handler_line": 18118, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18118)
             context_control = {}
         if context_control.get('handled'):
             return (
@@ -27069,13 +24599,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 systems=systems,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:18132",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_comprehension_response", "handler_line": 18132, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18132)
             behavior_alignment_answer = ""
         if behavior_alignment_answer:
             return (
@@ -27117,13 +24641,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             try:
                 _teach_result = _vb.teach_label(_teach_label, _scene_feats)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18197",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18197, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18197)
                 pass
         if not _scene_feats and not _teach_result:
             _vis_teach_m = None
@@ -27179,13 +24697,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     or ""
                 ).strip()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18252",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18252, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18252)
                 _nq_carry = ""
             if _nq_carry:
                 return (_nq_carry, 'warm', 0.93)
@@ -27212,13 +24724,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         if _intent_override:
             intent = _intent_override
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:18278",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 18278, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18278)
         pass
 
     # ---- DUAL-STRATA CONSCIOUS FRAME / REACTIVE SHORTCUT ----
@@ -27269,13 +24775,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 pipeline_state["correction_prefix"] = _corr_ack
                 pipeline_state.pop("correction_absorbed", None)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:18328",
-            exc=_aurora_boundary_exc,
-            context={"function": "_build_comprehension_response", "handler_line": 18328, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18328)
         pass
 
     # ---- WELLBEING QUERY ----
@@ -27298,13 +24798,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 if core_identity and getattr(core_identity, "creator_name", None):
                     creator_name = core_identity.creator_name
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18350",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18350, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18350)
                 pass
             if known_name:
                 return (
@@ -27374,13 +24868,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 if _heat_raw > 0.05:
                     parts.append(f"IVM heat is at {_heat_raw:.3f}.")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18419",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18419, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18419)
                 pass
             # Unresolved contradictions
             try:
@@ -27391,13 +24879,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                         f"contradiction{'s' if ledger.count() != 1 else ''} open."
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18429",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18429, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18429)
                 pass
             # What concept is under active pressure from the ledger
             try:
@@ -27408,13 +24890,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     if _active_anchor:
                         parts.append(f"The concept I was last working through was '{_active_anchor}'.")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18439",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18439, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18439)
                 pass
             # Current topic from working memory
             if working_memory and working_memory.current_topic:
@@ -27472,13 +24948,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     _state_str += f", dominant-emotion={_emotion_wb}"
                 parts.append(f"Field state: {_state_str}.")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:18496",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_comprehension_response", "handler_line": 18496, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18496)
             pass
         # First-person comparison for wellbeing queries
         if _prev_axis_activation:
@@ -27546,13 +25016,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             try:
                 speaker_fact = dict(working_memory.extract_user_owned_fact_assertion(user_text) or {})
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18563",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18563, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18563)
                 speaker_fact = {}
         if working_memory:
             working_memory.note_user_facts(user_text)
@@ -27709,13 +25173,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             try:
                 working_memory.refresh_claim_conflicts(systems=systems, reason='contradiction_check')
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18719",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18719, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18719)
                 pass
             conflict_answer = working_memory.answer_from_claims(
                 user_text,
@@ -27983,13 +25441,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     if answer:
                         return (answer, "informative", 0.85)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:18982",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 18982, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 18982)
                 pass
         if focus_summary:
             return (None, None, None)
@@ -28095,13 +25547,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                         confidence=0.9,
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:19087",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_build_comprehension_response", "handler_line": 19087, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 19087)
                     pass
             return (
                 _render_runtime_intent(
@@ -28152,13 +25598,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     working_memory.update_topic(anchor)
                     working_memory._register_mention(anchor, 'topic', 'user', 0.9)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:19137",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_build_comprehension_response", "handler_line": 19137, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 19137)
                     pass
                 return (None, None, None)
         return (None, None, None)
@@ -28188,24 +25628,12 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             try:
                 referent_resolution = working_memory.resolve_referents(user_text, understood)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:19166",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 19166, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 19166)
                 referent_resolution = referent_resolution or {}
             try:
                 claim_resolution = working_memory.resolve_claims(user_text, understood)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:19170",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 19170, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 19170)
                 claim_resolution = claim_resolution or {}
             resolved_topic = str(referent_resolution.get('topic', '') or '')
             if resolved_topic and (not understood.get('topic') or understood.get('topic') in working_memory._VAGUE_REFERENTS):
@@ -28292,13 +25720,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             try:
                 working_memory.update_topic(topic)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:19256",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 19256, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 19256)
                 pass
         deep_carryover_answer = _deep_context_carryover_answer(
             systems,
@@ -28744,13 +26166,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     if answer:
                         return (answer, "informative", 0.85)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:19697",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_comprehension_response", "handler_line": 19697, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 19697)
                 pass
 
         # Step 3: OETS lookup — only for genuine knowledge questions
@@ -28799,13 +26215,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                                     elif _crystal.level == CrystalLevel.QUASI:
                                         _crystal_conf = 0.95
                                 except Exception as _aurora_boundary_exc:
-                                    _aurora_record_exception_from_locals(
-                                        locals(),
-                                        module=__name__,
-                                        operation="exception_handler:aurora.py:19740",
-                                        exc=_aurora_boundary_exc,
-                                        context={"function": "_build_comprehension_response", "handler_line": 19740, "source_file": "aurora.py"},
-                                    )
+                                    _aurora_fault(locals(), _aurora_boundary_exc, '_build_comprehension_response', 19740)
                                     pass
                         return (_crystal_text, "precise", _crystal_conf)
 
@@ -29086,37 +26496,19 @@ def _restore_runtime_from_snapshot(
         try:
             snap_epochs = int(getattr(snapshot, "simulation_epochs", 0) or 0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20020",
-                exc=_aurora_boundary_exc,
-                context={"function": "_restore_runtime_from_snapshot", "handler_line": 20020, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20020)
             snap_epochs = 0
         try:
             current_epoch = int(getattr(session, "current_epoch", 0) or 0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20024",
-                exc=_aurora_boundary_exc,
-                context={"function": "_restore_runtime_from_snapshot", "handler_line": 20024, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20024)
             current_epoch = 0
         if snap_epochs > current_epoch:
             try:
                 session.current_epoch = snap_epochs
                 restored["simulation_epochs"] = snap_epochs
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20030",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_restore_runtime_from_snapshot", "handler_line": 20030, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20030)
                 pass
 
         learner = getattr(session, "learner", None)
@@ -29128,13 +26520,7 @@ def _restore_runtime_from_snapshot(
                 if verbose and restored_count > 0:
                     print(f"  [STATE] Rehydrated learner shards: {restored_count}")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20041",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_restore_runtime_from_snapshot", "handler_line": 20041, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20041)
                 pass
 
     identity = systems.get("identity")
@@ -29160,13 +26546,7 @@ def _restore_runtime_from_snapshot(
                     f"{restored['identity_anchors']} anchors"
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20066",
-                exc=_aurora_boundary_exc,
-                context={"function": "_restore_runtime_from_snapshot", "handler_line": 20066, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20066)
             pass
 
     if identity:
@@ -29174,13 +26554,7 @@ def _restore_runtime_from_snapshot(
         try:
             personality = identity.get_personality() or {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20073",
-                exc=_aurora_boundary_exc,
-                context={"function": "_restore_runtime_from_snapshot", "handler_line": 20073, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20073)
             personality = {}
         traits = personality.get("traits", {}) or {}
         perception = systems.get("perception")
@@ -29188,13 +26562,7 @@ def _restore_runtime_from_snapshot(
             try:
                 perception.set_personality(traits)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20080",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_restore_runtime_from_snapshot", "handler_line": 20080, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20080)
                 pass
         try:
             _ivm_obj = systems.get("ivm")
@@ -29207,13 +26575,7 @@ def _restore_runtime_from_snapshot(
             if _gen_obj and hasattr(perception, "set_genealogy_ref"):
                 perception.set_genealogy_ref(_gen_obj)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20092",
-                exc=_aurora_boundary_exc,
-                context={"function": "_restore_runtime_from_snapshot", "handler_line": 20092, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20092)
             pass
         # Restore ExpressionPerception snapshot from last session so learned
         # interaction patterns survive daemon restarts.
@@ -29237,13 +26599,7 @@ def _restore_runtime_from_snapshot(
                 if _ep_snap.get("ingest_count"):
                     systems["_perc_ingest_count"] = int(_ep_snap["ingest_count"])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20115",
-                exc=_aurora_boundary_exc,
-                context={"function": "_restore_runtime_from_snapshot", "handler_line": 20115, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20115)
             pass
         integration = systems.get("sensory_integration")
         if integration and hasattr(integration, "attach_systems"):
@@ -29255,13 +26611,7 @@ def _restore_runtime_from_snapshot(
                     identity=identity,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20126",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_restore_runtime_from_snapshot", "handler_line": 20126, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20126)
                 pass
         try:
             if perception is not None:
@@ -29269,13 +26619,7 @@ def _restore_runtime_from_snapshot(
                 perception.sensory_engine = systems.get("sensory")
                 perception.identity = identity
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20133",
-                exc=_aurora_boundary_exc,
-                context={"function": "_restore_runtime_from_snapshot", "handler_line": 20133, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_restore_runtime_from_snapshot', 20133)
             pass
 
     return restored
@@ -29476,13 +26820,7 @@ def boot_aurora(
         from aurora_constraint_emission import ConstraintEmitter
         systems['constraint_emitter'] = ConstraintEmitter()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:20236",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 20236, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20236)
         systems['constraint_emitter'] = None
 
     # Layer 3: Dimensional Systems
@@ -29547,13 +26885,7 @@ def boot_aurora(
                 decision.resolved = True
                 decision.notes = f"lesson queued: {domain}"
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20300",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_h_revise_model", "handler_line": 20300, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_h_revise_model', 20300)
                 pass
 
         # generate_form: missing representation → accommodate through the
@@ -29595,13 +26927,7 @@ def boot_aurora(
                 else:
                     decision.notes = "gap monitored — below persistence threshold"
             except Exception as _gf_e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20341",
-                    exc=_gf_e,
-                    context={"function": "_h_generate_form", "handler_line": 20341, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _gf_e, '_h_generate_form', 20341)
                 decision.notes = f"generate_form error: {_gf_e}"
 
         # surface_emergence: architecture-level failure → quasiarch + understanding contract
@@ -29617,13 +26943,7 @@ def boot_aurora(
                         decision.action_taken = True
                         decision.resolved = True
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:20356",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_h_surface_emergence", "handler_line": 20356, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_h_surface_emergence', 20356)
                         pass
 
         # seek: resolve ambiguity / no memory / no comprehension
@@ -29654,13 +26974,7 @@ def boot_aurora(
                     if _web.get_node(_tl) is not None:
                         _has_coverage = True
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:20386",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_h_seek", "handler_line": 20386, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20386)
                     pass
                 # Substring scan over node keys — concept space has related coverage
                 if not _has_coverage:
@@ -29675,13 +26989,7 @@ def boot_aurora(
                                 _has_coverage = True
                                 break
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:20400",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_h_seek", "handler_line": 20400, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20400)
                         pass
 
             # ── Step 2a: Internal — working memory synthesis ──────────────────
@@ -29699,13 +27007,7 @@ def boot_aurora(
                             if _tc is not None: _tc['internal'] = _tc.get('internal', 0) + 1
                             return
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:20417",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_h_seek", "handler_line": 20417, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20417)
                         pass
                 # Has coverage but working memory couldn't synthesize — run internal
                 # relational derivation NOW instead of deferring to the next pass.
@@ -29724,13 +27026,7 @@ def boot_aurora(
                             _research_sm._integrate_result(_word_key, _ir)
                             _derived = True
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:20435",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_h_seek", "handler_line": 20435, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20435)
                         pass
                     # Queue as high-priority so next study cycle deepens via internet
                     try:
@@ -29750,25 +27046,13 @@ def boot_aurora(
                             )
                             _research_sm.queue.insert(0, _req)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:20454",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_h_seek", "handler_line": 20454, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20454)
                         pass
                 elif _web is not None:
                     try:
                         _web.add_node(_word_key, role="gap_flagged", valence=0.0)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:20459",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_h_seek", "handler_line": 20459, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20459)
                         pass
                 decision.action_taken = True
                 decision.notes = (
@@ -29798,13 +27082,7 @@ def boot_aurora(
                 _result = _try_poedex_lookup(_text, systems,
                                              timeout=2.0, use_researcher=False) or ""
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20488",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_h_seek", "handler_line": 20488, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20488)
                 pass
 
             # If internal Observer found nothing → internet (Researcher)
@@ -29813,13 +27091,7 @@ def boot_aurora(
                     _result = _try_poedex_lookup(_text, systems,
                                                  timeout=8.0, use_researcher=True) or ""
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:20496",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_h_seek", "handler_line": 20496, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20496)
                     pass
 
             if _result:
@@ -29831,36 +27103,18 @@ def boot_aurora(
                     try:
                         _research_sm.teach_concept(_word_key, _result[:500])
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:20507",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_h_seek", "handler_line": 20507, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20507)
                         if _web is not None:
                             try:
                                 _web.add_node(_word_key, role="retrieved", valence=0.0)
                             except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:20511",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "_h_seek", "handler_line": 20511, "source_file": "aurora.py"},
-                                )
+                                _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20511)
                                 pass
                 elif _web is not None:
                     try:
                         _web.add_node(_word_key, role="retrieved", valence=0.0)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:20516",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_h_seek", "handler_line": 20516, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_h_seek', 20516)
                         pass
                 decision.result = _result
                 decision.action_taken = True
@@ -30016,13 +27270,7 @@ def boot_aurora(
         if verbose:
             print("  [WAVEFORM] Pressure pump registered")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:20638",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 20638, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20638)
         systems['pressure_pump'] = None
 
     # Layer 4: Consciousness Engine
@@ -30038,13 +27286,7 @@ def boot_aurora(
         try:
             consciousness.connect_sedimemory(systems['sedimemory'])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20653",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20653, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20653)
             pass
 
     # Wire Identity Field + Tensor Expressions → L4.
@@ -30059,13 +27301,7 @@ def boot_aurora(
                 print(f"  [GATE] Emergent functions driven by composite crystals "
                       f"({'tensor layer live' if _tl_active else 'fallback: field gates'})")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20667",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20667, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20667)
             pass
         # Boot pump — field becomes active the moment Aurora boots because she can
         # already see and hear. Prime pressure from whatever sensory state is live.
@@ -30087,13 +27323,7 @@ def boot_aurora(
             if verbose:
                 print("  [IDENTITY] Boot pressure primed")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20688",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20688, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20688)
             pass
     # Wire L3.5 → L3: DMC crystal promotions sedimented (Section 9).
     # Unconditional — this wiring must never depend on identity_field presence.
@@ -30101,25 +27331,13 @@ def boot_aurora(
         try:
             dimensional.connect_sedimemory(systems['sedimemory'])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20695",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20695, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20695)
             pass
     if systems.get('contradiction_ledger') is not None and hasattr(dimensional, 'connect_contradiction_ledger'):
         try:
             dimensional.connect_contradiction_ledger(systems['contradiction_ledger'])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20700",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20700, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20700)
             pass
     if verbose: print("[OK]")
 
@@ -30149,25 +27367,13 @@ def boot_aurora(
             if verbose:
                 print("  [L3.5 → L5] Perception wired to SediMemory for Warp traversal carving")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20717",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20717, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20717)
             pass
     if systems.get('contradiction_ledger') is not None and hasattr(perception, 'connect_contradiction_ledger'):
         try:
             perception.connect_contradiction_ledger(systems['contradiction_ledger'])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20722",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20722, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20722)
             pass
     # Register as a WARP actuator under the routing key it emits as
     # demand.source (its _warp_level_name() = 'representation').
@@ -30177,13 +27383,7 @@ def boot_aurora(
             if verbose:
                 print("  [WARP] ExpressionPerceptionEngine registered as actuator ('representation')")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20731",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20731, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20731)
             pass
     # Build 725 Correction, item 4 follow-up: OntologicalWeb (perception.oets.web)
     # is WarpCapable and already calls self.check_and_extend() internally
@@ -30255,13 +27455,7 @@ def boot_aurora(
         try:
             identity.connect_sedimemory(systems['sedimemory'])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20774",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20774, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20774)
             pass
     if verbose: print(f"  ({len(identity.dna.genome.core_genes)} genes)")
 
@@ -30288,13 +27482,7 @@ def boot_aurora(
         simulation._systems = systems
         simulation.session._systems = systems
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:20800",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 20800, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20800)
         pass
     _register_layer(systems, 'L7', 'Simulation Engine', 'simulation', simulation, {
         'state': 'get_system_state',
@@ -30303,13 +27491,7 @@ def boot_aurora(
     try:
         consciousness.connect_simulation(simulation)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:20808",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 20808, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20808)
         pass
     # Wire L7 → L3.5: update time_dilation + episode sediment now that SimulationEngine is up
     if systems.get('sedimemory') is not None:
@@ -30325,24 +27507,12 @@ def boot_aurora(
             # never wired in.
             systems['_simulation_governor'] = getattr(getattr(simulation, "session", None), "governor", None)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20819",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20819, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20819)
             pass
         try:
             simulation.connect_sedimemory(systems['sedimemory'])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:20823",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 20823, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20823)
             pass
     if verbose: print(f"  ({len(simulation.session.avatars)} avatars)")
 
@@ -30447,13 +27617,7 @@ def boot_aurora(
                     if hasattr(_genealogy, 'set_dps'):
                         _genealogy.set_dps(_dps_g)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20873",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "boot_aurora", "handler_line": 20873, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20873)
                 pass
             systems['field_balancer'] = _field_balancer
             # Restore corpus-trained links so they inject on first session
@@ -30635,13 +27799,7 @@ def boot_aurora(
             try:
                 perception.oets.research.set_fetch_callback(callback)  # type: ignore
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:20976",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "boot_aurora", "handler_line": 20976, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 20976)
                 pass
     if verbose:
         print("  [OETS] Research callback wired to Poedex")
@@ -30719,13 +27877,7 @@ def boot_aurora(
                 lambda: _collect_response_pressure_guides(systems)
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:21053",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 21053, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21053)
         pass
 
     # Wire IVM into perception for heat-aware expression selection
@@ -30733,13 +27885,7 @@ def boot_aurora(
         if hasattr(aurora, 'lattice') and hasattr(perception, 'set_ivm'):
             perception.set_ivm(aurora.lattice)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:21060",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 21060, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21060)
         pass
 
     # Wire genealogy into grammar engine + perception (axis-based LSV nudging)
@@ -30756,13 +27902,7 @@ def boot_aurora(
             if hasattr(_grammar, 'set_ivm'):
                 _grammar.set_ivm(lattice)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:21076",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 21076, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21076)
         pass
 
 
@@ -30787,13 +27927,7 @@ def boot_aurora(
         if seeded and verbose:
             print(f"  [IDENTITY] Seeded DNA anchors: {seeded}")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:21100",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 21100, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21100)
         pass
 
     # FIX-A129: her identity record, stored as learned propositions (idempotent).
@@ -30940,13 +28074,7 @@ def boot_aurora(
             if _dps_dt is not None:
                 _dream_trainer.ledger.set_dps(_dps_dt)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:21179",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 21179, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21179)
             pass
         if verbose:
             top = _dream_trainer.ledger.get_top_fails(3)
@@ -30989,22 +28117,10 @@ def boot_aurora(
                 if hasattr(_artmod, 'configure_state_dir'):
                     _artmod.configure_state_dir(systems.get('state_dir') or state_dir)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:21212",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "boot_aurora", "handler_line": 21212, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21212)
                 pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:21214",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 21214, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21214)
         pass
 
     # Try to restore saved state (standard L8 snapshot)
@@ -31052,13 +28168,7 @@ def boot_aurora(
             if verbose:
                 print("  [TRUTH → WM] WorkingMemory wired to ContradictionLedger")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:21261",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 21261, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21261)
             pass
 
     try:
@@ -31127,13 +28237,7 @@ def boot_aurora(
                 try:
                     systems["perception"].composer.dps = _dps
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:21329",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "boot_aurora", "handler_line": 21329, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21329)
                     pass
             # Wire hardware camera/mic → crystal so every captured frame feeds in.
             # HardwareInterface.process_visual/audio already has crystal routing —
@@ -31576,13 +28680,7 @@ def boot_aurora(
         try:
             quasiarch.attach_systems(systems)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:21502",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 21502, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21502)
             pass
 
     # Screen Observer — live visual feed wired into sensory/OETS pipeline
@@ -31681,13 +28779,7 @@ def boot_aurora(
             if verbose:
                 print("  [TRUTH → WM] WorkingMemory (final) wired to ContradictionLedger")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:21600",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 21600, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21600)
             pass
 
     _install_support_constraint_surfaces(systems)
@@ -31708,38 +28800,20 @@ def boot_aurora(
                         if verbose:
                             print("  [L3.5 → LANGUAGE FIELD] Wired to SediMemory for Warp traversal carving")
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:21620",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "boot_aurora", "handler_line": 21620, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21620)
                         pass
                 if systems.get('contradiction_ledger') is not None and hasattr(_lf_boot, 'connect_contradiction_ledger'):
                     try:
                         _lf_boot.connect_contradiction_ledger(systems['contradiction_ledger'])
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:21625",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "boot_aurora", "handler_line": 21625, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21625)
                         pass
                 try:
                     _cpm_lf_boot = systems.get('_cpm_session') or systems.get('cpm')
                     if _cpm_lf_boot is not None and hasattr(_lf_boot, 'set_cpm'):
                         _lf_boot.set_cpm(_cpm_lf_boot)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:21631",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "boot_aurora", "handler_line": 21631, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21631)
                     pass
                 # Register the language field as a WarpCapable actuator so the
                 # warp engine can accommodate missing representations (derive +
@@ -31755,13 +28829,7 @@ def boot_aurora(
                     if hasattr(_lf_boot, 'set_warp_genealogy'):
                         _lf_boot.set_warp_genealogy(systems.get('genealogy'))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:21646",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "boot_aurora", "handler_line": 21646, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21646)
                     pass
                 if verbose:
                     print("  [LANGUAGE FIELD] Booted from identity_field + tensor layer")
@@ -31820,23 +28888,11 @@ def boot_aurora(
                     if _ccr_sv is not None and _dir_sv:
                         _ccr_sv.save(_dir_sv)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:21704",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_save_ccr", "handler_line": 21704, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_save_ccr', 21704)
                     pass
             _atexit_ccr.register(_save_ccr)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:21707",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 21707, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21707)
             pass
         # ── DPS → CCR bridge: seed CCR nodes from COMPOSITE+ crystals ──────
         # With all concept crystals unified under DPS, the CCR is only
@@ -31914,22 +28970,10 @@ def boot_aurora(
                         _ccr.observe_lsa(_ax_dict, _dc.concept)
                         _seeded_ccr += 1
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:21784",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "boot_aurora", "handler_line": 21784, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21784)
                         pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:21786",
-                exc=_aurora_boundary_exc,
-                context={"function": "boot_aurora", "handler_line": 21786, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21786)
             _seeded_ccr = 0
 
         if verbose:
@@ -31995,13 +29039,7 @@ def boot_aurora(
                     trust_registry=_trust,
                 ))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:21851",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_on_online", "handler_line": 21851, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_on_online', 21851)
                 pass
 
         def _on_offline():
@@ -32025,13 +29063,7 @@ def boot_aurora(
         from aurora_braid_wiring import boot_thought_braid
         boot_thought_braid(systems, verbose=verbose)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:21874",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 21874, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'boot_aurora', 21874)
         pass
 
     # ---- CRYSTALLIZATION LOOPS — wire pressure→DPS, genome→AGB, frame→sedi ----
@@ -32285,13 +29317,7 @@ def _update_ivm_from_epoch(
         elif hasattr(lattice, 'vertices') and hasattr(lattice.vertices, 'compute_global_polarity'):
             lattice.vertices.compute_global_polarity()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:21973",
-            exc=_aurora_boundary_exc,
-            context={"function": "_update_ivm_from_epoch", "handler_line": 21973, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_update_ivm_from_epoch', 21973)
         pass
 
 
@@ -32348,13 +29374,7 @@ def _simulate_training_seek(
             else:
                 tc['external'] = tc.get('external', 0) + 1
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:22029",
-            exc=_aurora_boundary_exc,
-            context={"function": "_simulate_training_seek", "handler_line": 22029, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_simulate_training_seek', 22029)
         pass
 
 
@@ -32421,13 +29441,7 @@ def _run_training_constraint_pass(
             trace = cr.reason(profile, depth=3)
             cr.integrate(trace, semantic_proxy, emit_warp=False)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:22095",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_training_constraint_pass", "handler_line": 22095, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_training_constraint_pass', 22095)
         pass
 
 
@@ -32451,13 +29465,7 @@ def _seed_oets_from_failpoints(
         if web is None or not hasattr(web, 'add_node'):
             return
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:22118",
-            exc=_aurora_boundary_exc,
-            context={"function": "_seed_oets_from_failpoints", "handler_line": 22118, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_seed_oets_from_failpoints', 22118)
         return
 
     for dim, score in (failpoint_update.get('weakest_dimensions') or []):
@@ -32467,13 +29475,7 @@ def _seed_oets_from_failpoints(
             try:
                 web.add_node(concept[:40], role="training_gap", valence=valence)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22127",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_seed_oets_from_failpoints", "handler_line": 22127, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_seed_oets_from_failpoints', 22127)
                 pass
 
 
@@ -32497,13 +29499,7 @@ def train(systems: Dict[str, Any], epochs: int = 10,
         from aurora_dev_telemetry import DevTelemetry as _DevTelemetry
         _dev_telem = _DevTelemetry(systems)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:22150",
-            exc=_aurora_boundary_exc,
-            context={"function": "train", "handler_line": 22150, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22150)
         pass
     # ─────────────────────────────────────────────────────────────────────────
 
@@ -32522,13 +29518,7 @@ def train(systems: Dict[str, Any], epochs: int = 10,
             try:
                 _wf_epoch.flush_deferred()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22168",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "train", "handler_line": 22168, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22168)
                 pass
         dream_trainer = systems.get('dream_trainer')
         queued_lesson_specs = 0
@@ -32538,13 +29528,7 @@ def train(systems: Dict[str, Any], epochs: int = 10,
                     dream_trainer.flush_lessons_to_simulation(systems, force=True) or 0
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22177",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "train", "handler_line": 22177, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22177)
                 queued_lesson_specs = 0
         plan = _build_response_pressure_training_plan(
             systems,
@@ -32595,13 +29579,7 @@ def train(systems: Dict[str, Any], epochs: int = 10,
                     phase=phase_name,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22227",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "train", "handler_line": 22227, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22227)
                 pass
         if dream_trainer is not None and hasattr(dream_trainer, 'retain_learner_state'):
             try:
@@ -32609,13 +29587,7 @@ def train(systems: Dict[str, Any], epochs: int = 10,
                     dream_trainer.retain_learner_state(systems, source=phase_name) or 0
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22234",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "train", "handler_line": 22234, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22234)
                 result['retained_learnings'] = 0
         try:
             result['lineage_emergence'] = _observe_live_lineage_emergence(
@@ -32623,22 +29595,10 @@ def train(systems: Dict[str, Any], epochs: int = 10,
                 source=phase_name,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22241",
-                exc=_aurora_boundary_exc,
-                context={"function": "train", "handler_line": 22241, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22241)
             result['lineage_emergence'] = []
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22243",
-                exc=_aurora_boundary_exc,
-                context={"function": "train", "handler_line": 22243, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22243)
             result['social_api_reward'] = {}
 
         # Record telemetry snapshot for this epoch
@@ -32646,13 +29606,7 @@ def train(systems: Dict[str, Any], epochs: int = 10,
             try:
                 _dev_telem.record(epoch + 1, result)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22250",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "train", "handler_line": 22250, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22250)
                 pass
 
         if verbose:
@@ -32700,13 +29654,7 @@ def train(systems: Dict[str, Any], epochs: int = 10,
         try:
             print(_dev_telem.report())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22297",
-                exc=_aurora_boundary_exc,
-                context={"function": "train", "handler_line": 22297, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'train', 22297)
             pass
 
     if verbose:
@@ -32888,25 +29836,13 @@ def explore(systems: Dict[str, Any], cycles: int = 10, verbose: bool = True):
                             confidence=0.86,
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:22478",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "explore", "handler_line": 22478, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'explore', 22478)
                         pass
                 if working_memory is not None and hasattr(working_memory, "note_user_facts"):
                     try:
                         working_memory.note_user_facts(fact)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:22483",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "explore", "handler_line": 22483, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'explore', 22483)
                         pass
                 if working_memory is not None and hasattr(working_memory, "_register_semantic_frame"):
                     try:
@@ -32919,13 +29855,7 @@ def explore(systems: Dict[str, Any], cycles: int = 10, verbose: bool = True):
                             "confidence": 0.84,
                         })
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:22495",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "explore", "handler_line": 22495, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'explore', 22495)
                         pass
                 if understanding_contract is not None and hasattr(understanding_contract, "ingest_observation"):
                     try:
@@ -32942,13 +29872,7 @@ def explore(systems: Dict[str, Any], cycles: int = 10, verbose: bool = True):
                             session_id=str(systems.get("_session_id", "") or ""),
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:22511",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "explore", "handler_line": 22511, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'explore', 22511)
                         pass
             if lineage_journal is not None and hasattr(lineage_journal, "record_event"):
                 try:
@@ -32961,22 +29885,10 @@ def explore(systems: Dict[str, Any], cycles: int = 10, verbose: bool = True):
                         "summary": f"Exploration study cycle integrated {len(study_rows)} result(s) into memory.",
                     })
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:22523",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "explore", "handler_line": 22523, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'explore', 22523)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:22525",
-            exc=_aurora_boundary_exc,
-            context={"function": "explore", "handler_line": 22525, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'explore', 22525)
         pass
 
     # Save after exploration and study
@@ -33000,13 +29912,7 @@ def aurora_go_play(
         try:
             _full_save(systems, verbose=False)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22548",
-                exc=_aurora_boundary_exc,
-                context={"function": "aurora_go_play", "handler_line": 22548, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'aurora_go_play', 22548)
             pass
     return result
 
@@ -33038,13 +29944,7 @@ def aurora_trade_blows(
             resp_a = result.get("resp_A")
             return str(getattr(resp_a, "content", "") or "")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22579",
-                exc=_aurora_boundary_exc,
-                context={"function": "_generate", "handler_line": 22579, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_generate', 22579)
             return ""
 
     gm = GameStateMachine(systems, generate_fn=_generate)
@@ -33060,13 +29960,7 @@ def aurora_trade_blows(
         try:
             user_inp = input("\n  You: ").strip()
         except (EOFError, KeyboardInterrupt) as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22594",
-                exc=_aurora_boundary_exc,
-                context={"function": "aurora_trade_blows", "handler_line": 22594, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'aurora_trade_blows', 22594)
             break
         if not user_inp:
             continue
@@ -33179,13 +30073,7 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Snapshot file: {spi.get('state_file', spi.get('snapshot_file', '?'))}")
             print(f"       Snapshot exists: {spi.get('exists', '?')}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22706",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22706, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22706)
             pass
     drive_sync = systems.get('drive_sync')
     if drive_sync:
@@ -33197,13 +30085,7 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Last sync (Drive): {f'{ago:.0f}s ago' if ago else 'not yet'}")
             print(f"       Sync count: {ds.get('sync_count', 0)}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22717",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22717, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22717)
             pass
     git_sync = systems.get('git_sync')
     if git_sync:
@@ -33213,13 +30095,7 @@ def show_status(systems: Dict[str, Any]):
             if gs.get('git_available'):
                 print(f"       Branch: {gs.get('branch', '?')}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22726",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22726, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22726)
             pass
     checkpoint = systems.get('checkpoint')
     if checkpoint and hasattr(checkpoint, 'status'):
@@ -33229,13 +30105,7 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Auto-save running: {'Yes' if cp.get('auto_save_running') else 'No'}")
             print(f"       Items since save: {cp.get('items_since_save', 0)}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22735",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22735, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22735)
             pass
 
     # Learning / lineage surfaces
@@ -33250,13 +30120,7 @@ def show_status(systems: Dict[str, Any]):
             else:
                 print("       No fail points recorded yet")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22749",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22749, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22749)
             pass
 
     manual_lineage = systems.get("manual_code_lineage")
@@ -33269,13 +30133,7 @@ def show_status(systems: Dict[str, Any]):
             print(f"       History count: {m_status.get('history_count', 0)}")
             print(f"       State path: {m_status.get('state_path', '?')}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22761",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22761, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22761)
             pass
 
     lineage_journal = systems.get("lineage_emergence_journal")
@@ -33287,13 +30145,7 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Seen links: {len(getattr(lineage_journal, 'seen_links', {}) or {})}")
             print(f"       Seen traits: {len(getattr(lineage_journal, 'seen_traits', {}) or {})}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22772",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22772, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22772)
             pass
 
     interaction_processing = systems.get("interaction_processing")
@@ -33305,13 +30157,7 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Ghost relics: {i_status.get('ghost_relics', 0)}")
             print(f"       Recent routes: {len(list(i_status.get('recent_routes') or []))}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22783",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22783, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22783)
             pass
 
     code_evolution_chamber = systems.get("code_evolution_chamber")
@@ -33326,13 +30172,7 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Rejected: {ce.get('rejected_count', 0)}")
             print(f"       Total links: {ce.get('total_links', 0)}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22797",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22797, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22797)
             pass
     quasiarch = systems.get('quasiarch_observer')
     if quasiarch:
@@ -33345,13 +30185,7 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Ghost relics: {q_status.get('ghost_relics', 0)}")
             print(f"       Reformations: {q_status.get('reformations', 0)}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22809",
-                exc=_aurora_boundary_exc,
-                context={"function": "show_status", "handler_line": 22809, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'show_status', 22809)
             pass
 
     # Governance
@@ -33451,13 +30285,7 @@ def _intake_log_depth_beads(
             if current_mode == _EM.TRANSIENT:
                 return
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:22908",
-                exc=_aurora_boundary_exc,
-                context={"function": "_intake_log_depth_beads", "handler_line": 22908, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_intake_log_depth_beads', 22908)
             pass
 
         seen  = depth_seen.setdefault(iid, set())
@@ -33475,37 +30303,19 @@ def _intake_log_depth_beads(
                 p     = REGISTRY.cost(c)
                 delta = p.shift_cost_coeff * p.time_constant
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22925",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_intake_log_depth_beads", "handler_line": 22925, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_intake_log_depth_beads', 22925)
                 delta = 0.1
             try:
                 pol = max(-1.0, min(1.0, float(accountant.slot(c).polarity)))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22929",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_intake_log_depth_beads", "handler_line": 22929, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_intake_log_depth_beads', 22929)
                 pol = 0.0
             entry.append((c, NonCompChannel.M, delta, pol, tick, mode))
             seen.add(mode)
             if mode == current_mode:
                 break
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:22935",
-            exc=_aurora_boundary_exc,
-            context={"function": "_intake_log_depth_beads", "handler_line": 22935, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_intake_log_depth_beads', 22935)
         pass
 
 
@@ -33566,13 +30376,7 @@ def _advance_intake_pipeline(
             try:
                 return max(-1.0, min(1.0, float(accountant.slot(c).polarity)))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:22995",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_pol", "handler_line": 22995, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_pol', 22995)
                 return 0.0
 
         # ── Accountant tick + leverage bias ──────────────────────────────
@@ -33586,13 +30390,7 @@ def _advance_intake_pipeline(
                     for constraint, nudge in dict(_nudges or {}).items()
                 }
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:23008",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_advance_intake_pipeline", "handler_line": 23008, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_advance_intake_pipeline', 23008)
                 systems["_last_bias_nudges"] = {}
 
         # RW6(c) Track-1: EntropySaturationDetector.measure() must run once
@@ -33754,13 +30552,7 @@ def _advance_intake_pipeline(
                                 strand = strand_builder.build(variant, events)
                                 strand_lib.register(strand, current_tick=tick)
                             except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:23150",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "_advance_intake_pipeline", "handler_line": 23150, "source_file": "aurora.py"},
-                                )
+                                _aurora_fault(locals(), _aurora_boundary_exc, '_advance_intake_pipeline', 23150)
                                 pass
                         # Clean up all intake state for this id
                         for _store in (event_log, solid_cache,
@@ -33774,13 +30566,7 @@ def _advance_intake_pipeline(
                 _store.pop(iid, None)
 
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23163",
-            exc=_aurora_boundary_exc,
-            context={"function": "_advance_intake_pipeline", "handler_line": 23163, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_advance_intake_pipeline', 23163)
         pass  # intake pipeline must never interrupt the conversation loop
 
 
@@ -33814,13 +30600,7 @@ def _dispatch_user_directive(
                     return result.data
                 return f"I tried to open {entity} but: {result.note}"
     except Exception as _de:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23196",
-            exc=_de,
-            context={"function": "_dispatch_user_directive", "handler_line": 23196, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _de, '_dispatch_user_directive', 23196)
         pass
     return None
 
@@ -33853,13 +30633,7 @@ def dual_question_pipeline(
         from aurora_telemetry import get_telemetry as _get_tel
         _get_tel().reset()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23228",
-            exc=_aurora_boundary_exc,
-            context={"function": "dual_question_pipeline", "handler_line": 23228, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'dual_question_pipeline', 23228)
         pass
 
     class _MiniResp:
@@ -33890,13 +30664,7 @@ def dual_question_pipeline(
             try:
                 systems["_last_turn_state"] = _resp_dir
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:23255",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "dual_question_pipeline", "handler_line": 23255, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'dual_question_pipeline', 23255)
                 pass
             return _resp_dir, None, False
         # If no tool matched, fall through to normal pipeline so Aurora can
@@ -34070,13 +30838,7 @@ def dual_question_pipeline(
         try:
             systems["_last_turn_state"] = resp_h
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23312",
-                exc=_aurora_boundary_exc,
-                context={"function": "dual_question_pipeline", "handler_line": 23312, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'dual_question_pipeline', 23312)
             pass
         return resp_h, None, False
 
@@ -34274,13 +31036,7 @@ def dual_question_pipeline(
                     if gap_action != "ask":
                         user_text = f"{user_text} [Internal: {gap_result['content']}]"
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:23378",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "dual_question_pipeline", "handler_line": 23378, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'dual_question_pipeline', 23378)
                 pass
 
 
@@ -34400,13 +31156,7 @@ def dual_question_pipeline(
                     source="poedex",
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23399",
-                exc=_aurora_boundary_exc,
-                context={"function": "dual_question_pipeline", "handler_line": 23399, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'dual_question_pipeline', 23399)
             pass
 
     _turn_tick = int(getattr(systems.get("working_memory"), "turn_count", 0) or 0)
@@ -34684,13 +31434,7 @@ def _run_live_response_turn(
         from aurora_braid_wiring import begin_response_turn
         begin_response_turn(systems, user_text=user_text, turn_tick=turn_tick)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23448",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23448, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23448)
         pass
 
     # ---- CURIOSITY ENGINE — set interruptible flag (block curiosity during response) ----
@@ -34698,13 +31442,7 @@ def _run_live_response_turn(
         from aurora_curiosity_engine import _CYCLE_INTERRUPTIBLE as _CE_INT_SET
         _CE_INT_SET.set()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23455",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23455, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23455)
         pass
 
     # ---- CONCEPT CRYSTAL — clear turn overlays from last turn ----
@@ -34715,13 +31453,7 @@ def _run_live_response_turn(
                 _ccr_clr.clear_turn_overlays()
             systems['_ccr_needs_overlay_clear'] = False
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23465",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23465, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23465)
         pass
 
     # ---- LANGUAGE FIELD — build pragmatic receiver vector ----
@@ -34737,13 +31469,7 @@ def _run_live_response_turn(
             _pv = _lf_pv.build_pragmatic_vector(receiver_state=_recv_state)
             systems['_pragmatic_vector'] = _pv
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23480",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23480, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23480)
         pass
 
     # ---- STRATA-AWARE INTAKE: Resolve Vitals BEFORE parsing Signal ----
@@ -34756,13 +31482,7 @@ def _run_live_response_turn(
         systems["_live_conscious_frame"] = conscious_frame
         systems["_live_conscious_crest"] = conscious_crest
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23492",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23492, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23492)
         dual_strata_runtime = {}
 
     # 2. Mix Sensory Context (Vision/Audio) into the intake
@@ -34773,13 +31493,7 @@ def _run_live_response_turn(
             sensory_state = dict(sensory_crystal.get_state() or {})
             systems["_live_sensory_state"] = sensory_state
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23502",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23502, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23502)
         pass
 
     # ---- DIFFERENCE HISTORY BUFFER + ATTENTION ENGINE — per-turn tick ----
@@ -34809,13 +31523,7 @@ def _run_live_response_turn(
                             _salience_pt = min(1.0, sum(abs(v) for v in _dvals)
                                                / len(_dvals) * 2.0)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:23532",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_live_response_turn", "handler_line": 23532, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23532)
                         pass
 
                 # Direct address adds a floor but does not override surprise signal
@@ -34846,13 +31554,7 @@ def _run_live_response_turn(
                     if _novel_topics:
                         _salience_pt = min(1.0, _salience_pt + 0.15)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:23550",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 23550, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23550)
                     _tick_understood = {}
                     pass
 
@@ -34875,22 +31577,10 @@ def _run_live_response_turn(
                         if _uc_mn is not None and hasattr(_uc_mn, 'register_meaning_event'):
                             _uc_mn.register_meaning_event(_nucleus)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:23571",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 23571, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23571)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23573",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23573, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23573)
         pass
 
     # 3. Parse the signal as a perturbation of the above state
@@ -34933,13 +31623,7 @@ def _run_live_response_turn(
                 tags=["input", "parser", "meaning_boundary"],
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23587",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23587, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23587)
         _raw_understood = {}
         # Communication Credit Unification, Break 1 (2026-07-28): _cgs was
         # never bound in this function's scope -- only inside the boot
@@ -34974,13 +31658,7 @@ def _run_live_response_turn(
         elif hasattr(_cgs, "ingest"):
             _cgs.ingest(_grounded_turn_text)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23621",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23621, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23621)
         pass
     try:
         _parse_text = str((systems.get("_inline_vocab_lookup") or {}).get("grounded_text", "") or user_text)
@@ -35011,13 +31689,7 @@ def _run_live_response_turn(
                 context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23626",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23626, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23626)
         turn_understood = {}
     # Stamp pre-parsed utterance into systems for dual_question_pipeline
     if isinstance(turn_understood, dict) and turn_understood:
@@ -35037,13 +31709,7 @@ def _run_live_response_turn(
             if _umeta:
                 systems["_utterance_meta"] = _umeta
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23645",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 23645, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23645)
             pass
     understanding_observation: Dict[str, Any] = {}
     understanding_application: Dict[str, Any] = {}
@@ -35063,13 +31729,7 @@ def _run_live_response_turn(
                 pressure_before=p_before,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23664",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 23664, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23664)
             trace_id = ""
 
     _advance_intake_pipeline(systems, user_text, turn_tick)
@@ -35079,13 +31739,7 @@ def _run_live_response_turn(
         try:
             perception.observe_user_text(user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23673",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 23673, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23673)
             pass
 
     def _declarative_segments(text: str) -> List[str]:
@@ -35114,25 +31768,13 @@ def _run_live_response_turn(
                 try:
                     pre_understood = UtteranceParser().parse(seed_text)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:23701",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 23701, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23701)
                     pre_understood = {}
             try:
                 if working_memory.detect_context_directive(seed_text, pre_understood).get('detected'):
                     continue
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:23706",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_live_response_turn", "handler_line": 23706, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23706)
                 pass
             try:
                 working_memory.note_user_facts(seed_text, understood=pre_understood)
@@ -35148,13 +31790,7 @@ def _run_live_response_turn(
                 _sediment_validated_fact(systems, _seed_claims, seed_text)
                 working_memory._register_understood_mentions(pre_understood, source='user')
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:23721",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_live_response_turn", "handler_line": 23721, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23721)
                 continue
     # ---- PRESENT-FRAME FUSION — bind visual frame when attention is on the present ----
     # Fires only when either side has engaged with what Aurora is seeing/hearing.
@@ -35205,13 +31841,7 @@ def _run_live_response_turn(
                     if hasattr(working_memory, "_ensure_runtime_deques"):
                         working_memory._ensure_runtime_deques()
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:23771",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 23771, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23771)
                     pass
                 systems["_present_frame_active"] = {
                     "visual_label": _visual_label,
@@ -35220,13 +31850,7 @@ def _run_live_response_turn(
                     "engaged_by": "aurora" if _aurora_visual else "user",
                 }
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:23779",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 23779, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23779)
         pass
 
     # ---- PROPOSITION SUBSTRATE — register claims for discourse tracking ----
@@ -35240,13 +31864,7 @@ def _run_live_response_turn(
             if len(_rc) >= 2 and hasattr(_ps_obj, 'note_claim_bundle'):
                 _ps_obj.note_claim_bundle(_rc[-4:], raw_text=user_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23792",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 23792, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23792)
             pass
         try:
             _ps_obj = working_memory.proposition_substrate
@@ -35258,13 +31876,7 @@ def _run_live_response_turn(
                     try:
                         _ps_obj.configure({"belief_revision": True, "causal_mesh": True, "provenance": True, "weighted_lookup": True})
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:23803",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_live_response_turn", "handler_line": 23803, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23803)
                         pass
                 _ps_obj._flags_initialized = True
             if _ps_obj and hasattr(_ps_obj, "report"):
@@ -35273,22 +31885,10 @@ def _run_live_response_turn(
                     if _ps_rep:
                         systems["_last_ps_report"] = _ps_rep
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:23811",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 23811, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23811)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23813",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 23813, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23813)
             pass
     # Build 774 note: this call was briefly made lazy/deferred under the
     # (wrong) assumption that it wasn't needed before resp_A. Reverted --
@@ -35319,13 +31919,7 @@ def _run_live_response_turn(
             )
             systems["_live_contract_observation_done"] = True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23828",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 23828, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23828)
             understanding_observation = {}
     systems["_last_understanding_observation"] = dict(understanding_observation or {})
     _live_profile_stages["understanding_observation_ms"] = round(
@@ -35857,13 +32451,7 @@ def _run_live_response_turn(
             if _coaching_notes:
                 systems["_last_recommendation_notes"] = list(_coaching_notes)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23935",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 23935, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23935)
             pass
 
     quasiarch_runtime = _flush_quasiarch_runtime_events(
@@ -35927,22 +32515,10 @@ def _run_live_response_turn(
                 try:
                     persistence.oets_persistence.save_conversation_memory(conversation_memory)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:23995",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 23995, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23995)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:23997",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 23997, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23997)
             pass
 
     if working_memory:
@@ -35967,13 +32543,7 @@ def _run_live_response_turn(
             if referent_resolution.get('search_query'):
                 understood['search_query'] = referent_resolution['search_query']
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24021",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24021, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24021)
             pass
         try:
             if (
@@ -35983,13 +32553,7 @@ def _run_live_response_turn(
             ):
                 working_memory._skip_next_aurora_claim_ingest = True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24030",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24030, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24030)
             pass
         try:
             aurora_text = str(getattr(resp_A, 'content', '') or '').strip()
@@ -36013,13 +32577,7 @@ def _run_live_response_turn(
                     if _ws_claim_gate(aurora_text):
                         working_memory._skip_next_aurora_claim_ingest = True
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24053",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24053, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24053)
                     pass
                 try:
                     user_claims = list(working_memory._extract_claims(user_text, source='user', understood=understood) or [])
@@ -36045,22 +32603,10 @@ def _run_live_response_turn(
                     if user_shapes and aurora_shapes and (user_shapes & aurora_shapes):
                         working_memory._skip_next_aurora_claim_ingest = True
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24078",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24078, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24078)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24080",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24080, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24080)
             pass
         try:
             working_memory.update_from_turn(
@@ -36070,24 +32616,12 @@ def _run_live_response_turn(
                 aurora_src=str(getattr(resp_A, 'src', '') or ''),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24088",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24088, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24088)
             pass
         try:
             working_memory.last_aurora_response = getattr(resp_A, 'content', '') or ""
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24092",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24092, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24092)
             pass
         if not skip_cross_learning:
             try:
@@ -36098,13 +32632,7 @@ def _run_live_response_turn(
                     src=src,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:24102",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_live_response_turn", "handler_line": 24102, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24102)
                 pass
         lineage_events = []
         try:
@@ -36113,25 +32641,13 @@ def _run_live_response_turn(
                 source=f"runtime_turn:{src}",
             ) or [])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24110",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24110, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24110)
             lineage_events = []
         if lineage_events:
             try:
                 working_memory.last_lineage_emergence = list(lineage_events[:6])
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:24115",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_live_response_turn", "handler_line": 24115, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24115)
                 pass
             try:
                 latest_event = dict(lineage_events[0] or {})
@@ -36167,13 +32683,7 @@ def _run_live_response_turn(
                         session_id=session_id,
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:24150",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_live_response_turn", "handler_line": 24150, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24150)
                 pass
         try:
             interaction_runtime = _observe_interaction_runtime_turn(
@@ -36186,13 +32696,7 @@ def _run_live_response_turn(
                 source=str(systems.get('_pipeline_source', 'runtime_dialogue') or 'runtime_dialogue'),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24162",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24162, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24162)
             interaction_runtime = {}
         if understanding_contract is not None and hasattr(understanding_contract, 'commit_application'):
             try:
@@ -36213,13 +32717,7 @@ def _run_live_response_turn(
                     or {}
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:24181",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_live_response_turn", "handler_line": 24181, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24181)
                 understanding_application = {}
 
     # Store this response as prior text.  Its receiver resonance was measured
@@ -36227,13 +32725,7 @@ def _run_live_response_turn(
     try:
         systems['_last_aurora_response'] = str(getattr(resp_A, 'content', '') or '').strip()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24196",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24196, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24196)
         pass
 
     # ---- REFLECTION RE-ENTRY SEQUENCE (AURORA_COGNITIVE_PHYSICS.md §6–§8) ----
@@ -36270,22 +32762,10 @@ def _run_live_response_turn(
                         _mag = min(1.0, 0.3 + _refl_tension)
                         _ifield_refl.ingest_internal_signal('tension', magnitude=_mag, source_axis='N')
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24229",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24229, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24229)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24231",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24231, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24231)
             pass
 
     # ---- CONVERSATION RUBRIC ENGINE — score this exchange for live learning ----
@@ -36358,13 +32838,7 @@ def _run_live_response_turn(
                                 elif hasattr(_dt.ledger, 'hint_fail_dim'):
                                     _dt.ledger.hint_fail_dim(_dim, severity=1.0 - float(_val))
                             except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:24303",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "_run_live_response_turn", "handler_line": 24303, "source_file": "aurora.py"},
-                                )
+                                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24303)
                                 pass
                 # Feed coherence score to pressure tuner
                 _rpt_live = systems.get('_reply_response_pressure_tuner')
@@ -36383,13 +32857,7 @@ def _run_live_response_turn(
                                 context={'src': 'live_rubric'},
                             )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:24321",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_live_response_turn", "handler_line": 24321, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24321)
                         pass
                 try:
                     from aurora_internal.aurora_recommendation_hub import enqueue_recommendation
@@ -36405,13 +32873,7 @@ def _run_live_response_turn(
                             priority=0.7,
                         )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24336",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24336, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24336)
                     pass
                 try:
                     if _rub_result is not None:
@@ -36430,22 +32892,10 @@ def _run_live_response_turn(
                             if _rmean < 0.50 and isinstance(_last_pipeline_state, dict):
                                 _last_pipeline_state["rubric_quality_alert"] = True
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24354",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24354, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24354)
                     pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24356",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24356, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24356)
         pass
 
     try:
@@ -36463,13 +32913,7 @@ def _run_live_response_turn(
                 _rpt_ex.export_state(), indent=2, default=str,
             )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24366",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24366, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24366)
         pass
 
     if run_periodic_maintenance and not defer_save_until_correction:
@@ -36484,22 +32928,10 @@ def _run_live_response_turn(
                         try:
                             _chamber.observe_external_evidence(_qev)
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:24380",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_run_live_response_turn", "handler_line": 24380, "source_file": "aurora.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24380)
                             pass
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24382",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24382, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24382)
                     pass
         if turn_tick % 10 == 0:
             bridge = systems.get('_chain_bridge')
@@ -36507,13 +32939,7 @@ def _run_live_response_turn(
                 try:
                     bridge.inject_promoted_links()
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24389",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24389, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24389)
                     pass
             # Running developmental-timeline log + EEPR feed: snapshot growth
             # metrics, append to developmental_timeline.jsonl, and feed the
@@ -36523,13 +32949,7 @@ def _run_live_response_turn(
                 from aurora_developmental_log import record_developmental_snapshot
                 record_developmental_snapshot(systems)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:24398",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_live_response_turn", "handler_line": 24398, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24398)
                 pass
         if turn_tick % 15 == 0:
             # aurora_curiosity_engine.CuriosityEngine has a complete, real
@@ -36562,13 +32982,7 @@ def _run_live_response_turn(
                 try:
                     _pr.route(_fl_pr)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24409",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24409, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24409)
                     pass
             # DPME bridge: translate axis imbalance → DER facet energy guidance
             _db = systems.get('_dpme_bridge')
@@ -36576,13 +32990,7 @@ def _run_live_response_turn(
                 try:
                     _db.apply()
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24416",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24416, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24416)
                     pass
         if turn_tick % 20 == 0:
             _full_save(systems, verbose=False)
@@ -36601,22 +33009,10 @@ def _run_live_response_turn(
                 try:
                     persistence.oets_persistence.save_conversation_memory(conversation_memory)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:24434",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_response_turn", "handler_line": 24434, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24434)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:24436",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_response_turn", "handler_line": 24436, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24436)
             pass
 
     # ---- SESSION TURN BUFFER — rolling context window for acknowledgment ----
@@ -36629,13 +33025,7 @@ def _run_live_response_turn(
             if len(_buf) > 6:
                 _buf[:] = _buf[-6:]
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24448",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24448, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24448)
         pass
 
     try:
@@ -36666,13 +33056,7 @@ def _run_live_response_turn(
             if _pic % 5 == 0 and hasattr(_perc_a6, "consolidate"):
                 _perc_a6.consolidate()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24474",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24474, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24474)
         pass
 
     # Communication Credit Unification, Break 1 cleanup (2026-07-28): this
@@ -36726,13 +33110,7 @@ def _run_live_response_turn(
                             _gap_obj = getattr(_rg, "gap", None)
                             _gt_val = str(getattr(getattr(_gap_obj, "gap_type", None), "value", "") or "")
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:24527",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_run_live_response_turn", "handler_line": 24527, "source_file": "aurora.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24527)
                             pass
                         if _gt_val:
                             _gap_type_counts[_gt_val] += 1
@@ -36747,22 +33125,10 @@ def _run_live_response_turn(
                                         {"source": "clarification_memory", "gap_type": _gtype, "count": _gcount}
                                     )
                             except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:24541",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "_run_live_response_turn", "handler_line": 24541, "source_file": "aurora.py"},
-                                )
+                                _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24541)
                                 pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24543",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24543, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24543)
         pass
 
     # ---- FIX 2: Episode compiler pack → DreamTrainer.train_on_bundle ----
@@ -36811,22 +33177,10 @@ def _run_live_response_turn(
                             )
                             _dt_ep.train_on_bundle(_bundle, systems)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:24590",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_live_response_turn", "handler_line": 24590, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24590)
                         pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24592",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24592, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24592)
         pass
 
     # ---- CONCEPT CRYSTAL — observe LSA crossing for this turn ----
@@ -36860,13 +33214,7 @@ def _run_live_response_turn(
                 }
             systems['_ccr_needs_overlay_clear'] = True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24616",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24616, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24616)
         pass
 
     # The concept crystal is observed after application commit.  Attach its
@@ -36896,13 +33244,7 @@ def _run_live_response_turn(
             )
             systems['_geological_summary'] = _gb_pt.summary()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24628",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24628, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 24628)
         pass
 
     _last_turn_state_out = systems.get("_last_turn_state")
@@ -37211,13 +33553,7 @@ def _process_external_user_turn_impl(
         if isinstance(_pf_snap, dict) and _pf_snap:
             systems["_present_frame_snapshot"] = _pf_snap
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24757",
-            exc=_aurora_boundary_exc,
-            context={"function": "process_external_user_turn", "handler_line": 24757, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'process_external_user_turn', 24757)
         pass
 
     # Aurora Build 694, step 2: the canonical turn-open publication now
@@ -37265,13 +33601,7 @@ def _process_external_user_turn_impl(
             guidance_result = dict(perception.apply_guidance_from_text(user_text) or {})
         systems["_latest_surface_guidance_result"] = guidance_result
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24769",
-            exc=_aurora_boundary_exc,
-            context={"function": "process_external_user_turn", "handler_line": 24769, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'process_external_user_turn', 24769)
         systems["_latest_surface_guidance_result"] = {}
 
     runtime_governor = None
@@ -37318,13 +33648,7 @@ def _process_external_user_turn_impl(
         runtime_contract["maintenance_viability"] = round(n_viability, 4)
         runtime_contract["search_viability"] = round(min(n_viability, x_viability), 4)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24815",
-            exc=_aurora_boundary_exc,
-            context={"function": "process_external_user_turn", "handler_line": 24815, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'process_external_user_turn', 24815)
         runtime_governor = None
         runtime_contract = {}
 
@@ -37698,13 +34022,7 @@ def _process_external_user_turn_impl(
                 systems["_runtime_governor_status"] = runtime_governor.status()
                 systems["_last_response_runtime_contract"] = dict(runtime_contract)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:24849",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_external_user_turn", "handler_line": 24849, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process_external_user_turn', 24849)
                 pass
         if had_pipeline_source:
             systems["_pipeline_source"] = previous_pipeline_source
@@ -37873,13 +34191,7 @@ def _retain_cross_pipeline_learning(
     try:
         current_turn = int(getattr(working_memory, 'turn_count', 0) or 0)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24951",
-            exc=_aurora_boundary_exc,
-            context={"function": "_retain_cross_pipeline_learning", "handler_line": 24951, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 24951)
         current_turn = 0
     if hasattr(dream_trainer, 'expire_staged_pipeline_learning'):
         try:
@@ -37935,22 +34247,10 @@ def _retain_cross_pipeline_learning(
                             confidence=0.9,
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:24981",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_retain_cross_pipeline_learning", "handler_line": 24981, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 24981)
                         pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24983",
-            exc=_aurora_boundary_exc,
-            context={"function": "_retain_cross_pipeline_learning", "handler_line": 24983, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 24983)
         pass
 
     try:
@@ -37984,22 +34284,10 @@ def _retain_cross_pipeline_learning(
                             confidence=min(0.94, float(frame.get('confidence', 0.82) or 0.82)),
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:25014",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_retain_cross_pipeline_learning", "handler_line": 25014, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 25014)
                         pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:25016",
-            exc=_aurora_boundary_exc,
-            context={"function": "_retain_cross_pipeline_learning", "handler_line": 25016, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 25016)
         pass
 
     try:
@@ -38031,22 +34319,10 @@ def _retain_cross_pipeline_learning(
                             confidence=min(0.93, float(event.get('confidence', 0.84) or 0.84)),
                         )
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:25045",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_retain_cross_pipeline_learning", "handler_line": 25045, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 25045)
                         pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:25047",
-            exc=_aurora_boundary_exc,
-            context={"function": "_retain_cross_pipeline_learning", "handler_line": 25047, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 25047)
         pass
 
     confidence = float(getattr(resp_A, 'confidence', 0.0) or 0.0) if resp_A is not None else 0.0
@@ -38080,22 +34356,10 @@ def _retain_cross_pipeline_learning(
                                 confidence=min(0.95, confidence),
                             )
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:25078",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_retain_cross_pipeline_learning", "handler_line": 25078, "source_file": "aurora.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 25078)
                             pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25080",
-                exc=_aurora_boundary_exc,
-                context={"function": "_retain_cross_pipeline_learning", "handler_line": 25080, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_retain_cross_pipeline_learning', 25080)
             pass
 
     if retained:
@@ -38117,25 +34381,13 @@ def _build_simulation_live_bridge_context(systems: Dict[str, Any]) -> Dict[str, 
         try:
             manifest = dict(getattr(source_memory, 'lineage_activation_state', {}) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25098",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_simulation_live_bridge_context", "handler_line": 25098, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_simulation_live_bridge_context', 25098)
             manifest = {}
         if manifest:
             try:
                 episode_memory.apply_lineage_activation(manifest)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:25103",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_build_simulation_live_bridge_context", "handler_line": 25103, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_build_simulation_live_bridge_context', 25103)
                 pass
 
     episode_contract = None
@@ -38146,13 +34398,7 @@ def _build_simulation_live_bridge_context(systems: Dict[str, Any]) -> Dict[str, 
                 label=f"sim_{int(time.time() * 1000)}"
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25113",
-                exc=_aurora_boundary_exc,
-                context={"function": "_build_simulation_live_bridge_context", "handler_line": 25113, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_build_simulation_live_bridge_context', 25113)
             episode_contract = None
 
     sandbox_systems = dict(systems)
@@ -38313,13 +34559,7 @@ def _attach_live_response_simulation_bridge(systems: Dict[str, Any]) -> bool:
         )
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:25226",
-            exc=_aurora_boundary_exc,
-            context={"function": "_attach_live_response_simulation_bridge", "handler_line": 25226, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_attach_live_response_simulation_bridge', 25226)
         return False
 
 # ============================================================================
@@ -38342,13 +34582,7 @@ def _capture_hardware_voice_state(integration: Any) -> Dict[str, Any]:
         try:
             presets = dict(voice.list_voices() or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25248",
-                exc=_aurora_boundary_exc,
-                context={"function": "_capture_hardware_voice_state", "handler_line": 25248, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_capture_hardware_voice_state', 25248)
             presets = {}
         if voice_id:
             for preset_name, preset_id in presets.items():
@@ -38360,13 +34594,7 @@ def _capture_hardware_voice_state(integration: Any) -> Dict[str, Any]:
         try:
             voice_state['voice_label'] = str(voice.get_current_voice() or '')
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25259",
-                exc=_aurora_boundary_exc,
-                context={"function": "_capture_hardware_voice_state", "handler_line": 25259, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_capture_hardware_voice_state', 25259)
             pass
 
     return voice_state
@@ -38393,13 +34621,7 @@ def _restore_hardware_voice_state(integration: Any, voice_state: Any) -> bool:
     try:
         return bool(voice.set_voice(candidate))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:25285",
-            exc=_aurora_boundary_exc,
-            context={"function": "_restore_hardware_voice_state", "handler_line": 25285, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_restore_hardware_voice_state', 25285)
         return False
 
 def _load_learned_skill_state(systems: Dict[str, Any], verbose: bool = True) -> bool:
@@ -38515,13 +34737,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
                                list(sensory_crystal._visual.values()))
                 print(f"  [SAVE] Saved: sensory_crystal ({sc_nodes} nodes)")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25400",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25400, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25400)
             pass
     # Persist DPS crystal registry (concept + sensory + behavioral crystals)
     dimensional = systems.get('dimensional')
@@ -38545,13 +34761,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
                 n = len(getattr(dimensional.dps, 'crystals', {}) or {})
                 print(f"  [SAVE] Saved: dps_crystals ({n} crystals) {'OK' if ok else 'FAILED'}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25412",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25412, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25412)
             pass
     # Save autonomy state
     autonomy = systems.get('autonomy')
@@ -38566,13 +34776,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
             if verbose:
                 print("  [SAVE] Saved: fail_points")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25426",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25426, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25426)
             pass
     # Save expression evolution state
     perception = systems.get('perception')
@@ -38580,13 +34784,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
         try:
             perception.save_evo_state()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25433",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25433, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25433)
             pass
     # Save lexicon so vocabulary survives restarts
     if perception and hasattr(perception, 'lexicon'):
@@ -38596,13 +34794,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
             if verbose:
                 print(f"  [SAVE] Lexicon: {_lex.size} words saved")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25442",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25442, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25442)
             pass
     gap_system = systems.get('comprehension_gap_system')
     if gap_system and hasattr(gap_system, 'save'):
@@ -38611,13 +34803,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
             if verbose:
                 print("  [SAVE] Saved: comprehension_gap_system")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25450",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25450, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25450)
             pass
     manual_code_lineage = systems.get('manual_code_lineage')
     if manual_code_lineage and hasattr(manual_code_lineage, 'assimilate'):
@@ -38633,13 +34819,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
             if verbose and results:
                 print(f"  [SAVE] Manual code lineage: {len(results)} change(s) assimilated")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25465",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25465, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25465)
             pass
     code_evolution_chamber = systems.get('code_evolution_chamber')
     if code_evolution_chamber and hasattr(code_evolution_chamber, 'flush_files'):
@@ -38648,26 +34828,14 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
             if verbose:
                 print("  [SAVE] Saved: code_evolution_chamber")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25473",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25473, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25473)
             pass
     try:
         lineage_events = _observe_live_lineage_emergence(systems, source="aurora.save")
         if verbose and lineage_events:
             print(f"  [SAVE] Live lineage observed: {len(lineage_events)} event(s)")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:25479",
-            exc=_aurora_boundary_exc,
-            context={"function": "_full_save", "handler_line": 25479, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25479)
         pass
     quasiarch = systems.get('quasiarch_observer')
     if quasiarch and hasattr(quasiarch, 'save'):
@@ -38676,13 +34844,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
             if verbose:
                 print("  [SAVE] Saved: quasiarch_observer")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25487",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25487, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25487)
             pass
     lineage_journal = systems.get('lineage_emergence_journal')
     if lineage_journal and hasattr(lineage_journal, 'save'):
@@ -38691,13 +34853,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
             if verbose:
                 print("  [SAVE] Saved: live_lineage_journal")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25495",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25495, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25495)
             pass
     understanding_contract = systems.get('understanding_contract')
     if understanding_contract and hasattr(understanding_contract, 'save'):
@@ -38706,13 +34862,7 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
             if verbose:
                 print("  [SAVE] Saved: understanding_contract")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25503",
-                exc=_aurora_boundary_exc,
-                context={"function": "_full_save", "handler_line": 25503, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_full_save', 25503)
             pass
 
 
@@ -38732,26 +34882,14 @@ def _state_write_lock_active(systems: Dict[str, Any]) -> bool:
         try:
             drive_sync.force_sync()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25522",
-                exc=_aurora_boundary_exc,
-                context={"function": "_state_write_lock_active", "handler_line": 25522, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_state_write_lock_active', 25522)
             pass
     git_sync = systems.get('git_sync')
     if git_sync:
         try:
             git_sync.push_state()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25528",
-                exc=_aurora_boundary_exc,
-                context={"function": "_state_write_lock_active", "handler_line": 25528, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_state_write_lock_active', 25528)
             pass
 
 
@@ -38975,13 +35113,7 @@ def chat(systems: Dict[str, Any]):
         try:
             _sc.start_session(session_id)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:25751",
-                exc=_aurora_boundary_exc,
-                context={"function": "chat", "handler_line": 25751, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 25751)
             pass
 
     # Initialize working memory for this session (cross-turn context tracking)
@@ -39002,13 +35134,7 @@ def chat(systems: Dict[str, Any]):
             verbose=False,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:25771",
-            exc=_aurora_boundary_exc,
-            context={"function": "chat", "handler_line": 25771, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 25771)
         pass
     try:
         from aurora_internal.aurora_live_lineage_journal import LiveLineageJournal
@@ -39021,13 +35147,7 @@ def chat(systems: Dict[str, Any]):
         if hasattr(lineage_journal, "prime_systems"):
             lineage_journal.prime_systems(systems, source="session_boot")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:25783",
-            exc=_aurora_boundary_exc,
-            context={"function": "chat", "handler_line": 25783, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 25783)
         pass
 
     # Check for unread messages left by the daemon while you were away
@@ -39042,13 +35162,7 @@ def chat(systems: Dict[str, Any]):
                 print(f"\n  Aurora left you {len(_unread)} message(s) while you were away.")
                 print("  Type /messages to read them.\n")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:25797",
-            exc=_aurora_boundary_exc,
-            context={"function": "chat", "handler_line": 25797, "source_file": "aurora.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 25797)
         pass
 
     print()
@@ -39291,22 +35405,10 @@ def chat(systems: Dict[str, Any]):
                                             generation      = int(_sw.get("generation",        0)),
                                         ))
                                     except Exception as _aurora_boundary_exc:
-                                        _aurora_record_exception_from_locals(
-                                            locals(),
-                                            module=__name__,
-                                            operation="exception_handler:aurora.py:26226",
-                                            exc=_aurora_boundary_exc,
-                                            context={"function": "chat", "handler_line": 26226, "source_file": "aurora.py"},
-                                        )
+                                        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 26226)
                                         pass
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:26228",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 26228, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 26228)
                         pass
                 _full_save(systems)
                 print("\n  All state saved. Aurora remembers. Goodbye.\n")
@@ -39362,13 +35464,7 @@ def chat(systems: Dict[str, Any]):
                             try:
                                 _tss = _dtq.datetime.fromtimestamp(_ts).strftime("%H:%M:%S")
                             except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:26321",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "chat", "handler_line": 26321, "source_file": "aurora.py"},
-                                )
+                                _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 26321)
                                 _tss = "--:--:--"
                             if _prov == "WAVEFORM":
                                 _src  = _ev.get("source", "?")
@@ -39406,13 +35502,7 @@ def chat(systems: Dict[str, Any]):
                                             _top = sorted(_sp_num.items(), key=lambda x: -float(x[1]))[:4]
                                             print(f"       pressure    : {' '.join(f'{k}={v:.3f}' for k,v in _top)}")
                                         except Exception as _aurora_boundary_exc:
-                                            _aurora_record_exception_from_locals(
-                                                locals(),
-                                                module=__name__,
-                                                operation="exception_handler:aurora.py:26358",
-                                                exc=_aurora_boundary_exc,
-                                                context={"function": "chat", "handler_line": 26358, "source_file": "aurora.py"},
-                                            )
+                                            _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 26358)
                                             pass
                         print()
                 continue
@@ -39613,13 +35703,7 @@ def chat(systems: Dict[str, Any]):
                 try:
                     _gp_mins = float(_gp_arg)
                 except ValueError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:26601",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "chat", "handler_line": 26601, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 26601)
                     _gp_mins = 60.0
                 aurora_go_play(systems, duration_minutes=_gp_mins, verbose=True)
                 continue
@@ -39684,13 +35768,7 @@ def chat(systems: Dict[str, Any]):
                         try:
                             from PIL import ImageGrab as _tg; _tg.grab()
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:26665",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "chat", "handler_line": 26665, "source_file": "aurora.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 26665)
                             pil_ok = False
                         im_ok = bool(_shutil.which("import"))
                         print("  [SCREEN] Observer running but no captures yet.")
@@ -40168,13 +36246,7 @@ def chat(systems: Dict[str, Any]):
                         print(f"    Ontological depth:   {u.get('ontological_depth', 0):.4f}")
                         print(f"    Coherence index:     {u.get('coherence_index', 0):.4f}")
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:27142",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 27142, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 27142)
                         pass
                 # LSV status
                 if hasattr(perception, 'evo_status'):
@@ -40196,13 +36268,7 @@ def chat(systems: Dict[str, Any]):
                         print(f"    Generation:          {tmpl.get('generation', 0)}")
                         print(f"    Avg fitness:         {tmpl.get('avg_fitness', 0):.3f}")
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:27163",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 27163, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 27163)
                         pass
                 # IVM heat
                 try:
@@ -40212,13 +36278,7 @@ def chat(systems: Dict[str, Any]):
                         print(f"    Level:               {hs.get('level', '?')} ({hs.get('heat', 0):.3f})")
                         print(f"    Behavior:            {hs.get('behavior', '?')}")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:27172",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "chat", "handler_line": 27172, "source_file": "aurora.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 27172)
                     pass
                 # Autonomy
                 if autonomy:
@@ -40231,13 +36291,7 @@ def chat(systems: Dict[str, Any]):
                         print(f"    Dreams:              {q.get('dreams', 0)}")
                         print(f"    Inquiries:           {q['inquiries']['used']} / {q['inquiries']['limit']}")
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:27184",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 27184, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 27184)
                         pass
                 # Drive sync
                 drive_sync = systems.get('drive_sync')
@@ -40251,13 +36305,7 @@ def chat(systems: Dict[str, Any]):
                         print(f"    Last sync:           {f'{ago:.0f}s ago' if ago else 'not yet'}")
                         print(f"    Sync count:          {ds.get('sync_count', 0)}")
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:27197",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 27197, "source_file": "aurora.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'chat', 27197)
                         pass
                 print()
                 continue
@@ -40802,13 +36850,7 @@ def _record_corpus_response_pressure(
                 truth_alignment=truth_alignment,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:27741",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_corpus_response_pressure", "handler_line": 27741, "source_file": "aurora.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_corpus_response_pressure', 27741)
             pass
     return {
         'kind': kind,
@@ -40961,13 +37003,7 @@ def run_corpus_ingestion(
                     confidence=0.55,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:27827",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "witness", "handler_line": 27827, "source_file": "aurora.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'witness', 27827)
                 pass
         return response
 
@@ -41290,25 +37326,13 @@ if __name__ == '__main__':
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora.py:28104",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 28104, "source_file": "aurora.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 28104)
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora.py:28109",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 28109, "source_file": "aurora.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 28109)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

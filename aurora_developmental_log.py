@@ -16,7 +16,8 @@ bias toward warmth/openness; stalling nudges it toward caution. If a DCE/EEPR
 regulator with ingest_shard() is wired, the same shard is forwarded to it too.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_developmental_log.py')
 
 import json
 import os
@@ -33,13 +34,7 @@ def _safe_len(obj: Any, attr: str) -> int:
     try:
         return len(getattr(obj, attr, {}) or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:34",
-            exc=_aurora_boundary_exc,
-            context={"function": "_safe_len", "handler_line": 34, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_safe_len', 34)
         return 0
 
 
@@ -57,13 +52,7 @@ def snapshot_developmental_state(systems: Dict[str, Any]) -> Dict[str, Any]:
         dps = getattr(systems.get("dimensional"), "dps", None)
         snap["crystals"] = len(getattr(dps, "crystals", {}) or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:51",
-            exc=_aurora_boundary_exc,
-            context={"function": "snapshot_developmental_state", "handler_line": 51, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'snapshot_developmental_state', 51)
         snap["crystals"] = 0
 
     try:
@@ -72,13 +61,7 @@ def snapshot_developmental_state(systems: Dict[str, Any]) -> Dict[str, Any]:
         snap["warp_demands"] = int(getattr(wf, "_demand_count", 0) or 0)
         snap["warp_anomalies"] = len(getattr(wf, "_anomaly_ledger", []) or [])
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:59",
-            exc=_aurora_boundary_exc,
-            context={"function": "snapshot_developmental_state", "handler_line": 59, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'snapshot_developmental_state', 59)
         pass
 
     lf = systems.get("language_field")
@@ -89,26 +72,14 @@ def snapshot_developmental_state(systems: Dict[str, Any]) -> Dict[str, Any]:
         snap["lsa_excludes"] = sum(1 for e in lsa.values() if getattr(e, "excludes", None))
         snap["lsa_consequence"] = sum(1 for e in lsa.values() if getattr(e, "consequence", None))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:69",
-            exc=_aurora_boundary_exc,
-            context={"function": "snapshot_developmental_state", "handler_line": 69, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'snapshot_developmental_state', 69)
         pass
 
     try:
         eco = getattr(systems.get("perception"), "ecology", None)
         snap["wisdom_shards"] = len(getattr(getattr(eco, "wisdom", None), "shards", {}) or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:75",
-            exc=_aurora_boundary_exc,
-            context={"function": "snapshot_developmental_state", "handler_line": 75, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'snapshot_developmental_state', 75)
         pass
 
     # Behavioral-maturation counters: how often she held grounding internally
@@ -140,13 +111,7 @@ def _read_last_snapshot(path: str) -> Optional[Dict[str, Any]]:
                 if ln:
                     return json.loads(ln)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:106",
-            exc=_aurora_boundary_exc,
-            context={"function": "_read_last_snapshot", "handler_line": 106, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_read_last_snapshot', 106)
         pass
     return None
 
@@ -165,13 +130,7 @@ def _append_capped(path: str, entry: Dict[str, Any]) -> int:
             fh.writelines(lines)
         return len(lines)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:124",
-            exc=_aurora_boundary_exc,
-            context={"function": "_append_capped", "handler_line": 124, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_append_capped', 124)
         return 0
 
 
@@ -209,24 +168,12 @@ def _feed_eepr(systems: Dict[str, Any], snap: Dict[str, Any],
                 try:
                     eepr.ingest_shard(shard)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_developmental_log.py:161",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_feed_eepr", "handler_line": 161, "source_file": "aurora_developmental_log.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_feed_eepr', 161)
                     pass
                 break
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:165",
-            exc=_aurora_boundary_exc,
-            context={"function": "_feed_eepr", "handler_line": 165, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_feed_eepr', 165)
         return False
 
 
@@ -279,13 +226,7 @@ def record_developmental_event(systems: Dict[str, Any], event: str,
                 generation=int(generation),
             ))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_developmental_log.py:217",
-            exc=_aurora_boundary_exc,
-            context={"function": "record_developmental_event", "handler_line": 217, "source_file": "aurora_developmental_log.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'record_developmental_event', 217)
         pass
     return True
 

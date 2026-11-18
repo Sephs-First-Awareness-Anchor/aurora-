@@ -26,7 +26,8 @@ Coupling physics (same as CPM axis coupling):
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_waveform_pressure.py')
 
 import time
 from collections import deque
@@ -130,13 +131,7 @@ class WaveformPressurePump:
                     source=disturbance.source,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_waveform_pressure.py:131",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "inject", "handler_line": 131, "source_file": "aurora_waveform_pressure.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'inject', 131)
                 pass
             for ax, eff in primary_axes.items():
                 trace.append({
@@ -173,13 +168,7 @@ class WaveformPressurePump:
                         source=f"{disturbance.source}[coupled]",
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_waveform_pressure.py:167",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "inject", "handler_line": 167, "source_file": "aurora_waveform_pressure.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'inject', 167)
                     pass
 
         # ── 3. Record trace ───────────────────────────────────────────────────
@@ -200,13 +189,7 @@ class WaveformPressurePump:
             try:
                 qao.record_pressure_disturbance(summary)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_waveform_pressure.py:187",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "inject", "handler_line": 187, "source_file": "aurora_waveform_pressure.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'inject', 187)
                 pass
 
         return trace

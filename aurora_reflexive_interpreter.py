@@ -42,6 +42,8 @@ Two issues fixed using Aurora's own codestack:
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_reflexive_interpreter.py')
 
 import json
 import math
@@ -56,26 +58,14 @@ try:
     from aurora_internal.aurora_utterance_parser import UtteranceParser
     _PARSER_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_reflexive_interpreter.py:57",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 57, "source_file": "aurora_reflexive_interpreter.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 57)
     _PARSER_AVAILABLE = False
 
 try:
     from aurora_manifold_directory_reader import ManifoldDirectory, NoncompManifold, SlotView
     _DIRECTORY_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_reflexive_interpreter.py:63",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 63, "source_file": "aurora_reflexive_interpreter.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 63)
     _DIRECTORY_AVAILABLE = False
 
 try:
@@ -85,13 +75,7 @@ try:
     )
     _ROUTER_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_reflexive_interpreter.py:72",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 72, "source_file": "aurora_reflexive_interpreter.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 72)
     _ROUTER_AVAILABLE = False
     class BandPosition:
         INSIDE = "inside"; LOW = "low"; HIGH = "high"
@@ -100,13 +84,7 @@ try:
     from aurora_internal.aurora_noncomp_registry import NonCompDimension
     _NONCOMP_DIMENSIONS = tuple(dim.name for dim in NonCompDimension)
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_reflexive_interpreter.py:80",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 80, "source_file": "aurora_reflexive_interpreter.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 80)
     _NONCOMP_DIMENSIONS = ("POLARITY", "MAGNITUDE", "OPERATOR", "COST", "DIFFERENCE")
 
 try:
@@ -114,13 +92,7 @@ try:
     _NONCOMP_LAYER_COMPILER = NonCompLayerCompiler()
     _NONCOMP_LAYER_AVAILABLE = True
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_reflexive_interpreter.py:87",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 87, "source_file": "aurora_reflexive_interpreter.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 87)
     _NONCOMP_LAYER_COMPILER = None
     _NONCOMP_LAYER_AVAILABLE = False
 
@@ -131,13 +103,7 @@ try:
     )
     _SEDIMENT_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_reflexive_interpreter.py:97",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 97, "source_file": "aurora_reflexive_interpreter.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 97)
     _SEDIMENT_AVAILABLE = False
 
 try:
@@ -517,13 +483,7 @@ def _project_noncomp_state(
             try:
                 compiled_layer = _NONCOMP_LAYER_COMPILER.compile_layer(target)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:396",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_project_noncomp_state", "handler_line": 396, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_project_noncomp_state', 396)
                 compiled_layer = None
 
         layer_slots: List[Dict[str, object]] = []
@@ -543,13 +503,7 @@ def _project_noncomp_state(
                     try:
                         compiled_slot = compiled_layer.slot_by_law(c_law, dim)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_reflexive_interpreter.py:415",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_project_noncomp_state", "handler_line": 415, "source_file": "aurora_reflexive_interpreter.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_project_noncomp_state', 415)
                         compiled_slot = None
                     if compiled_slot is not None:
                         slot.update(
@@ -966,13 +920,7 @@ class ReflexiveInterpreter:
                 self._overlay = UnderstandingSedimentOverlay(state_dir=state_dir)
                 self._worth_ledger = PersistentWorthLedger(state_dir=state_dir)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:808",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "__init__", "handler_line": 808, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '__init__', 808)
                 self._overlay = None; self._worth_ledger = None
 
     def _worth_history_for(self, key:str) -> WorthHistory:
@@ -986,13 +934,7 @@ class ReflexiveInterpreter:
                     for s in self._worth_ledger.scores_for(key):
                         hist.record(s)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_reflexive_interpreter.py:821",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_worth_history_for", "handler_line": 821, "source_file": "aurora_reflexive_interpreter.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_worth_history_for', 821)
                     pass
             self._worth_histories[key] = hist
         return hist
@@ -1038,13 +980,7 @@ class ReflexiveInterpreter:
                         if _anchor is not None:
                             depth_sc = _anchor.depth_score
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:843",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "interpret", "handler_line": 843, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'interpret', 843)
                 pass
 
         # ── Sediment overlay: bedrock + lived deposits ──
@@ -1064,13 +1000,7 @@ class ReflexiveInterpreter:
                         origin_weight, _fkey, _slot)
                     origin_region = region_type(origin_weight)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:861",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "interpret", "handler_line": 861, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'interpret', 861)
                 sediment_delta = 0.0
 
         # ── Recall coupling: memory lowers the energy cost of re-knowing ──
@@ -1084,13 +1014,7 @@ class ReflexiveInterpreter:
                 recall_boost = recall_confidence_boost(
                     self._sedimemory, expression, match.constraint)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:874",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "interpret", "handler_line": 874, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'interpret', 874)
                 recall_boost = 0.0
         conf_effective = min(1.0, match.confidence + recall_boost)
 
@@ -1115,13 +1039,7 @@ class ReflexiveInterpreter:
         if self._worth_ledger is not None:
             try: self._worth_ledger.record(key, ws)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:898",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "interpret", "handler_line": 898, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'interpret', 898)
                 pass
         traj = hist.trajectory
 
@@ -1158,13 +1076,7 @@ class ReflexiveInterpreter:
                                      band_pos=self._band_pos,min_evo_target=min_evo,max_targets=max_t)
                 route_result = self._router.route_signal(signal)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:910",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "interpret", "handler_line": 910, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'interpret', 910)
                 pass
 
         coherent     = _polarity_coherent(match, route_result)
@@ -1203,24 +1115,12 @@ class ReflexiveInterpreter:
                     ref=_turn_ref_encoded)
                 self._overlay.save()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:925",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "interpret", "handler_line": 925, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'interpret', 925)
                 pass
         if self._worth_ledger is not None:
             try: self._worth_ledger.save()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_reflexive_interpreter.py:928",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "interpret", "handler_line": 928, "source_file": "aurora_reflexive_interpreter.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'interpret', 928)
                 pass
 
         # Build 714, Section 14: this is the projected-manifold field's only
@@ -1266,13 +1166,7 @@ class ReflexiveInterpreter:
             state.noncomp_state["sediment_delta"] = round(float(sediment_delta), 4)
             state.noncomp_state["recall_boost"]   = round(float(recall_boost), 4)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_reflexive_interpreter.py:962",
-                exc=_aurora_boundary_exc,
-                context={"function": "interpret", "handler_line": 962, "source_file": "aurora_reflexive_interpreter.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'interpret', 962)
             pass
 
         self._history.append(state)
@@ -1341,13 +1235,7 @@ if __name__ == "__main__":
                     idx    = build_route_index(SEMANTICS_PATH)
                     router = ManifoldRouter(idx, seed=42)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_reflexive_interpreter.py:1029",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "<module>", "handler_line": 1029, "source_file": "aurora_reflexive_interpreter.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 1029)
                     pass
             interp = ReflexiveInterpreter(directory=directory, router=router)
 

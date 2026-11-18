@@ -9,7 +9,8 @@ phrase patterns and evaluated against her pressure and clarity signals.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_articulation.py')
 
 import os
 import json
@@ -160,13 +161,7 @@ def _load_language_state(state_dir: Optional[str] = None) -> Dict[str, Any]:
             _LANGUAGE_STATE_MTIME_BY_PATH[key] = mtime
             return result
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_articulation.py:95",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_language_state", "handler_line": 95, "source_file": "aurora_articulation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_language_state', 95)
         pass
     return {}
 
@@ -190,13 +185,7 @@ def _load_lexicon_familiar(state_dir: Optional[str] = None) -> frozenset:
             _LEXICON_FAMILIAR_BY_PATH[key] = result
             return result
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_articulation.py:114",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_lexicon_familiar", "handler_line": 114, "source_file": "aurora_articulation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_lexicon_familiar', 114)
         pass
     _LEXICON_FAMILIAR_BY_PATH[key] = frozenset()
     return _LEXICON_FAMILIAR_BY_PATH[key]
@@ -241,13 +230,7 @@ def analyze_articulation_feedback(n_lines: int = 500) -> Dict[str, Any]:
                 try:
                     relief = float(parts[1]) if len(parts) > 1 else 0.0
                 except ValueError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_articulation.py:158",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "analyze_articulation_feedback", "handler_line": 158, "source_file": "aurora_articulation.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'analyze_articulation_feedback', 158)
                     relief = 0.0
                 reason_counts[reason] += stamps
                 if facet.role == "expression_flow":
@@ -257,13 +240,7 @@ def analyze_articulation_feedback(n_lines: int = 500) -> Dict[str, Any]:
                 else:
                     rejected_total += stamps
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_articulation.py:167",
-            exc=_aurora_boundary_exc,
-            context={"function": "analyze_articulation_feedback", "handler_line": 167, "source_file": "aurora_articulation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'analyze_articulation_feedback', 167)
         return empty
 
     total = accepted_total + rejected_total
@@ -316,13 +293,7 @@ def _adaptive_min_relief() -> float:
     try:
         return float(_get_feedback_insights().get("suggested_min_relief", base))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_articulation.py:219",
-            exc=_aurora_boundary_exc,
-            context={"function": "_adaptive_min_relief", "handler_line": 219, "source_file": "aurora_articulation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_adaptive_min_relief', 219)
         return base
 
 
@@ -870,13 +841,7 @@ def record_decision(decision: ArticulationDecision, state_dir: Optional[str] = N
         trace_file.write_text(json.dumps(asdict(decision), indent=2, ensure_ascii=True),
                               encoding="utf-8")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_articulation.py:764",
-            exc=_aurora_boundary_exc,
-            context={"function": "record_decision", "handler_line": 764, "source_file": "aurora_articulation.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'record_decision', 764)
         pass
 
     # Stamp active DPS crystals with the articulation outcome
@@ -890,13 +855,7 @@ def record_decision(decision: ArticulationDecision, state_dir: Optional[str] = N
                 if c:
                     c.add_facet(role, content, confidence=conf)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_articulation.py:777",
-                exc=_aurora_boundary_exc,
-                context={"function": "record_decision", "handler_line": 777, "source_file": "aurora_articulation.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'record_decision', 777)
             pass
 
 

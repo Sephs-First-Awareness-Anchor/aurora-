@@ -11,6 +11,8 @@ the tool just fetches.
 """
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/tool_registry.py')
 
 import json
 import math
@@ -20,9 +22,9 @@ import threading
 import time
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 
 # ---------------------------------------------------------------------------
@@ -80,13 +82,7 @@ def _weather_fetch(location: str = "", **_) -> ToolResult:
         )
         return ToolResult("weather", data, True)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:81",
-            exc=exc,
-            context={"function": "_weather_fetch", "handler_line": 81, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_weather_fetch', 81)
         return ToolResult("weather", "", False, str(exc))
 
 
@@ -110,13 +106,7 @@ def _calculator(expression: str = "", **_) -> ToolResult:
         result = eval(safe, safe_ns)  # noqa: S307 — scrubbed input only
         return ToolResult("calculator", f"{expression} = {result}", True)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:104",
-            exc=exc,
-            context={"function": "_calculator", "handler_line": 104, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_calculator', 104)
         return ToolResult("calculator", "", False, str(exc))
 
 
@@ -155,13 +145,7 @@ def _self_state_read(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResul
             if snap_age is not None:
                 parts.append(f"last surface snapshot: {int(snap_age)}s ago")
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:142",
-            exc=exc,
-            context={"function": "_self_state_read", "handler_line": 142, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_self_state_read', 142)
         parts.append(f"daemon status unreadable: {exc}")
 
     # Live pipeline signals
@@ -174,13 +158,7 @@ def _self_state_read(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResul
                 parts.append(f"stagnation: {float(es.stagnation_score):.2f}")
                 parts.append(f"novelty: {float(es.novelty):.2f}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:154",
-                exc=_aurora_boundary_exc,
-                context={"function": "_self_state_read", "handler_line": 154, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_self_state_read', 154)
             pass
         try:
             dimensional = systems.get("dimensional")
@@ -189,13 +167,7 @@ def _self_state_read(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResul
             if dimensional and hasattr(dimensional, "dmm"):
                 parts.append(f"dmm alignment: {float(dimensional.dmm.state.alignment):.2f}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:162",
-                exc=_aurora_boundary_exc,
-                context={"function": "_self_state_read", "handler_line": 162, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_self_state_read', 162)
             pass
 
     if not parts:
@@ -235,13 +207,7 @@ def _schedule_read(**_) -> ToolResult:
         if last_save:
             parts.append(f"last save: {last_save}")
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:201",
-            exc=exc,
-            context={"function": "_schedule_read", "handler_line": 201, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_schedule_read', 201)
         return ToolResult("schedule_read", "", False, str(exc))
 
     if not parts:
@@ -264,13 +230,7 @@ def _memory_read(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
                     if recalls:
                         parts.append("recent recalls: " + " | ".join(str(r) for r in recalls))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:223",
-                exc=_aurora_boundary_exc,
-                context={"function": "_memory_read", "handler_line": 223, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_memory_read', 223)
             pass
 
         # OETS working concepts
@@ -281,13 +241,7 @@ def _memory_read(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
                 if concepts:
                     parts.append("active oets concepts: " + ", ".join(str(c) for c in concepts))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:233",
-                exc=_aurora_boundary_exc,
-                context={"function": "_memory_read", "handler_line": 233, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_memory_read', 233)
             pass
 
         # Working memory snapshot
@@ -301,13 +255,7 @@ def _memory_read(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
                 if learned:
                     parts.append("learned this session: " + ", ".join(str(x) for x in learned))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:246",
-                exc=_aurora_boundary_exc,
-                context={"function": "_memory_read", "handler_line": 246, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_memory_read', 246)
             pass
 
     if not parts:
@@ -336,13 +284,7 @@ def _file_read(path: str = "", **_) -> ToolResult:
         text = target.read_text(errors="replace")[:2000]
         return ToolResult("file_read", text, True)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:274",
-            exc=exc,
-            context={"function": "_file_read", "handler_line": 274, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_file_read', 274)
         return ToolResult("file_read", "", False, str(exc))
 
 
@@ -398,13 +340,7 @@ def _visual_analysis(
                     )
                     visual_source_used = "camera"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:329",
-                exc=_aurora_boundary_exc,
-                context={"function": "_visual_analysis", "handler_line": 329, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_visual_analysis', 329)
             pass
 
     # Fallback (or primary when screen is requested): screen_observer → what's on display
@@ -417,13 +353,7 @@ def _visual_analysis(
                     structural_summary = desc
                     visual_source_used = "screen_observer"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:341",
-                exc=_aurora_boundary_exc,
-                context={"function": "_visual_analysis", "handler_line": 341, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_visual_analysis', 341)
             pass
 
     if not structural_summary:
@@ -486,13 +416,7 @@ def _audio_analysis(
                 )
                 audio_source_used = "system_monitor"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:403",
-                exc=_aurora_boundary_exc,
-                context={"function": "_audio_analysis", "handler_line": 403, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_audio_analysis', 403)
             pass
 
     if not temporal_summary:
@@ -508,13 +432,7 @@ def _audio_analysis(
                     temporal_summary = f"mic: category={_cat}, level={_vol:.2f}"
                     audio_source_used = "microphone"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:418",
-                exc=_aurora_boundary_exc,
-                context={"function": "_audio_analysis", "handler_line": 418, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_audio_analysis', 418)
             pass
 
     if not temporal_summary:
@@ -537,13 +455,7 @@ def _audio_analysis(
                 )
                 audio_source_used = "ambient_snapshot"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:440",
-                exc=_aurora_boundary_exc,
-                context={"function": "_audio_analysis", "handler_line": 440, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_audio_analysis', 440)
             pass
 
     if not temporal_summary:
@@ -599,13 +511,7 @@ def _challenge_my_conclusion(
                     counter_confidence = 0.55
                     break
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:495",
-            exc=_aurora_boundary_exc,
-            context={"function": "_challenge_my_conclusion", "handler_line": 495, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_challenge_my_conclusion', 495)
         pass
 
     if counter_confidence < 0.1:
@@ -648,13 +554,7 @@ def _query_crystal_state(systems: Optional[Dict[str, Any]] = None, **_) -> ToolR
             if dmm_state:
                 parts.append(f"alignment: {float(getattr(dmm_state, 'alignment', 0.0)):.2f}")
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:537",
-            exc=exc,
-            context={"function": "_query_crystal_state", "handler_line": 537, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_query_crystal_state', 537)
         parts.append(f"crystal state unreadable: {exc}")
     if not parts:
         return ToolResult("query_crystal_state", "", False, "no crystal data accessible")
@@ -676,13 +576,7 @@ def _query_sedimemory_strata(systems: Optional[Dict[str, Any]] = None, **_) -> T
             if hasattr(sm, "decay_state"):
                 parts.append(f"decay_state: {sm.decay_state}")
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:558",
-            exc=exc,
-            context={"function": "_query_sedimemory_strata", "handler_line": 558, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_query_sedimemory_strata', 558)
         parts.append(f"sedimemory unreadable: {exc}")
     if not parts:
         return ToolResult("query_sedimemory_strata", "", False, "no sedimemory data accessible")
@@ -702,13 +596,7 @@ def _query_genealogy_recent(systems: Optional[Dict[str, Any]] = None, **_) -> To
         if genealogy and hasattr(genealogy, "fitness_score"):
             parts.append(f"fitness: {float(genealogy.fitness_score):.3f}")
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:577",
-            exc=exc,
-            context={"function": "_query_genealogy_recent", "handler_line": 577, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_query_genealogy_recent', 577)
         parts.append(f"genealogy unreadable: {exc}")
     if not parts:
         return ToolResult("query_genealogy_recent", "", False, "no genealogy data accessible")
@@ -726,13 +614,7 @@ def _query_unresolved_tensions(systems: Optional[Dict[str, Any]] = None, **_) ->
             for item in open_loops[-3:]:
                 parts.append(f"  tension: {str(item.get('tension', ''))[:60]}")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:594",
-            exc=_aurora_boundary_exc,
-            context={"function": "_query_unresolved_tensions", "handler_line": 594, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_query_unresolved_tensions', 594)
         pass
     try:
         from aurora_self_grounding import get_self_boundary_map
@@ -740,13 +622,7 @@ def _query_unresolved_tensions(systems: Optional[Dict[str, Any]] = None, **_) ->
         if bmap.get("not_me_count"):
             parts.append(f"not-me register: {bmap['not_me_count']} entries")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:601",
-            exc=_aurora_boundary_exc,
-            context={"function": "_query_unresolved_tensions", "handler_line": 601, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_query_unresolved_tensions', 601)
         pass
     if not parts:
         return ToolResult("query_unresolved_tensions", "no unresolved tensions detected", True)
@@ -767,13 +643,7 @@ def _query_sunni_pattern(systems: Optional[Dict[str, Any]] = None, **_) -> ToolR
             if learned:
                 parts.append("session_learned: " + ", ".join(str(x) for x in learned))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:621",
-            exc=_aurora_boundary_exc,
-            context={"function": "_query_sunni_pattern", "handler_line": 621, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_query_sunni_pattern', 621)
         pass
     try:
         conv = systems.get("conversation_memory")
@@ -782,13 +652,7 @@ def _query_sunni_pattern(systems: Optional[Dict[str, Any]] = None, **_) -> ToolR
             if intents:
                 parts.append("recent_intents: " + ", ".join(str(i) for i in intents))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:629",
-            exc=_aurora_boundary_exc,
-            context={"function": "_query_sunni_pattern", "handler_line": 629, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_query_sunni_pattern', 629)
         pass
     if not parts:
         return ToolResult("query_sunni_pattern", "", False, "no interaction pattern data accessible")
@@ -809,26 +673,14 @@ def _query_pressure_history(systems: Optional[Dict[str, Any]] = None, **_) -> To
                 for h in history[-5:]
             ))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:649",
-            exc=_aurora_boundary_exc,
-            context={"function": "_query_pressure_history", "handler_line": 649, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_query_pressure_history', 649)
         pass
     try:
         dimensional = systems.get("dimensional")
         if dimensional and hasattr(dimensional, "der"):
             parts.append(f"current_thermal: {float(dimensional.der.thermal_load):.2f}")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:655",
-            exc=_aurora_boundary_exc,
-            context={"function": "_query_pressure_history", "handler_line": 655, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_query_pressure_history', 655)
         pass
     if not parts:
         return ToolResult("query_pressure_history", "", False, "no pressure history accessible")
@@ -859,24 +711,12 @@ def _world_knowledge_search(
                     grounded = SelfGroundingFallback().ground(query, systems)
                     anchor = grounded.anchor_type
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/tool_registry.py:685",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_world_knowledge_search", "handler_line": 685, "source_file": "aurora_internal/tool_registry.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_world_knowledge_search', 685)
                     anchor = "external"
                 data = f"query: {query} | result: {snippet} | self_anchor: {anchor}"
                 return ToolResult("world_knowledge_search", data, True)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:689",
-            exc=_aurora_boundary_exc,
-            context={"function": "_world_knowledge_search", "handler_line": 689, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_world_knowledge_search', 689)
         pass
     # Fallback: just note the query was attempted
     return ToolResult(
@@ -918,13 +758,7 @@ def _corpus_download(url: str = "", filename: str = "", systems: Optional[Dict[s
             return ToolResult("corpus_download", f"Successfully downloaded new corpus to {path.name}. Storage rotated.", True)
         return ToolResult("corpus_download", "", False, "download failed")
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:730",
-            exc=exc,
-            context={"function": "_corpus_download", "handler_line": 730, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_corpus_download', 730)
         return ToolResult("corpus_download", "", False, str(exc))
 
 
@@ -974,13 +808,7 @@ def _corpus_hunter(topic: str = "", systems: Optional[Dict[str, Any]] = None, **
         return ToolResult("corpus_hunter", "", False, "Found link but download failed.")
 
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:779",
-            exc=exc,
-            context={"function": "_corpus_hunter", "handler_line": 779, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_corpus_hunter', 779)
         return ToolResult("corpus_hunter", "", False, str(exc))
 
 
@@ -1015,26 +843,14 @@ def _corpus_train(corpus_name: str = "", systems: Optional[Dict[str, Any]] = Non
                     coherence_window=200, unlock_avg=0.62, unlock_min=0.45, warmup_epochs=3
                 )
             except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/tool_registry.py:813",
-                    exc=e,
-                    context={"function": "run_training", "handler_line": 813, "source_file": "aurora_internal/tool_registry.py"},
-                )
+                _aurora_fault(locals(), e, 'run_training', 813)
                 with open("training_error.log", "a") as f:
                     f.write(f"Training thread failed: {e}\n")
 
         threading.Thread(target=run_training, daemon=True).start()
         return ToolResult("corpus_train", f"Training started in background on {corpus_name}.", True)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:819",
-            exc=exc,
-            context={"function": "_corpus_train", "handler_line": 819, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_corpus_train', 819)
         return ToolResult("corpus_train", "", False, str(exc))
 
 
@@ -1097,13 +913,7 @@ def _corpus_train_auto(systems: Optional[Dict[str, Any]] = None, **_) -> ToolRes
                 coherence_window=200, unlock_avg=0.62, unlock_min=0.45, warmup_epochs=3,
             )
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:859",
-                exc=exc,
-                context={"function": "_run", "handler_line": 859, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), exc, '_run', 859)
             with open(str(_base / "aurora_state" / "training_error.log"), "a") as f:
                 f.write(f"corpus_train_auto: {exc}\n")
 
@@ -1156,13 +966,7 @@ def _get_android_context():
         from com.chaquo.python import Python  # type: ignore
         return Python.getPlatform().getApplication()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:911",
-            exc=_aurora_boundary_exc,
-            context={"function": "_get_android_context", "handler_line": 911, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_get_android_context', 911)
         pass
     try:
         from android import mActivity  # type: ignore  (Activity context, fallback)
@@ -1186,13 +990,7 @@ def _chaquopy_launch_app(package: str) -> tuple:
             ctx.startActivity(market_intent)
             return False, f"{package} isn't installed — opening Play Store"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:934",
-                exc=_aurora_boundary_exc,
-                context={"function": "_chaquopy_launch_app", "handler_line": 934, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_chaquopy_launch_app', 934)
             pass
         return False, f"{package} isn't installed on this device"
     launch_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -1215,31 +1013,13 @@ def _termux_run(cmd: list, timeout: int = 15) -> tuple:
         r = _subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         return r.stdout.strip(), r.stderr.strip(), r.returncode
     except _subprocess.TimeoutExpired as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:956",
-            exc=_aurora_boundary_exc,
-            context={"function": "_termux_run", "handler_line": 956, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_termux_run', 956)
         return "", "timeout", 1
     except FileNotFoundError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:958",
-            exc=_aurora_boundary_exc,
-            context={"function": "_termux_run", "handler_line": 958, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_termux_run', 958)
         return "", f"{cmd[0]} not found — install termux-api package", 127
     except Exception as e:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:960",
-            exc=e,
-            context={"function": "_termux_run", "handler_line": 960, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), e, '_termux_run', 960)
         return "", str(e), 1
 
 
@@ -1383,13 +1163,7 @@ def _resolve_app_package(name: str) -> Optional[str]:
                     return m
             return matches[0]
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1081",
-            exc=_aurora_boundary_exc,
-            context={"function": "_resolve_app_package", "handler_line": 1081, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_resolve_app_package', 1081)
         pass
     return None
 
@@ -1411,13 +1185,7 @@ def _mobile_launch_app(package: str = "", systems: Optional[Dict[str, Any]] = No
             ok, msg = _chaquopy_launch_app(resolved)
             return ToolResult("mobile_launch_app", msg, ok, "" if ok else msg)
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:1097",
-                exc=exc,
-                context={"function": "_mobile_launch_app", "handler_line": 1097, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), exc, '_mobile_launch_app', 1097)
             return ToolResult("mobile_launch_app", "", False, str(exc))
     if not _is_termux():
         return ToolResult("mobile_launch_app", "", False, "not running on Android/Termux")
@@ -1456,13 +1224,7 @@ def _mobile_open_url(url: str = "", systems: Optional[Dict[str, Any]] = None, **
             ok, msg = _chaquopy_open_url(url)
             return ToolResult("mobile_open_url", msg, ok, "" if ok else msg)
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:1130",
-                exc=exc,
-                context={"function": "_mobile_open_url", "handler_line": 1130, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), exc, '_mobile_open_url', 1130)
             return ToolResult("mobile_open_url", "", False, str(exc))
     if not _is_termux():
         return ToolResult("mobile_open_url", "", False, "not running on Android/Termux")
@@ -1614,13 +1376,7 @@ def _mobile_image_search(
         if m:
             vqd = m.group(1)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1281",
-            exc=_aurora_boundary_exc,
-            context={"function": "_mobile_image_search", "handler_line": 1281, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_image_search', 1281)
         pass
 
     # Step 2: hit the image JSON endpoint
@@ -1646,13 +1402,7 @@ def _mobile_image_search(
                     "height": item.get("height", ""),
                 })
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:1306",
-                exc=_aurora_boundary_exc,
-                context={"function": "_mobile_image_search", "handler_line": 1306, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_image_search', 1306)
             pass
 
     # Open browser (always useful; only fallback if no programmatic results)
@@ -1804,13 +1554,7 @@ def _mobile_reverse_image_search(
                     f"upload to 0x0.st failed: {r.stderr or r.stdout}"
                 )
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:1383",
-                exc=e,
-                context={"function": "_mobile_reverse_image_search", "handler_line": 1383, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), e, '_mobile_reverse_image_search', 1383)
             return ToolResult("mobile_reverse_image_search", "", False, f"upload error: {e}")
 
     lens_url = (
@@ -1896,22 +1640,10 @@ def _mobile_music_identify(
                 stdout=_subprocess.DEVNULL, stderr=_subprocess.DEVNULL,
             )
         except FileNotFoundError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:1468",
-                exc=_aurora_boundary_exc,
-                context={"function": "_mobile_music_identify", "handler_line": 1468, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_music_identify', 1468)
             rc = 127
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/tool_registry.py:1470",
-                exc=_aurora_boundary_exc,
-                context={"function": "_mobile_music_identify", "handler_line": 1470, "source_file": "aurora_internal/tool_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_music_identify', 1470)
             rc = 1
 
         if rc == 0 and _rec_proc is not None:
@@ -1926,13 +1658,7 @@ def _mobile_music_identify(
                     )
                     time.sleep(0.8)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/tool_registry.py:1484",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_mobile_music_identify", "handler_line": 1484, "source_file": "aurora_internal/tool_registry.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_music_identify', 1484)
                     rc = 1
 
         if rc == 0 and _rec_proc is not None:
@@ -1944,23 +1670,11 @@ def _mobile_music_identify(
             try:
                 _rec_proc.wait(timeout=3)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/tool_registry.py:1495",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_mobile_music_identify", "handler_line": 1495, "source_file": "aurora_internal/tool_registry.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_music_identify', 1495)
                 try:
                     _rec_proc.terminate()
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/tool_registry.py:1498",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_mobile_music_identify", "handler_line": 1498, "source_file": "aurora_internal/tool_registry.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_music_identify', 1498)
                     pass
         out, err = "", ""
 
@@ -2025,13 +1739,7 @@ def _mobile_music_identify(
             try:
                 os.unlink(tmp_audio)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/tool_registry.py:1562",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_mobile_music_identify", "handler_line": 1562, "source_file": "aurora_internal/tool_registry.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_music_identify', 1562)
                 pass
 
 
@@ -2070,13 +1778,7 @@ def _desktop_open_url(url: str = "", headed: bool = True, systems: Optional[Dict
         data = f"url={result.get('url',url)} | title={result.get('title','?')} | ok={result.get('ok')}"
         return ToolResult("desktop_open_url", data, bool(result.get("ok")), result.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1594",
-            exc=exc,
-            context={"function": "_desktop_open_url", "handler_line": 1594, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_open_url', 1594)
         return ToolResult("desktop_open_url", "", False, str(exc))
 
 
@@ -2090,13 +1792,7 @@ def _desktop_search(query: str = "", engine: str = "google", headed: bool = True
         data = f"engine={engine} | query={query} | url={result.get('url','?')} | title={result.get('title','?')}"
         return ToolResult("desktop_search", data, bool(result.get("ok")), result.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1607",
-            exc=exc,
-            context={"function": "_desktop_search", "handler_line": 1607, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_search', 1607)
         return ToolResult("desktop_search", "", False, str(exc))
 
 
@@ -2156,13 +1852,7 @@ def _desktop_browser_action(action: str = "", target: str = "", text: str = "", 
                 )
         return ToolResult("desktop_browser_action", data, bool(r.get("ok")), r.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1635",
-            exc=exc,
-            context={"function": "_desktop_browser_action", "handler_line": 1635, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_browser_action', 1635)
         return ToolResult("desktop_browser_action", "", False, str(exc))
 
 
@@ -2176,13 +1866,7 @@ def _desktop_launch_app(app_name: str = "", systems: Optional[Dict[str, Any]] = 
         data = f"app={app_name} | launched={result.get('launched','?')}"
         return ToolResult("desktop_launch_app", data, bool(result.get("ok")), result.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1648",
-            exc=exc,
-            context={"function": "_desktop_launch_app", "handler_line": 1648, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_launch_app', 1648)
         return ToolResult("desktop_launch_app", "", False, str(exc))
 
 
@@ -2202,13 +1886,7 @@ def _desktop_system_action(op: str = "", confirm: bool = False, systems: Optiona
         data = f"op={op} | ok={result.get('ok')}"
         return ToolResult("desktop_system_action", data, bool(result.get("ok")), result.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1667",
-            exc=exc,
-            context={"function": "_desktop_system_action", "handler_line": 1667, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_system_action', 1667)
         return ToolResult("desktop_system_action", "", False, str(exc))
 
 
@@ -2224,13 +1902,7 @@ def _desktop_file_manager(op: str = "", path: str = "", dest: str = "", content:
             data += f"\n{res['content']}"
         return ToolResult("desktop_file_manager", data, bool(res.get("ok")), res.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1682",
-            exc=exc,
-            context={"function": "_desktop_file_manager", "handler_line": 1682, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_file_manager', 1682)
         return ToolResult("desktop_file_manager", "", False, str(exc))
 
 
@@ -2247,13 +1919,7 @@ def _desktop_shell_command(cmd: str = "", cwd: str = None, bg: bool = False, sys
             data = f"stdout:\n{res.get('stdout')}\n\nstderr:\n{res.get('stderr')}\nexitcode:{res.get('returncode')}"
         return ToolResult("desktop_shell_command", data, bool(res.get("ok")), res.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1698",
-            exc=exc,
-            context={"function": "_desktop_shell_command", "handler_line": 1698, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_shell_command', 1698)
         return ToolResult("desktop_shell_command", "", False, str(exc))
 
 
@@ -2267,13 +1933,7 @@ def _desktop_process_control(op: str = "", target: str = "", systems: Optional[D
         data = " | ".join(f"{k}={v}" for k,v in res.items() if k not in ("ok", "error"))
         return ToolResult("desktop_process_control", data, bool(res.get("ok")), res.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1711",
-            exc=exc,
-            context={"function": "_desktop_process_control", "handler_line": 1711, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_process_control', 1711)
         return ToolResult("desktop_process_control", "", False, str(exc))
 
 
@@ -2287,13 +1947,7 @@ def _desktop_macro(op: str = "", x: int = None, y: int = None, text: str = "", k
         data = " | ".join(f"{k}={v}" for k,v in res.items() if k not in ("ok", "error"))
         return ToolResult("desktop_macro", data, bool(res.get("ok")), res.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1724",
-            exc=exc,
-            context={"function": "_desktop_macro", "handler_line": 1724, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_macro', 1724)
         return ToolResult("desktop_macro", "", False, str(exc))
 
 
@@ -2307,13 +1961,7 @@ def _desktop_clipboard(op: str = "", text: str = "", systems: Optional[Dict[str,
         data = res.get("content", f"op={op} successful")
         return ToolResult("desktop_clipboard", data, bool(res.get("ok")), res.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1737",
-            exc=exc,
-            context={"function": "_desktop_clipboard", "handler_line": 1737, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_clipboard', 1737)
         return ToolResult("desktop_clipboard", "", False, str(exc))
 
 
@@ -2325,13 +1973,7 @@ def _desktop_media_capture(duration_s: float = 1.5, systems: Optional[Dict[str, 
         data = f"activity={res.get('activity')} | rms_db={res.get('rms_db')}"
         return ToolResult("desktop_media_capture", data, bool(res.get("available")), res.get("error",""))
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1748",
-            exc=exc,
-            context={"function": "_desktop_media_capture", "handler_line": 1748, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_desktop_media_capture', 1748)
         return ToolResult("desktop_media_capture", "", False, str(exc))
 
 
@@ -2382,13 +2024,7 @@ def _query_curiosity_log(max_entries: int = 5, **_) -> ToolResult:
                 )
                 entries.append(entry)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/tool_registry.py:1798",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_query_curiosity_log", "handler_line": 1798, "source_file": "aurora_internal/tool_registry.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_query_curiosity_log', 1798)
                 continue
 
         if not entries:
@@ -2396,13 +2032,7 @@ def _query_curiosity_log(max_entries: int = 5, **_) -> ToolResult:
 
         return ToolResult("query_curiosity_log", "\n\n---\n\n".join(entries), True)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1805",
-            exc=exc,
-            context={"function": "_query_curiosity_log", "handler_line": 1805, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, '_query_curiosity_log', 1805)
         return ToolResult("query_curiosity_log", "", False, str(exc))
 
 
@@ -2416,13 +2046,7 @@ def call(name: str, **kwargs: Any) -> ToolResult:
     try:
         return td.fn(**kwargs)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/tool_registry.py:1818",
-            exc=exc,
-            context={"function": "call", "handler_line": 1818, "source_file": "aurora_internal/tool_registry.py"},
-        )
+        _aurora_fault(locals(), exc, 'call', 1818)
         return ToolResult(name, "", False, str(exc))
 
 

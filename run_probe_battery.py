@@ -18,7 +18,8 @@ reporting, matching run_full_competency_gauntlet.py's own doctrine.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'run_probe_battery.py')
 
 import argparse
 import json
@@ -57,13 +58,7 @@ def _json_safe(value: Any) -> Any:
         json.dumps(value)
         return value
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:run_probe_battery.py:58",
-            exc=_aurora_boundary_exc,
-            context={"function": "_json_safe", "handler_line": 58, "source_file": "run_probe_battery.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_json_safe', 58)
         if isinstance(value, dict):
             return {str(k): _json_safe(v) for k, v in value.items()}
         if isinstance(value, (list, tuple)):
@@ -104,13 +99,7 @@ def _extract_delivered_response_text(
             response_text = str(getattr(gateway_response, "content", "") or "").strip()
             response["response_src"] = str(response.get("response_src") or "") or "gateway_fallback"
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_probe_battery.py:98",
-                exc=exc,
-                context={"function": "_extract_delivered_response_text", "handler_line": 98, "source_file": "run_probe_battery.py"},
-            )
+            _aurora_fault(locals(), exc, '_extract_delivered_response_text', 98)
             response["response_src"] = f"gateway_error:{exc.__class__.__name__}"
     return response_text
 
@@ -169,13 +158,7 @@ def _make_relevance_scorer(systems: Dict[str, Any]):
             hits = sum(1 for w in words if w in anchor)
             return hits / len(words)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_probe_battery.py:156",
-                exc=_aurora_boundary_exc,
-                context={"function": "scorer", "handler_line": 156, "source_file": "run_probe_battery.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'scorer', 156)
             return None
 
     return scorer
@@ -205,26 +188,14 @@ def run_probe_battery(run_id: str = "", verbose: bool = True, runtime_profile: s
         try:
             pre_snapshot = record_developmental_snapshot(systems, force=True)
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_probe_battery.py:185",
-                exc=exc,
-                context={"function": "run_probe_battery", "handler_line": 185, "source_file": "run_probe_battery.py"},
-            )
+            _aurora_fault(locals(), exc, 'run_probe_battery', 185)
             pre_snapshot = {"status": "unavailable", "reason": str(exc)}
 
         try:
             probes = load_probes(PROBES_PATH)
             probe_count = len(probes)
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_probe_battery.py:191",
-                exc=exc,
-                context={"function": "run_probe_battery", "handler_line": 191, "source_file": "run_probe_battery.py"},
-            )
+            _aurora_fault(locals(), exc, 'run_probe_battery', 191)
             return {
                 "run_id": run_id,
                 "status": "blocked",
@@ -240,13 +211,7 @@ def run_probe_battery(run_id: str = "", verbose: bool = True, runtime_profile: s
         try:
             post_snapshot = record_developmental_snapshot(systems, force=True)
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:run_probe_battery.py:206",
-                exc=exc,
-                context={"function": "run_probe_battery", "handler_line": 206, "source_file": "run_probe_battery.py"},
-            )
+            _aurora_fault(locals(), exc, 'run_probe_battery', 206)
             post_snapshot = {"status": "unavailable", "reason": str(exc)}
 
         result = report.to_dict()
@@ -285,13 +250,7 @@ def _read_last_articulation_trace() -> Optional[Dict[str, Any]]:
     try:
         return json.loads(_REAL_ARTICULATION_TRACE_PATH.read_text(encoding="utf-8"))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:run_probe_battery.py:244",
-            exc=_aurora_boundary_exc,
-            context={"function": "_read_last_articulation_trace", "handler_line": 244, "source_file": "run_probe_battery.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_read_last_articulation_trace', 244)
         return None
 
 
@@ -302,13 +261,7 @@ def _contradiction_ledger_count(systems: Dict[str, Any]) -> int:
     try:
         return len(ledger.all())
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:run_probe_battery.py:254",
-            exc=_aurora_boundary_exc,
-            context={"function": "_contradiction_ledger_count", "handler_line": 254, "source_file": "run_probe_battery.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_contradiction_ledger_count', 254)
         return 0
 
 
@@ -445,13 +398,7 @@ def run_golden_validation() -> Dict[str, Any]:
     try:
         results = validate_golden_transcripts(probes_path=PROBES_PATH, golden_path=GOLDEN_PATH)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:run_probe_battery.py:390",
-            exc=exc,
-            context={"function": "run_golden_validation", "handler_line": 390, "source_file": "run_probe_battery.py"},
-        )
+        _aurora_fault(locals(), exc, 'run_golden_validation', 390)
         return {"status": "blocked", "reason": f"could not run golden validation: {exc}"}
     summary = golden_validation_summary(results)
     return {

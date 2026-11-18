@@ -18,6 +18,8 @@ The same five constraints are applied at code level:
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_code_evolution_chamber.py')
 
 import ast
 import hashlib
@@ -31,13 +33,7 @@ from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Sequence, Tup
 try:
     from aurora_internal.lineage_canonical import operator_action_for_axis as _operator_action_for_axis
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:32",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 32, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 32)
     def _operator_action_for_axis(axis: str) -> str:
         mapping = {
             "X": "admissibility_gating",
@@ -87,13 +83,7 @@ def _rounded(value: Any, digits: int = 6) -> float:
     try:
         return round(float(value), int(digits))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:81",
-            exc=_aurora_boundary_exc,
-            context={"function": "_rounded", "handler_line": 81, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_rounded', 81)
         return 0.0
 
 
@@ -439,13 +429,7 @@ class CodeConstraintEvaluator:
             with open(path, "r", encoding="utf-8") as fh:
                 src = fh.read()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:426",
-                exc=_aurora_boundary_exc,
-                context={"function": "_compute_file_metrics", "handler_line": 426, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_compute_file_metrics', 426)
             return out
 
         lines = [ln for ln in src.splitlines() if ln.strip()]
@@ -457,13 +441,7 @@ class CodeConstraintEvaluator:
         try:
             tree = ast.parse(src, filename=path)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:437",
-                exc=_aurora_boundary_exc,
-                context={"function": "_compute_file_metrics", "handler_line": 437, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_compute_file_metrics', 437)
             out["syntax_failures"] = 1
             return out
 
@@ -1174,13 +1152,7 @@ class CodeEvolutionChamber:
             try:
                 change = float(after_val) - float(before_val)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:920",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_metric_deltas", "handler_line": 920, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_metric_deltas', 920)
                 continue
             if abs(change) <= 1e-9:
                 continue
@@ -1630,25 +1602,13 @@ class CodeEvolutionChamber:
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:1369",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 1369, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 1369)
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:1374",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 1374, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 1374)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

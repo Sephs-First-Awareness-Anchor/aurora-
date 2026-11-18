@@ -33,9 +33,8 @@ import hashlib
 import json
 import os
 import shutil
-import time
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 CHUNK_BYTES = 1024 * 1024
 

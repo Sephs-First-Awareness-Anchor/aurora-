@@ -42,6 +42,8 @@ Call wire_crystallization_loops(systems) once after boot_aurora().
 """
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_crystal_ingestion.py')
 
 from typing import Any, Dict
 
@@ -128,13 +130,7 @@ def _crystallize_pressure_exp(exp: Any, dps: Any) -> None:
         crystal.use()
         crystal.evolve()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_crystal_ingestion.py:96",
-            exc=_aurora_boundary_exc,
-            context={"function": "_crystallize_pressure_exp", "handler_line": 96, "source_file": "aurora_crystal_ingestion.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_crystallize_pressure_exp', 96)
         pass
 
 
@@ -407,13 +403,7 @@ def _route_behavioral_to_dps(sensory_engine: Any, dps: Any) -> None:
                 crystal.use()
                 crystal.evolve()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_crystal_ingestion.py:141",
-            exc=_aurora_boundary_exc,
-            context={"function": "_route_behavioral_to_dps", "handler_line": 141, "source_file": "aurora_crystal_ingestion.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_route_behavioral_to_dps', 141)
         pass
 
 
@@ -457,13 +447,7 @@ def maybe_sediment_frame(frame_dict: Dict[str, Any], sedimemory: Any) -> None:
             existence_mode=ExistenceMode.AGENTIC,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_crystal_ingestion.py:184",
-            exc=_aurora_boundary_exc,
-            context={"function": "maybe_sediment_frame", "handler_line": 184, "source_file": "aurora_crystal_ingestion.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'maybe_sediment_frame', 184)
         pass
 
 
@@ -473,13 +457,7 @@ def _install_dce_sediment_hook(dce_bridge: Any, sedimemory: Any) -> None:
         if dce_bridge is not None and sedimemory is not None:
             dce_bridge._sedimemory_ref = sedimemory
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_crystal_ingestion.py:193",
-            exc=_aurora_boundary_exc,
-            context={"function": "_install_dce_sediment_hook", "handler_line": 193, "source_file": "aurora_crystal_ingestion.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_install_dce_sediment_hook', 193)
         pass
 
 
@@ -544,13 +522,7 @@ def seed_dps_from_lexicon_and_oets(dps: Any, systems: Dict[str, Any]) -> int:
                 seeded += 1
 
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_crystal_ingestion.py:257",
-            exc=_aurora_boundary_exc,
-            context={"function": "seed_dps_from_lexicon_and_oets", "handler_line": 257, "source_file": "aurora_crystal_ingestion.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'seed_dps_from_lexicon_and_oets', 257)
         pass
     return seeded
 

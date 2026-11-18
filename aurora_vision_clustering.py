@@ -27,22 +27,19 @@ DEPENDENCIES (all optional -- degrades gracefully):
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_vision_clustering.py')
 
-import os
-import json
 import time
 import math
 import hashlib
 import logging
-import threading
 import urllib.request
 import urllib.parse
 from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass, field, asdict
-from pathlib import Path
-from collections import defaultdict
+from aurora_internal.aurora_shared_helpers import DictRecord
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +48,7 @@ try:
     from PIL import Image as PILImage
     _PIL_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_vision_clustering.py:52",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 52, "source_file": "aurora_vision_clustering.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 52)
     _PIL_AVAILABLE = False
     logger.info("[Vision] Pillow not installed. Install with: pip install Pillow")
 
@@ -65,13 +56,7 @@ try:
     import numpy as np
     _NP_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_vision_clustering.py:59",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 59, "source_file": "aurora_vision_clustering.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 59)
     import array
     _NP_AVAILABLE = False
 
@@ -82,7 +67,7 @@ except ImportError as _aurora_boundary_exc:
 # ============================================================================
 
 @dataclass
-class VisualFeatureVector:
+class VisualFeatureVector(DictRecord):
     """Feature vector for a single image."""
     image_path:   str
     image_hash:   str
@@ -111,14 +96,6 @@ class VisualFeatureVector:
             min(self.aspect_ratio, 3.0) / 3.0,
         ]
 
-    def to_dict(self) -> Dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> "VisualFeatureVector":
-        return cls(**{k: v for k, v in d.items()
-                      if k in cls.__dataclass_fields__})
-
 
 class FeatureExtractor:
     """
@@ -137,13 +114,7 @@ class FeatureExtractor:
             img = PILImage.open(image_path).convert("RGB")
             return self._extract_from_pil(image_path, img)
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_vision_clustering.py:124",
-                exc=e,
-                context={"function": "extract", "handler_line": 124, "source_file": "aurora_vision_clustering.py"},
-            )
+            _aurora_fault(locals(), e, 'extract', 124)
             logger.debug(f"[Vision] Feature extraction failed for {image_path}: {e}")
             return None
 
@@ -208,13 +179,7 @@ class FeatureExtractor:
                         edges += 1
             return edges / max(1, (sample_size - 1) ** 2)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_vision_clustering.py:188",
-                exc=_aurora_boundary_exc,
-                context={"function": "_estimate_edge_density", "handler_line": 188, "source_file": "aurora_vision_clustering.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_estimate_edge_density', 188)
             return 0.0
 
     def _stub_extract(self, path: str) -> VisualFeatureVector:
@@ -233,7 +198,7 @@ class FeatureExtractor:
 # ============================================================================
 
 @dataclass
-class VisualCluster:
+class VisualCluster(DictRecord):
     """A cluster of visually similar images."""
     cluster_id:    str
     centroid:      List[float]   # 8-dim centroid
@@ -260,14 +225,6 @@ class VisualCluster:
         distances = [_euclidean(self.centroid, v) for v in vectors]
         avg_dist = sum(distances) / len(distances)
         return max(0.0, 1.0 - avg_dist)
-
-    def to_dict(self) -> Dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> "VisualCluster":
-        return cls(**{k: v for k, v in d.items()
-                      if k in cls.__dataclass_fields__})
 
 
 def _euclidean(a: List[float], b: List[float]) -> float:
@@ -463,13 +420,7 @@ class OETSVisionBinder:
                     confidence=cluster.confidence,
                 )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_vision_clustering.py:436",
-                exc=_aurora_boundary_exc,
-                context={"function": "_bind_to_oets", "handler_line": 436, "source_file": "aurora_vision_clustering.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_bind_to_oets', 436)
             pass
 
 

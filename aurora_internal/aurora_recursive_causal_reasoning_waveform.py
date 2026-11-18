@@ -40,7 +40,7 @@ import math
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from aurora_persistence_utils import atomic_write_json
 from aurora_warp_protocol import CoverageGap, WarpCapable, WarpComponent, istates_to_axes

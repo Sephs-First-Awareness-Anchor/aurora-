@@ -39,7 +39,8 @@ a sustained exchange where a stated fact could plausibly be revisited).
 
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_contradiction_perception.py')
 import json
 import os
 
@@ -85,13 +86,7 @@ def _load_contradicts_pairs(state_dir):
             if src and tgt:
                 pairs.add(frozenset((src, tgt)))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_contradiction_perception.py:86",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_contradicts_pairs", "handler_line": 86, "source_file": "aurora_internal/aurora_contradiction_perception.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_contradicts_pairs', 86)
         return set()
     return pairs
 
@@ -125,22 +120,10 @@ def _recent_window_pairs(pair_log_path, current_turn_id, window_turns):
                 try:
                     records.append(json.loads(line))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_contradiction_perception.py:107",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_recent_window_pairs", "handler_line": 107, "source_file": "aurora_internal/aurora_contradiction_perception.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_recent_window_pairs', 107)
                     continue
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_contradiction_perception.py:109",
-            exc=_aurora_boundary_exc,
-            context={"function": "_recent_window_pairs", "handler_line": 109, "source_file": "aurora_internal/aurora_contradiction_perception.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_recent_window_pairs', 109)
         return []
 
     prior = [r for r in records if str(r.get("turn_id")) != str(current_turn_id)]
@@ -148,13 +131,7 @@ def _recent_window_pairs(pair_log_path, current_turn_id, window_turns):
         cur = int(current_turn_id)
         prior = [r for r in prior if _safe_int(r.get("turn_id")) is not None and _safe_int(r.get("turn_id")) < cur]
     except (TypeError, ValueError) as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_contradiction_perception.py:116",
-            exc=_aurora_boundary_exc,
-            context={"function": "_recent_window_pairs", "handler_line": 116, "source_file": "aurora_internal/aurora_contradiction_perception.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_recent_window_pairs', 116)
         pass
 
     distinct_turn_ids = sorted({r.get("turn_id") for r in prior}, key=lambda t: _safe_int(t) if _safe_int(t) is not None else -1)
@@ -256,12 +233,6 @@ def perceive_contradictions(user_text, systems, turn_id):
             )
             fired += 1
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_contradiction_perception.py:209",
-                exc=_aurora_boundary_exc,
-                context={"function": "perceive_contradictions", "handler_line": 209, "source_file": "aurora_internal/aurora_contradiction_perception.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'perceive_contradictions', 209)
             continue
     return fired

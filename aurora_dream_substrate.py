@@ -43,7 +43,7 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 POSITIVE_FACET_ROLES = ("achievement", "relief_event")
 NEGATIVE_FACET_ROLES = ("misstep",)

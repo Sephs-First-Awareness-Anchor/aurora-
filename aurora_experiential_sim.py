@@ -37,10 +37,10 @@ contexts_seen >= 3 with composability > 0.30 — so each axis theme repeats
 its structural shapes across distinct contexts, on purpose.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_experiential_sim.py')
 
 import argparse
-import json
 import os
 import sys
 import time
@@ -121,13 +121,7 @@ def collect_metrics(systems: Dict[str, Any]) -> Dict[str, Any]:
             if getattr(e, "noncomp_id", None)
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_experiential_sim.py:122",
-            exc=_aurora_boundary_exc,
-            context={"function": "collect_metrics", "handler_line": 122, "source_file": "aurora_experiential_sim.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'collect_metrics', 122)
         m["vocab_size"] = -1
 
     # Grammar motifs
@@ -139,13 +133,7 @@ def collect_metrics(systems: Dict[str, Any]) -> Dict[str, Any]:
         m["motifs_promoted"] = int(ml.get("promoted", 0) or 0)
         m["top_motif"] = str(st.get("top_motif", "") or "")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_experiential_sim.py:133",
-            exc=_aurora_boundary_exc,
-            context={"function": "collect_metrics", "handler_line": 133, "source_file": "aurora_experiential_sim.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'collect_metrics', 133)
         m["motifs_total"] = -1
         m["motifs_promoted"] = -1
 
@@ -158,13 +146,7 @@ def collect_metrics(systems: Dict[str, Any]) -> Dict[str, Any]:
             m["tension"] = round(float(frame.subsurface_tension), 4)
             m["salience"] = round(float(frame.surface_salience), 4)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_experiential_sim.py:145",
-            exc=_aurora_boundary_exc,
-            context={"function": "collect_metrics", "handler_line": 145, "source_file": "aurora_experiential_sim.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'collect_metrics', 145)
         pass
 
     # Ignition
@@ -175,13 +157,7 @@ def collect_metrics(systems: Dict[str, Any]) -> Dict[str, Any]:
             m["ignition_go"] = bool(ig.get("go", False))
             m["ignition_stages"] = [k for k, v in (ig.get("stages") or {}).items() if v]
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_experiential_sim.py:155",
-            exc=_aurora_boundary_exc,
-            context={"function": "collect_metrics", "handler_line": 155, "source_file": "aurora_experiential_sim.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'collect_metrics', 155)
         pass
 
     # Understanding contract
@@ -191,13 +167,7 @@ def collect_metrics(systems: Dict[str, Any]) -> Dict[str, Any]:
         if acc is not None:
             m["understanding_accuracy"] = round(float(acc), 3)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_experiential_sim.py:164",
-            exc=_aurora_boundary_exc,
-            context={"function": "collect_metrics", "handler_line": 164, "source_file": "aurora_experiential_sim.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'collect_metrics', 164)
         pass
 
     return m
@@ -295,13 +265,7 @@ def persist_everything(systems: Dict[str, Any]) -> None:
             cm.record_session_end()
             print("  [SAVE] Saved: conversation session record")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_experiential_sim.py:261",
-            exc=_aurora_boundary_exc,
-            context={"function": "persist_everything", "handler_line": 261, "source_file": "aurora_experiential_sim.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'persist_everything', 261)
         pass
 
 

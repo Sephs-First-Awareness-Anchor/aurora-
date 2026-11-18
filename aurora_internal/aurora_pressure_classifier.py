@@ -43,13 +43,14 @@ Sources used (in priority order):
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_pressure_classifier.py')
 
 import json
 import os
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 _AXES = ("X", "T", "N", "B", "A")
 
@@ -293,22 +294,10 @@ class PressureClassifier:
                             sums[ax]   += v
                             counts[ax] += 1
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_pressure_classifier.py:294",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_axis_pressure_from_log", "handler_line": 294, "source_file": "aurora_internal/aurora_pressure_classifier.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_axis_pressure_from_log', 294)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_classifier.py:296",
-                exc=_aurora_boundary_exc,
-                context={"function": "_axis_pressure_from_log", "handler_line": 296, "source_file": "aurora_internal/aurora_pressure_classifier.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_axis_pressure_from_log', 296)
             pass
         return {ax: round(sums[ax] / max(1, counts[ax]), 4) for ax in _AXES if counts[ax] > 0}
 
@@ -397,13 +386,7 @@ class PressureClassifier:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_pressure_classifier.py:384",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_json", "handler_line": 384, "source_file": "aurora_internal/aurora_pressure_classifier.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_json', 384)
             return {}
 
     def _path(self, rel: str) -> str:

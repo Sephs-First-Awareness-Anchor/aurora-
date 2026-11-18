@@ -17,7 +17,8 @@ Launch:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_hub.py')
 
 import gzip
 import os
@@ -185,13 +186,7 @@ def _augment_import_paths() -> None:
         try:
             resolved = str(candidate.resolve())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:178",
-                exc=_aurora_boundary_exc,
-                context={"function": "_augment_import_paths", "handler_line": 178, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_augment_import_paths', 178)
             resolved = str(candidate)
         if candidate.is_dir() and resolved not in sys.path:
             sys.path.append(resolved)
@@ -204,13 +199,7 @@ def _auto_install(package: str, import_name: str = "") -> bool:
         __import__(import_name)
         return True
     except ImportError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hub.py:190",
-            exc=_aurora_boundary_exc,
-            context={"function": "_auto_install", "handler_line": 190, "source_file": "aurora_hub.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_auto_install', 190)
         pass
     print(f"[Hub] Auto-installing {package} ...")
     import subprocess
@@ -230,38 +219,20 @@ def _ensure_matplotlib_available() -> None:
         import matplotlib  # noqa: F401
         return
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hub.py:209",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ensure_matplotlib_available", "handler_line": 209, "source_file": "aurora_hub.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_matplotlib_available', 209)
         _augment_import_paths()
     try:
         import matplotlib  # noqa: F401
         return
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hub.py:214",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ensure_matplotlib_available", "handler_line": 214, "source_file": "aurora_hub.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_matplotlib_available', 214)
         pass
     if _auto_install("matplotlib"):
         try:
             import matplotlib  # noqa: F401
             return
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:220",
-                exc=_aurora_boundary_exc,
-                context={"function": "_ensure_matplotlib_available", "handler_line": 220, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_matplotlib_available', 220)
             pass
     print("[Hub] Could not load matplotlib. Run: pip install matplotlib numpy")
     sys.exit(1)
@@ -272,26 +243,14 @@ def _ensure_numpy_available() -> None:
         import numpy  # noqa: F401
         return
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hub.py:230",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ensure_numpy_available", "handler_line": 230, "source_file": "aurora_hub.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_numpy_available', 230)
         pass
     if _auto_install("numpy"):
         try:
             import numpy  # noqa: F401
             return
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:236",
-                exc=_aurora_boundary_exc,
-                context={"function": "_ensure_numpy_available", "handler_line": 236, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_numpy_available', 236)
             pass
     print("[Hub] Could not load numpy. Run: pip install numpy")
     sys.exit(1)
@@ -340,13 +299,7 @@ class StateReader:
             try:
                 return json.loads(p.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:284",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_read", "handler_line": 284, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_read', 284)
                 pass
         return {}
 
@@ -355,13 +308,7 @@ class StateReader:
             try:
                 return json.loads(p.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:292",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_read_path", "handler_line": 292, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_read_path', 292)
                 pass
         return {}
 
@@ -379,13 +326,7 @@ class StateReader:
                     avgs.append(round(sum(scores) / len(scores), 4))
             return avgs
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:309",
-                exc=_aurora_boundary_exc,
-                context={"function": "_responder_trend", "handler_line": 309, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_responder_trend', 309)
             return []
 
     def _fail_trends(self, fp: Dict) -> Dict[str, str]:
@@ -413,13 +354,7 @@ class StateReader:
                 d = json.loads(p.read_text())
                 return len(d.get("entries", {}))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:336",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_lex_size", "handler_line": 336, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_lex_size', 336)
                 pass
         return 0
 
@@ -431,13 +366,7 @@ class StateReader:
             lines = p.read_text().splitlines()
             return lines[-n:] if len(lines) > n else lines
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:347",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_log", "handler_line": 347, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_log', 347)
             return []
 
     def _read_surface_log(self, n: int) -> List[str]:
@@ -448,13 +377,7 @@ class StateReader:
             lines = p.read_text().splitlines()
             return lines[-n:] if len(lines) > n else lines
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:357",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_surface_log", "handler_line": 357, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_surface_log', 357)
             return []
 
     def _unread_messages(self) -> int:
@@ -465,13 +388,7 @@ class StateReader:
             msgs = json.loads(p.read_text())
             return sum(1 for m in msgs if not m.get("read"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:367",
-                exc=_aurora_boundary_exc,
-                context={"function": "_unread_messages", "handler_line": 367, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_unread_messages', 367)
             return 0
 
     # ------------------------------------------------------------------
@@ -510,13 +427,7 @@ class StateReader:
                         if isinstance(issues_val, list) and len(issues_val) > 0:
                             results.append(stripped)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:405",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_read_qao_journal_issues", "handler_line": 405, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_read_qao_journal_issues', 405)
                         # Not valid JSON on its own -- include raw if it looks right
                         if '"issues": []' not in stripped and "'issues': []" not in stripped:
                             results.append(stripped)
@@ -524,13 +435,7 @@ class StateReader:
                     break
             results.reverse()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:412",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_qao_journal_issues", "handler_line": 412, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_qao_journal_issues', 412)
             pass
         return results
 
@@ -542,13 +447,7 @@ class StateReader:
             count = sum(1 for _ in itertools.islice(os.scandir(p), 50001))
             return count
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:423",
-                exc=_aurora_boundary_exc,
-                context={"function": "_count_dir", "handler_line": 423, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_count_dir', 423)
             return 0
 
     def _screen_frames(self) -> List[Dict[str, Any]]:
@@ -572,13 +471,7 @@ class StateReader:
                 })
             return result
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:446",
-                exc=_aurora_boundary_exc,
-                context={"function": "_screen_frames", "handler_line": 446, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_screen_frames', 446)
             return []
 
     def read_training(self) -> Dict[str, Any]:
@@ -695,13 +588,7 @@ class StateReader:
                     if len(d["recent"]) < 4:
                         d["recent"].append(f"[{ts_s}] {tone}  T={tension:.4f}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:562",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_all_layer_pressure", "handler_line": 562, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_all_layer_pressure', 562)
             pass
 
         # ── Leverage scalar computation ───────────────────────────────────────
@@ -734,13 +621,7 @@ class StateReader:
                 for a in ("X", "T", "N", "B", "A")
             }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:594",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_all_layer_pressure", "handler_line": 594, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_all_layer_pressure', 594)
             pass
 
         # ── L5: template_evolution.json ───────────────────────────────────────
@@ -751,13 +632,7 @@ class StateReader:
                 result["L5_template"]["pool_size"] = len(pool)
                 result["L5_template"]["generation"] = te.get("generation", 0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:604",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_all_layer_pressure", "handler_line": 604, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_all_layer_pressure', 604)
             pass
 
         # ── L6: aurora_state.json governance + crystal_genomes ────────────────
@@ -776,13 +651,7 @@ class StateReader:
                                 flat[f"{genome}.{dim}"] = gap
                 result["L6_behavioral"]["crystal_pressure"] = flat
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:622",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_all_layer_pressure", "handler_line": 622, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_all_layer_pressure', 622)
             pass
 
         # ── L7: evo_625_pressure_map.json ─────────────────────────────────────
@@ -807,13 +676,7 @@ class StateReader:
                     "axis_weight": axis_w,
                 })
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:646",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_all_layer_pressure", "handler_line": 646, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_all_layer_pressure', 646)
             pass
 
         # ── L7: surface_pressure_log.jsonl (last 100) ────────────────────────
@@ -837,13 +700,7 @@ class StateReader:
                         cooc[key] = cooc.get(key, 0) + 1
             result["L7_surface"]["axis_cooc"] = cooc
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:669",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_all_layer_pressure", "handler_line": 669, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_all_layer_pressure', 669)
             pass
 
         return result
@@ -876,25 +733,13 @@ class StateReader:
                         try:
                             entries.append(json.loads(line))
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_hub.py:701",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "read_pressure_log", "handler_line": 701, "source_file": "aurora_hub.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'read_pressure_log', 701)
                             pass
                         if len(entries) >= n:
                             break
             return list(reversed(entries[:n]))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:706",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_pressure_log", "handler_line": 706, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_pressure_log', 706)
             return []
 
     def _read_assimilated_count(self) -> int:
@@ -905,13 +750,7 @@ class StateReader:
             data = json.loads(p.read_text())
             return len(data) if isinstance(data, list) else 0
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:716",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_assimilated_count", "handler_line": 716, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_assimilated_count', 716)
             return 0
 
     def _read_pool_size(self) -> int:
@@ -930,13 +769,7 @@ class StateReader:
                 return len(data.get("operations", data.get("ops", [])))
             return 0
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:734",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_pool_size", "handler_line": 734, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_pool_size', 734)
             return 0
 
     def _read_evolved_count(self) -> Dict[str, int]:
@@ -965,13 +798,7 @@ class StateReader:
             reg = getattr(aes, "_SURFACE_REGISTRY", {})
             gen1 = len(reg) if isinstance(reg, dict) else 0
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:762",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_evolved_count", "handler_line": 762, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_evolved_count', 762)
             gen1 = 0
 
         if not p.exists():
@@ -990,13 +817,7 @@ class StateReader:
                            and o.get("_frontier"))
             return {"gen1": gen1, "gen2": gen2, "frontier": frontier}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:780",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_evolved_count", "handler_line": 780, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_evolved_count', 780)
             return {"gen1": gen1, "gen2": 0, "frontier": 0}
 
     def read_lineage(self) -> Dict[str, Any]:
@@ -1012,39 +833,21 @@ class StateReader:
             if p.exists():
                 links = json.loads(p.read_text())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:795",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_lineage", "handler_line": 795, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_lineage', 795)
             pass
         try:
             p = gen_dir / "abilities.json"
             if p.exists() or Path(str(p) + ".gz").exists():
                 abilities = _read_json_with_gzip_fallback(p)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:801",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_lineage", "handler_line": 801, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_lineage', 801)
             pass
         try:
             p = gen_dir / "tick_state.json"
             if p.exists():
                 tick_state = json.loads(p.read_text())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:807",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_lineage", "handler_line": 807, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_lineage', 807)
             pass
         try:
             p = gen_dir / "events.jsonl"
@@ -1064,23 +867,11 @@ class StateReader:
                         if len(events) >= 20:
                             break
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:826",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "read_lineage", "handler_line": 826, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'read_lineage', 826)
                         pass
                 events.reverse()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:829",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_lineage", "handler_line": 829, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_lineage', 829)
             pass
 
         # Depth distribution
@@ -1113,13 +904,7 @@ class StateReader:
         try:
             return json.loads(p.read_text()) or {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:861",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_sensory_crystal", "handler_line": 861, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_sensory_crystal', 861)
             return {}
 
     def read_dce_log(self, n: int = 200) -> List[Dict]:
@@ -1134,23 +919,11 @@ class StateReader:
                 try:
                     out.append(json.loads(ln))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:875",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "read_dce_log", "handler_line": 875, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'read_dce_log', 875)
                     pass
             return out
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:878",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_dce_log", "handler_line": 878, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_dce_log', 878)
             return []
 
     def read_sensory_telemetry(self, n: int = 200) -> List[Dict]:
@@ -1165,23 +938,11 @@ class StateReader:
                 try:
                     out.append(json.loads(ln))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:892",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "read_sensory_telemetry", "handler_line": 892, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'read_sensory_telemetry', 892)
                     pass
             return out
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:895",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_sensory_telemetry", "handler_line": 895, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_sensory_telemetry', 895)
             return []
 
     def read_manifold(self) -> Dict[str, Any]:
@@ -1200,13 +961,7 @@ class StateReader:
                 cnt = _Counter(v.get("axis", "?") for v in data.values())
                 ax_abilities = {k: cnt[k] for k in ("X", "T", "N", "B", "A")}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:913",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_manifold", "handler_line": 913, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_manifold', 913)
             pass
 
         # Couplings (axis transition counts)
@@ -1216,13 +971,7 @@ class StateReader:
             if p.exists():
                 couplings = json.loads(p.read_text())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:922",
-                exc=_aurora_boundary_exc,
-                context={"function": "read_manifold", "handler_line": 922, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'read_manifold', 922)
             pass
 
         return {
@@ -1389,25 +1138,13 @@ def _build_ui():
                             new_size = max(5, int(round(int(m.group(2)) * ratio)))
                             widget.config(font=f"{m.group(1)} {new_size}{m.group(3) or ''}")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:1088",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_rescale", "handler_line": 1088, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_rescale', 1088)
                 pass
             try:
                 for child in widget.winfo_children():
                     _rescale(child)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:1093",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_rescale", "handler_line": 1093, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_rescale', 1093)
                 pass
 
         _rescale(root)
@@ -1421,26 +1158,14 @@ def _build_ui():
                 new_size = max(5, int(round(int(m.group(2)) * ratio)))
                 st.configure("TNotebook.Tab", font=f"{m.group(1)} {new_size}{m.group(3) or ''}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:1106",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_zoom", "handler_line": 1106, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_zoom', 1106)
             pass
 
         pct = int(round(_zoom["level"] * 100))
         try:
             lbl_zoom.config(text=f"  {pct}%")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:1112",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_zoom", "handler_line": 1112, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_zoom', 1112)
             pass
 
     # ── Title bar (always visible above tabs) ────────────────────────────────
@@ -1500,13 +1225,7 @@ def _build_ui():
                 json.dump(payload, _f)
             os.replace(tmp, str(_STATE_DIR / "daemon_cmd.json"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:1171",
-                exc=_aurora_boundary_exc,
-                context={"function": "_write_cmd", "handler_line": 1171, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_write_cmd', 1171)
             pass
 
     def _read_state_file(path: Path, default: Any) -> Any:
@@ -1514,13 +1233,7 @@ def _build_ui():
             try:
                 return json.loads(path.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:1178",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_read_state_file", "handler_line": 1178, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_read_state_file', 1178)
                 pass
         return default
 
@@ -1573,26 +1286,14 @@ def _build_ui():
             try:
                 _QUIET_FLAG_PATH.unlink(missing_ok=True)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:1230",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_toggle_quiet", "handler_line": 1230, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_toggle_quiet', 1230)
                 pass
         else:
             _write_cmd({"cmd": "quiet"})
             try:
                 (_STATE_DIR / "quiet_mode").touch()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:1236",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_toggle_quiet", "handler_line": 1236, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_toggle_quiet', 1236)
                 pass
         root.after(300, _update_quiet_btn)
 
@@ -1943,13 +1644,7 @@ def _build_ui():
                 _pending_chat["id"] = _queue_surface_turn(text)
                 chat_quiet_lbl.config(text="[surface daemon]", fg=ACCENT2)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:1586",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_send_chat", "handler_line": 1586, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_send_chat', 1586)
                 _pending_chat["mode"] = "daemon"
                 _pending_chat["id"] = ""
                 _write_cmd({"cmd": "chat", "text": text})
@@ -2040,13 +1735,7 @@ def _build_ui():
                 )
             root.after(600, _poll_chat_response)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:1676",
-                exc=_aurora_boundary_exc,
-                context={"function": "_poll_chat_response", "handler_line": 1676, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_poll_chat_response', 1676)
             root.after(600, _poll_chat_response)
 
     def _draw_radar(fig, ax, labels, values, fill_color, line_color, title):
@@ -2192,13 +1881,7 @@ def _build_ui():
                 preview = ", ".join(str(i) for i in issues[:3])
                 display = f"[{ts_val}] {preview}\n"
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:1821",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_update_journal_feed", "handler_line": 1821, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_update_journal_feed', 1821)
                 display = raw[:120] + "\n"
             tag = _journal_axis_tag(display)
             journal_feed.insert(tk.END, display, tag)
@@ -3344,13 +3027,7 @@ def _build_ui():
                         if not ax_sum:
                             ax_sum = {k: [(k, v)] for k, v in _ax_counts.items()}
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:2966",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "refresh_overview", "handler_line": 2966, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_overview', 2966)
                         pass
                 top_dim = top_dims[0][0] if top_dims else "--"
                 corpus_info_labels["sensor_top"].config(text=top_dim[:24])
@@ -3368,13 +3045,7 @@ def _build_ui():
             _update_surface_log(data.get("surface_log_lines", []))
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:2983",
-                exc=e,
-                context={"function": "refresh_overview", "handler_line": 2983, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), e, 'refresh_overview', 2983)
             _update_log([f"[hub error] {e}"])
 
         root.after(REFRESH_MS, refresh_overview)
@@ -3463,13 +3134,7 @@ def _build_ui():
                             "the observer writes its first journal entries.\n",
                             "default_j")
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:3071",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "refresh_qao", "handler_line": 3071, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_qao', 3071)
                         journal_feed.insert(tk.END,
                             "QAO observer directory is empty.\n"
                             "Will populate on next aurora daemon cycle.\n",
@@ -3495,13 +3160,7 @@ def _build_ui():
             )
 
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:3096",
-                exc=_aurora_boundary_exc,
-                context={"function": "refresh_qao", "handler_line": 3096, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_qao', 3096)
             pass
 
         root.after(REFRESH_QAO_MS, refresh_qao)
@@ -3611,13 +3270,7 @@ def _build_ui():
                         _deduped.append(_line_s)
                 vis_perception_lbl.config(text="\n".join(_deduped) if _deduped else "No visual perception yet.")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:3205",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_vision", "handler_line": 3205, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3205)
                 pass
 
             # Live frame image — camera first, screen fallback
@@ -3672,13 +3325,7 @@ def _build_ui():
                                        fg=TEXT_DIM, font=("Courier New", 8))
                     vis_frame_ts_lbl.config(text="CAMERA OFF" if not camera_allowed else "NO SIGNAL")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:3259",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_vision", "handler_line": 3259, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3259)
                 pass
 
             # Scene log from frame mtimes (derive scene info from filenames + size)
@@ -3695,13 +3342,7 @@ def _build_ui():
                     if not isinstance(scene_entries, list):
                         scene_entries = []
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:3275",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "refresh_vision", "handler_line": 3275, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3275)
                     # File may be truncated mid-write — recover valid entries
                     # Strategy 1: find complete {...} blobs handling nested [] arrays
                     try:
@@ -3721,23 +3362,11 @@ def _build_ui():
                                     try:
                                         scene_entries.append(json.loads(raw[start:i+1]))
                                     except Exception as _aurora_boundary_exc:
-                                        _aurora_record_exception_from_locals(
-                                            locals(),
-                                            module=__name__,
-                                            operation="exception_handler:aurora_hub.py:3294",
-                                            exc=_aurora_boundary_exc,
-                                            context={"function": "refresh_vision", "handler_line": 3294, "source_file": "aurora_hub.py"},
-                                        )
+                                        _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3294)
                                         pass
                                     start = None
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:3297",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "refresh_vision", "handler_line": 3297, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3297)
                         pass
                     # Strategy 2: if still empty, regex-extract key fields from partial text
                     if not scene_entries and obs_state.exists():
@@ -3759,13 +3388,7 @@ def _build_ui():
                             if "brightness" in partial:
                                 scene_entries = [partial]
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_hub.py:3318",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "refresh_vision", "handler_line": 3318, "source_file": "aurora_hub.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3318)
                             scene_entries = []
 
             if not scene_entries:
@@ -3789,13 +3412,7 @@ def _build_ui():
                             "camera_live": age < 10.0,
                         }]
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:3341",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "refresh_vision", "handler_line": 3341, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3341)
                         scene_entries = []
 
             if not scene_entries:
@@ -3823,13 +3440,7 @@ def _build_ui():
                             "trigger": str(surface_snapshot.get("trigger", "") or ""),
                         }]
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:3368",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "refresh_vision", "handler_line": 3368, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3368)
                     scene_entries = []
 
             if scene_entries:
@@ -3943,13 +3554,7 @@ def _build_ui():
                     vectors_n  = vi.get("vector_count", len(vi.get("vectors", vi.get("feature_vectors", {}))))
                     oets_bound = sum(1 for c in _vi_clusters.values() if c.get("oets_bound"))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:3481",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "refresh_vision", "handler_line": 3481, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3481)
                     pass
 
             # Sensory crystal visual facets
@@ -3969,13 +3574,7 @@ def _build_ui():
                     _sc_motion_m = _vis.get("motion", {}).get("maturity", 0)
                     _sc_total    = _sc.get("total_frames", "--")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:3500",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "refresh_vision", "handler_line": 3500, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3500)
                     pass
 
             screen_count = frame_count
@@ -4061,23 +3660,11 @@ def _build_ui():
                         "dim")
                 vis_telem_box.configure(state=tk.DISABLED)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:3585",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_vision", "handler_line": 3585, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3585)
                 pass
 
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:3588",
-                exc=_aurora_boundary_exc,
-                context={"function": "refresh_vision", "handler_line": 3588, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_vision', 3588)
             pass
 
         root.after(REFRESH_VISION_MS, refresh_vision)
@@ -4118,13 +3705,7 @@ def _build_ui():
                     else:
                         aud_mic_lbl.config(text="● MIC OFF", fg="#f97316")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:3628",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_audio", "handler_line": 3628, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_audio', 3628)
                 pass
 
             # ── "WHAT I HEAR" — display Aurora's own module output ──
@@ -4155,13 +3736,7 @@ def _build_ui():
                         _deduped.append(_line_s)
                 aud_perception_lbl.config(text="\n".join(_deduped) if _deduped else "No audio perception yet.")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:3658",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_audio", "handler_line": 3658, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_audio', 3658)
                 pass
 
             # ── Live ambient audio ────────────────────────────────────────
@@ -4196,13 +3771,7 @@ def _build_ui():
                 else:
                     _live_ts_lbl.config(text="no data yet")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:3692",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_audio", "handler_line": 3692, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_audio', 3692)
                 pass
 
             sc = reader.read_sensory_crystal()
@@ -4231,25 +3800,13 @@ def _build_ui():
                         try:
                             _aud_fig_ref["canvas"].get_tk_widget().destroy()
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_hub.py:3720",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "refresh_audio", "handler_line": 3720, "source_file": "aurora_hub.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_audio', 3720)
                             pass
                     if _aud_fig_ref["fig"] is not None:
                         try:
                             _plt.close(_aud_fig_ref["fig"])
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_hub.py:3725",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "refresh_audio", "handler_line": 3725, "source_file": "aurora_hub.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_audio', 3725)
                             pass
 
                     fig, axes = _plt.subplots(1, 2, figsize=(8, 2.2), facecolor=BG_PANEL)
@@ -4286,13 +3843,7 @@ def _build_ui():
                     _aud_fig_ref["fig"]    = fig
                     _aud_fig_ref["canvas"] = canvas
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:3761",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "refresh_audio", "handler_line": 3761, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_audio', 3761)
                     pass
 
                 # ── Cross-modal lanes ─────────────────────────────────────
@@ -4380,13 +3931,7 @@ def _build_ui():
                     aud_telem_box.insert(tk.END,
                         "\n  First promotions appear here once facets mature.\n", "dim")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:3848",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "refresh_audio", "handler_line": 3848, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_audio', 3848)
                     aud_telem_box.insert(tk.END, "Crystal initializing...\n", "dim")
             aud_telem_box.see(tk.END)
             aud_telem_box.configure(state=tk.DISABLED)
@@ -4442,13 +3987,7 @@ def _build_ui():
             dce_log_box.configure(state=tk.DISABLED)
 
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:3903",
-                exc=_aurora_boundary_exc,
-                context={"function": "refresh_audio", "handler_line": 3903, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_audio', 3903)
             pass
         root.after(REFRESH_AUDIO_MS, refresh_audio)
 
@@ -4626,13 +4165,7 @@ def _build_ui():
                     band_text += "  ⟶ RELIEF ACTIVE"
                     band_color = "#f59e0b"
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:4080",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_evolution", "handler_line": 4080, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_evolution', 4080)
                 pass
             evo_l4g_labels["band"].config(text=f"band: {band_text}", fg=band_color)
             evo_l4g_labels["net"].config(
@@ -4972,13 +4505,7 @@ def _build_ui():
                     )
                     evo_directive_box.configure(state=tk.DISABLED)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:4419",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "refresh_evolution", "handler_line": 4419, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_evolution', 4419)
                     pass
 
             # ── Daemon activity log ───────────────────────────────────────────
@@ -5029,36 +4556,18 @@ def _build_ui():
                     evo_activity_box.see(tk.END)
                 evo_activity_box.configure(state=tk.DISABLED)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:4469",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_evolution", "handler_line": 4469, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_evolution', 4469)
                 pass
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:4472",
-                exc=e,
-                context={"function": "refresh_evolution", "handler_line": 4472, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), e, 'refresh_evolution', 4472)
             try:
                 evo_directive_box.configure(state=tk.NORMAL)
                 evo_directive_box.delete("1.0", tk.END)
                 evo_directive_box.insert(tk.END, f"[refresh error] {e}\n", "dim")
                 evo_directive_box.configure(state=tk.DISABLED)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:4478",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_evolution", "handler_line": 4478, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_evolution', 4478)
                 pass
 
         root.after(REFRESH_EVO_MS, refresh_evolution)
@@ -5196,26 +4705,14 @@ def _build_ui():
                 trn_log_box.configure(state=tk.DISABLED)
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:4615",
-                exc=e,
-                context={"function": "refresh_training", "handler_line": 4615, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), e, 'refresh_training', 4615)
             try:
                 trn_log_box.configure(state=tk.NORMAL)
                 trn_log_box.delete("1.0", tk.END)
                 trn_log_box.insert(tk.END, f"[refresh error] {e}\n", "dim")
                 trn_log_box.configure(state=tk.DISABLED)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:4621",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_training", "handler_line": 4621, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_training', 4621)
                 pass
 
         root.after(REFRESH_TRAINING_MS, refresh_training)
@@ -5336,13 +4833,7 @@ def _build_ui():
                     f"links:{ticks}"
                 ) if isinstance(tick_count, int) else f"links:{ticks}")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:5046",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_manifold", "handler_line": 5046, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_manifold', 5046)
                 mf_ticks_lbl.config(text=f"links:{ticks}")
 
             # ── Axis pressure radar ──────────────────────────────────────
@@ -5405,26 +4896,14 @@ def _build_ui():
             mf_anchors.configure(state=tk.DISABLED)
 
         except Exception as _e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5108",
-                exc=_e,
-                context={"function": "refresh_manifold", "handler_line": 5108, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _e, 'refresh_manifold', 5108)
             try:
                 mf_anchors.configure(state=tk.NORMAL)
                 mf_anchors.delete("1.0", tk.END)
                 mf_anchors.insert(tk.END, f"[error] {_e}", "dim")
                 mf_anchors.configure(state=tk.DISABLED)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:5114",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_manifold", "handler_line": 5114, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_manifold', 5114)
                 pass
         root.after(REFRESH_MANIFOLD_MS, refresh_manifold)
 
@@ -5580,13 +5059,7 @@ def _build_ui():
                             try:
                                 return float(val)
                             except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora_hub.py:5269",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "_safe_f", "handler_line": 5269, "source_file": "aurora_hub.py"},
-                                )
+                                _aurora_fault(locals(), _aurora_boundary_exc, '_safe_f', 5269)
                                 return default
 
                         cost_raw = ev.get("trace_cost_total", 0.0)
@@ -5620,39 +5093,21 @@ def _build_ui():
                             ln_events_box.insert(tk.END, f"  {notes}", "tick")
                         ln_events_box.insert(tk.END, "\n")
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:5302",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "refresh_lineage", "handler_line": 5302, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_lineage', 5302)
                         ln_events_box.insert(tk.END, f"[event parse error]\n", "tick")
             else:
                 ln_events_box.insert(tk.END, "no lineage events yet\n", "tick")
             ln_events_box.configure(state=tk.DISABLED)
 
         except Exception as _e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5308",
-                exc=_e,
-                context={"function": "refresh_lineage", "handler_line": 5308, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _e, 'refresh_lineage', 5308)
             try:
                 ln_events_box.configure(state=tk.NORMAL)
                 ln_events_box.delete("1.0", tk.END)
                 ln_events_box.insert(tk.END, f"[error] {_e}\n", "tick")
                 ln_events_box.configure(state=tk.DISABLED)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:5314",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "refresh_lineage", "handler_line": 5314, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_lineage', 5314)
                 pass
         root.after(REFRESH_LINEAGE_MS, refresh_lineage)
 
@@ -5802,13 +5257,7 @@ def _build_ui():
             dg_log_box.see(tk.END)
             dg_log_box.configure(state=tk.DISABLED)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5463",
-                exc=_aurora_boundary_exc,
-                context={"function": "_dg_log", "handler_line": 5463, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_dg_log', 5463)
             pass
 
     def _dg_clear_log() -> None:
@@ -5817,13 +5266,7 @@ def _build_ui():
             dg_log_box.delete("1.0", tk.END)
             dg_log_box.configure(state=tk.DISABLED)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5471",
-                exc=_aurora_boundary_exc,
-                context={"function": "_dg_clear_log", "handler_line": 5471, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_dg_clear_log', 5471)
             pass
 
     # ── live runtime checks ───────────────────────────────────────────────────
@@ -5840,13 +5283,7 @@ def _build_ui():
                 with open(_STATE_DIR / name, encoding="utf-8") as f:
                     return json.load(f)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:5487",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_read_json", "handler_line": 5487, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_read_json', 5487)
                 return {}
 
         def _check(label, ok, warn_msg="", crit=False):
@@ -5928,13 +5365,7 @@ def _build_ui():
                         for ax in (obj.get("expected_axes") or []):
                             if ax in counts: counts[ax] += 1
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:5568",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_live_checks", "handler_line": 5568, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_checks', 5568)
                         pass
                 total = sum(counts.values())
                 if total > 0:
@@ -5948,13 +5379,7 @@ def _build_ui():
                                    f"X:{counts['X']} T:{counts['T']} "
                                    f"N:{counts['N']} B:{counts['B']} A:{counts['A']}"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5581",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_checks", "handler_line": 5581, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_checks', 5581)
             pass
 
         # ── pressure_experiences Gate counts ──────────────────────────────────
@@ -5980,13 +5405,7 @@ def _build_ui():
                         if g == 4: gate4 += 1
                         elif g == 5: gate5 += 1
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_hub.py:5606",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_live_checks", "handler_line": 5606, "source_file": "aurora_hub.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_checks', 5606)
                         pass
                 total = gate4 + gate5
                 if total > 0:
@@ -5998,13 +5417,7 @@ def _build_ui():
                     checks.append(("dim", "Gate rejects (last 500)",
                                    f"Gate4={gate4}  Gate5={gate5}"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5617",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_checks", "handler_line": 5617, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_checks', 5617)
             pass
 
         # ── links.json ────────────────────────────────────────────────────────
@@ -6018,13 +5431,7 @@ def _build_ui():
                 checks.append(("dim", "Chain links on disk",
                                 f"{len(ldata)} links in links.json"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5630",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_live_checks", "handler_line": 5630, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_checks', 5630)
             pass
 
         return checks
@@ -6056,13 +5463,7 @@ def _build_ui():
                 summary_sev)
             dg_checks_box.configure(state=tk.DISABLED)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5661",
-                exc=_aurora_boundary_exc,
-                context={"function": "_refresh_diag_live", "handler_line": 5661, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_diag_live', 5661)
             pass
         root.after(REFRESH_DIAG_MS, _refresh_diag_live)
 
@@ -6076,13 +5477,7 @@ def _build_ui():
             with open(DIAG_REPORT, encoding="utf-8") as f:
                 report = json.load(f)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5674",
-                exc=_aurora_boundary_exc,
-                context={"function": "_dg_load_report", "handler_line": 5674, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_dg_load_report', 5674)
             return
         # Exclude sweep proposals — those live on the Governor tab only
         all_props = report.get("proposals", [])
@@ -6161,13 +5556,7 @@ def _build_ui():
                 proc.wait()
                 root.after(0, _dg_scan_done, proc.returncode)
             except Exception as exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:5752",
-                    exc=exc,
-                    context={"function": "_run", "handler_line": 5752, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), exc, '_run', 5752)
                 root.after(0, lambda _exc=exc: _dg_log(f"[scan error] {_exc}"))
                 root.after(0, _dg_scan_done, -1)
 
@@ -6199,13 +5588,7 @@ def _build_ui():
                 if records:
                     return records[-1]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:5783",
-                exc=_aurora_boundary_exc,
-                context={"function": "_dg_read_last_ledger_record", "handler_line": 5783, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_dg_read_last_ledger_record', 5783)
             pass
         return None
 
@@ -6245,25 +5628,13 @@ def _build_ui():
                 proc.wait(); os.unlink(tmp_path)
                 root.after(0, lambda rc=proc.returncode: _dg_deploy_done(rc, p))
             except FileNotFoundError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:5822",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run", "handler_line": 5822, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_run', 5822)
                 root.after(0, lambda: _dg_log(
                     "[warn] 'qae' not on PATH — run: cd ~/quasiarch/enforcer && pip install ."))
                 root.after(0, lambda: dg_deploy_btn.configure(
                     state=tk.NORMAL, text="✔  Deploy & Commit"))
             except Exception as exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:5827",
-                    exc=exc,
-                    context={"function": "_run", "handler_line": 5827, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), exc, '_run', 5827)
                 root.after(0, lambda _exc=exc: _dg_log(f"[enforcer error] {_exc}"))
                 root.after(0, lambda: _dg_deploy_done(-1, p))
 
@@ -6315,13 +5686,7 @@ def _build_ui():
                         cwd=str(_BASE_DIR), capture_output=True,
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:5877",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_learn", "handler_line": 5877, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_run_learn', 5877)
                     pass
             threading.Thread(target=_run_learn, daemon=True, name="diag-learn").start()
         else:
@@ -6392,13 +5757,7 @@ def _build_ui():
                     root.after(0, lambda: _dg_log("[reverse] backup restored + revert committed"))
                     reversed_ok = True
                 except Exception as exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:5947",
-                        exc=exc,
-                        context={"function": "_run", "handler_line": 5947, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), exc, '_run', 5947)
                     root.after(0, lambda _exc=exc: _dg_log(f"[reverse] backup restore failed: {_exc}"))
 
             # Attempt 2: git revert if backup gone but commit known
@@ -6415,13 +5774,7 @@ def _build_ui():
                         root.after(0, lambda: _dg_log(
                             f"[reverse] git revert failed: {res.stderr.strip()[:120]}"))
                 except Exception as exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:5963",
-                        exc=exc,
-                        context={"function": "_run", "handler_line": 5963, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), exc, '_run', 5963)
                     root.after(0, lambda _exc=exc: _dg_log(f"[reverse] git revert error: {_exc}"))
 
             if not reversed_ok:
@@ -6473,13 +5826,7 @@ def _build_ui():
                 proc.wait()
                 root.after(0, lambda rc=proc.returncode: _dg_sweep_done(rc))
             except Exception as exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6014",
-                    exc=exc,
-                    context={"function": "_run", "handler_line": 6014, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), exc, '_run', 6014)
                 root.after(0, lambda _exc=exc: _dg_log(f"[sweep error] {_exc}"))
                 root.after(0, lambda: _dg_sweep_done(-1))
 
@@ -6645,13 +5992,7 @@ def _build_ui():
                 return {ax: d_.get("axes",{}).get(ax, _AXIS_NAMES_DEFAULT.get(ax,ax))
                         for ax in _AXES_ORDER}
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6180",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_gov_load_aurora_labels", "handler_line": 6180, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_gov_load_aurora_labels', 6180)
                 pass
         return dict(_AXIS_NAMES_DEFAULT)
 
@@ -6771,13 +6112,7 @@ def _build_ui():
         try:
             data = json.loads(_SWEEP_RESULTS.read_text())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:6299",
-                exc=_aurora_boundary_exc,
-                context={"function": "_gov_load_sweep_results", "handler_line": 6299, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_gov_load_sweep_results', 6299)
             return
         ranked = data.get("ranked", [])
         results_by_label = {r["label"]: r for r in data.get("results", [])}
@@ -6789,13 +6124,7 @@ def _build_ui():
             try:
                 history = json.loads(_SWEEP_HISTORY.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6310",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_gov_load_sweep_results", "handler_line": 6310, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_gov_load_sweep_results', 6310)
                 pass
 
         completed_at = data.get("completed_at", 0)
@@ -6932,13 +6261,7 @@ def _build_ui():
                     else:
                         gov_overlay_lbl.configure(text="overlay: INACTIVE", fg=TEXT_DIM)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:6446",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_gov_refresh", "handler_line": 6446, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_gov_refresh', 6446)
                     pass
             else:
                 gov_overlay_lbl.configure(text="overlay: INACTIVE", fg=TEXT_DIM)
@@ -7010,23 +6333,11 @@ def _build_ui():
                         gov_energy_box.insert(tk.END, "  no active income — interact or complete a learning task\n", "dim")
                     gov_energy_box.configure(state=tk.DISABLED)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hub.py:6517",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_gov_refresh", "handler_line": 6517, "source_file": "aurora_hub.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_gov_refresh', 6517)
                     pass
 
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:6520",
-                exc=_aurora_boundary_exc,
-                context={"function": "_gov_refresh", "handler_line": 6520, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_gov_refresh', 6520)
             pass
 
         root.after(REFRESH_GOV_MS, _gov_refresh)
@@ -7060,13 +6371,7 @@ def _build_ui():
         else:
             voice_txt.insert(tk.END, "VOICE_COMMANDS.md not found.")
     except Exception as e:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_hub.py:6553",
-            exc=e,
-            context={"function": "_build_ui", "handler_line": 6553, "source_file": "aurora_hub.py"},
-        )
+        _aurora_fault(locals(), e, '_build_ui', 6553)
         voice_txt.insert(tk.END, f"Error loading voice commands: {e}")
     voice_txt.config(state=tk.DISABLED)
 
@@ -7110,13 +6415,7 @@ def _build_ui():
         try:
             _refresh_room()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:6596",
-                exc=_aurora_boundary_exc,
-                context={"function": "_set_room_view", "handler_line": 6596, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_set_room_view', 6596)
             pass
 
     for _mode, _label in (("surface", "Surface"), ("subsurface", "Subsurface")):
@@ -7268,13 +6567,7 @@ def _build_ui():
                 if not isinstance(msgs_, list):
                     msgs_ = []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6747",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_send_room_reply", "handler_line": 6747, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_send_room_reply', 6747)
                 msgs_ = []
         msgs_.append({
             "from":    "sunni",
@@ -7355,13 +6648,7 @@ def _build_ui():
                 if not isinstance(entries, list):
                     entries = []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6827",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_send_coaching", "handler_line": 6827, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_send_coaching', 6827)
                 pass
         entries.append({
             "type":            ctype,
@@ -7386,13 +6673,7 @@ def _build_ui():
                 if not isinstance(entries, list):
                     entries = []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6851",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_load_coach_history", "handler_line": 6851, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_load_coach_history', 6851)
                 pass
         room_coach_hist_box.configure(state=tk.NORMAL)
         room_coach_hist_box.delete("1.0", tk.END)
@@ -7481,13 +6762,7 @@ def _build_ui():
                 "ts_str":  time.strftime("%Y-%m-%d %H:%M:%S"),
             }))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hub.py:6939",
-                exc=_aurora_boundary_exc,
-                context={"function": "_refresh_room", "handler_line": 6939, "source_file": "aurora_hub.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 6939)
             pass
 
         # Read her labels
@@ -7496,13 +6771,7 @@ def _build_ui():
             try:
                 _rlabels = _json.loads(_LABELS_FILE.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6947",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_refresh_room", "handler_line": 6947, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 6947)
                 pass
         _axis_names_ = _rlabels.get("axes", {})
 
@@ -7518,13 +6787,7 @@ def _build_ui():
             try:
                 _ds = _json.loads(_ds_path.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6962",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_refresh_room", "handler_line": 6962, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 6962)
                 pass
 
         if _ds:
@@ -7561,26 +6824,14 @@ def _build_ui():
             try:
                 _dual_snapshot = _json.loads(_DUAL_STRATA_SNAPSHOT.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:6998",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_refresh_room", "handler_line": 6998, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 6998)
                 _dual_snapshot = {}
         _projection = {}
         if _SUBSURFACE_PROJECTION.exists():
             try:
                 _projection = _json.loads(_SUBSURFACE_PROJECTION.read_text())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:7004",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_refresh_room", "handler_line": 7004, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 7004)
                 _projection = {}
         _sub = dict(_dual_snapshot.get("subsurface_state", {}) or {})
         _surface = dict(_dual_snapshot.get("conscious_frame", {}) or {})
@@ -7683,13 +6934,7 @@ def _build_ui():
                 if not isinstance(_notes, list):
                     _notes = []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:7106",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_refresh_room", "handler_line": 7106, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 7106)
                 pass
         room_notes_box.configure(state=tk.NORMAL)
         room_notes_box.delete("1.0", tk.END)
@@ -7715,13 +6960,7 @@ def _build_ui():
                 if not isinstance(_msgs, list):
                     _msgs = []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:7131",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_refresh_room", "handler_line": 7131, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 7131)
                 pass
         room_msg_box.configure(state=tk.NORMAL)
         room_msg_box.delete("1.0", tk.END)
@@ -7749,13 +6988,7 @@ def _build_ui():
                 if not isinstance(_acts, list):
                     _acts = []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:7158",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_refresh_room", "handler_line": 7158, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 7158)
                 pass
         _change_entries: list = []
         for _e in _acts:
@@ -7819,13 +7052,7 @@ def _build_ui():
                 if not isinstance(_poe_entries, list):
                     _poe_entries = []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_hub.py:7221",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_refresh_room", "handler_line": 7221, "source_file": "aurora_hub.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_refresh_room', 7221)
                 pass
         poe_log_count_lbl.configure(
             text=f"  {len(_poe_entries)} total inquiries" if _poe_entries else "  no inquiries yet",

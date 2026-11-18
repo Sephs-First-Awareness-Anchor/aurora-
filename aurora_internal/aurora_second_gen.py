@@ -26,12 +26,13 @@ Key differences for gen-2 descriptors:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_second_gen.py')
 
 import json
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 _DESCRIPTOR_STATE_REL  = "aurora_state/operation_descriptors.json"
 _EVOLVED_SURFACE_FILE  = "aurora_internal/aurora_evolved_surfaces.py"
@@ -148,13 +149,7 @@ class SecondGenEvolutionInjector:
             if isinstance(reg, dict):
                 return dict(reg)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_second_gen.py:149",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_registry", "handler_line": 149, "source_file": "aurora_internal/aurora_second_gen.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_registry', 149)
             pass
         return {}
 
@@ -166,13 +161,7 @@ class SecondGenEvolutionInjector:
                 data = json.load(fh)
             return data if isinstance(data, dict) else None
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_second_gen.py:160",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_pool", "handler_line": 160, "source_file": "aurora_internal/aurora_second_gen.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_pool', 160)
             return None
 
     def _save_pool(self, path: str, state: Dict[str, Any]) -> None:
@@ -180,13 +169,7 @@ class SecondGenEvolutionInjector:
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(state, fh, indent=2, sort_keys=True, ensure_ascii=True)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_second_gen.py:167",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_pool", "handler_line": 167, "source_file": "aurora_internal/aurora_second_gen.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_save_pool', 167)
             pass
 
     def _surface_to_descriptor(
@@ -376,13 +359,7 @@ class SecondGenEvolutionInjector:
                 try:
                     counts[ax.strip()] = int(float(n_str.strip()))
                 except ValueError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_second_gen.py:356",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_weights_from_sig", "handler_line": 356, "source_file": "aurora_internal/aurora_second_gen.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_weights_from_sig', 356)
                     pass
             elif part and part in _AXES:
                 counts[part] = counts.get(part, 0) + 1

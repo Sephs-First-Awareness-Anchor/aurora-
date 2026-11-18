@@ -14,6 +14,8 @@ but the organism does not absorb the moment.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/surface_continuity_feed.py')
 
 import functools
 import json
@@ -21,7 +23,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 _FEED_FILENAME = "surface_continuity_feed.json"
 _MAX_PACKETS = 20
@@ -111,13 +113,7 @@ def write_continuity_packet(
                 if isinstance(raw, list):
                     existing = raw
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/dual_strata/surface_continuity_feed.py:95",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "write_continuity_packet", "handler_line": 95, "source_file": "aurora_internal/dual_strata/surface_continuity_feed.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'write_continuity_packet', 95)
                 existing = []
         existing.append(packet)
         existing = existing[-_MAX_PACKETS:]
@@ -125,13 +121,7 @@ def write_continuity_packet(
         tmp.write_text(json.dumps(existing, indent=2), encoding="utf-8")
         tmp.replace(feed_path)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/surface_continuity_feed.py:102",
-            exc=_aurora_boundary_exc,
-            context={"function": "write_continuity_packet", "handler_line": 102, "source_file": "aurora_internal/dual_strata/surface_continuity_feed.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'write_continuity_packet', 102)
         pass
 
     return packet_id
@@ -156,13 +146,7 @@ def read_and_clear_continuity_packets(state_dir: Any) -> List[Dict[str, Any]]:
         if not isinstance(raw, list):
             return []
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/surface_continuity_feed.py:125",
-            exc=_aurora_boundary_exc,
-            context={"function": "read_and_clear_continuity_packets", "handler_line": 125, "source_file": "aurora_internal/dual_strata/surface_continuity_feed.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'read_and_clear_continuity_packets', 125)
         return []
 
     pending = [p for p in raw if isinstance(p, dict) and not bool(p.get("consumed", False))]
@@ -181,13 +165,7 @@ def read_and_clear_continuity_packets(state_dir: Any) -> List[Dict[str, Any]]:
         tmp.write_text(json.dumps(raw, indent=2), encoding="utf-8")
         tmp.replace(feed_path)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/surface_continuity_feed.py:143",
-            exc=_aurora_boundary_exc,
-            context={"function": "read_and_clear_continuity_packets", "handler_line": 143, "source_file": "aurora_internal/dual_strata/surface_continuity_feed.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'read_and_clear_continuity_packets', 143)
         pass
 
     return pending

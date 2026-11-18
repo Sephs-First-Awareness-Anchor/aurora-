@@ -1,6 +1,6 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
-import sys, os, json, time, traceback
+import sys, os, time, traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from aurora import boot_aurora, _run_live_response_turn

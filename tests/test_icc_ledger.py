@@ -12,7 +12,6 @@ EntropySaturationDetector, MoralWeightLedger, and FailureGuardSuite --
 never an actuator, never commands them.
 """
 import json
-import os
 
 from foundational_contract import ExistenceMode
 from aurora_constraint_engine import GuardResult

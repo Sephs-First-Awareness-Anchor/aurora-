@@ -9,7 +9,7 @@ import re
 import secrets
 import textwrap
 from pathlib import Path
-from typing import Iterable, List, Sequence, Tuple
+from typing import List, Sequence, Tuple
 
 
 SECTION_MARKER_RE = re.compile(r"(?m)^## ")

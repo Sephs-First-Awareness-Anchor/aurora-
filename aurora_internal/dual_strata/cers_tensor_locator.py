@@ -24,7 +24,8 @@ SlotCoord's slot_id, in the SAME CrystalProcessingSystem registry (and the
 same dps_crystals.json file) every other concept already lives in.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/cers_tensor_locator.py')
 
 import math
 from typing import Any, Dict, Optional, Tuple
@@ -34,13 +35,7 @@ from .subsurface_state import AXES, clip01
 try:
     from .crest import Crest
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_internal/dual_strata/cers_tensor_locator.py:35",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 35, "source_file": "aurora_internal/dual_strata/cers_tensor_locator.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 35)
     # pragma: no cover - typing only
     Crest = Any  # type: ignore
 
@@ -60,13 +55,7 @@ def _get_manifold_types():
         from aurora_constraint_manifold_router import SlotCoord, DIM_NAMES, _DIMENSION_TO_AXIS
         return SlotCoord, DIM_NAMES, _DIMENSION_TO_AXIS
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/cers_tensor_locator.py:53",
-            exc=_aurora_boundary_exc,
-            context={"function": "_get_manifold_types", "handler_line": 53, "source_file": "aurora_internal/dual_strata/cers_tensor_locator.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_get_manifold_types', 53)
         return None, None, None
 
 
@@ -149,13 +138,7 @@ def lookup_tensor_crystal(dps: Any, coord: Optional[Any]) -> Optional[Any]:
     try:
         return dps.get_crystal(f"tensor:{coord.slot_id}")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/cers_tensor_locator.py:135",
-            exc=_aurora_boundary_exc,
-            context={"function": "lookup_tensor_crystal", "handler_line": 135, "source_file": "aurora_internal/dual_strata/cers_tensor_locator.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'lookup_tensor_crystal', 135)
         return None
 
 
@@ -234,13 +217,7 @@ def record_tensor_trace(
     try:
         crystal.update_axis_mean({ax: clip01(adjusted_axes.get(ax, 0.0)) for ax in AXES})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/cers_tensor_locator.py:213",
-            exc=_aurora_boundary_exc,
-            context={"function": "record_tensor_trace", "handler_line": 213, "source_file": "aurora_internal/dual_strata/cers_tensor_locator.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'record_tensor_trace', 213)
         pass
 
     if crystal.constraint_signature is None:
@@ -255,13 +232,7 @@ def record_tensor_trace(
     try:
         crystal.evolve()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/cers_tensor_locator.py:227",
-            exc=_aurora_boundary_exc,
-            context={"function": "record_tensor_trace", "handler_line": 227, "source_file": "aurora_internal/dual_strata/cers_tensor_locator.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'record_tensor_trace', 227)
         pass
 
     return crystal, distortion, is_new

@@ -9,7 +9,7 @@ coordinator's PREVIOUS-turn snapshot (this tick's own observation
 happens after, via aurora_consciousness_engine.py's reordered
 _attach_dual_strata_snapshot).
 """
-import tempfile
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import time
 
 import pytest

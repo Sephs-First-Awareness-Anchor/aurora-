@@ -23,7 +23,8 @@ merge or deprecate anything; it only produces the evidence that decision
 would be made from.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/cers_bridge.py')
 
 import json
 import time
@@ -205,13 +206,7 @@ class CERSBridge:
                 if _coord is not None:
                     _pre_distortion, _pre_is_new = measure_distortion(dps, _coord, adjusted_axes)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/cers_bridge.py:206",
-                exc=_aurora_boundary_exc,
-                context={"function": "build_snapshot", "handler_line": 206, "source_file": "aurora_internal/dual_strata/cers_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'build_snapshot', 206)
             _coord = None
 
         # 4. CERS-governed convergence — THE upgrade. Everything above this
@@ -261,13 +256,7 @@ class CERSBridge:
                         ),
                     }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/cers_bridge.py:255",
-                exc=_aurora_boundary_exc,
-                context={"function": "build_snapshot", "handler_line": 255, "source_file": "aurora_internal/dual_strata/cers_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'build_snapshot', 255)
             tensor_trace = {}
 
         # 5. Raw mechanism detail for downward traversal only

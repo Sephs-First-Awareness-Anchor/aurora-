@@ -2,7 +2,6 @@
 """Read-only shadow of what each input did to each representation (Sir, 2026-11-14).  It records; it decides nothing."""
 from __future__ import annotations
 
-import copy
 
 import pytest
 

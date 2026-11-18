@@ -19,12 +19,11 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 
 from __future__ import annotations
 
-import hashlib
 import math
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 # ============================================================================
@@ -54,8 +53,7 @@ def _zero_rubric() -> Dict[str, float]:
     return {d: 0.0 for d in RUBRIC_DIMENSIONS}
 
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 _CONTENT_STOPWORDS = {

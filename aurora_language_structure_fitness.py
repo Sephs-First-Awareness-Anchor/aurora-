@@ -1,9 +1,10 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_language_structure_fitness.py')
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 LANE_SIGNALS: Dict[str, List[str]] = {
@@ -37,13 +38,7 @@ class LanguageStructureFitness:
         try:
             from aurora_semantic_intention_bridge import SemanticIntention
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_language_structure_fitness.py:38",
-                exc=_aurora_boundary_exc,
-                context={"function": "score", "handler_line": 38, "source_file": "aurora_language_structure_fitness.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'score', 38)
             SemanticIntention = None
 
         if intention is None:
@@ -87,13 +82,7 @@ class LanguageStructureFitness:
                         expected = 0
                     scaffolding_match = 1.0 if avg_level >= expected else (avg_level / expected if expected > 0 else 1.0)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_language_structure_fitness.py:81",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "score", "handler_line": 81, "source_file": "aurora_language_structure_fitness.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'score', 81)
                 scaffolding_match = 0.5
 
         # 3. Lane alignment

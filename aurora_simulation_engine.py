@@ -23,7 +23,8 @@ DOCTRINE:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_simulation_engine.py')
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import re
@@ -32,7 +33,7 @@ import math
 import hashlib
 import random
 import os
-from enum import Enum, IntEnum, auto
+from enum import Enum, IntEnum
 from typing import Dict, List, Any, Optional, Tuple, Set, Deque, Iterable, Callable
 from dataclasses import dataclass, field
 from collections import defaultdict, deque
@@ -66,13 +67,7 @@ try:
     )
     _HAS_PRESSURE_MAP = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_simulation_engine.py:67",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 67, "source_file": "aurora_simulation_engine.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 67)
     Aurora625PressureMap = None  # type: ignore
     _HAS_PRESSURE_MAP = False
 
@@ -81,8 +76,7 @@ except ImportError as _aurora_boundary_exc:
 # SHARED UTILITIES
 # ============================================================================
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _generate_id(prefix: str) -> str:
@@ -653,13 +647,7 @@ class ConsciousLearner:
             conf = 0.7 if strengthen else 0.6
             crystal.add_facet("understanding", understanding_text, confidence=conf)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_simulation_engine.py:304",
-                exc=_aurora_boundary_exc,
-                context={"function": "_stamp_crystal", "handler_line": 304, "source_file": "aurora_simulation_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_stamp_crystal', 304)
             pass
 
     def propose_shard(
@@ -733,13 +721,7 @@ class ConsciousLearner:
                 if results:
                     return [text for _, text in results[:10]]
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:369",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "what_have_i_learned", "handler_line": 369, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'what_have_i_learned', 369)
                 pass
         # Session-only fallback (shards not persisted to disk). Build 616
         # Repair D: this is one of the admission boundary's listed exit
@@ -827,13 +809,7 @@ class ConsciousLearner:
                     )
                 injected += 1
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:423",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "inject_into_oets", "handler_line": 423, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'inject_into_oets', 423)
                 continue
         return injected
 
@@ -876,13 +852,7 @@ class ConsciousLearner:
         try:
             self.total_observations = int(state.get("total_observations", 0) or 0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_simulation_engine.py:460",
-                exc=_aurora_boundary_exc,
-                context={"function": "import_state", "handler_line": 460, "source_file": "aurora_simulation_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'import_state', 460)
             self.total_observations = 0
 
         raw_shards = state.get("shards", []) or []
@@ -897,13 +867,7 @@ class ConsciousLearner:
             try:
                 concept = ResponseConcept(concept_name)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:474",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "import_state", "handler_line": 474, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'import_state', 474)
                 concept = ResponseConcept.THOUGHTFUL_REFLECTION
 
             shard_id = str(row.get("shard_id", "") or _generate_id("understand"))
@@ -913,35 +877,17 @@ class ConsciousLearner:
             try:
                 confidence = _clamp(float(row.get("confidence", 0.3) or 0.3), 0.0, 1.0)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:483",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "import_state", "handler_line": 483, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'import_state', 483)
                 confidence = 0.3
             try:
                 observation_count = max(1, int(row.get("observation_count", 1) or 1))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:487",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "import_state", "handler_line": 487, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'import_state', 487)
                 observation_count = 1
             try:
                 ts = float(row.get("timestamp", time.time()) or time.time())
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:491",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "import_state", "handler_line": 491, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'import_state', 491)
                 ts = time.time()
 
             # Build 616 backward compatibility: a pre-616 export has none
@@ -1020,13 +966,7 @@ class ConsciousLearner:
                     if tgt and tgt != topic and tgt not in key_neighbors:
                         key_neighbors.append(tgt)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:549",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_understanding", "handler_line": 549, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_understanding', 549)
                 pass
 
         if not axis:
@@ -1063,13 +1003,7 @@ class ConsciousLearner:
                     persistence_key=f"shallow:{topic}",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:591",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_understanding", "handler_line": 591, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_understanding', 591)
                 pass
         else:
             parts.append(f"({axis})")
@@ -1194,13 +1128,7 @@ class SimulatedAvatar:
                 json.dump({"current_epoch": int(self.current_epoch)}, fh)
             os.replace(tmp, path)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_simulation_engine.py:696",
-                exc=_aurora_boundary_exc,
-                context={"function": "save_epoch_state", "handler_line": 696, "source_file": "aurora_simulation_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save_epoch_state', 696)
             pass
 
     def restore_epoch_state(self, path: str) -> bool:
@@ -1221,13 +1149,7 @@ class SimulatedAvatar:
                 self.set_epoch(epoch)
                 return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_simulation_engine.py:716",
-                exc=_aurora_boundary_exc,
-                context={"function": "restore_epoch_state", "handler_line": 716, "source_file": "aurora_simulation_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'restore_epoch_state', 716)
             pass
         return False
 
@@ -1518,13 +1440,7 @@ class TopicGenerator:
                 if targets:
                     concept = random.choice(targets[:5])["word"]
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:1006",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "generate", "handler_line": 1006, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'generate', 1006)
                 pass
         if not concept:
             # Fallback to a random high-frequency word from web if no OETS
@@ -2066,13 +1982,7 @@ class SimulationSession:
                             result["fidelity"] = bridged.get("meta", {}).get("fidelity", None)
                             result["path"] = "live_bridge"
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_simulation_engine.py:1547",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "run_epoch_grounding", "handler_line": 1547, "source_file": "aurora_simulation_engine.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'run_epoch_grounding', 1547)
                         pass
 
                 # ── Path B: perception.express() ─────────────────────────────
@@ -2103,13 +2013,7 @@ class SimulationSession:
                             result["response"] = expr
                             result["path"] = "perception_express"
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_simulation_engine.py:1577",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "run_epoch_grounding", "handler_line": 1577, "source_file": "aurora_simulation_engine.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'run_epoch_grounding', 1577)
                         pass
 
                 # ── Path C: systems direct turn ───────────────────────────────
@@ -2132,23 +2036,11 @@ class SimulationSession:
                             result["fidelity"] = _turn_result.get("_last_lf_fidelity", None)
                             result["path"] = "direct_turn"
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_simulation_engine.py:1599",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "run_epoch_grounding", "handler_line": 1599, "source_file": "aurora_simulation_engine.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'run_epoch_grounding', 1599)
                         pass
 
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:1602",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "run_epoch_grounding", "handler_line": 1602, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'run_epoch_grounding', 1602)
                 pass
 
             results.append(result)
@@ -2157,13 +2049,7 @@ class SimulationSession:
                 import time
                 time.sleep(0.05)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:1610",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "run_epoch_grounding", "handler_line": 1610, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'run_epoch_grounding', 1610)
                 pass
 
         return results
@@ -2226,13 +2112,7 @@ class SimulationSession:
                 try:
                     out[str(k)] = _clamp(float(v), 0.0, 1.0)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_simulation_engine.py:1672",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_coerce_float_map", "handler_line": 1672, "source_file": "aurora_simulation_engine.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_coerce_float_map', 1672)
                     continue
             return out
 
@@ -2247,13 +2127,7 @@ class SimulationSession:
                 if isinstance(maybe, dict):
                     overrides = dict(maybe)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:1686",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_normalize_avatar_spec", "handler_line": 1686, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_normalize_avatar_spec', 1686)
                 overrides = {}
         if not overrides and isinstance(spec, dict):
             raw_overrides = spec.get("avatar_overrides", {})
@@ -2567,13 +2441,7 @@ class SimulationSession:
             try:
                 live_response_context = self._live_response_context_factory()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:1975",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "run_episode", "handler_line": 1975, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'run_episode', 1975)
                 live_response_context = None
 
         for turn in range(effective_turns):
@@ -2791,13 +2659,7 @@ class SimulationSession:
                     existence_mode=ExistenceMode.AGENTIC,
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:2190",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "run_episode", "handler_line": 2190, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'run_episode', 2190)
                 pass
 
         return result
@@ -2839,13 +2701,7 @@ class SimulationSession:
                     print(f"    Q{_gr['question_index']+1}: {_resp}{_fid_str}")
                 print()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_simulation_engine.py:2231",
-                exc=_aurora_boundary_exc,
-                context={"function": "run_epoch", "handler_line": 2231, "source_file": "aurora_simulation_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run_epoch', 2231)
             pass  # Grounding failure never blocks the epoch
 
         # Apply pressure config for speed-run mode
@@ -2958,13 +2814,7 @@ class SimulationSession:
                     meta.setdefault('generation_path', 'live_turn_bridge')
                     return expression, meta
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:2343",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_generate_expression", "handler_line": 2343, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_generate_expression', 2343)
                 pass
 
         # Waveform formulation (2026-07-11, corrected same day): the earlier
@@ -3037,13 +2887,7 @@ class SimulationSession:
                         mode="sim",
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_simulation_engine.py:2414",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_formulate_through_perception", "handler_line": 2414, "source_file": "aurora_simulation_engine.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_formulate_through_perception', 2414)
                     pass  # a failed ripple degrades grounding, not formulation
 
             # 2. GROUND composition in the turn's content field.
@@ -3054,13 +2898,7 @@ class SimulationSession:
                     if keywords:
                         composer.set_context(keywords)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_simulation_engine.py:2424",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_formulate_through_perception", "handler_line": 2424, "source_file": "aurora_simulation_engine.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_formulate_through_perception', 2424)
                 pass
 
             # 3. FORMULATE through her expression ecology under honest
@@ -3090,13 +2928,7 @@ class SimulationSession:
                 'signal_openness': round(openness, 3),
             }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_simulation_engine.py:2453",
-                exc=_aurora_boundary_exc,
-                context={"function": "_formulate_through_perception", "handler_line": 2453, "source_file": "aurora_simulation_engine.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_formulate_through_perception', 2453)
             return ("", {'generation_path': 'no_expression'})
 
     def _interpret_reaction(self, reaction: Dict) -> ConversationObservation:
@@ -3735,25 +3567,13 @@ if __name__ == '__main__':
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_simulation_engine.py:3091",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 3091, "source_file": "aurora_simulation_engine.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 3091)
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_simulation_engine.py:3096",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 3096, "source_file": "aurora_simulation_engine.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 3096)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

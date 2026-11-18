@@ -58,12 +58,9 @@ CREATED: February 2026
 from __future__ import annotations
 
 import hashlib
-import math
-import time
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Deque, Dict, List, Optional, Set, Tuple
+from typing import Deque, Dict, List, Set, Tuple
 
 from aurora_internal.aurora_constraint_manifold_patched import Constraint, ManifoldViolation
 from foundational_contract import ExistenceMode

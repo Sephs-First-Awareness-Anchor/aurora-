@@ -27,7 +27,7 @@ if _ROOT not in sys.path:
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 AXES: Tuple[str, ...] = ("X", "T", "N", "B", "A")
 AXIS_INDEX = {a: i for i, a in enumerate(AXES)}

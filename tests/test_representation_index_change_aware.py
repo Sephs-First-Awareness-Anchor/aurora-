@@ -21,7 +21,7 @@ import sys
 import tempfile
 import types
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pytest
 

@@ -56,7 +56,8 @@ Created: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_dimensional_systems.py')
 import time
 import os
 import math
@@ -93,13 +94,7 @@ try:
     )
     CONSTRAINT_MANIFOLD_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_dimensional_systems.py:94",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 94, "source_file": "aurora_dimensional_systems.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 94)
     CONSTRAINT_MANIFOLD_AVAILABLE = False
 
 # ── Layer 2: I-State Beings — SynthesisResult ────────────────────────────────
@@ -108,13 +103,7 @@ try:
     _SYNTHESIS_TYPE = _SynthesisResult
     I_STATE_BEINGS_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_dimensional_systems.py:102",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 102, "source_file": "aurora_dimensional_systems.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 102)
     _SYNTHESIS_TYPE = None
     I_STATE_BEINGS_AVAILABLE = False
 
@@ -138,13 +127,7 @@ try:
     from aurora_625_pressure_map import Aurora625PressureMap
     PRESSURE_MAP_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_dimensional_systems.py:125",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 125, "source_file": "aurora_dimensional_systems.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 125)
     Aurora625PressureMap = None  # type: ignore
     PRESSURE_MAP_AVAILABLE = False
 
@@ -536,13 +519,7 @@ class Crystal:
             try:
                 self._compound_signature()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:417",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "evolve", "handler_line": 417, "source_file": "aurora_dimensional_systems.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'evolve', 417)
                 pass
             if self.level == CrystalLevel.QUASI:
                 self._internalize_laws()
@@ -636,13 +613,7 @@ class Crystal:
             try:
                 c.facets[fid] = CrystalFacet.from_dict(fd)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:502",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "from_dict", "handler_line": 502, "source_file": "aurora_dimensional_systems.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'from_dict', 502)
                 pass
         # Unlock any fail point dims the crystal earned but weren't serialized
         c._unlock_failpoints()
@@ -766,13 +737,7 @@ class CrystalProcessingSystem(WarpCapable):
                                for i, ax in enumerate(_axes) if i < len(_phases)}
                 crystal.update_axis_mean(_axis_state)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:620",
-                exc=_aurora_boundary_exc,
-                context={"function": "process", "handler_line": 620, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'process', 620)
             pass
 
         # Add facet from the envelope's data type
@@ -811,13 +776,7 @@ class CrystalProcessingSystem(WarpCapable):
                         existence_mode=ExistenceMode.AGENTIC,
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_dimensional_systems.py:658",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "process", "handler_line": 658, "source_file": "aurora_dimensional_systems.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'process', 658)
                     pass
 
         # WARP Universalization Directive Phase 1 (2026-07-24): keep the
@@ -828,13 +787,7 @@ class CrystalProcessingSystem(WarpCapable):
         try:
             self._update_crystal_links(crystal.crystal_id)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:668",
-                exc=_aurora_boundary_exc,
-                context={"function": "process", "handler_line": 668, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'process', 668)
             pass
 
         return {
@@ -1113,13 +1066,7 @@ class CrystalProcessingSystem(WarpCapable):
                 persistence_key="resonant_miss:" + concept,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:924",
-                exc=_aurora_boundary_exc,
-                context={"function": "_confess_resonance_miss", "handler_line": 924, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_confess_resonance_miss', 924)
             pass
 
     def resonant_or_extend(
@@ -1324,13 +1271,7 @@ class CrystalProcessingSystem(WarpCapable):
             try:
                 self._update_crystal_links(crystal_id)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:1089",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_concepts", "handler_line": 1089, "source_file": "aurora_dimensional_systems.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process_concepts', 1089)
                 pass
 
         return {
@@ -1375,13 +1316,7 @@ class CrystalProcessingSystem(WarpCapable):
             os.replace(tmp, path)
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:1143",
-                exc=_aurora_boundary_exc,
-                context={"function": "save_crystals", "handler_line": 1143, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save_crystals', 1143)
             return False
 
     def load_crystals(self, path: str) -> int:
@@ -1391,13 +1326,7 @@ class CrystalProcessingSystem(WarpCapable):
             with open(path, "r", encoding="utf-8") as fh:
                 payload = json.load(fh)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:1152",
-                exc=_aurora_boundary_exc,
-                context={"function": "load_crystals", "handler_line": 1152, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load_crystals', 1152)
             return 0
         loaded = 0
         for cid, cd in (payload.get("crystals") or {}).items():
@@ -1407,13 +1336,7 @@ class CrystalProcessingSystem(WarpCapable):
                 self.concept_index[c.concept] = cid
                 loaded += 1
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:1161",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "load_crystals", "handler_line": 1161, "source_file": "aurora_dimensional_systems.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'load_crystals', 1161)
                 pass
 
         # AURORA DIRECTIVE, Phase 0/2: boot rehydration is one causal
@@ -1997,13 +1920,7 @@ class DimensionalRecall:
                 persistence_key="recall_miss:" + ",".join(sorted(set(concepts))),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:1688",
-                exc=_aurora_boundary_exc,
-                context={"function": "_confess_recall_miss", "handler_line": 1688, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_confess_recall_miss', 1688)
             pass
 
     def _to_packet(
@@ -3045,13 +2962,7 @@ class DimensionalSystems:
                 if _pm.load():
                     self.pressure_map = _pm
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:2656",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "__init__", "handler_line": 2656, "source_file": "aurora_dimensional_systems.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '__init__', 2656)
                 self.pressure_map = None
 
         if self.genealogy is not None:
@@ -3132,13 +3043,7 @@ class DimensionalSystems:
             GENEALOGY_AVAILABLE = True
             return True
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:2736",
-                exc=_aurora_boundary_exc,
-                context={"function": "_ensure_genealogy_symbols", "handler_line": 2736, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_genealogy_symbols', 2736)
             GENEALOGY_AVAILABLE = False
             return False
 
@@ -3194,13 +3099,7 @@ class DimensionalSystems:
             try:
                 grad = self.pressure_map.get_slot_gradient(slot)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:2791",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_measure_constraint_weights", "handler_line": 2791, "source_file": "aurora_dimensional_systems.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_measure_constraint_weights', 2791)
                 grad = None
             if grad is not None:
                 for ax in ("X", "T", "N", "B", "A"):
@@ -3241,13 +3140,7 @@ class DimensionalSystems:
             idx = int(hashlib.md5(str(concept).encode("utf-8")).hexdigest(), 16) % len(slots)
             return slots[idx]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:2831",
-                exc=_aurora_boundary_exc,
-                context={"function": "_slot_for_concept", "handler_line": 2831, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_slot_for_concept', 2831)
             return None
 
     def _ensure_semantic_abilities(self) -> None:
@@ -3268,13 +3161,7 @@ class DimensionalSystems:
                 try:
                     labels = list(constraints_for_operation(op_name))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_dimensional_systems.py:2851",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_ensure_semantic_abilities", "handler_line": 2851, "source_file": "aurora_dimensional_systems.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_semantic_abilities', 2851)
                     labels = []
 
             requires_axes: List[str] = []
@@ -3284,13 +3171,7 @@ class DimensionalSystems:
                 try:
                     tok = axis_token(str(lbl))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_dimensional_systems.py:2860",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_ensure_semantic_abilities", "handler_line": 2860, "source_file": "aurora_dimensional_systems.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_semantic_abilities', 2860)
                     tok = None
                 if tok and tok not in requires_axes:
                     requires_axes.append(tok)
@@ -3316,13 +3197,7 @@ class DimensionalSystems:
         try:
             self.genealogy.normalize_ability_origins()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:2885",
-                exc=_aurora_boundary_exc,
-                context={"function": "_ensure_semantic_abilities", "handler_line": 2885, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_ensure_semantic_abilities', 2885)
             pass
 
     def _observe_semantic_operation(
@@ -3375,13 +3250,7 @@ class DimensionalSystems:
                 notes=notes,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dimensional_systems.py:2937",
-                exc=_aurora_boundary_exc,
-                context={"function": "_observe_semantic_operation", "handler_line": 2937, "source_file": "aurora_dimensional_systems.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_observe_semantic_operation', 2937)
             return
 
     def process(self, envelope: IVMEnvelope) -> Dict[str, Any]:
@@ -3588,13 +3457,7 @@ class DimensionalSystems:
                     'A': round(sv.A, 4),
                 }
             except AttributeError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:3122",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_synthesis", "handler_line": 3122, "source_file": "aurora_dimensional_systems.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process_synthesis', 3122)
                 pass
 
         result['constraint_context'] = constraint_context
@@ -3701,13 +3564,7 @@ class DimensionalSystems:
                     detail=f"coherence={state['coherence']} dominant={state['dominant']}",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:3204",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "update_emotional_state", "handler_line": 3204, "source_file": "aurora_dimensional_systems.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'update_emotional_state', 3204)
                 pass
 
         return state
@@ -4189,25 +4046,13 @@ if __name__ == '__main__':
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_dimensional_systems.py:3685",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 3685, "source_file": "aurora_dimensional_systems.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 3685)
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_dimensional_systems.py:3690",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 3690, "source_file": "aurora_dimensional_systems.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 3690)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

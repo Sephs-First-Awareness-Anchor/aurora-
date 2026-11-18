@@ -1,8 +1,6 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
-import os
-from pathlib import Path
 
 # Add project root to path
 sys.path.append("/storage/emulated/0/aurora_strata/aurora--main/aurora--main")

@@ -8,8 +8,6 @@ cannot cross the surface boundary into Aurora's spoken output.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
-import os
-import types
 
 
 PASS = "\033[92mPASS\033[0m"

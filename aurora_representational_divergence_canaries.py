@@ -39,7 +39,7 @@ import os
 import shutil
 import tempfile
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from aurora_representational_address import RepresentationalRef, resolve_manifold_slot
 

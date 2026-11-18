@@ -91,7 +91,8 @@ KING QUASICRYSTAL — IDENTITY (recursive):
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'concept_crystal.py')
 
 import gzip
 import json
@@ -99,7 +100,7 @@ import math
 import os
 import time
 import uuid as _uuid_mod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 
@@ -115,13 +116,7 @@ try:
     )
     _DPS_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:concept_crystal.py:116",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 116, "source_file": "concept_crystal.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 116)
     _DPS_AVAILABLE = False
     _DPSCrystalLevel = None  # type: ignore[assignment]
 
@@ -618,13 +613,7 @@ class ConceptCrystalRegistry:
         try:
             crystal.evolve()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:concept_crystal.py:556",
-                exc=_aurora_boundary_exc,
-                context={"function": "observe_lsa", "handler_line": 556, "source_file": "concept_crystal.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'observe_lsa', 556)
             pass
         promoted = crystal.level.value > 1 if _DPS_AVAILABLE else False
         if promoted:
@@ -757,13 +746,7 @@ class ConceptCrystalRegistry:
         try:
             crystal.evolve()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:concept_crystal.py:633",
-                exc=_aurora_boundary_exc,
-                context={"function": "observe_sensory", "handler_line": 633, "source_file": "concept_crystal.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'observe_sensory', 633)
             pass
         return crystal
 
@@ -892,13 +875,7 @@ class ConceptCrystalRegistry:
             with gzip.open(path, "wt", encoding="utf-8") as f:
                 json.dump(data, f)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:concept_crystal.py:748",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 748, "source_file": "concept_crystal.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 748)
             pass
 
     def load(self, state_dir: str) -> None:
@@ -914,25 +891,13 @@ class ConceptCrystalRegistry:
                         crystal = _DPSCrystal.from_dict(nd)
                         self._nodes[crystal.crystal_id] = crystal
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:concept_crystal.py:763",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "load", "handler_line": 763, "source_file": "concept_crystal.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'load', 763)
                         # Try legacy node format
                         try:
                             node = ConceptCrystalNode.from_dict(nd)
                             self._nodes[node.node_id] = node
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:concept_crystal.py:768",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "load", "handler_line": 768, "source_file": "concept_crystal.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 768)
                             pass
                 else:
                     try:
@@ -940,13 +905,7 @@ class ConceptCrystalRegistry:
                         self._nodes[node.node_id]        = node
                         self._ax_index[node.axis_bucket] = node.node_id
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:concept_crystal.py:775",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "load", "handler_line": 775, "source_file": "concept_crystal.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'load', 775)
                         pass
             # Rebuild ax_index from saved string keys
             for k_str, nid in data.get("ax_index", {}).items():
@@ -955,22 +914,10 @@ class ConceptCrystalRegistry:
                     if nid in self._nodes:
                         self._ax_index[bkt] = nid
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:concept_crystal.py:783",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "load", "handler_line": 783, "source_file": "concept_crystal.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'load', 783)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:concept_crystal.py:785",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 785, "source_file": "concept_crystal.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 785)
             pass
 
     def _log_promotion(self, crystal: Any) -> None:

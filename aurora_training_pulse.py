@@ -53,7 +53,8 @@ corpus_runner integration: call pulse.energize() once per absorbed item.
 Zero manual steps — constructed from the existing `systems` dict only.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_training_pulse.py')
 
 import time
 from typing import Any, Dict, Optional
@@ -146,13 +147,7 @@ class TrainingPulse:
                 out["ignition_go"] = bool(ig.get("go", False))
                 out["ignition_stages"] = [k for k, v in (ig.get("stages") or {}).items() if v]
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_training_pulse.py:147",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "field_report", "handler_line": 147, "source_file": "aurora_training_pulse.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'field_report', 147)
                 pass
         return out
 
@@ -194,13 +189,7 @@ class TrainingPulse:
             )
             pump.inject(dist, ifield, qao=self._systems.get("quasiarch_observer"))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_training_pulse.py:188",
-                exc=_aurora_boundary_exc,
-                context={"function": "_inject_waveform", "handler_line": 188, "source_file": "aurora_training_pulse.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_inject_waveform', 188)
             pass
 
     def _record_and_snapshot(self):
@@ -224,13 +213,7 @@ class TrainingPulse:
             self._systems["_last_diff_snapshot"] = snap
             return snap
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_training_pulse.py:228",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_and_snapshot", "handler_line": 228, "source_file": "aurora_training_pulse.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_and_snapshot', 228)
             return None
 
     def _tick_attention(self, user_text: str, snap):
@@ -245,13 +228,7 @@ class TrainingPulse:
                 if dvals:
                     salience = min(1.0, sum(abs(v) for v in dvals) / len(dvals) * 2.0)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_training_pulse.py:242",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_tick_attention", "handler_line": 242, "source_file": "aurora_training_pulse.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_tick_attention', 242)
                 pass
             addressed = bool(user_text and user_text.strip())
             if addressed:
@@ -265,13 +242,7 @@ class TrainingPulse:
             self._systems["_last_attention_frame"] = frame
             return frame
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_training_pulse.py:255",
-                exc=_aurora_boundary_exc,
-                context={"function": "_tick_attention", "handler_line": 255, "source_file": "aurora_training_pulse.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_tick_attention', 255)
             return None
 
     def _capture_nucleus(self):
@@ -288,11 +259,5 @@ class TrainingPulse:
                     uc.register_meaning_event(nucleus)
             return nucleus
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_training_pulse.py:271",
-                exc=_aurora_boundary_exc,
-                context={"function": "_capture_nucleus", "handler_line": 271, "source_file": "aurora_training_pulse.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_capture_nucleus', 271)
             return None

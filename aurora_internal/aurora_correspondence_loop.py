@@ -80,13 +80,15 @@ inventing a synthetic worth pass just to call the mint path.
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_correspondence_loop.py')
 
 import hashlib
 import json
 import os
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from aurora_internal.aurora_shared_helpers import DictRecord
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -154,22 +156,10 @@ def _load_jsonl(path: Path) -> List[Dict[str, Any]]:
                 try:
                     out.append(json.loads(line))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:155",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_load_jsonl", "handler_line": 155, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_load_jsonl', 155)
                     continue
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:157",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_jsonl", "handler_line": 157, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_jsonl', 157)
         return []
     return out
 
@@ -183,13 +173,7 @@ def _append_jsonl(path: Path, entry: Dict[str, Any]) -> bool:
             os.fsync(f.fileno())
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:170",
-            exc=_aurora_boundary_exc,
-            context={"function": "_append_jsonl", "handler_line": 170, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_append_jsonl', 170)
         return False
 
 
@@ -204,7 +188,7 @@ def _log_violation(state_dir: Optional[Path], reason: str, detail: Dict[str, Any
 # ============================================================================
 
 @dataclass
-class CommittedPrediction:
+class CommittedPrediction(DictRecord):
     message_id: str
     prev_hash: str
     entry_hash: str
@@ -215,20 +199,6 @@ class CommittedPrediction:
     axis_signature: str
     projected_accuracy: float
     committed_at: float
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "message_id": self.message_id,
-            "prev_hash": self.prev_hash,
-            "entry_hash": self.entry_hash,
-            "topic": self.topic,
-            "affect": self.affect,
-            "intent_type": self.intent_type,
-            "certainty_band": self.certainty_band,
-            "axis_signature": self.axis_signature,
-            "projected_accuracy": self.projected_accuracy,
-            "committed_at": self.committed_at,
-        }
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "CommittedPrediction":
@@ -387,13 +357,7 @@ def _load_outbound_messages(state_dir: Optional[Path] = None) -> List[Dict[str, 
         data = json.loads(path.read_text(encoding="utf-8"))
         return data if isinstance(data, list) else []
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:367",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_outbound_messages", "handler_line": 367, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_outbound_messages', 367)
         return []
 
 
@@ -441,13 +405,7 @@ def unnotified_reply_expecting_messages(state_dir: Optional[Path] = None) -> Lis
     try:
         notified = set(json.loads(notified_path.read_text(encoding="utf-8")))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:414",
-            exc=_aurora_boundary_exc,
-            context={"function": "unnotified_reply_expecting_messages", "handler_line": 414, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'unnotified_reply_expecting_messages', 414)
         notified = set()
     messages = _load_outbound_messages(state_dir)
     return [
@@ -463,13 +421,7 @@ def mark_notified(message_ids: List[str], state_dir: Optional[Path] = None) -> N
     try:
         existing = set(json.loads(notified_path.read_text(encoding="utf-8")))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:429",
-            exc=_aurora_boundary_exc,
-            context={"function": "mark_notified", "handler_line": 429, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'mark_notified', 429)
         existing = set()
     existing.update(str(m) for m in message_ids)
     notified_path.parent.mkdir(parents=True, exist_ok=True)
@@ -495,13 +447,7 @@ def draft_correspondence_message(systems: Dict[str, Any]) -> Optional[Dict[str, 
         try:
             unresolved = ledger.unresolved()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:454",
-                exc=_aurora_boundary_exc,
-                context={"function": "draft_correspondence_message", "handler_line": 454, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'draft_correspondence_message', 454)
             unresolved = []
         if unresolved:
             rec = unresolved[0]
@@ -579,13 +525,7 @@ def post_correspondence_message(
             state_dir=state_dir,
         )
     except (RetroPredictionError, CorrespondenceCapReachedError, CorrespondenceChainFrozenError) as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:531",
-            exc=_aurora_boundary_exc,
-            context={"function": "post_correspondence_message", "handler_line": 531, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'post_correspondence_message', 531)
         return None
 
     _append_outbound_message(
@@ -649,13 +589,7 @@ def ingest_replies(
             try:
                 understanding_state = interpreter.interpret(reply_text)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:594",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "ingest_replies", "handler_line": 594, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'ingest_replies', 594)
                 understanding_state = None
 
         try:
@@ -665,13 +599,7 @@ def ingest_replies(
                 magnitude = mismatch if mismatch >= 0.45 else (1.0 - mismatch) * 0.6
                 identity_field.ingest_internal_signal(kind, magnitude=magnitude, source_axis=payload.axis_signature)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:603",
-                exc=_aurora_boundary_exc,
-                context={"function": "ingest_replies", "handler_line": 603, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'ingest_replies', 603)
             pass
 
         resolution = {
@@ -748,13 +676,7 @@ def verify_correspondence_loop() -> Dict[str, Any]:
             commit_prediction("m1", state_dir=sd)
             check("duplicate message_id still chains (no crash)", True)
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:679",
-                exc=exc,
-                context={"function": "verify_correspondence_loop", "handler_line": 679, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-            )
+            _aurora_fault(locals(), exc, 'verify_correspondence_loop', 679)
             check("duplicate message_id still chains (no crash)", False, str(exc))
 
         _append_jsonl(sd / "correspondence" / _INBOUND_FILE, {"reply_to": "m_retro", "text": "yes"})
@@ -762,13 +684,7 @@ def verify_correspondence_loop() -> Dict[str, Any]:
             commit_prediction("m_retro", state_dir=sd)
             check("retro-prediction refused", False)
         except RetroPredictionError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:686",
-                exc=_aurora_boundary_exc,
-                context={"function": "verify_correspondence_loop", "handler_line": 686, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'verify_correspondence_loop', 686)
             check("retro-prediction refused", True)
 
         sd2 = Path(tempfile.mkdtemp())
@@ -778,13 +694,7 @@ def verify_correspondence_loop() -> Dict[str, Any]:
             commit_prediction("cap_over", state_dir=sd2)
             check("cadence cap enforced", False)
         except CorrespondenceCapReachedError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:695",
-                exc=_aurora_boundary_exc,
-                context={"function": "verify_correspondence_loop", "handler_line": 695, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'verify_correspondence_loop', 695)
             check("cadence cap enforced", True)
 
         _append_jsonl(sd / "correspondence" / _INBOUND_FILE, {"reply_to": "m1", "text": "Yes, that works for me."})
@@ -821,13 +731,7 @@ def verify_correspondence_loop() -> Dict[str, Any]:
             commit_prediction("after_tamper", state_dir=sd4)
             check("commits refused while chain is frozen", False)
         except CorrespondenceChainFrozenError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_correspondence_loop.py:731",
-                exc=_aurora_boundary_exc,
-                context={"function": "verify_correspondence_loop", "handler_line": 731, "source_file": "aurora_internal/aurora_correspondence_loop.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'verify_correspondence_loop', 731)
             check("commits refused while chain is frozen", True)
 
         draft = draft_correspondence_message({})

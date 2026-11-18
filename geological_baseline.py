@@ -74,11 +74,12 @@ from accumulated understanding automatically).
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'geological_baseline.py')
 
 import math
 import threading
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 # Genealogical depth of each crystal stage from the 125-base constraint origin
@@ -346,11 +347,5 @@ class GeologicalBaseline:
                         source="geological_baseline",
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:geological_baseline.py:347",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_recalculate", "handler_line": 347, "source_file": "geological_baseline.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_recalculate', 347)
                     pass

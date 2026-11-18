@@ -33,7 +33,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from aurora_internal.scouting.contracts import ScoutRequest, ScoutReport
 

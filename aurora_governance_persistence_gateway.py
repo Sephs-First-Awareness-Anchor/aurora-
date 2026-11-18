@@ -40,16 +40,17 @@ THREE SYSTEMS IN ONE:
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_governance_persistence_gateway.py')
 
 import time
 import math
 import json
 import hashlib
 import random
-import pickle
 import re
-from enum import Enum, IntEnum, auto
-from typing import Dict, List, Any, Optional, Tuple, Set, Callable, Deque
+from enum import Enum, auto
+from typing import Dict, List, Any, Optional, Tuple, Deque
 from dataclasses import dataclass, field, asdict
 from collections import defaultdict, deque
 from pathlib import Path
@@ -83,8 +84,7 @@ from aurora_simulation_engine import (
 # SHARED UTILITIES
 # ============================================================================
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _generate_id(prefix: str) -> str:
@@ -678,13 +678,7 @@ class StatePersistence:
             self._last_save = time.time()
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_governance_persistence_gateway.py:679",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 679, "source_file": "aurora_governance_persistence_gateway.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 679)
             return False
 
     def load(self) -> Optional[AuroraStateSnapshot]:
@@ -700,13 +694,7 @@ class StatePersistence:
                 return None  # Integrity failure
             return snap
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_governance_persistence_gateway.py:694",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 694, "source_file": "aurora_governance_persistence_gateway.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 694)
             return None
 
     def _rotate_backup(self):
@@ -721,13 +709,7 @@ class StatePersistence:
             while len(backups) > self.max_backups:
                 backups.pop(0).unlink()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_governance_persistence_gateway.py:708",
-                exc=_aurora_boundary_exc,
-                context={"function": "_rotate_backup", "handler_line": 708, "source_file": "aurora_governance_persistence_gateway.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_rotate_backup', 708)
             pass
 
     def get_info(self) -> Dict[str, Any]:
@@ -1028,13 +1010,7 @@ class NSpaceGateway:
             claim = OntologicalClaim(predicate='I_IS', mode=mode)
             result.ontological_valid = True
         except OntologicalViolation as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_governance_persistence_gateway.py:997",
-                exc=_aurora_boundary_exc,
-                context={"function": "_validate", "handler_line": 997, "source_file": "aurora_governance_persistence_gateway.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_validate', 997)
             result.ontological_valid = False
             result.verdict = GatewayVerdict.REJECTED
             result.rejection_reason = "Ontological violation — mode too low"
@@ -1053,13 +1029,7 @@ class NSpaceGateway:
                     result.rejection_reason = "Below moral threshold"
                     return result
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_governance_persistence_gateway.py:1015",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_validate", "handler_line": 1015, "source_file": "aurora_governance_persistence_gateway.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_validate', 1015)
                 pass  # L3 not fully initialized — allow through
 
         # Governance: Check for axis conflicts in the data's signature
@@ -1169,13 +1139,7 @@ class NSpaceGateway:
                 )
                 result.assembly = assembly
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_governance_persistence_gateway.py:1097",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_synthesize", "handler_line": 1097, "source_file": "aurora_governance_persistence_gateway.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_synthesize', 1097)
                 pass  # Consciousness not fully operational yet
 
         # L5: Perception pipeline — ingest as interaction
@@ -1515,13 +1479,7 @@ class NSpaceGateway:
                         "semantic_strategy_applied": _decision.applied,
                     }
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_governance_persistence_gateway.py:1431",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_articulate_user_response", "handler_line": 1431, "source_file": "aurora_governance_persistence_gateway.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_articulate_user_response', 1431)
                 mtsl_context = None
 
             # CIR audit follow-up (2026-08-04): pass this runtime's own
@@ -1554,13 +1512,7 @@ class NSpaceGateway:
                 }, mode="gateway")
             return decision.selected
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_governance_persistence_gateway.py:1449",
-                exc=_aurora_boundary_exc,
-                context={"function": "_articulate_user_response", "handler_line": 1449, "source_file": "aurora_governance_persistence_gateway.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_articulate_user_response', 1449)
             return draft_text
 
     def get_stats(self) -> Dict[str, Any]:
@@ -2105,13 +2057,7 @@ from aurora_autonomy import (
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_governance_persistence_gateway.py:1993",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 1993, "source_file": "aurora_governance_persistence_gateway.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 1993)
     _aurora_native_inspect = None
 
 try:
@@ -2122,13 +2068,7 @@ try:
         PROFILE_SPECS as CRYSTAL_PROFILE_SPECS,
     )
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_governance_persistence_gateway.py:2003",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 2003, "source_file": "aurora_governance_persistence_gateway.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2003)
     crystal_pack_state = None
     crystal_restore_state = None
     crystal_inspect_state = None
@@ -2137,13 +2077,7 @@ except Exception as _aurora_boundary_exc:
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_governance_persistence_gateway.py:2011",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 2011, "source_file": "aurora_governance_persistence_gateway.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2011)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

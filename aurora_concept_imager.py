@@ -21,7 +21,8 @@ Tracker file: aurora_state/concept_images_fetched.json
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_concept_imager.py')
 
 import json
 import os
@@ -47,13 +48,7 @@ def _load_tracker(state_dir: Path) -> Dict[str, List[str]]:
                 data.setdefault("grounded", [])
                 return data
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_concept_imager.py:48",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_tracker", "handler_line": 48, "source_file": "aurora_concept_imager.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_tracker', 48)
             pass
     return {"fetched": [], "failed": [], "grounded": []}
 
@@ -66,13 +61,7 @@ def _save_tracker(state_dir: Path, tracker: Dict[str, List[str]]) -> None:
             json.dump(tracker, f, indent=2)
         os.replace(tmp, str(p))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_concept_imager.py:60",
-            exc=_aurora_boundary_exc,
-            context={"function": "_save_tracker", "handler_line": 60, "source_file": "aurora_concept_imager.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_save_tracker', 60)
         pass
 
 
@@ -126,13 +115,7 @@ def fetch_concept_image(word: str, state_dir: Path) -> Optional[Path]:
         return save_path
 
     except Exception as e:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_concept_imager.py:113",
-            exc=e,
-            context={"function": "fetch_concept_image", "handler_line": 113, "source_file": "aurora_concept_imager.py"},
-        )
+        _aurora_fault(locals(), e, 'fetch_concept_image', 113)
         logger.debug(f"[IMAGER] fetch failed for '{word}': {e}")
         return None
 
@@ -195,13 +178,7 @@ def ingest_concept_image(
                 if hasattr(sensory_crystal, "_register_concept_visual"):
                     sensory_crystal._register_concept_visual(word, f"imager:{word}")
             except Exception as ce:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_concept_imager.py:175",
-                    exc=ce,
-                    context={"function": "ingest_concept_image", "handler_line": 175, "source_file": "aurora_concept_imager.py"},
-                )
+                _aurora_fault(locals(), ce, 'ingest_concept_image', 175)
                 logger.debug(f"[IMAGER] Crystal feed failed for '{word}': {ce}")
 
         # Also route through HardwareInterface.process_visual for full pipeline
@@ -209,13 +186,7 @@ def ingest_concept_image(
             try:
                 hardware.process_visual(features, None)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_concept_imager.py:182",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "ingest_concept_image", "handler_line": 182, "source_file": "aurora_concept_imager.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'ingest_concept_image', 182)
                 pass
 
         logger.info(f"[IMAGER] Ingested concept image: '{word}'")
@@ -264,13 +235,7 @@ def run_concept_image_cycle(
             if sl >= 2:
                 candidates.append(word)
     except Exception as e:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_concept_imager.py:230",
-            exc=e,
-            context={"function": "run_concept_image_cycle", "handler_line": 230, "source_file": "aurora_concept_imager.py"},
-        )
+        _aurora_fault(locals(), e, 'run_concept_image_cycle', 230)
         logger.debug(f"[IMAGER] Candidate scan failed: {e}")
         return 0
 
@@ -284,13 +249,7 @@ def run_concept_image_cycle(
             reverse=True,
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_concept_imager.py:243",
-            exc=_aurora_boundary_exc,
-            context={"function": "run_concept_image_cycle", "handler_line": 243, "source_file": "aurora_concept_imager.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'run_concept_image_cycle', 243)
         pass
 
     ingested = 0

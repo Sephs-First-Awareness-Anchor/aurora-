@@ -83,8 +83,7 @@ INFLUENCE_EDGES: List[Tuple[str, str, float]] = [
 ]
 
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 # ============================================================================

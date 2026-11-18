@@ -13,7 +13,8 @@ Remove this file once the bottleneck is identified and fixed.
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_dev_telemetry.py')
 
 import time
 from typing import Any, Dict, List, Optional
@@ -36,13 +37,7 @@ def _axis_snapshot(systems: Dict[str, Any]) -> Dict[str, float]:
                 for ax, long in zip(_AXES, _IVM_LONG_NAMES)
             }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dev_telemetry.py:37",
-                exc=_aurora_boundary_exc,
-                context={"function": "_axis_snapshot", "handler_line": 37, "source_file": "aurora_dev_telemetry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_axis_snapshot', 37)
             pass
     # Fallback: constraint reasoner current_profile()
     cr = systems.get("constraint_reasoner")
@@ -50,13 +45,7 @@ def _axis_snapshot(systems: Dict[str, Any]) -> Dict[str, float]:
         try:
             return cr.current_profile()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dev_telemetry.py:44",
-                exc=_aurora_boundary_exc,
-                context={"function": "_axis_snapshot", "handler_line": 44, "source_file": "aurora_dev_telemetry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_axis_snapshot', 44)
             pass
     return {ax: 0.5 for ax in _AXES}
 
@@ -69,13 +58,7 @@ def _oets_node_count(systems: Dict[str, Any]) -> int:
         if web is not None and hasattr(web, "nodes"):
             return len(web.nodes)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_dev_telemetry.py:56",
-            exc=_aurora_boundary_exc,
-            context={"function": "_oets_node_count", "handler_line": 56, "source_file": "aurora_dev_telemetry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_oets_node_count', 56)
         pass
     return 0
 
@@ -87,13 +70,7 @@ def _dps_crystal_count(systems: Dict[str, Any]) -> int:
         if dps is not None and hasattr(dps, "crystals"):
             return len(dps.crystals)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_dev_telemetry.py:67",
-            exc=_aurora_boundary_exc,
-            context={"function": "_dps_crystal_count", "handler_line": 67, "source_file": "aurora_dev_telemetry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_dps_crystal_count', 67)
         pass
     return 0
 
@@ -105,13 +82,7 @@ def _constraint_alignment(systems: Dict[str, Any]) -> Optional[float]:
             report = cr.reasoning_report()
             return report.get("recent_alignment")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_dev_telemetry.py:78",
-            exc=_aurora_boundary_exc,
-            context={"function": "_constraint_alignment", "handler_line": 78, "source_file": "aurora_dev_telemetry.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_constraint_alignment', 78)
         pass
     return None
 

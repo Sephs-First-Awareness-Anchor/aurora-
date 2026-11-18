@@ -229,7 +229,6 @@ class TestIStateOperations:
 # Genealogy walk_link_sequence
 # ---------------------------------------------------------------------------
 
-from unittest.mock import patch
 
 
 class TestWalkLinkSequence:

@@ -19,7 +19,6 @@ import os
 import shutil
 import sys
 import tempfile
-import textwrap
 from unittest.mock import patch
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

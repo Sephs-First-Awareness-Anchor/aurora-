@@ -20,7 +20,8 @@ The path:
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_emergence_surface.py')
 
 import json
 import os
@@ -158,13 +159,7 @@ class EmergenceMonitor:
             suffix = str(getattr(link, "id", "")).replace(":", "_")
             return f"{axis}:LINK_{suffix}"
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:159",
-                exc=_aurora_boundary_exc,
-                context={"function": "_ability_id_for_link", "handler_line": 159, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_ability_id_for_link', 159)
             return None
 
     def _ability_value(self, ability: Any, key: str, default: Any = None) -> Any:
@@ -186,13 +181,7 @@ class EmergenceMonitor:
         try:
             return int(float(raw))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:180",
-                exc=_aurora_boundary_exc,
-                context={"function": "_tag_int", "handler_line": 180, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_tag_int', 180)
             return int(default)
 
     def _tag_float(self, tags: List[str], prefix: str, default: float = 0.0) -> float:
@@ -200,13 +189,7 @@ class EmergenceMonitor:
         try:
             return float(raw)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:187",
-                exc=_aurora_boundary_exc,
-                context={"function": "_tag_float", "handler_line": 187, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_tag_float', 187)
             return float(default)
 
     def _ability_operational_status(self, aid: str, ability: Any) -> str:
@@ -361,13 +344,7 @@ class EmergenceMonitor:
             if hasattr(self._oets, "ground"):
                 self._oets.ground(concept_name, meaning)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:341",
-                exc=_aurora_boundary_exc,
-                context={"function": "_register_with_oets", "handler_line": 341, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_register_with_oets', 341)
             pass
 
     def _concept_name(self, aid: str, tags: List[str], dominant_axis: str) -> str:
@@ -406,13 +383,7 @@ class EmergenceMonitor:
                     self._emerged = {}
                 self._last_link_count = len(self._emerged)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:379",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_manifest", "handler_line": 379, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_manifest', 379)
             self._emerged = {}
             self._last_link_count = 0
         try:
@@ -428,13 +399,7 @@ class EmergenceMonitor:
                 else:
                     self._candidates = {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:394",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_manifest", "handler_line": 394, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_manifest', 394)
             self._candidates = {}
 
     def _normalize_emerged_entry(self, aid: str, entry: Dict[str, Any]) -> Dict[str, Any]:
@@ -470,13 +435,7 @@ class EmergenceMonitor:
                 json.dump(self._emerged, f, indent=2)
             os.replace(tmp, self._manifest_path)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:429",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_manifest", "handler_line": 429, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_save_manifest', 429)
             pass
 
     def _save_candidates(self) -> None:
@@ -492,13 +451,7 @@ class EmergenceMonitor:
                 json.dump(self._candidates, f, indent=2)
             os.replace(tmp, self._candidate_path)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:444",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_candidates", "handler_line": 444, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_save_candidates', 444)
             pass
 
     def _save_status(self, new_ids: List[str]) -> None:
@@ -526,11 +479,5 @@ class EmergenceMonitor:
                 json.dump(payload, f, indent=2)
             os.replace(tmp, self._status_path)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_emergence_surface.py:471",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_status", "handler_line": 471, "source_file": "aurora_emergence_surface.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_save_status', 471)
             pass

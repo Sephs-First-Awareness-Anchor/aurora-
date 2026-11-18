@@ -15,11 +15,11 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_conversation_episode_compiler.py')
 
 import hashlib
 import json
-import math
 import os
 import random
 import time
@@ -147,13 +147,7 @@ def _reconstruct_linear_thread(mapping: Dict[str, Any]) -> List[Dict[str, Any]]:
         try:
             roots = [next(iter(mapping.keys()))]
         except StopIteration as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_conversation_episode_compiler.py:148",
-                exc=_aurora_boundary_exc,
-                context={"function": "_reconstruct_linear_thread", "handler_line": 148, "source_file": "aurora_internal/aurora_conversation_episode_compiler.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_reconstruct_linear_thread', 148)
             return []
 
     def has_message(n: Dict[str, Any]) -> bool:
@@ -559,13 +553,7 @@ class ConversationEpisodeCompiler:
                 with open(manifest_path, "r", encoding="utf-8") as f:
                     manifest = json.load(f)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_conversation_episode_compiler.py:518",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_save_packs", "handler_line": 518, "source_file": "aurora_internal/aurora_conversation_episode_compiler.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_save_packs', 518)
                 manifest = []
 
         for pack in packs:
@@ -603,13 +591,7 @@ class ConversationEpisodeCompiler:
                     pack.payloads = json.load(f)
             return pack
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_conversation_episode_compiler.py:555",
-                exc=_aurora_boundary_exc,
-                context={"function": "load_pack", "handler_line": 555, "source_file": "aurora_internal/aurora_conversation_episode_compiler.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load_pack', 555)
             return None
 
     def list_available_packs(self) -> List[Dict[str, Any]]:
@@ -621,13 +603,7 @@ class ConversationEpisodeCompiler:
             with open(manifest_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_conversation_episode_compiler.py:566",
-                exc=_aurora_boundary_exc,
-                context={"function": "list_available_packs", "handler_line": 566, "source_file": "aurora_internal/aurora_conversation_episode_compiler.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'list_available_packs', 566)
             return []
 
     @property

@@ -25,10 +25,9 @@ from __future__ import annotations
 import collections
 import json
 import os
-import math
 import threading
-from dataclasses import dataclass, field as dc_field
-from typing import Dict, Iterator, List, Optional
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 # ── Axis / dimension mappings ────────────────────────────────────────────────
 _AXIS_STR_TO_INT: Dict[str, int] = {"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}

@@ -6,7 +6,7 @@ not just through the self-test harness.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
-import sys, math
+import sys
 sys.path.insert(0, ".")
 
 if __name__ == "__main__":
