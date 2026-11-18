@@ -2222,9 +2222,9 @@ def habitat_reset() -> str:
     """Full reset -- human-only, Hub-triggered (spec section 32)."""
     import json as _json
     if _habitat is None:
-        return json.dumps({"error": "habitat_not_initialized"})
+        return _json.dumps({"error": "habitat_not_initialized"})
     _habitat.reset()
-    return json.dumps({"success": True})
+    return _json.dumps({"success": True})
 
 
 def _messenger_waiting() -> bool:

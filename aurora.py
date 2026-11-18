@@ -27963,7 +27963,11 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 ev = _poedex_lookup_evidence(
                     embedded,
                     systems,
-                    request_text=search_prompt_text,
+                    # search_prompt_text is a local of _run_live_response_turn,
+                    # not of this function: naming it here raised NameError, so
+                    # every explicit lookup on this path failed silently.
+                    # Same derivation as that function.
+                    request_text=str((lookup_request or {}).get('source_text') or user_text),
                     timeout=12.0,
                     use_researcher=True,
                     pipeline_state=pipeline_state if isinstance(pipeline_state, dict) else None,
@@ -28723,7 +28727,11 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 ev = _poedex_lookup_evidence(
                     resolved_query,
                     systems,
-                    request_text=search_prompt_text,
+                    # search_prompt_text is a local of _run_live_response_turn,
+                    # not of this function: naming it here raised NameError, so
+                    # every explicit lookup on this path failed silently.
+                    # Same derivation as that function.
+                    request_text=str((lookup_request or {}).get('source_text') or user_text),
                     timeout=12.0,
                     use_researcher=True,
                     pipeline_state=pipeline_state if isinstance(pipeline_state, dict) else None,
