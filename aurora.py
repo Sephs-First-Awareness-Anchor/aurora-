@@ -35896,7 +35896,9 @@ def _run_live_response_turn(
                 "axes": dict(_rc_contract.get("runtime_axes") or {}),
                 "dominant": str(_ps.get("collective_dominant_axis") or ""),
                 "conf": round(float(getattr(resp_A, "confidence", 0.5) or 0.5), 3),
-                "nc": str((systems.get("_noncomp_output") or {}).get("nc_name") or ""),
+                # _apply_noncomp_output_guidance writes _last_noncomp_output;
+                # "_noncomp_output" was never written, so "nc" was always "".
+                "nc": str((systems.get("_last_noncomp_output") or {}).get("nc_name") or ""),
                 "tone": str(tone or ""),
             }
             conversation_memory.record_exchange(

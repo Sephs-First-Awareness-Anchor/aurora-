@@ -247,9 +247,16 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
         )
         pass
 
-    # Curiosity process — any pending open curiosity loops
+    # Curiosity process — any pending open curiosity loops.
+    # Nothing ever wrote systems['_open_curiosity_loops'], so this process
+    # never formed.  The live loops are owned by the curiosity engine
+    # (systems['_curiosity_engine']); read them through its own accessor.
     try:
         curiosity_loops = systems.get('_open_curiosity_loops') or []
+        if not curiosity_loops:
+            _curiosity_engine = systems.get('_curiosity_engine')
+            if _curiosity_engine is not None and hasattr(_curiosity_engine, 'open_curiosity_loops'):
+                curiosity_loops = _curiosity_engine.open_curiosity_loops()
         if curiosity_loops:
             subject = str(getattr(curiosity_loops[0], 'subject', curiosity_loops[0]))[:60]
             contexts.append(make_process_context(

@@ -323,6 +323,13 @@ class CuriosityEngine:
 
         return cycle_record
 
+    def open_curiosity_loops(self) -> List[CuriosityObject]:
+        """Unsettled curiosities carried into the next cycle, oldest first.
+
+        A read-only snapshot for the turn's process contexts (the braid's
+        curiosity process).  The engine keeps sole ownership of the list."""
+        return list(self._open_curiosity_loops)
+
     def reset_idle_counter(self) -> None:
         """Call at start of each idle period."""
         self._cycle_count_this_idle = 0
