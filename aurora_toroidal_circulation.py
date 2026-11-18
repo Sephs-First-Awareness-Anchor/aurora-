@@ -243,6 +243,9 @@ class ToroidalCirculationLayer:
                 return False
             try:
                 os.makedirs(self._state_dir, exist_ok=True)
+                from aurora_internal.aurora_store_ownership import store_write_allowed
+                if not store_write_allowed(self._path):
+                    return False
                 tmp = self._path + ".tmp"
                 payload = {
                     "version": 1,

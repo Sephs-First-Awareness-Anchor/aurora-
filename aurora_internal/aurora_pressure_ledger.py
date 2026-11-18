@@ -279,19 +279,23 @@ class PressureExperienceLedger:
 
         # Persist immediately -- atomic append to JSONL (max 500 entries retained)
         _MAX_ENTRIES = self._MAX_ENTRIES
+        from aurora_internal.aurora_store_ownership import store_write_allowed
         try:
-            with open(self._log_path, "a") as f:
-                f.write(json.dumps(exp.to_dict()) + "\n")
-            # Trim to last 500 entries if file is growing too large
-            try:
-                with open(self._log_path, "r") as _rf:
-                    _lines = _rf.readlines()
-                if len(_lines) > _MAX_ENTRIES:
-                    with open(self._log_path, "w") as _wf:
-                        _wf.writelines(_lines[-_MAX_ENTRIES:])
-            except Exception as _aurora_boundary_exc:
-                _aurora_fault(locals(), _aurora_boundary_exc, 'record', 174)
-                pass
+            # On a surface-only device this log is home-owned: the felt pressure
+            # still lands in the buffer above, home keeps the durable record.
+            if store_write_allowed(self._log_path):
+                with open(self._log_path, "a") as f:
+                    f.write(json.dumps(exp.to_dict()) + "\n")
+                # Trim to last 500 entries if file is growing too large
+                try:
+                    with open(self._log_path, "r") as _rf:
+                        _lines = _rf.readlines()
+                    if len(_lines) > _MAX_ENTRIES:
+                        with open(self._log_path, "w") as _wf:
+                            _wf.writelines(_lines[-_MAX_ENTRIES:])
+                except Exception as _aurora_boundary_exc:
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'record', 174)
+                    pass
         except Exception as _aurora_boundary_exc:
             _aurora_fault(locals(), _aurora_boundary_exc, 'record', 176)
             pass

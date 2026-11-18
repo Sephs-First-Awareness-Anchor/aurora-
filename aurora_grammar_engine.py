@@ -941,6 +941,9 @@ class MotifLineage:
         # prepare_response_trace every turn (~12% of turn wall time).
         if not force and batch_defer(self):
             return
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self._state_path):
+            return
         try:
             data = {
                 "motifs":    {k: v.to_dict() for k, v in self._motifs.items()},

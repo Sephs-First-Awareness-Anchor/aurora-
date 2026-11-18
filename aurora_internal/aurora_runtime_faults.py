@@ -219,6 +219,9 @@ def _project_fault_to_developmental_stream(record: Dict[str, Any], state_dir: Pa
             "expected_vs_observed": record.get("message", ""),
             "recovery_outcome": "unresolved",
         }
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(path):
+            return
         with open(path, "a", encoding="utf-8") as handle:
             handle.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
     except Exception:

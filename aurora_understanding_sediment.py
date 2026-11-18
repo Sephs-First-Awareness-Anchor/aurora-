@@ -157,6 +157,9 @@ class UnderstandingSedimentOverlay:
                 return False
             try:
                 os.makedirs(self._state_dir, exist_ok=True)
+                from aurora_internal.aurora_store_ownership import store_write_allowed
+                if not store_write_allowed(self._path):
+                    return False
                 tmp = self._path + ".tmp"
                 with open(tmp, "w", encoding="utf-8") as f:
                     json.dump({"version": 1, "entries": self._entries}, f, indent=1)
@@ -364,6 +367,9 @@ class PersistentWorthLedger:
                 return False
             try:
                 os.makedirs(self._state_dir, exist_ok=True)
+                from aurora_internal.aurora_store_ownership import store_write_allowed
+                if not store_write_allowed(self._path):
+                    return False
                 tmp = self._path + ".tmp"
                 payload = {
                     "version": 1,

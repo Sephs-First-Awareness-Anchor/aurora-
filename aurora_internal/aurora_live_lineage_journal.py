@@ -78,6 +78,9 @@ class LiveLineageJournal:
             from aurora_internal.aurora_turn_persistence import batch_defer
             if batch_defer(self):
                 return True
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self.storage_path):
+            return True
         try:
             os.makedirs(os.path.dirname(self.storage_path) or ".", exist_ok=True)
             payload = {

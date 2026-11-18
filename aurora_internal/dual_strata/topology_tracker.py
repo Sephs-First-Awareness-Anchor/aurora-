@@ -404,6 +404,9 @@ class TopologyTracker:
     def save(self) -> bool:
         if not self._path:
             return False
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self._path):
+            return False
         with self._lock:
             if not self._dirty:
                 return False

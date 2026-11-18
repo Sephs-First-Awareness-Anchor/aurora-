@@ -613,6 +613,9 @@ class LexicalMemory:
         """Persist full vocabulary to disk."""
         import json as _j, os as _os
         p = path or self._path or self._DEFAULT_PATH
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(p):
+            return True
         try:
             _os.makedirs(_os.path.dirname(p), exist_ok=True)
             data = {
@@ -1194,6 +1197,9 @@ class ImpressionCascade:
         """Persist full vocabulary to disk."""
         import json as _j, os as _os
         p = path or self._DEFAULT_PATH
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(p):
+            return True
         try:
             _os.makedirs(_os.path.dirname(p), exist_ok=True)
             data = {

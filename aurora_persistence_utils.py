@@ -54,6 +54,9 @@ def _serialize_json(data: Any, indent: Optional[int], default) -> str:
 
 def atomic_write_json(path: Path, data: Dict[str, Any], *, indent: int = 2, default=None) -> bool:
     """Atomically write JSON to disk under a process-wide persistence lock."""
+    from aurora_internal.aurora_store_ownership import store_write_allowed
+    if not store_write_allowed(path):
+        return True  # a home-owned store on a surface-only device: home writes it
     tmp = None
     with PERSISTENCE_LOCK:
         try:

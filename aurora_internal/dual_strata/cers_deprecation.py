@@ -119,6 +119,9 @@ class SubsystemDeprecationLedger:
     def _save(self) -> None:
         if not self._path:
             return
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self._path):
+            return
         try:
             os.makedirs(self._state_dir, exist_ok=True)
             # Compact: only the two fields evaluate() reads from historical

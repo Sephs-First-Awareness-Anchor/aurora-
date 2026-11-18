@@ -34,6 +34,9 @@ def _ensure_dir(path: str) -> None:
 
 
 def _append_jsonl(path: str, rec: Dict[str, Any]) -> None:
+    from aurora_internal.aurora_store_ownership import store_write_allowed
+    if not store_write_allowed(path):
+        return
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(rec, ensure_ascii=True, sort_keys=True) + "\n")
 
@@ -314,6 +317,9 @@ _LAST_SETTLE: Dict[str, float] = {}
 
 
 def _atomic_write_lines(path: str, rows: List[Dict[str, Any]]) -> None:
+    from aurora_internal.aurora_store_ownership import store_write_allowed
+    if not store_write_allowed(path):
+        return
     tmp = path + ".settle.tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         for row in rows:

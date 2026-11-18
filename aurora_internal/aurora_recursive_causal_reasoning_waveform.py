@@ -1488,6 +1488,9 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
     def _append_history(self, cycle: Mapping[str, Any]) -> None:
         if not self.persist:
             return
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self.history_path):
+            return
         try:
             line = json.dumps(dict(cycle or {}), sort_keys=True, default=str)
             with self.history_path.open("a", encoding="utf-8") as fh:

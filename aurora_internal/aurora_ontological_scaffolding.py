@@ -2862,6 +2862,9 @@ class OntologicalScaffoldingEngine:
             except Exception:
                 _study_dir = "aurora_state"
             log_path = os.path.join(str(_study_dir), "study_log.jsonl")
+            from aurora_internal.aurora_store_ownership import store_write_allowed
+            if not store_write_allowed(log_path):
+                return
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
             with open(log_path, 'a') as f:
                 f.write(_j.dumps(event.to_dict()) + "\n")
