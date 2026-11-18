@@ -14,14 +14,14 @@ branch's method headers and the other's bodies.  On main it left:
 - record_pressure_observation with record_participation's body (NameError on
   candidate_evaluation) and no record_participation override, so a real
   consumer's evaluation never judged the projection it used;
-- the score bridge sending every score to record_participation, so an
-  observer could close a projection it never used;
 - provisional_resolution without the demand edge its docstring describes;
 - build_perspective_projections without either branch's duplicate-view rule.
 
-Each piece is restored as its own branch wrote it.  The progressive branch's
-cached frontier (one structural scan per inadequacy episode) is not restored
-here; tests that need it still fail.
+Each piece is restored as its own branch wrote it.  Two progressive-branch
+pieces are left for Sir because they change when she inquires: routing scores
+without a candidate evaluation to record_pressure_observation (so raw Habitat
+pressure stops staging inquiry), and the cached frontier (one structural scan
+per inadequacy episode).  Tests that need them still fail.
 """
 from __future__ import annotations
 

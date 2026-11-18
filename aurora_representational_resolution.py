@@ -903,27 +903,20 @@ def record_ref_participation_from_scores(systems, ref_encoded, dimension_scores,
         for trace_id in (extra_trace_ids or [])
     ]
     try:
-        # A score with no candidate evaluation only reports consequence; it may
-        # raise inadequacy pressure but never stages or completes a projection
-        # it did not use.  Only a real consumer's evaluation closes one.
-        if candidate_evaluation is None:
-            engine.record_pressure_observation(
-                ref,
-                pressure_before=before,
-                pressure_after=after,
-                source=source,
-                context_tag=context_tag,
-                extra_trace=trace,
-            )
-        else:
-            engine.record_participation(
-                ref,
-                pressure_before=before,
-                pressure_after=after,
-                source=source,
-                context_tag=context_tag,
-                extra_trace=trace,
-                candidate_evaluation=candidate_evaluation,
-            )
+        # Every score still goes to record_participation, as on main: raw
+        # Habitat traffic keeps staging inquiry from pressure alone.  The
+        # progressive branch routed scores without a candidate evaluation to
+        # record_pressure_observation instead, so only her own provisional
+        # reads open an inquiry; that is a change in when she inquires, left
+        # for Sir to choose (record_pressure_observation is kept for it).
+        engine.record_participation(
+            ref,
+            pressure_before=before,
+            pressure_after=after,
+            source=source,
+            context_tag=context_tag,
+            extra_trace=trace,
+            candidate_evaluation=candidate_evaluation,
+        )
     except Exception:
         pass
