@@ -529,22 +529,6 @@ class GameStateMachine:
     def start(self) -> str:
         return _MENU_TEXT
 
-    def process(self, text: str) -> str:
-        t = text.strip()
-        t_low = t.lower().rstrip(".,!?")
-
-        if (t_low in ("quit", "exit", "stop game", "end game", "done", "bye")
-                or re.search(r'\bquit\b|\bend\s+(?:the\s+)?game\b|\bstop\s+(?:the\s+)?game\b', t_low)):
-            self.is_done = True
-            u, a, r = self.score["user"], self.score["aurora"], self.score["rounds"]
-            return f"Game over. Score — You: {u}  Aurora: {a}  Rounds: {r}. Good game!"
-
-        handler = getattr(self, f"_state_{self.state}", None)
-        if handler:
-            return handler(t, t_low)
-        self.state = "menu"
-        return _MENU_TEXT
-
     # ── Helpers ─────────────────────────────────────────────────────────────
 
     def _score_line(self) -> str:
