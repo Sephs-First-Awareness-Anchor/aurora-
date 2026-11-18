@@ -377,6 +377,9 @@ def extract_seeds_from_systems(systems: Dict[str, Any]) -> Tuple[List[str], List
         to ActivationField.spread() as `seeds` and `sensory_recognitions`.
     """
     seeds: List[str] = []
+    # Transient associative hypotheses share the existing salience pathway.
+    # They never become promotion evidence or autobiographical observations.
+    seeds.extend(str(c) for c in systems.pop("_dream_association_seeds", [])[:80])
 
     # 1. Recent user utterances — what was just said
     wm = systems.get("working_memory")

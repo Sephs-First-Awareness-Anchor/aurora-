@@ -52,6 +52,8 @@ EXCLUDED_NAMES = frozenset({
     "subsurface_daemon_status.json", "subsurface_heartbeat.json",
     "emergence_monitor_status.json", "interaction_status.json",
     "runtime_faults.jsonl",
+    "desktop_owner_token.txt", "desktop_config.json", "desktop_jobs.json",
+    "host_inventory.json", "computational_blueprints.json", "desktop_demonstrations.json",
 })
 
 
@@ -139,7 +141,7 @@ def validate_manifest(manifest: Any) -> List[Dict[str, Any]]:
     return clean
 
 
-def snapshot_state(state_dir: Any, snapshot_dir: Path) -> List[Dict[str, Any]]:
+def snapshot_state(state_dir: Any, snapshot_dir: Path, *, rel_paths=None) -> List[Dict[str, Any]]:
     """Copy the transferable files to a private directory and describe the
     COPY, so the hashes sent describe exactly the bytes sent even while the
     live files keep changing underneath."""
@@ -149,13 +151,15 @@ def snapshot_state(state_dir: Any, snapshot_dir: Path) -> List[Dict[str, Any]]:
         shutil.rmtree(snapshot_dir)
     snapshot_dir.mkdir(parents=True)
     kept: List[str] = []
-    for rel in list_transferable(src):
+    for rel in (list_transferable(src) if rel_paths is None else rel_paths):
         try:
             dest = snapshot_dir / rel
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src / rel, dest)
             kept.append(rel)
         except OSError:
+            if rel_paths is not None:
+                raise TransferError(f"required surface checkpoint could not be copied: {rel}")
             continue  # a file that vanished mid-copy is not part of this snapshot
     return build_manifest(snapshot_dir, kept)
 

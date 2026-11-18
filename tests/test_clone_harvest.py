@@ -244,6 +244,19 @@ def test_motif_evidence_alone_does_not_promote_a_thin_shape(tmp_path):
     assert out == {"absorbed": 1, "promoted": 0, "demoted": 0}       # one context: not composable yet
 
 
+def test_hosted_motif_chunk_receipt_survives_a_save_and_reload(tmp_path):
+    from aurora_grammar_engine import GrammarEngine, TokenRole as R
+    records = [{"seq": ["agent", "action"], "s": 3, "ctx": ["first"]}]
+    eng = GrammarEngine(state_dir=str(tmp_path))
+    eng._lineage._motifs.clear()
+    eng.absorb_clone_motifs(records, persist=False, harvest_chunk_id="harvest:chunk")
+    eng._lineage.save()
+    loaded = GrammarEngine(state_dir=str(tmp_path))
+    result = loaded.absorb_clone_motifs(records, harvest_chunk_id="harvest:chunk")
+    assert result["already_absorbed_chunk"] == 1
+    assert loaded._lineage.get_or_create((R.AGENT, R.ACTION)).success_count == 3
+
+
 def _said_web(*statements):
     from aurora_internal.aurora_ontological_scaffolding import OntologicalWeb
     from aurora_internal.aurora_propositional_understanding import integrate_form

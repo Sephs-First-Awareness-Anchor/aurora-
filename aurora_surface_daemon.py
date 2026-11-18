@@ -5,6 +5,7 @@ from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_f
 _aurora_fault = _bind_fault_recorder(__name__, 'aurora_surface_daemon.py')
 
 import json
+import os
 import signal
 import threading
 import time
@@ -24,7 +25,7 @@ from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
 
 
 _BASE_DIR = Path(__file__).parent
-_STATE_DIR = _BASE_DIR / "aurora_state"
+_STATE_DIR = Path(os.environ.get("AURORA_STATE_DIR") or _BASE_DIR / "aurora_state").resolve()
 _QUEUE_FILE = _STATE_DIR / "surface_turn_queue.json"
 _RESULT_FILE = _STATE_DIR / "surface_turn_result.json"
 _STATUS_FILE = _STATE_DIR / "surface_daemon_status.json"

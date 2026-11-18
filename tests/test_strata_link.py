@@ -192,8 +192,15 @@ def test_only_the_owner_is_applied_and_a_claim_raises_the_epoch(rig):
     assert second.outbox.stats()["pending"] == 1
     assert len(read_and_clear_continuity_packets(rig["laptop"])) == 1   # the phone's only
 
-    # An explicit claim moves ownership and raises the epoch.
+    # Pairing or an explicit claim cannot discard an existing surface's state.
     second.request_claim()
+    second.sync_once()
+    assert (second.role, second.epoch) == ("standby", 1)
+    assert second.last_error == "checkpoint_handoff_required"
+    (rig["phone"] / "surface_working_state.json").write_text('{"present": "state"}')
+    checkpoint = rig["client"].push_state("handoff")
+    assert checkpoint["ok"]
+    assert second.pull_handoff(checkpoint["token"])["ok"]
     second.sync_once()
     assert (second.role, second.epoch) == ("active", 2)
     assert second.outbox.stats()["pending"] == 0

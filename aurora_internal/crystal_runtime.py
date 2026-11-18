@@ -15,7 +15,8 @@ import json
 import os
 import re
 import time
-from typing import Any, Dict, Mapping
+from pathlib import Path
+from typing import Any, Dict, List, Mapping, Optional
 
 from aurora_internal import crystal_associations as _A
 from aurora_internal import crystal_facets as _F
@@ -64,13 +65,15 @@ def word_profiles(crystals: Mapping[str, Any], state_dir: str) -> _S.ContextProf
                             prof.merge(st["contexts"])
                     except Exception:
                         pass
-    mem = _read(state_dir, "aurora_conversation_memory.json") or {}
-    for e in mem.get("entries") or []:
-        for field in ("user_said", "aurora_said"):
-            for sent in re.split(r"[.!?;\n]+", str(e.get(field) or "")):
-                ws = _WORD.findall(sent.lower())
-                if ws:
-                    prof.observe(ws)
+        # Durable WordUse already contains these live conversations. Replay is
+        # only the legacy checkpoint fallback, not another vote for the same turn.
+        mem = _read(state_dir, "aurora_conversation_memory.json") or {}
+        for e in mem.get("entries") or []:
+            for field in ("user_said", "aurora_said"):
+                for sent in re.split(r"[.!?;\n]+", str(e.get(field) or "")):
+                    ws = _WORD.findall(sent.lower())
+                    if ws:
+                        prof.observe(ws)
     return prof
 
 
@@ -80,6 +83,26 @@ def _role_lookup() -> Dict[str, str]:
         return {str(w): str(getattr(r, "value", r)) for w, r in _WORD_ROLES.items()}
     except Exception:
         return {}
+
+
+REPORT_FILE = "crystal_pass_report.json"
+REPORT_HISTORY = 24
+
+
+def _write_report(state_dir: str, report: Mapping[str, Any], at: float) -> None:
+    try:
+        from aurora_persistence_utils import atomic_write_json
+        path = Path(state_dir) / REPORT_FILE
+        old = _read(state_dir, REPORT_FILE) or {}
+        history = [h for h in old.get("history", []) if isinstance(h, dict)]
+        brief = {"at": at, "seconds": report.get("seconds")}
+        for key, sub_key in (("links", "links"), ("facets", "facets"), ("held", "facets")):
+            part = report.get(key)
+            if isinstance(part, Mapping):
+                brief[key] = part.get(sub_key)
+        atomic_write_json(path, {"at": at, "report": report, "history": (history + [brief])[-REPORT_HISTORY:]}, default=str)
+    except Exception:
+        pass
 
 
 def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, min_interval: float = MIN_INTERVAL) -> Dict[str, Any]:
@@ -139,7 +162,9 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
                 getattr(cr, "_unlock_failpoints", lambda: None)()
                 raised += 1
         _last["t"] = now
-        return {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "held": held, "folded": folded, "maturity": mat, "interior": interior, "classes": len(classes),
+        report = {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "held": held, "folded": folded, "maturity": mat, "interior": interior, "classes": len(classes),
                 "substitute_links": links_subst, "generalizations": len(hubs), "generalization_crystals_created": created, "sensory_crystals_created": sensory_made, "generalizations_raised": raised}
+        _write_report(state_dir, report, now)
+        return report
     except Exception as exc:          # fail-safe: a failure here must never reach a turn or a save
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}

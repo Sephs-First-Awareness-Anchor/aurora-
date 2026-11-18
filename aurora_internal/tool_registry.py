@@ -2044,6 +2044,12 @@ def call(name: str, **kwargs: Any) -> ToolResult:
     if td is None:
         return ToolResult(name, "", False, "tool not registered")
     try:
+        systems = kwargs.get("systems") or {}
+        host = systems.get("host_services")
+        if host is not None and (name.startswith("desktop_") or name in {"mobile_send_sms", "mobile_make_call"}):
+            params = {k: v for k, v in kwargs.items() if k != "systems"}
+            result = host.execute(name, params)
+            return ToolResult(name, json.dumps(result, default=str), bool(result.get("ok")), result.get("error", ""))
         return td.fn(**kwargs)
     except Exception as exc:
         _aurora_fault(locals(), exc, 'call', 1818)

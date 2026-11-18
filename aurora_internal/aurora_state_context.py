@@ -32,8 +32,16 @@ constraint), not a new one introduced here.
 from __future__ import annotations
 
 from typing import Optional
+import os
+from pathlib import Path
 
 _active_state_dir: Optional[str] = None
+
+
+def resolve_state_dir(state_dir=None) -> Path:
+    """Explicit caller, active boot, configured process, legacy repository default."""
+    return Path(state_dir or _active_state_dir or os.environ.get("AURORA_STATE_DIR") or
+                Path(__file__).resolve().parents[1] / "aurora_state").expanduser().resolve()
 
 
 def set_active_state_dir(state_dir: Optional[str]) -> None:

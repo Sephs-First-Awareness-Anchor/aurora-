@@ -66,7 +66,7 @@ _CODE_MUTATION_LOCK = threading.Lock()
 # Paths
 # ---------------------------------------------------------------------------
 _BASE_DIR       = Path(__file__).parent
-_STATE_DIR      = _BASE_DIR / "aurora_state"
+_STATE_DIR      = Path(os.environ.get("AURORA_STATE_DIR") or _BASE_DIR / "aurora_state").resolve()
 _MESSAGES_FILE  = _STATE_DIR / "aurora_to_user.json"   # messages Aurora leaves for you
 _DAEMON_LOG     = _STATE_DIR / "daemon.log"
 _SUBSURFACE_STATUS = _STATE_DIR / "subsurface_daemon_status.json"

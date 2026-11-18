@@ -1243,6 +1243,13 @@ def start_curiosity_background(
     User turns always interrupt via _CYCLE_INTERRUPTIBLE.
     """
     global _CURIOSITY_THREAD
+    resident = getattr(engine, "systems", {}).get("_desktop_runtime")
+    if resident is not None:
+        # The resident scheduler owns this engine and the field lock. Starting
+        # its legacy thread would introduce a second developmental clock.
+        return
+    if _CURIOSITY_THREAD is not None and _CURIOSITY_THREAD.is_alive():
+        return
     _CURIOSITY_STOP.clear()
 
     def _loop():

@@ -26680,6 +26680,7 @@ def boot_aurora(
         from aurora_internal.aurora_universal_function_lineage import UniversalFunctionLineage
         _function_lineage = UniversalFunctionLineage(
             repo_root=str(Path(__file__).resolve().parent),
+            manifest_path=os.path.join(state_dir, "universal_function_lineage.json"),
             auto_build=True,
             include_lambdas=True,
             persist=True,
@@ -34062,6 +34063,9 @@ def process_external_user_turn(systems: Dict[str, Any], user_text: str, **kwargs
     reply event is observed AFTER, scored against the same expectations.  Both
     observations are best-effort and can never alter or block the turn.
     """
+    from aurora_internal.dual_strata.strata_link import require_surface_admission, publish_raw_input
+    require_surface_admission(systems)
+    publish_raw_input(systems.get("state_dir", "aurora_state"), str(user_text or ""))
     # One write batch around the WHOLE turn (phone load, 2026-11-07).  The
     # impl opens its own batch ~300 lines in, so everything before it (and
     # the live-experience observations here) rewrote hot state files in full
@@ -34706,7 +34710,7 @@ def save_sensory_skill_state(systems: Dict[str, Any], verbose: bool = True) -> b
 # INTERACTIVE CHAT REPL
 # ============================================================================
 
-def _full_save(systems: Dict[str, Any], verbose: bool = True):
+def _full_save(systems: Dict[str, Any], verbose: bool = True, *, weave: bool = True):
     """Save all state: standard snapshot + OETS web + memory + identity + sensory + autonomy."""
     if _state_write_lock_active(systems):
         if verbose:
@@ -34749,7 +34753,8 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
                 # Weave every subsystem's stored data into the crystals it belongs to (additive, fail-safe, rate-limited;
                 # AURORA_CRYSTAL_WEAVE=0 turns it off) just before the registry is persisted.
                 from aurora_internal import crystal_runtime as _crystal_runtime
-                _crystal_report = _crystal_runtime.run_pass(dimensional.dps, state_dir)
+                _crystal_report = (_crystal_runtime.run_pass(dimensional.dps, state_dir)
+                                   if weave else {"skipped": "persistence_only"})
                 if verbose and _crystal_report.get("ok"):
                     print(f"  [SAVE] Crystal weave: {_crystal_report.get('links', {}).get('links', 0)} links, "
                           f"{_crystal_report.get('facets', {}).get('facets', 0)} facets, "
