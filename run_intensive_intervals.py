@@ -3,8 +3,6 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 import json
 import subprocess
-import time
-import os
 
 def get_stats():
     try:

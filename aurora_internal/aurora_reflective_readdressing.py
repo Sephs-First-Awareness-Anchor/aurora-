@@ -37,7 +37,7 @@ import time
 import uuid
 from collections import deque
 from pathlib import Path
-from typing import Any, Deque, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Deque, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 from aurora_internal.aurora_runtime_faults import (
     record_exception_from_locals as _aurora_record_exception_from_locals,

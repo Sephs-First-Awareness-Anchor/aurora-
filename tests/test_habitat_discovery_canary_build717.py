@@ -78,7 +78,6 @@ controlled synthetic input can assert with certainty.
 from __future__ import annotations
 
 import random
-import tempfile
 
 from aurora_internal.constraint_genealogy import (
     AXES,

@@ -25,7 +25,7 @@ import glob
 import json
 import os
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from aurora_constraint_manifold_router import SlotCoord, AXES, DIM_NAMES
 

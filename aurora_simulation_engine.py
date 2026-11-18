@@ -32,7 +32,7 @@ import math
 import hashlib
 import random
 import os
-from enum import Enum, IntEnum, auto
+from enum import Enum, IntEnum
 from typing import Dict, List, Any, Optional, Tuple, Set, Deque, Iterable, Callable
 from dataclasses import dataclass, field
 from collections import defaultdict, deque

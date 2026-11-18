@@ -1,7 +1,6 @@
 """King Quasicrystal authority canaries for live possibility actualization."""
 from __future__ import annotations
 
-from types import SimpleNamespace
 
 import aurora_internal.aurora_live_possibility_frontier as frontier
 

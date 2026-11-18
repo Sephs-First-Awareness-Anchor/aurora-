@@ -27,7 +27,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import json
 import os
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 _CONSTRAINT_TO_AXIS = {
     "existence": "X",

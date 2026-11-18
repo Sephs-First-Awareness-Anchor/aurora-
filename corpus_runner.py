@@ -66,7 +66,6 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import os
 import re
-import json
 import time
 import math
 import hashlib

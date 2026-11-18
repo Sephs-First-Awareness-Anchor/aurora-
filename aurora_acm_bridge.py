@@ -30,7 +30,6 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 #   python aurora_acm_bridge.py --verbose    # print frame stats
 
 import argparse
-import os
 import sys
 import socket
 import threading

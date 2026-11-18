@@ -15,7 +15,7 @@ import json
 import os
 import re
 import time
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, Mapping
 
 from aurora_internal import crystal_associations as _A
 from aurora_internal import crystal_facets as _F

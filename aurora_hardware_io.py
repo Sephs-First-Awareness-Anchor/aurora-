@@ -1254,14 +1254,13 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 
 import time
-import math
 import hashlib
 import random
 import json
 import os
 import numpy as np
 from enum import Enum, auto
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from collections import defaultdict
 from pathlib import Path

@@ -14,14 +14,12 @@ from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
-import os
-import re
 import shutil
 import time
 import csv
 import urllib.request
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Optional, Iterator
+from typing import Tuple, Optional, Iterator
 
 _STATE_DIR = Path(__file__).resolve().parents[1] / "aurora_state"
 _CORPORA_DIR = _STATE_DIR / "corpora"

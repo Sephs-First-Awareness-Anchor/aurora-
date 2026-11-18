@@ -7,7 +7,6 @@ delivered path (backward-attribution-confirmed in R1.9.1).
 instance of the never-content-only-style doctrine (F1.4: usage-habit ->
 style; F5: register -> looseness; now: valence-proximity -> tone).
 """
-import math
 
 from aurora_expression_perception import ExpressionPerceptionEngine, SentenceComposer, LexicalEntry
 

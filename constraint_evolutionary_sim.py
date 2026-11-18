@@ -68,7 +68,7 @@ import time
 import threading
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 log = logging.getLogger("aurora.evo_sim")
 

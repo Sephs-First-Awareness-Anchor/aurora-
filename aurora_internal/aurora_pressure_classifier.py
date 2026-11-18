@@ -49,7 +49,7 @@ import json
 import os
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 _AXES = ("X", "T", "N", "B", "A")
 

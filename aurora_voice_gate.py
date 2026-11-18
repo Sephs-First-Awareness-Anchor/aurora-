@@ -63,7 +63,7 @@ import re
 from collections import OrderedDict
 import time
 from types import SimpleNamespace
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 
 VOICE_GATE_VERSION = "aurora_voice_gate_v1"
 

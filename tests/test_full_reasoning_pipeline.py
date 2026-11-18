@@ -10,7 +10,6 @@ emotion, and expression.
 
 from aurora_runtime import AuroraRuntime
 from aurora_internal.aurora_attention_engine import AttentionState
-import time
 
 def run_verification():
     print("\n[TEST] Booting Aurora Full Stack...")

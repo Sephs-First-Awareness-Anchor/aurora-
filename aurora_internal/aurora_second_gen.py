@@ -31,7 +31,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import json
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 _DESCRIPTOR_STATE_REL  = "aurora_state/operation_descriptors.json"
 _EVOLVED_SURFACE_FILE  = "aurora_internal/aurora_evolved_surfaces.py"

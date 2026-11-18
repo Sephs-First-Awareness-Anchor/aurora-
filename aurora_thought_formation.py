@@ -40,7 +40,6 @@ from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import copy
-import json
 import re
 import threading
 import time

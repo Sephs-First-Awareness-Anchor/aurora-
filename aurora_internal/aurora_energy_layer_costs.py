@@ -75,7 +75,7 @@ import time
 import hashlib
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Deque, Dict, List, Optional, Tuple
+from typing import Deque, Dict, List, Optional
 
 # ---------------------------------------------------------------------------
 # AURORA STACK IMPORTS — exact names from existing modules

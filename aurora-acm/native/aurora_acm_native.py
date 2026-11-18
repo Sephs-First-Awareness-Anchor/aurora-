@@ -20,7 +20,6 @@
 #   python aurora_acm_native.py           # auto-detect aurora-core-ai
 #   python aurora_acm_native.py --no-ai   # force harmonic drift
 
-import math
 import os
 import sys
 import time

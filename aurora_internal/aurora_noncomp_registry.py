@@ -73,7 +73,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import math
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Dict, NamedTuple, Optional, Tuple
+from typing import Dict, Tuple
 
 # ---------------------------------------------------------------------------
 # AURORA STACK IMPORTS — exact names from existing modules

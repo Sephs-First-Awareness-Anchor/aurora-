@@ -10,7 +10,6 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import enum
 import json
-import math
 import os
 import tempfile
 from collections import deque

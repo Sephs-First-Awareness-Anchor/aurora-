@@ -1,5 +1,4 @@
 from pathlib import Path
-from types import SimpleNamespace
 
 from aurora_expression_perception import LexicalMemory, SentenceComposer, VoiceGenome
 from aurora_internal.aurora_proposition_frame import PropositionFrame

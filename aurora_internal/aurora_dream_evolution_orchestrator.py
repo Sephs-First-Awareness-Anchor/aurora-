@@ -22,7 +22,6 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
-import json
 import logging
 import os
 import time

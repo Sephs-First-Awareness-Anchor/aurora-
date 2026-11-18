@@ -48,8 +48,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import json
 import os
 import time
-from collections import deque
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 _STATE_REL  = "aurora_state"
 _HINTS_REL  = "aurora_state/adapter_hints.json"

@@ -36,7 +36,7 @@ import re
 import threading
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Set
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from collections import defaultdict
 
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")

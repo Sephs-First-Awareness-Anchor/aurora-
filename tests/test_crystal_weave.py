@@ -1,6 +1,5 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 """Weaving the stores into the crystal architecture honours the evidence contract and makes links that change something."""
-import ast
 import os
 import re
 

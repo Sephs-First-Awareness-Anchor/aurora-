@@ -36,14 +36,12 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import time
 import math
 import os
-import shutil
 import hashlib
 import random
 from aurora_warp_protocol import WarpCapable
 import aurora_constraint_emission
 import re
 import numpy as np
-from enum import Enum, IntEnum, auto
 from typing import Dict, List, Any, Optional, Tuple, Set
 from dataclasses import dataclass, field
 from collections import defaultdict, deque

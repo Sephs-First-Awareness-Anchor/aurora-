@@ -22,7 +22,6 @@ not a claim of end-to-end realism.
 """
 from __future__ import annotations
 
-import tempfile
 
 import pytest
 

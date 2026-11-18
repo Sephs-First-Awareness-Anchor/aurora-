@@ -54,7 +54,7 @@ import math
 import os
 import time
 from itertools import combinations
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Set, Tuple
 
 _AXES = ("X", "T", "N", "B", "A")
 _ALL_BASE_CHANNELS = tuple(f"NC:{s}>{d}" for s in _AXES for d in _AXES)

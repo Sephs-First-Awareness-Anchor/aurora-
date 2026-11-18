@@ -11,7 +11,6 @@ Aurora. Subsurface/Aurora owns every interpretive step after retrieval.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
-import json
 import os
 import sys
 import time

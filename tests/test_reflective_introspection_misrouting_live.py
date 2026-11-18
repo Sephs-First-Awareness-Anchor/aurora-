@@ -13,7 +13,6 @@ ordinary prompts stay on their normal paths (12, full); the required
 reduced-canary sequence that originally produced four byte-identical
 responses.
 """
-import hashlib
 import os
 import random
 import shutil

@@ -62,7 +62,7 @@ import subprocess
 import sys
 import tarfile
 import time
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 EXPERIMENT_VERSION = "aurora_development_experiment_v1"
 CONTENT_ROLES = ("noun", "verb", "adjective", "adverb")

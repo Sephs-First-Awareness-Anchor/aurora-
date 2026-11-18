@@ -34,7 +34,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import json
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 _ADAPTER_HINTS_REL = "aurora_state/adapter_hints.json"
 

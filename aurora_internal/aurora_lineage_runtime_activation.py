@@ -13,7 +13,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import json
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")
 

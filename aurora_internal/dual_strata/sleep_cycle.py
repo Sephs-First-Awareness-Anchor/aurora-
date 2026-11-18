@@ -16,7 +16,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import json
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 _SLEEP_STATE_FILENAME = "surface_sleep_mode.json"
 

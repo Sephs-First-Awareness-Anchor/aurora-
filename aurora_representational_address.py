@@ -49,7 +49,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, replace
-from typing import Any, Dict, FrozenSet, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 AXES: Tuple[str, ...] = ("X", "T", "N", "B", "A")
 DIM_NAMES: Tuple[str, ...] = ("POLARITY", "MAGNITUDE", "OPERATOR", "COST", "DIFFERENCE")

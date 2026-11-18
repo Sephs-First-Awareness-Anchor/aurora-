@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import hashlib
 import math
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Set, Tuple
 
 LEX_SLOTS = 4
 _AXES = ("X", "T", "N", "B", "A")

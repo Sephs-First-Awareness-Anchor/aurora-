@@ -17,7 +17,6 @@ demonstrations those repairs were made for.
 from __future__ import annotations
 
 import json
-import time as _time
 
 from aurora_habitat import HabitatRuntime
 from aurora_habitat_motivation import maybe_engage_habitat

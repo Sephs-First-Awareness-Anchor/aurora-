@@ -37,7 +37,7 @@ The stage functions themselves live in aurora.py.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 @dataclass

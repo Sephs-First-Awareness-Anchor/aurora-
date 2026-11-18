@@ -7,7 +7,6 @@ Usage:
   aurora_state_compress.py unpack  — restore .cz archives back to directories
   aurora_state_compress.py rotate  — log rotation only (no pack/unpack)
 """
-import os
 import sys
 import shutil
 from pathlib import Path

@@ -50,9 +50,7 @@ both modules are fully loaded.
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
-import hashlib
-import time
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional
 
 # ── Axis / I-state constants (mirrored from warp_protocol — no dep) ───────────
 

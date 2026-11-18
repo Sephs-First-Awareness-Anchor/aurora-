@@ -22,7 +22,7 @@ import math
 import sys
 import os as _os
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from .crest import Crest
 from .subsurface_state import AXES, clip01

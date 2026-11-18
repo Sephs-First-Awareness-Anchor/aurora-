@@ -64,7 +64,7 @@ Created: February 2026
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
-from enum import IntEnum, auto
+from enum import IntEnum
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, FrozenSet, Set, List
 

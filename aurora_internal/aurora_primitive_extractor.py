@@ -79,11 +79,10 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import json
 import math
-import os
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Deque, Dict, FrozenSet, List, Optional, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple
 
 # =============================================================================
 # AXIS CONSTANTS

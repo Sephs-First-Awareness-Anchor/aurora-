@@ -13,7 +13,6 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import itertools
 import json
 import os
-import re
 import time
 from collections import deque
 from dataclasses import dataclass, field

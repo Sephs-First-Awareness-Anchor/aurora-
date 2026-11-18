@@ -20,7 +20,6 @@ from there, uniformly for both single-line and multi-line handlers.
 import ast
 import os
 import sys
-import tempfile
 from pathlib import Path
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

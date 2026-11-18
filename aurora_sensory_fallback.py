@@ -14,7 +14,7 @@ failure it returns a safe, neutral perception so the caller never crashes.
 """
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 
 def perceive_frame(jpeg_bytes: Any, prev_gray: Any = None) -> Tuple[Dict[str, Any], Any]:

@@ -29,20 +29,15 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
-import os
-import json
 import time
 import math
 import hashlib
 import logging
-import threading
 import urllib.request
 import urllib.parse
 from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass, field, asdict
-from pathlib import Path
-from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 

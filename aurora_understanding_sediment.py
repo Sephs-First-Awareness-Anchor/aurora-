@@ -57,7 +57,7 @@ import os
 import time
 import threading
 from collections import deque
-from typing import Any, Deque, Dict, List, Optional, Tuple
+from typing import Any, Deque, Dict, List, Optional
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 

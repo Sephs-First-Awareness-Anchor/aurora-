@@ -44,7 +44,7 @@ import json
 import os
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 _AXES = ("X", "T", "N", "B", "A")
 _PRESSURE_LOG_REL  = "aurora_state/surface_pressure_log.jsonl"

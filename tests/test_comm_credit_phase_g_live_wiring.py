@@ -32,7 +32,6 @@ in the diff, not part of Communication Credit's receiver-evidence
 routing -- left for separate consideration rather than folded in here
 without its own dedicated verification.
 """
-import json
 import os
 import shutil
 import sys

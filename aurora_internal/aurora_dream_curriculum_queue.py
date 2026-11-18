@@ -24,7 +24,6 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import json
 import os
-import random
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional

@@ -16,7 +16,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import json
 import os
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 
 def _safe_axis(raw: Any) -> str:

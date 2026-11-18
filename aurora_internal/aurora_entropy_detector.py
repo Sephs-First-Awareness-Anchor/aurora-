@@ -62,9 +62,9 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import math
 from collections import deque
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Deque, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from enum import Enum
+from typing import Deque, Dict, Optional, Tuple
 
 from aurora_internal.aurora_constraint_manifold_patched import Constraint, ManifoldViolation
 from aurora_internal.aurora_noncomp_registry import REGISTRY

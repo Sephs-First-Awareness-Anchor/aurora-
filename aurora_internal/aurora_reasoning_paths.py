@@ -50,7 +50,7 @@ import math
 import os
 import threading
 import time
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional
 
 PATHS_VERSION = "aurora_reasoning_paths_v1"
 AXES = ("X", "T", "N", "B", "A")

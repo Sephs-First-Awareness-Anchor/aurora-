@@ -52,7 +52,7 @@ import os
 import threading
 import time
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from aurora_internal.dual_strata.topology_frame import AXES, TopologyFrame

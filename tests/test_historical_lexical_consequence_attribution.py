@@ -23,7 +23,6 @@ while implementing PR 2, not assumed):
 """
 from __future__ import annotations
 
-import tempfile
 
 from aurora_internal.aurora_lexical_grounding import (
     AuroraLexicalGrounding,

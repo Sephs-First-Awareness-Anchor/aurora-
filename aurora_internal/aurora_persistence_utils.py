@@ -99,8 +99,7 @@ def checksum_dict(data: Dict[str, Any]) -> str:
 import socket
 import subprocess
 import logging
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from dataclasses import dataclass, asdict
 from typing import List
 
 logger = logging.getLogger(__name__)

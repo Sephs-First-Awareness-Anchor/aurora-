@@ -64,8 +64,8 @@ from __future__ import annotations
 import hashlib
 import math
 from collections import deque
-from dataclasses import dataclass, field
-from typing import Deque, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Deque, Dict, List, Optional
 
 from aurora_internal.aurora_constraint_manifold_patched import Constraint, ManifoldViolation
 from foundational_contract import ExistenceMode

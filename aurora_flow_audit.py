@@ -49,7 +49,7 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 AXES = ("X", "T", "N", "B", "A")
 DIMS = ("POLARITY", "MAGNITUDE", "OPERATOR", "COST", "DIFFERENCE")

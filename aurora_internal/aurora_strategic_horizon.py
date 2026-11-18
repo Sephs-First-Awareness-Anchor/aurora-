@@ -48,7 +48,7 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from aurora_internal.aurora_constraint_manifold_patched import Constraint
 from aurora_internal.aurora_persistence_utils import PERSISTENCE_LOCK, _ensure_parent

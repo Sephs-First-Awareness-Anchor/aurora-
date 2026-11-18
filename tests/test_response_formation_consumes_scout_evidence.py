@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Aurora, not Scout, interprets raw response-fit specimens."""
 import ast, os, sys
-from types import SimpleNamespace
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import aurora
 from aurora_internal.aurora_turn_chain import TurnUnderstandingState

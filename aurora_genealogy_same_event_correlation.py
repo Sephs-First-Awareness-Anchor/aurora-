@@ -54,7 +54,7 @@ THREE OUTCOMES (as specified):
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 from aurora_genealogy_promotion_dimension_observer import classify_promotion_relevant_dimension_participation
 

@@ -23,9 +23,7 @@ small synthetic repo (not the real ~270K-line one) so they run fast while
 still exercising the real mechanism end-to-end.
 """
 import os
-import shutil
 import sys
-import tempfile
 import time
 from pathlib import Path
 

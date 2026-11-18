@@ -42,7 +42,6 @@ import json
 import math
 import multiprocessing as mp
 import os
-import queue
 import resource
 import signal
 import sys

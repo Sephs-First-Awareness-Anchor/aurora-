@@ -33,7 +33,7 @@ import uuid
 import json
 import os
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any, Callable, Tuple
+from typing import List, Dict, Optional, Any, Tuple
 from enum import Enum
 
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")

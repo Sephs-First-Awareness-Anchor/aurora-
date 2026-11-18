@@ -9,7 +9,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 # Mapping: subsurface crest labels → which keys in _subsurface_detail
 # are relevant at each depth

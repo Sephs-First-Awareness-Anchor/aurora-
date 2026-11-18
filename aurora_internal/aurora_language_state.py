@@ -32,7 +32,7 @@ import threading
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field, asdict
 from collections import defaultdict, deque
-from enum import Enum, auto
+from enum import Enum
 
 
 # ============================================================================

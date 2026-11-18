@@ -26,7 +26,7 @@ import re
 import sys
 import urllib.request
 import urllib.error
-from typing import Any, Dict, List, Optional, Tuple, Iterable
+from typing import Any, Dict, List, Optional, Tuple
 
 APP_NAME = "chats_criteria"
 SCHEMA_VERSION = 4  # bumped for full transcript capture

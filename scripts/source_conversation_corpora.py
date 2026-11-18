@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import gzip
 import io
 import json
 import re

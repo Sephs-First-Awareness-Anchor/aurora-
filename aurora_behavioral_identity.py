@@ -31,10 +31,9 @@ import math
 import hashlib
 import random
 import numpy as np
-from enum import Enum, IntEnum, auto
-from typing import Dict, List, Any, Optional, Tuple, Set
+from enum import Enum, auto
+from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
-from collections import defaultdict
 
 from aurora_constraint_unit_adapter import build_constraint_profile
 

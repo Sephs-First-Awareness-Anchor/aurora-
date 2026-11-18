@@ -94,10 +94,9 @@ from __future__ import annotations
 
 import hashlib
 import math
-import os
 import tempfile
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from aurora_closure_basis import (
     AXES,

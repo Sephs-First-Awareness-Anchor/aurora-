@@ -32,7 +32,6 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import os
 import json
 import time
-import math
 import hashlib
 import logging
 import threading
@@ -51,8 +50,7 @@ _FC = _FoundationalContract()
 from aurora_internal.aurora_constraint_manifold_patched import Constraint as _Constraint
 from aurora_internal.aurora_noncomp_registry import REGISTRY as _NC_REGISTRY
 from aurora_internal.aurora_difference_buffer import make_difference_buffer as _make_difference_buffer
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field, asdict
+from typing import Dict, List, Optional, Any
 from pathlib import Path
 from collections import defaultdict
 

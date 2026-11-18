@@ -28,13 +28,12 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 import json
 import os
 import re
-import subprocess
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional, Tuple
 
 from aurora_internal.scouting.contracts import ScoutRequest
 

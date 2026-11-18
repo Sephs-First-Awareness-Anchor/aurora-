@@ -8,7 +8,6 @@ elapsed. The metabolic clock's steps therefore never create, record or observe a
 """
 import os
 import sys
-from types import SimpleNamespace
 
 import pytest
 

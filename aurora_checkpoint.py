@@ -24,9 +24,8 @@ import hashlib
 import tempfile
 import threading
 import logging
-from typing import Dict, Any, Optional, List, Callable
+from typing import Dict, Optional, List, Callable
 from dataclasses import dataclass, field, asdict
-from pathlib import Path
 from enum import Enum
 
 logger = logging.getLogger(__name__)

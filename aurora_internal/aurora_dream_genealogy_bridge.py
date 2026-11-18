@@ -33,7 +33,6 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import hashlib
 import json
-import math
 import os
 import random
 import time

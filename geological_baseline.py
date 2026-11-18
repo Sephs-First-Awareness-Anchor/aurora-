@@ -78,7 +78,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import math
 import threading
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 # Genealogical depth of each crystal stage from the 125-base constraint origin

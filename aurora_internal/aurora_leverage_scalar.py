@@ -103,7 +103,7 @@ import math
 import random
 from collections import deque
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 from aurora_internal.aurora_constraint_manifold_patched import (
     Constraint,
