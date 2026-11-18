@@ -115,7 +115,7 @@
     "FEEDS": 15,
     "SHARED_STATE": 1
    },
-   "cohesion": 0.106,
+   "cohesion": 0.131,
    "evidence": [
     [
      "fn:aurora_internal.tool_registry._audio_analysis",
@@ -138,17 +138,17 @@
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.data",
+     "field:aurora_internal.tool_registry.ToolResult.note",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.note",
+     "field:aurora_internal.tool_registry.ToolResult.data",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ]
    ],
-   "external_binding": 296,
+   "external_binding": 233,
    "higher_order": "subsys:category:bridges",
    "id": "subsys:composite:bridges:9c439ea7",
    "members": [
@@ -246,7 +246,7 @@
     "FEEDS": 164,
     "INSTANTIATES": 3
    },
-   "cohesion": 0.232,
+   "cohesion": 0.233,
    "evidence": [
     [
      "fn:aurora_crystal_ingestion._bare_word",
@@ -359,17 +359,17 @@
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior.aspects",
+     "fn:aurora_internal.crystal_interior._profile",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior._profile",
+     "fn:aurora_internal.crystal_interior.aspects",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ]
    ],
-   "external_binding": 817,
+   "external_binding": 813,
    "higher_order": "subsys:category:crystal",
    "id": "subsys:composite:crystal:cbfaf025",
    "members": [
@@ -550,7 +550,7 @@
     "INSTANTIATES": 6,
     "SHARED_STATE": 3
    },
-   "cohesion": 0.036,
+   "cohesion": 0.035,
    "evidence": [
     [
      "mod:aurora_consciousness_engine",
@@ -603,7 +603,7 @@
      "fn:aurora_dimensional_systems.DimensionalSystems.process_synthesis"
     ]
    ],
-   "external_binding": 1141,
+   "external_binding": 1144,
    "higher_order": "subsys:category:dimensional",
    "id": "subsys:composite:dimensional:78d8264b",
    "members": [
@@ -654,7 +654,7 @@
     "INSTANTIATES": 26,
     "SHARED_STATE": 3
    },
-   "cohesion": 0.142,
+   "cohesion": 0.143,
    "evidence": [
     [
      "mod:aurora_constraint_engine",
@@ -712,7 +712,7 @@
      "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
     ],
     [
-     "field:aurora_ivm.RecursionLevel.SURFACE",
+     "field:aurora_ivm.RecursionLevel.CORE",
      "FEEDS",
      "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
     ],
@@ -777,7 +777,7 @@
      "fn:aurora_constraint_engine.SedimentBasin.__init__"
     ]
    ],
-   "external_binding": 1064,
+   "external_binding": 1058,
    "higher_order": "subsys:category:foundation",
    "id": "subsys:composite:foundation:6f0cf83a",
    "members": [
@@ -795,10 +795,10 @@
   },
   {
    "binding": {
-    "CALLS": 2,
+    "CALLS": 3,
     "INSTANTIATES": 2
    },
-   "cohesion": 0.012,
+   "cohesion": 0.013,
    "evidence": [
     [
      "fn:aurora_internal.aurora_pressure_ledger.PressureExperienceLedger._bridge_to_oets",
@@ -816,7 +816,7 @@
      "fn:aurora_internal.aurora_ontological_scaffolding.OntologicalWeb.get_node"
     ]
    ],
-   "external_binding": 339,
+   "external_binding": 375,
    "higher_order": "subsys:category:foundation",
    "id": "subsys:composite:foundation:d3ead140",
    "members": [
@@ -832,7 +832,7 @@
     "INSTANTIATES": 1,
     "SHARED_STATE": 4
    },
-   "cohesion": 0.354,
+   "cohesion": 0.383,
    "evidence": [
     [
      "fn:aurora_internal.aurora_pressure_router.PressureRouter.__init__",
@@ -850,7 +850,7 @@
      "fn:aurora_internal.aurora_pressure_classifier.PressureClassifier.classify"
     ]
    ],
-   "external_binding": 42,
+   "external_binding": 37,
    "higher_order": "subsys:category:foundation",
    "id": "subsys:composite:foundation:71e21bb1",
    "members": [
@@ -865,7 +865,7 @@
     "FEEDS": 3,
     "INSTANTIATES": 1
    },
-   "cohesion": 0.081,
+   "cohesion": 0.082,
    "evidence": [
     [
      "fn:aurora_manifold_lookup._directory",
@@ -883,7 +883,7 @@
      "fn:aurora_manifold_directory_reader.ManifoldDirectory.load"
     ]
    ],
-   "external_binding": 79,
+   "external_binding": 78,
    "higher_order": "subsys:category:foundation",
    "id": "subsys:composite:foundation:8bbcbdb6",
    "members": [
@@ -895,11 +895,11 @@
   {
    "binding": {
     "CALLS": 27,
-    "FEEDS": 67,
+    "FEEDS": 66,
     "INSTANTIATES": 10,
     "SHARED_STATE": 6
    },
-   "cohesion": 0.094,
+   "cohesion": 0.089,
    "evidence": [
     [
      "fn:aurora_genealogy_environment.link_from_dict",
@@ -1012,7 +1012,7 @@
      "field:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger.links"
     ]
    ],
-   "external_binding": 1066,
+   "external_binding": 1110,
    "higher_order": "subsys:category:genealogy",
    "id": "subsys:composite:genealogy:c9b3e419",
    "members": [
@@ -1034,7 +1034,7 @@
     "INSTANTIATES": 5,
     "SHARED_STATE": 4
    },
-   "cohesion": 0.076,
+   "cohesion": 0.078,
    "evidence": [
     [
      "cls:tensor_occupancy_warp_bridge.TensorOccupancyWarpBridge",
@@ -1137,7 +1137,7 @@
      "store:universal_function_constraints.json"
     ]
    ],
-   "external_binding": 692,
+   "external_binding": 678,
    "higher_order": "subsys:category:genealogy",
    "id": "subsys:composite:genealogy:10b01d71",
    "members": [
@@ -1153,70 +1153,30 @@
   },
   {
    "binding": {
-    "CALLS": 119,
-    "FEEDS": 22,
+    "CALLS": 54,
+    "FEEDS": 20,
     "INSTANTIATES": 4,
     "SHARED_STATE": 4
    },
-   "cohesion": 0.049,
+   "cohesion": 0.053,
    "evidence": [
     [
-     "fn:aurora_autonomy.FilesystemExplorer.can_read",
+     "mod:aurora_autonomy",
      "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+     "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
     ],
     [
-     "fn:aurora_autonomy.FilesystemExplorer.read_file",
+     "mod:aurora_checkpoint",
      "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-    ],
-    [
-     "fn:aurora_autonomy.FilesystemExplorer.list_directory",
-     "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-    ],
-    [
-     "fn:aurora_checkpoint.WriteValidator.validate",
-     "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-    ],
-    [
-     "fn:aurora_checkpoint.AtomicWriter.write",
-     "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-    ],
-    [
-     "fn:aurora_checkpoint.CheckpointManager.__init__",
-     "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-    ],
-    [
-     "fn:aurora_dev_telemetry._axis_snapshot",
-     "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-    ],
-    [
-     "fn:aurora_dev_telemetry._oets_node_count",
-     "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-    ],
-    [
-     "fn:aurora_dev_telemetry._dps_crystal_count",
-     "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+     "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
     ],
     [
      "mod:aurora_governance_persistence_gateway",
      "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+     "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
     ],
     [
-     "fn:aurora_governance_persistence_gateway.StatePersistence.save",
-     "CALLS",
-     "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-    ],
-    [
-     "fn:aurora_governance_persistence_gateway.StatePersistence.load",
+     "fn:aurora_governance_persistence_gateway.NSpaceGateway._synthesize",
      "CALLS",
      "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
     ],
@@ -1266,42 +1226,107 @@
      "fn:aurora_checkpoint.CheckpointManager.start_auto_save"
     ],
     [
-     "fn:aurora_internal.aurora_identity_persistence._ensure_memory_residue_lineage",
+     "fn:aurora_internal.aurora_metabolic_clock.MetabolicClock._run_close",
+     "CALLS",
+     "fn:aurora_internal.aurora_runtime_faults.record_runtime_fault"
+    ],
+    [
+     "fn:aurora_internal.aurora_metabolic_clock.MetabolicClock._run_close",
+     "FEEDS",
+     "fn:aurora_internal.aurora_runtime_faults.record_runtime_fault"
+    ],
+    [
+     "field:aurora_internal.aurora_metabolic_clock.MetabolicClock._steps",
+     "FEEDS",
+     "fn:aurora_internal.aurora_runtime_faults.record_runtime_fault"
+    ],
+    [
+     "fn:aurora_internal.aurora_metabolic_steps.core_tick_cost",
+     "CALLS",
+     "fn:aurora_internal.aurora_rest_ledger.core_step_cost"
+    ],
+    [
+     "fn:aurora_internal.aurora_metabolic_steps.step_rest_open",
+     "CALLS",
+     "fn:aurora_internal.aurora_rest_ledger.allocate_rest"
+    ],
+    [
+     "fn:aurora_internal.aurora_metabolic_steps.step_rest_open",
+     "CALLS",
+     "fn:aurora_internal.aurora_rest_ledger.rest_rate"
+    ],
+    [
+     "fn:aurora_internal.aurora_persistence_utils.atomic_write_json",
      "CALLS",
      "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
     ],
     [
-     "fn:aurora_internal.aurora_identity_persistence.OETSPersistence.__init__",
+     "fn:aurora_internal.aurora_persistence_utils.write_breach_report",
      "CALLS",
      "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
     ],
     [
-     "fn:aurora_internal.aurora_identity_persistence.OETSPersistence._web_candidates",
+     "fn:aurora_internal.aurora_persistence_utils.DeviceAwareness.save",
      "CALLS",
      "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+    ],
+    [
+     "fn:aurora_internal.aurora_runtime_health.compute_runtime_health",
+     "CALLS",
+     "fn:aurora_internal.aurora_runtime_faults.fault_summary"
+    ],
+    [
+     "fn:aurora_internal.aurora_runtime_health.compute_runtime_health",
+     "FEEDS",
+     "fn:aurora_internal.aurora_runtime_faults.fault_summary"
     ]
    ],
-   "external_binding": 2899,
+   "external_binding": 1452,
    "higher_order": "subsys:category:governance",
-   "id": "subsys:composite:governance:01effd21",
+   "id": "subsys:composite:governance:2753c48b",
    "members": [
     "aurora_autonomy.py",
     "aurora_checkpoint.py",
-    "aurora_dev_telemetry.py",
     "aurora_governance_persistence_gateway.py",
-    "aurora_internal/aurora_identity_persistence.py",
-    "aurora_internal/aurora_leverage_relief.py",
     "aurora_internal/aurora_metabolic_clock.py",
     "aurora_internal/aurora_metabolic_steps.py",
-    "aurora_internal/aurora_persistence_audit.py",
     "aurora_internal/aurora_persistence_utils.py",
     "aurora_internal/aurora_rest_ledger.py",
-    "aurora_internal/aurora_runtime_constraint_governor.py",
     "aurora_internal/aurora_runtime_faults.py",
     "aurora_internal/aurora_runtime_health.py",
-    "aurora_metabolic_distiller.py",
-    "aurora_offline_resilience.py",
     "aurora_persistence_utils.py"
+   ],
+   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
+  },
+  {
+   "binding": {
+    "CALLS": 1,
+    "FEEDS": 2
+   },
+   "cohesion": 0.017,
+   "evidence": [
+    [
+     "fn:aurora_internal.aurora_identity_persistence.OETSPersistence.load_web",
+     "CALLS",
+     "fn:aurora_internal.aurora_persistence_audit.log_reversion"
+    ],
+    [
+     "field:aurora_internal.aurora_identity_persistence.OETSPersistence.state_dir",
+     "FEEDS",
+     "fn:aurora_internal.aurora_persistence_audit.log_reversion"
+    ],
+    [
+     "fn:aurora_internal.aurora_identity_persistence.OETSPersistence.load_web._ts",
+     "FEEDS",
+     "fn:aurora_internal.aurora_persistence_audit.log_reversion"
+    ]
+   ],
+   "external_binding": 176,
+   "higher_order": "subsys:category:governance",
+   "id": "subsys:composite:governance:a8c18fbb",
+   "members": [
+    "aurora_internal/aurora_identity_persistence.py",
+    "aurora_internal/aurora_persistence_audit.py"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -1439,7 +1464,7 @@
     "INSTANTIATES": 2,
     "SHARED_STATE": 2
    },
-   "cohesion": 0.155,
+   "cohesion": 0.162,
    "evidence": [
     [
      "fn:aurora_internal.aurora_quasiarch_observer.AuroraQuasiArchObserver.__init__",
@@ -1487,7 +1512,7 @@
      "fn:aurora_internal.quasiarch_observer.ghost_relics.GhostRelicSystem.find_best_relic"
     ]
    ],
-   "external_binding": 261,
+   "external_binding": 248,
    "higher_order": "subsys:category:investigative",
    "id": "subsys:composite:investigative:4f4bb621",
    "members": [
@@ -1536,7 +1561,7 @@
     "FEEDS": 10,
     "INSTANTIATES": 2
    },
-   "cohesion": 0.09,
+   "cohesion": 0.078,
    "evidence": [
     [
      "fn:aurora_internal.aurora_semantic_probe_battery._acknowledges_contradiction",
@@ -1554,7 +1579,7 @@
      "fn:aurora_internal.aurora_conversation_rubric_engine.ConversationRubricEngine.score_conversation"
     ]
    ],
-   "external_binding": 162,
+   "external_binding": 188,
    "higher_order": "subsys:category:language",
    "id": "subsys:composite:language:f91cf40d",
    "members": [
@@ -1586,7 +1611,7 @@
      "fn:aurora_internal.aurora_directed_training_corpus.DirectedTrainingCorpusBridge.samples_for_dimensions"
     ]
    ],
-   "external_binding": 217,
+   "external_binding": 209,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:f7283074",
    "members": [
@@ -1602,7 +1627,7 @@
     "INSTANTIATES": 2,
     "SHARED_STATE": 1
    },
-   "cohesion": 0.028,
+   "cohesion": 0.029,
    "evidence": [
     [
      "fn:aurora_experiential_sim.run_sim",
@@ -1635,7 +1660,7 @@
      "fn:aurora_training_pulse.TrainingPulse.energize"
     ]
    ],
-   "external_binding": 206,
+   "external_binding": 199,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:680a4391",
    "members": [
@@ -1714,7 +1739,7 @@
     "FEEDS": 32,
     "INSTANTIATES": 2
    },
-   "cohesion": 0.081,
+   "cohesion": 0.082,
    "evidence": [
     [
      "fn:aurora_internal.aurora_code_evolution_chamber._aurora_native_evolved_engine",
@@ -1767,7 +1792,7 @@
      "fn:aurora_internal.aurora_evolution_hook.assign_target"
     ]
    ],
-   "external_binding": 911,
+   "external_binding": 901,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:6f24c869",
    "members": [
@@ -1781,10 +1806,10 @@
   {
    "binding": {
     "CALLS": 15,
-    "FEEDS": 50,
+    "FEEDS": 48,
     "INSTANTIATES": 4
    },
-   "cohesion": 0.229,
+   "cohesion": 0.226,
    "evidence": [
     [
      "fn:aurora_internal.aurora_dream_evolution_orchestrator.DreamEvolutionOrchestrator.__init__",
@@ -1852,7 +1877,7 @@
      "fn:aurora_internal.aurora_dream_curriculum_queue.DreamCurriculumQueue.record_completion"
     ]
    ],
-   "external_binding": 232,
+   "external_binding": 229,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:80bafba2",
    "members": [
@@ -1870,7 +1895,7 @@
     "INSTANTIATES": 1,
     "SHARED_STATE": 1
    },
-   "cohesion": 0.091,
+   "cohesion": 0.101,
    "evidence": [
     [
      "fn:aurora_quantum_dream_substrate.QuantumDreamSubstrate._dream_encounter_with_selves",
@@ -1888,7 +1913,7 @@
      "fn:aurora_possibility_selves.crystal_authority"
     ]
    ],
-   "external_binding": 229,
+   "external_binding": 205,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:b74d3707",
    "members": [
@@ -1900,11 +1925,11 @@
   {
    "binding": {
     "CALLS": 32,
-    "FEEDS": 33,
+    "FEEDS": 31,
     "INSTANTIATES": 11,
     "SHARED_STATE": 4
    },
-   "cohesion": 0.071,
+   "cohesion": 0.073,
    "evidence": [
     [
      "fn:aurora_concept_imager.ingest_concept_image",
@@ -1947,7 +1972,7 @@
      "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
     ],
     [
-     "fn:aurora_expression_perception.build_layer5_associative_modules",
+     "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
      "FEEDS",
      "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
     ],
@@ -1987,7 +2012,7 @@
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.accepted",
+     "field:aurora_articulation.ArticulationDecision.candidate_pressure",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
@@ -1997,7 +2022,7 @@
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ]
    ],
-   "external_binding": 1043,
+   "external_binding": 989,
    "higher_order": "subsys:category:perception",
    "id": "subsys:composite:perception:ab562dfd",
    "members": [
@@ -2098,7 +2123,7 @@
      "fn:flutter_app.android.app.src.main.python.aurora_historical_experience_environment.HistoricalExperienceEnvironment.resume"
     ]
    ],
-   "external_binding": 771,
+   "external_binding": 777,
    "higher_order": "subsys:category:phone_python",
    "id": "subsys:composite:phone_python:92d4d84c",
    "members": [
@@ -2143,7 +2168,7 @@
     "CALLS": 13,
     "FEEDS": 28
    },
-   "cohesion": 0.075,
+   "cohesion": 0.076,
    "evidence": [
     [
      "fn:aurora_internal.aurora_comprehension_gap.ComprehensionGapDetector._ambiguous_promoted_word",
@@ -2191,7 +2216,7 @@
      "fn:aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state"
     ]
    ],
-   "external_binding": 503,
+   "external_binding": 497,
    "higher_order": "subsys:category:reasoning",
    "id": "subsys:composite:reasoning:b1415b0b",
    "members": [
@@ -2239,7 +2264,7 @@
     "CALLS": 2,
     "FEEDS": 4
    },
-   "cohesion": 0.05,
+   "cohesion": 0.051,
    "evidence": [
     [
      "fn:aurora_internal.aurora_contradiction_perception.perceive_contradictions",
@@ -2257,7 +2282,7 @@
      "fn:aurora_internal.aurora_relation_pairs.extract_joints"
     ]
    ],
-   "external_binding": 113,
+   "external_binding": 111,
    "higher_order": "subsys:category:reasoning",
    "id": "subsys:composite:reasoning:7255ef84",
    "members": [
@@ -2272,7 +2297,7 @@
     "FEEDS": 13,
     "INSTANTIATES": 2
    },
-   "cohesion": 0.051,
+   "cohesion": 0.053,
    "evidence": [
     [
      "fn:aurora_internal.aurora_operator_composer.OperatorComposer._parent_trajectory_ok",
@@ -2320,7 +2345,7 @@
      "fn:aurora_internal.aurora_strategic_horizon._clip01"
     ]
    ],
-   "external_binding": 332,
+   "external_binding": 320,
    "higher_order": "subsys:category:reasoning",
    "id": "subsys:composite:reasoning:7b47d38a",
    "members": [
@@ -2333,13 +2358,13 @@
   },
   {
    "binding": {
-    "CALLS": 87,
-    "FEEDS": 187,
+    "CALLS": 88,
+    "FEEDS": 197,
     "INHERITS": 1,
     "INSTANTIATES": 3,
     "SHARED_STATE": 12
    },
-   "cohesion": 0.203,
+   "cohesion": 0.209,
    "evidence": [
     [
      "cls:aurora_representational_resolution.RepresentationalResolutionEngine",
@@ -2452,7 +2477,7 @@
      "fn:aurora_internal.aurora_live_possibility_frontier._projection_contexts_for_candidate"
     ]
    ],
-   "external_binding": 1140,
+   "external_binding": 1138,
    "higher_order": "subsys:category:reasoning",
    "id": "subsys:composite:reasoning:929f8dd5",
    "members": [
@@ -2473,7 +2498,7 @@
     "INSTANTIATES": 4,
     "SHARED_STATE": 60
    },
-   "cohesion": 0.029,
+   "cohesion": 0.031,
    "evidence": [
     [
      "fn:aurora._run_reasoning_pipeline",
@@ -2558,15 +2583,15 @@
     [
      "mod:aurora",
      "SHARES",
-     "organ:ExistenceMode"
+     "organ:dimensional"
     ],
     [
      "mod:aurora",
      "SHARES",
-     "organ:identity"
+     "organ:chamber"
     ]
    ],
-   "external_binding": 4159,
+   "external_binding": 3881,
    "higher_order": "subsys:category:runtime",
    "id": "subsys:composite:runtime:0414c162",
    "members": [
@@ -2580,11 +2605,11 @@
   },
   {
    "binding": {
-    "CALLS": 105,
+    "CALLS": 106,
     "FEEDS": 191,
     "INSTANTIATES": 25
    },
-   "cohesion": 0.338,
+   "cohesion": 0.344,
    "evidence": [
     [
      "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.__init__",
@@ -2707,7 +2732,7 @@
      "fn:aurora_internal.dual_strata.micro_reasoning.generate_micro_reasoning"
     ]
    ],
-   "external_binding": 629,
+   "external_binding": 613,
    "higher_order": "subsys:category:strata",
    "id": "subsys:composite:strata:a8913e4f",
    "members": [
@@ -2739,7 +2764,7 @@
     "INSTANTIATES": 4,
     "SHARED_STATE": 2
    },
-   "cohesion": 0.275,
+   "cohesion": 0.29,
    "evidence": [
     [
      "fn:aurora_internal.dual_strata.sensory_observation.run_sensory_observation_cycle",
@@ -2862,7 +2887,7 @@
      "fn:aurora_internal.dual_strata.sensory_snapshot_channel.write_surface_snapshot"
     ]
    ],
-   "external_binding": 358,
+   "external_binding": 333,
    "higher_order": "subsys:category:strata",
    "id": "subsys:composite:strata:ef2079cf",
    "members": [
@@ -5234,17 +5259,17 @@
      },
      "evidence": [
       [
+       "field:aurora_internal.scouting.contracts.ScoutRequest.inquiry",
+       "FEEDS",
+       "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
+      ],
+      [
        "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
       [
        "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
-       "FEEDS",
-       "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
-      ],
-      [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.inquiry",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ]
@@ -5428,7 +5453,7 @@
   {
    "best_evidence_composite": "subsys:composite:bridges:9c439ea7",
    "candidate": false,
-   "cohesion": 0.101,
+   "cohesion": 0.126,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_desktop_agent.py",
@@ -5479,7 +5504,7 @@
   {
    "best_evidence_composite": "subsys:composite:crystal:cbfaf025",
    "candidate": false,
-   "cohesion": 0.232,
+   "cohesion": 0.233,
    "declared_links": 30,
    "domain": "desktop",
    "hub": "aurora_internal/crystal_runtime.py",
@@ -5747,12 +5772,12 @@
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior.aspects",
+       "fn:aurora_internal.crystal_interior._profile",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior._profile",
+       "fn:aurora_internal.crystal_interior.aspects",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ]
@@ -6593,7 +6618,7 @@
   {
    "best_evidence_composite": "subsys:composite:dimensional:78d8264b",
    "candidate": false,
-   "cohesion": 0.036,
+   "cohesion": 0.035,
    "declared_links": 5,
    "domain": "desktop",
    "hub": "aurora_consciousness_engine.py",
@@ -6730,13 +6755,13 @@
   {
    "best_evidence_composite": "subsys:composite:foundation:6f0cf83a",
    "candidate": false,
-   "cohesion": 0.108,
+   "cohesion": 0.107,
    "declared_links": 21,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_noncomp_registry.py",
    "id": "foundation.1",
    "internal_binding": {
-    "CALLS": 48,
+    "CALLS": 49,
     "FEEDS": 107,
     "INSTANTIATES": 30,
     "SHARED_STATE": 3
@@ -6932,17 +6957,17 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.T",
-       "FEEDS",
-       "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
-      ],
-      [
        "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.A",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.X",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.B",
+       "FEEDS",
+       "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
+      ],
+      [
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.N",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ]
@@ -7047,7 +7072,7 @@
     },
     {
      "binding": {
-      "CALLS": 2,
+      "CALLS": 3,
       "INSTANTIATES": 2
      },
      "evidence": [
@@ -7107,7 +7132,7 @@
        "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
       ],
       [
-       "field:aurora_ivm.RecursionLevel.SURFACE",
+       "field:aurora_ivm.RecursionLevel.CORE",
        "FEEDS",
        "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
       ]
@@ -7224,7 +7249,7 @@
   {
    "best_evidence_composite": "subsys:composite:foundation:71e21bb1",
    "candidate": false,
-   "cohesion": 0.354,
+   "cohesion": 0.383,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_pressure_classifier.py",
@@ -7279,7 +7304,7 @@
   {
    "best_evidence_composite": "subsys:composite:foundation:8bbcbdb6",
    "candidate": false,
-   "cohesion": 0.081,
+   "cohesion": 0.082,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_manifold_directory_reader.py",
@@ -7332,14 +7357,14 @@
   {
    "best_evidence_composite": "subsys:composite:genealogy:c9b3e419",
    "candidate": false,
-   "cohesion": 0.097,
+   "cohesion": 0.094,
    "declared_links": 13,
    "domain": "desktop",
    "hub": "aurora_internal/constraint_genealogy.py",
    "id": "genealogy.1",
    "internal_binding": {
     "CALLS": 46,
-    "FEEDS": 91,
+    "FEEDS": 90,
     "INHERITS": 1,
     "INSTANTIATES": 15,
     "SHARED_STATE": 8
@@ -7641,7 +7666,7 @@
     {
      "binding": {
       "CALLS": 1,
-      "FEEDS": 16
+      "FEEDS": 15
      },
      "evidence": [
       [
@@ -7808,20 +7833,20 @@
    "subsystem": "genealogy"
   },
   {
-   "best_evidence_composite": "subsys:composite:governance:01effd21",
+   "best_evidence_composite": "subsys:composite:governance:2753c48b",
    "candidate": false,
-   "cohesion": 0.046,
+   "cohesion": 0.044,
    "declared_links": 25,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_runtime_faults.py",
    "id": "governance.1",
    "internal_binding": {
-    "CALLS": 115,
+    "CALLS": 58,
     "FEEDS": 11,
     "INSTANTIATES": 3,
     "SHARED_STATE": 4
    },
-   "jaccard": 0.714,
+   "jaccard": 0.381,
    "links": [
     {
      "binding": {
@@ -7852,23 +7877,13 @@
     },
     {
      "binding": {
-      "CALLS": 11
+      "CALLS": 1
      },
      "evidence": [
       [
-       "fn:aurora_autonomy.FilesystemExplorer.can_read",
+       "mod:aurora_autonomy",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_autonomy.FilesystemExplorer.read_file",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_autonomy.FilesystemExplorer.list_directory",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -7906,23 +7921,13 @@
     },
     {
      "binding": {
-      "CALLS": 4
+      "CALLS": 1
      },
      "evidence": [
       [
-       "fn:aurora_checkpoint.WriteValidator.validate",
+       "mod:aurora_checkpoint",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_checkpoint.AtomicWriter.write",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_checkpoint.CheckpointManager.__init__",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -7932,23 +7937,13 @@
     },
     {
      "binding": {
-      "CALLS": 4
+      "CALLS": 1
      },
      "evidence": [
       [
-       "fn:aurora_dev_telemetry._axis_snapshot",
+       "mod:aurora_dev_telemetry",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_dev_telemetry._oets_node_count",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_dev_telemetry._dps_crystal_count",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -7958,21 +7953,16 @@
     },
     {
      "binding": {
-      "CALLS": 7
+      "CALLS": 2
      },
      "evidence": [
       [
        "mod:aurora_governance_persistence_gateway",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ],
       [
-       "fn:aurora_governance_persistence_gateway.StatePersistence.save",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_governance_persistence_gateway.StatePersistence.load",
+       "fn:aurora_governance_persistence_gateway.NSpaceGateway._synthesize",
        "CALLS",
        "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
       ]
@@ -8021,18 +8011,13 @@
     },
     {
      "binding": {
-      "CALLS": 2
+      "CALLS": 1
      },
      "evidence": [
       [
        "mod:aurora_internal.aurora_energy_layer_costs",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_internal.aurora_energy_layer_costs.verify_layer_energy_costs",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -8069,23 +8054,13 @@
     },
     {
      "binding": {
-      "CALLS": 10
+      "CALLS": 1
      },
      "evidence": [
       [
-       "fn:aurora_internal.aurora_identity_persistence._ensure_memory_residue_lineage",
+       "mod:aurora_internal.aurora_identity_persistence",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_internal.aurora_identity_persistence.OETSPersistence.__init__",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_internal.aurora_identity_persistence.OETSPersistence._web_candidates",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -8103,23 +8078,13 @@
     },
     {
      "binding": {
-      "CALLS": 5
+      "CALLS": 1
      },
      "evidence": [
       [
-       "fn:aurora_internal.aurora_leverage_relief.LeverageReliefValve._scan_recent_experiences",
+       "mod:aurora_internal.aurora_leverage_relief",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_internal.aurora_leverage_relief.LeverageReliefValve._write_redirect",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_internal.aurora_leverage_relief.LeverageReliefValve._clear_redirect",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -8160,9 +8125,9 @@
      },
      "evidence": [
       [
-       "fn:aurora_internal.aurora_persistence_audit.log_reversion",
+       "mod:aurora_internal.aurora_persistence_audit",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -8198,23 +8163,13 @@
     },
     {
      "binding": {
-      "CALLS": 6
+      "CALLS": 1
      },
      "evidence": [
       [
-       "fn:aurora_internal.aurora_runtime_constraint_governor._normalize_axis_map",
+       "mod:aurora_internal.aurora_runtime_constraint_governor",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_internal.aurora_runtime_constraint_governor.RuntimeConstraintGovernor.evaluate_task",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_internal.aurora_runtime_constraint_governor.RuntimeConstraintGovernor.note_energy_income",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -8273,23 +8228,13 @@
     },
     {
      "binding": {
-      "CALLS": 10
+      "CALLS": 1
      },
      "evidence": [
       [
-       "fn:aurora_metabolic_distiller.CoherenceAnalyzer._timestamp_from_payload",
+       "mod:aurora_metabolic_distiller",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_metabolic_distiller.CoherenceAnalyzer._worth_from_payload",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_metabolic_distiller.TemporalCompressor._ingest_purged_line",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -8299,18 +8244,13 @@
     },
     {
      "binding": {
-      "CALLS": 10
+      "CALLS": 2
      },
      "evidence": [
       [
-       "fn:aurora_offline_resilience._write_json",
+       "mod:aurora_offline_resilience",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
-      ],
-      [
-       "fn:aurora_offline_resilience._read_json",
-       "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ],
       [
        "fn:aurora_offline_resilience.check_connectivity",
@@ -8357,7 +8297,7 @@
       [
        "mod:aurora_support_stack",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -8371,9 +8311,9 @@
      },
      "evidence": [
       [
-       "fn:aurora_telemetry.TurnTelemetry.axis_weighted_fails",
+       "mod:aurora_telemetry",
        "CALLS",
-       "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+       "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
       ]
      ],
      "link": [
@@ -8417,7 +8357,7 @@
    "subsystem": "governance"
   },
   {
-   "best_evidence_composite": "subsys:composite:governance:01effd21",
+   "best_evidence_composite": "subsys:composite:governance:2753c48b",
    "candidate": false,
    "cohesion": 0.047,
    "declared_links": 1,
@@ -8429,7 +8369,7 @@
     "FEEDS": 12,
     "INSTANTIATES": 1
    },
-   "jaccard": 0.118,
+   "jaccard": 0.2,
    "links": [
     {
      "binding": {
@@ -8674,7 +8614,7 @@
   {
    "best_evidence_composite": "subsys:composite:investigative:4f4bb621",
    "candidate": false,
-   "cohesion": 0.023,
+   "cohesion": 0.024,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_quasiarch_observer.py",
@@ -8725,7 +8665,7 @@
   {
    "best_evidence_composite": "subsys:composite:investigative:4f4bb621",
    "candidate": false,
-   "cohesion": 0.099,
+   "cohesion": 0.101,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_internal/quasiarch_observer/dimensional_memory.py",
@@ -8778,7 +8718,7 @@
   {
    "best_evidence_composite": "subsys:composite:language:f91cf40d",
    "candidate": false,
-   "cohesion": 0.068,
+   "cohesion": 0.059,
    "declared_links": 2,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_conversation_rubric_engine.py",
@@ -8840,7 +8780,7 @@
   {
    "best_evidence_composite": null,
    "candidate": false,
-   "cohesion": 0.01,
+   "cohesion": 0.009,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_grammar_engine.py",
@@ -8937,7 +8877,7 @@
   {
    "best_evidence_composite": "subsys:composite:learning:6f24c869",
    "candidate": false,
-   "cohesion": 0.081,
+   "cohesion": 0.082,
    "declared_links": 5,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_evolution_chamber.py",
@@ -9167,14 +9107,14 @@
   {
    "best_evidence_composite": "subsys:composite:learning:80bafba2",
    "candidate": false,
-   "cohesion": 0.229,
+   "cohesion": 0.226,
    "declared_links": 4,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_dream_evolution_orchestrator.py",
    "id": "learning.3",
    "internal_binding": {
     "CALLS": 15,
-    "FEEDS": 50,
+    "FEEDS": 48,
     "INSTANTIATES": 4
    },
    "jaccard": 1.0,
@@ -9265,7 +9205,7 @@
     },
     {
      "binding": {
-      "FEEDS": 14
+      "FEEDS": 12
      },
      "evidence": [
       [
@@ -9304,7 +9244,7 @@
   {
    "best_evidence_composite": "subsys:composite:learning:680a4391",
    "candidate": false,
-   "cohesion": 0.028,
+   "cohesion": 0.029,
    "declared_links": 2,
    "domain": "desktop",
    "hub": "aurora_training_pulse.py",
@@ -9493,7 +9433,7 @@
   {
    "best_evidence_composite": "subsys:composite:learning:b74d3707",
    "candidate": false,
-   "cohesion": 0.091,
+   "cohesion": 0.101,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_possibility_selves.py",
@@ -9592,14 +9532,14 @@
   {
    "best_evidence_composite": "subsys:composite:perception:ab562dfd",
    "candidate": false,
-   "cohesion": 0.068,
+   "cohesion": 0.07,
    "declared_links": 10,
    "domain": "desktop",
    "hub": "aurora_expression_perception.py",
    "id": "perception.1",
    "internal_binding": {
     "CALLS": 33,
-    "FEEDS": 30,
+    "FEEDS": 28,
     "INSTANTIATES": 14,
     "SHARED_STATE": 3
    },
@@ -9681,7 +9621,7 @@
        "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
       ],
       [
-       "fn:aurora_expression_perception.build_layer5_associative_modules",
+       "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
        "FEEDS",
        "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
       ]
@@ -9802,7 +9742,7 @@
     {
      "binding": {
       "CALLS": 13,
-      "FEEDS": 12,
+      "FEEDS": 10,
       "INSTANTIATES": 8
      },
      "evidence": [
@@ -10231,14 +10171,14 @@
   {
    "best_evidence_composite": "subsys:composite:reasoning:929f8dd5",
    "candidate": false,
-   "cohesion": 0.194,
+   "cohesion": 0.201,
    "declared_links": 8,
    "domain": "desktop",
    "hub": "aurora_representational_address.py",
    "id": "reasoning.1",
    "internal_binding": {
-    "CALLS": 87,
-    "FEEDS": 187,
+    "CALLS": 88,
+    "FEEDS": 197,
     "INHERITS": 1,
     "INSTANTIATES": 4,
     "SHARED_STATE": 12
@@ -10348,7 +10288,7 @@
     {
      "binding": {
       "CALLS": 16,
-      "FEEDS": 31
+      "FEEDS": 39
      },
      "evidence": [
       [
@@ -10375,7 +10315,7 @@
     {
      "binding": {
       "CALLS": 28,
-      "FEEDS": 70
+      "FEEDS": 69
      },
      "evidence": [
       [
@@ -10401,8 +10341,8 @@
     },
     {
      "binding": {
-      "CALLS": 26,
-      "FEEDS": 61,
+      "CALLS": 27,
+      "FEEDS": 64,
       "INHERITS": 1,
       "SHARED_STATE": 11
      },
@@ -10474,7 +10414,7 @@
   {
    "best_evidence_composite": "subsys:composite:reasoning:b1415b0b",
    "candidate": false,
-   "cohesion": 0.073,
+   "cohesion": 0.074,
    "declared_links": 4,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_constraint_semantic_continuity.py",
@@ -10590,7 +10530,7 @@
   {
    "best_evidence_composite": "subsys:composite:reasoning:7b47d38a",
    "candidate": false,
-   "cohesion": 0.051,
+   "cohesion": 0.053,
    "declared_links": 3,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_strategic_horizon.py",
@@ -10751,7 +10691,7 @@
   {
    "best_evidence_composite": "subsys:composite:reasoning:7255ef84",
    "candidate": false,
-   "cohesion": 0.05,
+   "cohesion": 0.051,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_contradiction_perception.py",
@@ -10802,8 +10742,8 @@
   {
    "best_evidence_composite": "subsys:composite:runtime:0414c162",
    "candidate": false,
-   "cohesion": 0.03,
-   "declared_links": 7,
+   "cohesion": 0.032,
+   "declared_links": 8,
    "domain": "desktop",
    "hub": "aurora.py",
    "id": "runtime.1",
@@ -10934,6 +10874,14 @@
      ]
     },
     {
+     "binding": {},
+     "evidence": [],
+     "link": [
+      "aurora_internal/__init__.py",
+      "aurora_runtime.py"
+     ]
+    },
+    {
      "binding": {
       "CALLS": 3,
       "FEEDS": 4,
@@ -10995,13 +10943,13 @@
   {
    "best_evidence_composite": "subsys:composite:strata:a8913e4f",
    "candidate": false,
-   "cohesion": 0.224,
+   "cohesion": 0.229,
    "declared_links": 80,
    "domain": "desktop",
    "hub": "aurora_internal/dual_strata/__init__.py",
    "id": "strata.1",
    "internal_binding": {
-    "CALLS": 174,
+    "CALLS": 175,
     "FEEDS": 284,
     "INSTANTIATES": 32,
     "SHARED_STATE": 5
@@ -11568,7 +11516,7 @@
     },
     {
      "binding": {
-      "CALLS": 6,
+      "CALLS": 7,
       "FEEDS": 11
      },
      "evidence": [
@@ -12220,12 +12168,12 @@
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
+       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.context_families",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.observation_count",
+       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ]
@@ -12280,7 +12228,7 @@
        "fn:aurora_internal.dual_strata.topology_tracker.TopologyFingerprint.from_signature"
       ],
       [
-       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.regime",
+       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.sinks",
        "FEEDS",
        "fn:aurora_internal.dual_strata.semantic_variant_registry.TopologyProfile.from_signature"
       ]
@@ -12697,7 +12645,7 @@
   {
    "best_evidence_composite": null,
    "candidate": false,
-   "cohesion": 0.083,
+   "cohesion": 0.125,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_surface_dispatcher.py",

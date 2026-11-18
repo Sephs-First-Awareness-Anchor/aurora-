@@ -1,7 +1,7 @@
 # What the knowledge graph covers, and what it does not
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `d9a335038080`, generator 2.0.0.
+Source commit `5cb5581adc37`, generator 2.0.0.
 
 Nothing here is hidden by a summary: every unresolved call site is in `unresolved_calls.jsonl`, every file's status in `files.jsonl`, every claim check in `claims.json`, and every statically reachable function that no recorded run entered in `unobserved.json`.
 
@@ -9,27 +9,27 @@ Nothing here is hidden by a summary: every unresolved call site is in `unresolve
 
 | status | files | meaning |
 |---|---:|---|
-| not_analysed | 3376 | data, config, images and other files: listed, not read |
-| parsed_ast | 909 | Python, parsed with ast: calls, state, flow |
-| scanned_references | 107 | Markdown: the code, stores and organs it names |
+| not_analysed | 3368 | data, config, images and other files: listed, not read |
+| parsed_ast | 914 | Python, parsed with ast: calls, state, flow |
+| scanned_references | 106 | Markdown: the code, stores and organs it names |
 | parsed_regex | 47 | Rust, Dart, Kotlin, Java: read with patterns, calls matched by name |
 | scanned_launches | 31 | shell, workflows, service units, web: only the modules and scripts they launch |
 
 ## Calls without a resolved target
 
-35009 method calls inside Aurora's code have no static target. External library calls and calls on built-in values are listed with their reason but not counted as gaps.
+35046 method calls inside Aurora's code have no static target. External library calls and calls on built-in values are listed with their reason but not counted as gaps.
 
 | reason | sites | what would resolve it |
 |---|---:|---|
-| untyped_local | 20789 | a type the code does not state (assignment from an untyped call) |
-| builtin_value | 19693 | nothing: str, dict, list and similar |
-| external | 12461 | nothing: a library outside the repo |
-| dynamic_receiver | 5337 | the result of a call or subscript; runtime evidence |
-| untyped_attribute | 3686 | self.x whose class is never stated; an annotation or runtime evidence |
-| untyped_module_state | 1986 | a module global whose type is not stated |
+| untyped_local | 20787 | a type the code does not state (assignment from an untyped call) |
+| builtin_value | 19704 | nothing: str, dict, list and similar |
+| external | 12494 | nothing: a library outside the repo |
+| dynamic_receiver | 5341 | the result of a call or subscript; runtime evidence |
+| untyped_attribute | 3691 | self.x whose class is never stated; an annotation or runtime evidence |
+| untyped_module_state | 1987 | a module global whose type is not stated |
 | unknown_member | 1288 | a name the target class or module does not define (dynamic or inherited from outside) |
-| untyped_parameter | 1199 | a parameter without an annotation |
-| organ_receiver | 724 | systems[key] where the organ has no single implementing class |
+| untyped_parameter | 1227 | a parameter without an annotation |
+| organ_receiver | 725 | systems[key] where the organ has no single implementing class |
 
 ## Edge basis
 
@@ -37,16 +37,16 @@ Every edge says how it is known. implemented: read from code. declared: stated i
 
 | basis | edges |
 |---|---:|
-| implemented | 137478 |
-| declared | 13045 |
-| observed | 4822 |
-| implemented+observed | 3801 |
-| inferred | 1548 |
+| implemented | 136479 |
+| declared | 12823 |
+| observed | 4858 |
+| implemented+observed | 3721 |
+| inferred | 1555 |
 | implemented+inferred | 2 |
 
 ## Runtime evidence
 
-Recorded scenarios: desktop_boot, desktop_turns. 7289 nodes were observed. 4397 functions are statically reachable from the desktop entry points but were not entered in any recorded run.
+Recorded scenarios: desktop_boot, desktop_turns. 7335 nodes were observed. 4421 functions are statically reachable from the desktop entry points but were not entered in any recorded run.
 - `desktop_boot`: entry `aurora.boot_aurora`, completed True, 2833 call pairs, 350.4 s
 - `desktop_turns`: entry `aurora.process_external_user_turn`, completed True, 4598 call pairs, 39.9 s
 
@@ -54,7 +54,7 @@ Paths no recording covers: the phone runtime past the boot stages listed, the AC
 
 ## Declared ownership and its boundary
 
-Layer and category come from `docs/module_ownership.json` (aurora.module_ownership/2, sha256 561e8c185309d9c6). They are claims, kept apart from what the code and the runs show.
+Layer and category come from `docs/module_ownership.json` (aurora.module_ownership/2, sha256 d60eb40815d2dd1b). They are claims, kept apart from what the code and the runs show.
 
 > Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.
 
@@ -65,7 +65,7 @@ Not covered by the mapping:
 - `Cargo.toml, pubspec.yaml, Gradle files, buildozer.spec, requirements and pytest.ini`: Build and dependency configuration
 - `flutter_app/android/ resources and manifests`: Android resources and XML configuration
 
-Claim checks: conflict 3, consistent 345, unverified 559.
+Claim checks: conflict 1, consistent 346, unverified 560.
 
 ## Reading impact
 

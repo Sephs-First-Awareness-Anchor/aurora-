@@ -483,7 +483,7 @@
 {"builtin_value": 6, "owner": "fn:aurora_boundary_hypothesis.attempt_boundary_hypothesis"}
 {"builtin_value": 3, "owner": "fn:aurora_boundary_hypothesis.check_and_resolve_pending_boundary_hypothesis"}
 {"builtin_value": 7, "owner": "fn:aurora_boundary_hypothesis.render_checkable_boundary_interpretation"}
-{"builtin_value": 10, "owner": "fn:aurora_braid_wiring._build_turn_process_contexts"}
+{"builtin_value": 11, "owner": "fn:aurora_braid_wiring._build_turn_process_contexts"}
 {"builtin_value": 4, "owner": "fn:aurora_braid_wiring.begin_expression"}
 {"builtin_value": 2, "owner": "fn:aurora_braid_wiring.begin_response_turn"}
 {"builtin_value": 3, "owner": "fn:aurora_braid_wiring.boot_thought_braid"}
@@ -511,8 +511,6 @@
 {"external": 1, "owner": "fn:aurora_checkpoint.CheckpointManager.start_auto_save"}
 {"external": 1, "owner": "fn:aurora_checkpoint.CheckpointManager.write_transaction"}
 {"external": 2, "owner": "fn:aurora_checkpoint.CheckpointRecord.compute_checksum"}
-{"builtin_value": 1, "owner": "fn:aurora_checkpoint.CorpusCursor.from_dict"}
-{"builtin_value": 1, "owner": "fn:aurora_checkpoint.RollingStats.from_dict"}
 {"builtin_value": 1, "owner": "fn:aurora_classroom.ClassroomSession.__init__"}
 {"external": 1, "owner": "fn:aurora_classroom.ClassroomSession._persist"}
 {"builtin_value": 1, "owner": "fn:aurora_classroom.ClassroomSession._run_mtsl_perturbation_probe"}
@@ -2992,6 +2990,7 @@
 {"builtin_value": 6, "owner": "fn:aurora_internal.aurora_sensory_crystal.visual_dict_to_crystal_57d"}
 {"external": 3, "owner": "fn:aurora_internal.aurora_shadow_state.open_shadow_state"}
 {"builtin_value": 1, "external": 3, "owner": "fn:aurora_internal.aurora_shadow_state.promote_shadow_deltas"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.aurora_solidification._constraint_signature"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.aurora_solidification._depth_recurrence_gap"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.aurora_solidification._depth_recurrence_min"}
@@ -3919,7 +3918,6 @@
 {"external": 2, "owner": "fn:aurora_ivm.ContradictionLedger.load"}
 {"builtin_value": 1, "external": 2, "owner": "fn:aurora_ivm.ContradictionLedger.record"}
 {"external": 1, "owner": "fn:aurora_ivm.ContradictionLedger.resolve"}
-{"builtin_value": 1, "owner": "fn:aurora_ivm.ContradictionRecord.from_dict"}
 {"external": 1, "owner": "fn:aurora_ivm.IVMCoordinate.__post_init__"}
 {"external": 1, "owner": "fn:aurora_ivm.IVMCoordinate.at_pole"}
 {"external": 1, "owner": "fn:aurora_ivm.IVMCoordinate.cartesian_distance_to"}
@@ -3949,7 +3947,6 @@
 {"external": 1, "owner": "fn:aurora_ivm.ToroidalVertexSystem.tick"}
 {"external": 1, "owner": "fn:aurora_ivm.import_threading_lock"}
 {"builtin_value": 1, "external": 2, "owner": "fn:aurora_ivm.verify_ivm"}
-{"builtin_value": 1, "owner": "fn:aurora_language_field.LSAEntry.from_dict"}
 {"external": 1, "owner": "fn:aurora_language_field.LanguageField.__init__"}
 {"builtin_value": 1, "owner": "fn:aurora_language_field.LanguageField._confess_comparison_uncertainty"}
 {"builtin_value": 4, "external": 2, "owner": "fn:aurora_language_field.LanguageField._context_similarity"}
@@ -4271,6 +4268,7 @@
 {"builtin_value": 8, "owner": "fn:aurora_representational_emergence_observatory.evaluate_candidate_relationship"}
 {"builtin_value": 1, "owner": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier"}
 {"builtin_value": 5, "owner": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_consequence"}
+{"builtin_value": 5, "owner": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event"}
 {"builtin_value": 1, "owner": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources"}
 {"builtin_value": 1, "owner": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates"}
 {"builtin_value": 7, "owner": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_candidate_downstream_effect"}
@@ -4279,7 +4277,7 @@
 {"builtin_value": 3, "external": 1, "owner": "fn:aurora_representational_resolution._projection_id"}
 {"builtin_value": 4, "owner": "fn:aurora_representational_resolution._projection_priority"}
 {"builtin_value": 2, "external": 1, "owner": "fn:aurora_representational_resolution._projection_view_key"}
-{"builtin_value": 2, "owner": "fn:aurora_representational_resolution.build_perspective_projections"}
+{"builtin_value": 3, "owner": "fn:aurora_representational_resolution.build_perspective_projections"}
 {"builtin_value": 3, "owner": "fn:aurora_representational_resolution.get_or_create_engine"}
 {"builtin_value": 1, "owner": "fn:aurora_representational_resolution.perspective_owner_axis"}
 {"builtin_value": 1, "owner": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine._bootstrap_domain_hypotheses"}
@@ -4354,7 +4352,12 @@
 {"builtin_value": 2, "owner": "fn:aurora_runtime.ChainSimBridge._link_tag_value"}
 {"builtin_value": 1, "owner": "fn:aurora_runtime.ChainSimBridge._relief_to_fitness"}
 {"builtin_value": 4, "external": 1, "owner": "fn:aurora_runtime.ChainSimBridge.inject_promoted_links"}
-{"builtin_value": 30, "owner": "fn:aurora_runtime.RuntimeCLI._dispatch"}
+{"builtin_value": 4, "owner": "fn:aurora_runtime.RuntimeCLI._cmd_code_autoevolve"}
+{"builtin_value": 9, "owner": "fn:aurora_runtime.RuntimeCLI._cmd_code_pressure"}
+{"builtin_value": 1, "owner": "fn:aurora_runtime.RuntimeCLI._cmd_code_simulate"}
+{"builtin_value": 4, "owner": "fn:aurora_runtime.RuntimeCLI._cmd_code_stage"}
+{"builtin_value": 11, "owner": "fn:aurora_runtime.RuntimeCLI._cmd_code_status"}
+{"builtin_value": 1, "owner": "fn:aurora_runtime.RuntimeCLI._cmd_inject"}
 {"builtin_value": 2, "external": 1, "owner": "fn:aurora_runtime.RuntimeCLI.run"}
 {"builtin_value": 1, "owner": "fn:aurora_runtime.StackSystems.layer_status"}
 {"builtin_value": 2, "owner": "fn:aurora_runtime.StackSystems.pressure_snapshot"}
@@ -4625,9 +4628,7 @@
 {"builtin_value": 11, "owner": "fn:aurora_vision_clustering.OETSVisionBinder._infer_label"}
 {"builtin_value": 2, "external": 12, "owner": "fn:aurora_vision_clustering.SimpleKMeans._fit_numpy"}
 {"builtin_value": 2, "external": 1, "owner": "fn:aurora_vision_clustering.SimpleKMeans._fit_pure"}
-{"builtin_value": 1, "owner": "fn:aurora_vision_clustering.VisualCluster.from_dict"}
 {"external": 1, "owner": "fn:aurora_vision_clustering.VisualCluster.update_centroid"}
-{"builtin_value": 1, "owner": "fn:aurora_vision_clustering.VisualFeatureVector.from_dict"}
 {"external": 1, "owner": "fn:aurora_vision_clustering._euclidean"}
 {"builtin_value": 3, "owner": "fn:aurora_vocabulary_seed_apply._worth_keeping"}
 {"builtin_value": 8, "external": 8, "owner": "fn:aurora_vocabulary_seed_apply.apply_seed"}
@@ -4732,7 +4733,7 @@
 {"builtin_value": 8, "owner": "fn:aurora_working_memory.WorkingMemory._candidate_preserves_bundle"}
 {"builtin_value": 3, "external": 2, "owner": "fn:aurora_working_memory.WorkingMemory._candidate_preserves_claim"}
 {"builtin_value": 1, "owner": "fn:aurora_working_memory.WorkingMemory._choose_response_variant"}
-{"builtin_value": 4, "external": 1, "owner": "fn:aurora_working_memory.WorkingMemory._claim_matches_targets"}
+{"builtin_value": 4, "owner": "fn:aurora_working_memory.WorkingMemory._claim_matches_targets"}
 {"builtin_value": 5, "owner": "fn:aurora_working_memory.WorkingMemory._claim_signature"}
 {"builtin_value": 6, "owner": "fn:aurora_working_memory.WorkingMemory._claim_terms"}
 {"builtin_value": 12, "owner": "fn:aurora_working_memory.WorkingMemory._claim_to_text"}
@@ -5877,6 +5878,9 @@
 {"external": 5, "owner": "fn:tests.test_code_evolution_restart_heredity.TestMalformedPersistedStateIsRepresentedNotGuessed.test_partially_malformed_entries_are_skipped_individually"}
 {"external": 3, "owner": "fn:tests.test_code_evolution_restart_heredity.TestRejectedEvidenceSurvivesRestartWithoutBecomingParentage.test_rejected_mutation_discoverable_but_never_auto_parent_after_restart"}
 {"external": 3, "owner": "fn:tests.test_code_evolution_restart_heredity._write"}
+{"builtin_value": 1, "external": 2, "owner": "fn:tests.test_cognition_gap_wiring._string_keys_read_from_systems"}
+{"builtin_value": 1, "external": 3, "owner": "fn:tests.test_cognition_gap_wiring.ab"}
+{"builtin_value": 1, "owner": "fn:tests.test_cognition_gap_wiring.test_aurora_reads_the_noncomp_slot_its_writer_fills"}
 {"external": 1, "owner": "fn:tests.test_cognitive_experience_causal_evaluator._world_with_decoy_and_rule"}
 {"external": 1, "owner": "fn:tests.test_cognitive_experience_causal_evaluator.test_apply_causal_evaluation_feeds_genuine_failures_to_dream_trainer"}
 {"external": 2, "owner": "fn:tests.test_cognitive_experience_causal_evaluator.test_apply_causal_evaluation_requires_recorded_consequence"}
@@ -6799,6 +6803,7 @@
 {"external": 1, "owner": "fn:tests.test_perspective_live_birth.test_engine_is_attached_at_boot_to_the_real_state_dir"}
 {"external": 2, "owner": "fn:tests.test_perspective_live_birth.test_lineage_development_persists_to_disk"}
 {"external": 1, "owner": "fn:tests.test_perspective_live_birth.test_turn_existence_evidence_is_persistent_not_more"}
+{"external": 2, "owner": "fn:tests.test_perspective_merge_repair.test_observer_and_consumer_are_separate_methods_again"}
 {"builtin_value": 1, "owner": "fn:tests.test_perspective_representation_birth._canary_pair"}
 {"external": 2, "owner": "fn:tests.test_perspective_representation_birth.test_one_lineage_evidence_never_touches_the_other_profile"}
 {"external": 1, "owner": "fn:tests.test_perspective_representation_birth.test_process_synthesis_hands_the_pair_in_rather_than_stamping_after"}
@@ -6884,6 +6889,10 @@
 {"external": 1, "owner": "fn:tests.test_praxis_same_device_loop.test_operator_pause_reaches_aurora_only_as_availability"}
 {"external": 1, "owner": "fn:tests.test_praxis_same_device_loop.test_the_operator_surface_has_no_socket"}
 {"external": 2, "owner": "fn:tests.test_praxis_same_device_loop.test_the_same_device_loop_end_to_end"}
+{"external": 3, "owner": "fn:tests.test_praxis_shared_state_and_discovery._organism"}
+{"external": 6, "owner": "fn:tests.test_praxis_shared_state_and_discovery.test_discovery_does_not_wait_for_an_idle_field_but_the_pull_does"}
+{"builtin_value": 1, "external": 4, "owner": "fn:tests.test_praxis_shared_state_and_discovery.test_loop_still_pulls_with_the_real_field_lock_predicate"}
+{"builtin_value": 1, "external": 2, "owner": "fn:tests.test_praxis_shared_state_and_discovery.test_pause_still_stops_discovery"}
 {"external": 1, "owner": "fn:tests.test_prediction_field_manifold.test_manifold_familiarity_present_marks_source"}
 {"external": 1, "owner": "fn:tests.test_preoutcome_pressure_capture.TestCommitApplicationCapturesPreOutcomePressure.test_pending_validation_carries_a_pressure_snapshot"}
 {"external": 1, "owner": "fn:tests.test_preoutcome_pressure_capture.TestCommitApplicationCapturesPreOutcomePressure.test_snapshot_reflects_the_state_at_commit_time_not_a_constant"}
@@ -7346,6 +7355,10 @@
 {"external": 7, "owner": "fn:tests.test_ui_observation_journal.test_starting_a_session_while_one_is_active_closes_the_previous_one_out"}
 {"external": 1, "owner": "fn:tests.test_ui_observation_journal.test_stop_session_clears_active_session_state"}
 {"builtin_value": 1, "external": 5, "owner": "fn:tests.test_ui_observation_journal.test_stop_session_writes_manifest_with_correct_counts"}
+{"builtin_value": 1, "external": 2, "owner": "fn:tests.test_undefined_names_in_live_paths._undefined_names"}
+{"builtin_value": 1, "external": 4, "owner": "fn:tests.test_undefined_names_in_live_paths.test_comprehension_lookup_derives_its_own_prompt_text"}
+{"builtin_value": 1, "external": 3, "owner": "fn:tests.test_undefined_names_in_live_paths.test_phone_habitat_reset_answers_when_no_habitat"}
+{"builtin_value": 1, "external": 3, "owner": "fn:tests.test_undefined_names_in_live_paths.test_phone_habitat_reset_reports_success"}
 {"external": 3, "owner": "fn:tests.test_understanding_genealogy_preservation.test_observation_and_application_projection_keep_distinct_evidence"}
 {"external": 1, "owner": "fn:tests.test_understanding_sediment_overlay.test_delta_decays_toward_zero_over_the_half_life"}
 {"builtin_value": 1, "owner": "fn:tests.test_universal_function_lineage.test_recursive_surfaces_are_coevolution_not_cyclic_parentage"}

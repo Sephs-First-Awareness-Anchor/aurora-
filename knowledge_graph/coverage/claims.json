@@ -978,14 +978,9 @@
   },
   "mod:aurora_internal.aurora_quasiarch_observer": {
    "claim_basis": "reviewed",
-   "notes": [
-    "writes state that production code outside investigative work reads: store:qao_mutation_signal.json (read by aurora_daemon), store:runtime_state.json (read by flutter_app.android.app.src.main.python.aurora_historical_experience_environment)"
-   ],
-   "observations": [
-    "live organ(s) quasiarch_observer",
-    "ran in desktop_boot, desktop_turns"
-   ],
-   "status": "conflict"
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
   },
   "mod:aurora_internal.aurora_reasoning_paths": {
    "claim_basis": "name_and_docstring",
@@ -2142,11 +2137,10 @@
   "mod:reply_aurora": {
    "claim_basis": "reviewed",
    "notes": [
-    "declared runtime but not reachable from any recorded entry point",
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
    ],
    "observations": [],
-   "status": "conflict"
+   "status": "unverified"
   },
   "mod:run_aurora": {
    "claim_basis": "name_and_docstring",
@@ -6564,7 +6558,7 @@
   "path": "docs/module_ownership.json",
   "schema": "aurora.module_ownership/2",
   "scope": "Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.",
-  "sha256": "561e8c185309d9c6",
+  "sha256": "d60eb40815d2dd1b",
   "version": 2
  }
 }

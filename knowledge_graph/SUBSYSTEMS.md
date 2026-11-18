@@ -1,7 +1,7 @@
 # Aurora's crystal ladder: declared responsibility against implemented and observed behaviour
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `d9a335038080`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
+Source commit `5cb5581adc37`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
 
 The repository is the king quasi. Each domain is a quasi, each declared subsystem a higher-order unit, and every file a base unit. Domains and subsystems are claims from the ownership mapping. A composite is promoted only when the graph shows its files bound by calls, instantiation, inheritance, spawns, callbacks, value flow or shared state; the mapping's own composites (built from imports) are listed beside them with how much of that binding their links carry. A conflict means the evidence points beyond the declared subsystem; it is a question to review, not a correction.
 
@@ -106,7 +106,7 @@ Declared: The instruction set, virtual machine and JIT.
 | `aurora-acm/kernel/src/xaurora/mod.rs` | location | - | - | - | 0 | - |
 | `aurora-acm/kernel/src/xaurora/vm.rs` | location | - | - | - | 0 | - |
 
-### Quasi: Desktop Aurora (`subsys:quasi:desktop`), 929 base file(s)
+### Quasi: Desktop Aurora (`subsys:quasi:desktop`), 934 base file(s)
 
 Declared: Her Python runtime and everything that runs, tests or maintains it on a computer.
 
@@ -115,7 +115,7 @@ Declared: Her Python runtime and everything that runs, tests or maintains it on 
 Declared: Praxis, ACM, scouting, research dispatch and tool registries.
 
 - Evidence composite `subsys:composite:bridges:32b189f0`: 3 files, cohesion 0.128, binding {'CALLS': 6, 'INSTANTIATES': 2, 'FEEDS': 18, 'SHARED_STATE': 1}. Files: `aurora_praxis_initiative.py`, `aurora_praxis_messenger.py`, `aurora_social_corroboration.py`
-- Evidence composite `subsys:composite:bridges:9c439ea7`: 3 files, cohesion 0.106, binding {'CALLS': 19, 'FEEDS': 15, 'SHARED_STATE': 1}. Files: `aurora_desktop_agent.py`, `aurora_internal/tool_registry.py`, `aurora_tool_mind.py`
+- Evidence composite `subsys:composite:bridges:9c439ea7`: 3 files, cohesion 0.131, binding {'CALLS': 19, 'FEEDS': 15, 'SHARED_STATE': 1}. Files: `aurora_desktop_agent.py`, `aurora_internal/tool_registry.py`, `aurora_tool_mind.py`
 - Evidence composite `subsys:composite:bridges:d8368445`: 2 files, cohesion 0.029, binding {'CALLS': 4, 'FEEDS': 6}. Files: `aurora_internal/scouting/broker.py`, `aurora_internal/scouting/contracts.py`
 - Declared composite `bridges.1` (hub `aurora_internal/scouting/contracts.py`): 4 files, 4 of 4 import links carry binding, status supported, closest evidence composite `subsys:composite:bridges:d8368445` (overlap 0.5).
 - Declared composite `bridges.2` (hub `aurora_praxis_messenger.py`): 3 files, 2 of 2 import links carry binding, status supported, closest evidence composite `subsys:composite:bridges:32b189f0` (overlap 1.0).
@@ -148,7 +148,7 @@ Declared: The concept-crystal store, its evidence-based growth, ingestion and pe
 - Evidence composite `subsys:composite:crystal:1a4df838`: 4 files, cohesion 0.333, binding {'INHERITS': 1, 'CALLS': 21, 'INSTANTIATES': 12, 'FEEDS': 44, 'SHARED_STATE': 11}. Files: `aurora_interaction_engine.py`, `aurora_interaction_processing.py`, `aurora_internal/quasiarch_observer/crystal_engine.py`, `aurora_internal/quasiarch_observer/dimensional_processing.py`
 - Evidence composite `subsys:composite:crystal:1dc7e692`: 2 files, cohesion 0.8, binding {'CALLS': 1, 'INSTANTIATES': 2, 'FEEDS': 5}. Files: `aurora_crystal_state_bridge.py`, `crystalzip.py`
 - Evidence composite `subsys:composite:crystal:2c7f2bbb`: 3 files, cohesion 0.047, binding {'CALLS': 7, 'FEEDS': 4}. Files: `aurora_internal/aurora_lexical_crystals.py`, `aurora_internal/aurora_representation_crystals.py`, `concept_crystal.py`
-- Evidence composite `subsys:composite:crystal:cbfaf025`: 14 files, cohesion 0.232, binding {'CALLS': 80, 'FEEDS': 164, 'INSTANTIATES': 3}. Files: `aurora_crystal_ingestion.py`, `aurora_internal/crystal_associations.py`, `aurora_internal/crystal_convergence.py`, `aurora_internal/crystal_facets.py`, `aurora_internal/crystal_grammar.py`, `aurora_internal/crystal_interior.py`, `aurora_internal/crystal_lexicon.py`, `aurora_internal/crystal_maturity.py`, `aurora_internal/crystal_promotion.py`, `aurora_internal/crystal_runtime.py`, `aurora_internal/crystal_sensory.py`, `aurora_internal/crystal_store.py` ...
+- Evidence composite `subsys:composite:crystal:cbfaf025`: 14 files, cohesion 0.233, binding {'CALLS': 80, 'FEEDS': 164, 'INSTANTIATES': 3}. Files: `aurora_crystal_ingestion.py`, `aurora_internal/crystal_associations.py`, `aurora_internal/crystal_convergence.py`, `aurora_internal/crystal_facets.py`, `aurora_internal/crystal_grammar.py`, `aurora_internal/crystal_interior.py`, `aurora_internal/crystal_lexicon.py`, `aurora_internal/crystal_maturity.py`, `aurora_internal/crystal_promotion.py`, `aurora_internal/crystal_runtime.py`, `aurora_internal/crystal_sensory.py`, `aurora_internal/crystal_store.py` ...
 - Declared composite `crystal.1` (hub `aurora_internal/crystal_runtime.py`): 14 files, 30 of 30 import links carry binding, status supported, closest evidence composite `subsys:composite:crystal:cbfaf025` (overlap 1.0).
 - Declared composite `crystal.2` (hub `aurora_interaction_processing.py`): 5 files, 3 of 6 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:crystal:1a4df838` (overlap 0.8).
 - Declared composite `crystal.3` (hub `aurora_internal/aurora_lexical_crystals.py`): 3 files, 3 of 3 import links carry binding, status supported, closest evidence composite `subsys:composite:crystal:2c7f2bbb` (overlap 1.0).
@@ -187,7 +187,7 @@ Declared: The concept-crystal store, its evidence-based growth, ingestion and pe
 
 Declared: I-State beings, dimensional systems, consciousness assembly and simulation (the L2 to L4 and L7 layer files).
 
-- Evidence composite `subsys:composite:dimensional:78d8264b`: 4 files, cohesion 0.036, binding {'INSTANTIATES': 6, 'CALLS': 12, 'FEEDS': 21, 'SHARED_STATE': 3}. Files: `aurora_consciousness_engine.py`, `aurora_dimensional_systems.py`, `aurora_i_state_beings.py`, `aurora_simulation_engine.py`
+- Evidence composite `subsys:composite:dimensional:78d8264b`: 4 files, cohesion 0.035, binding {'INSTANTIATES': 6, 'CALLS': 12, 'FEEDS': 21, 'SHARED_STATE': 3}. Files: `aurora_consciousness_engine.py`, `aurora_dimensional_systems.py`, `aurora_i_state_beings.py`, `aurora_simulation_engine.py`
 - Declared composite `dimensional.1` (hub `aurora_consciousness_engine.py`): 4 files, 4 of 5 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:dimensional:78d8264b` (overlap 1.0).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
@@ -202,11 +202,11 @@ Declared: I-State beings, dimensional systems, consciousness assembly and simula
 
 Declared: Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonComp, pressure and leverage.
 
-- Evidence composite `subsys:composite:foundation:6f0cf83a`: 9 files, cohesion 0.142, binding {'INSTANTIATES': 26, 'CALLS': 40, 'FEEDS': 107, 'SHARED_STATE': 3}. Files: `aurora_constraint_engine.py`, `aurora_constraint_manifold_compiler.py`, `aurora_constraint_unit_adapter.py`, `aurora_internal/aurora_constraint_manifold_patched.py`, `aurora_internal/aurora_leverage_scalar.py`, `aurora_internal/aurora_noncomp_registry.py`, `aurora_internal/aurora_polarity_gradient.py`, `aurora_ivm.py`, `foundational_contract.py`
-- Evidence composite `subsys:composite:foundation:71e21bb1`: 2 files, cohesion 0.354, binding {'INSTANTIATES': 1, 'CALLS': 5, 'FEEDS': 13, 'SHARED_STATE': 4}. Files: `aurora_internal/aurora_pressure_classifier.py`, `aurora_internal/aurora_pressure_router.py`
-- Evidence composite `subsys:composite:foundation:8bbcbdb6`: 2 files, cohesion 0.081, binding {'INSTANTIATES': 1, 'CALLS': 3, 'FEEDS': 3}. Files: `aurora_manifold_directory_reader.py`, `aurora_manifold_lookup.py`
+- Evidence composite `subsys:composite:foundation:6f0cf83a`: 9 files, cohesion 0.143, binding {'INSTANTIATES': 26, 'CALLS': 40, 'FEEDS': 107, 'SHARED_STATE': 3}. Files: `aurora_constraint_engine.py`, `aurora_constraint_manifold_compiler.py`, `aurora_constraint_unit_adapter.py`, `aurora_internal/aurora_constraint_manifold_patched.py`, `aurora_internal/aurora_leverage_scalar.py`, `aurora_internal/aurora_noncomp_registry.py`, `aurora_internal/aurora_polarity_gradient.py`, `aurora_ivm.py`, `foundational_contract.py`
+- Evidence composite `subsys:composite:foundation:71e21bb1`: 2 files, cohesion 0.383, binding {'INSTANTIATES': 1, 'CALLS': 5, 'FEEDS': 13, 'SHARED_STATE': 4}. Files: `aurora_internal/aurora_pressure_classifier.py`, `aurora_internal/aurora_pressure_router.py`
+- Evidence composite `subsys:composite:foundation:8bbcbdb6`: 2 files, cohesion 0.082, binding {'INSTANTIATES': 1, 'CALLS': 3, 'FEEDS': 3}. Files: `aurora_manifold_directory_reader.py`, `aurora_manifold_lookup.py`
 - Evidence composite `subsys:composite:foundation:9389ce53`: 2 files, cohesion 0.2, binding {'INSTANTIATES': 1, 'CALLS': 5, 'FEEDS': 9}. Files: `aurora_computational_model.py`, `aurora_constraint_head.py`
-- Evidence composite `subsys:composite:foundation:d3ead140`: 2 files, cohesion 0.012, binding {'INSTANTIATES': 2, 'CALLS': 2}. Files: `aurora_internal/aurora_ontological_scaffolding.py`, `aurora_internal/aurora_pressure_ledger.py`
+- Evidence composite `subsys:composite:foundation:d3ead140`: 2 files, cohesion 0.013, binding {'INSTANTIATES': 2, 'CALLS': 3}. Files: `aurora_internal/aurora_ontological_scaffolding.py`, `aurora_internal/aurora_pressure_ledger.py`
 - Declared composite `foundation.1` (hub `aurora_internal/aurora_noncomp_registry.py`): 15 files, 15 of 21 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:foundation:6f0cf83a` (overlap 0.6).
 - Declared composite `foundation.2` (hub `aurora_computational_model.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:foundation:9389ce53` (overlap 1.0).
 - Declared composite `foundation.3` (hub `aurora_internal/aurora_pressure_classifier.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:foundation:71e21bb1` (overlap 1.0).
@@ -256,8 +256,8 @@ Declared: Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonC
 
 Declared: Constraint genealogy, code and ability lineage, function provenance, evidence qualification, WARP.
 
-- Evidence composite `subsys:composite:genealogy:10b01d71`: 7 files, cohesion 0.076, binding {'INHERITS': 1, 'CALLS': 23, 'INSTANTIATES': 5, 'FEEDS': 24, 'SHARED_STATE': 4}. Files: `aurora_genealogy_representation_resolver.py`, `aurora_internal/aurora_manual_code_lineage.py`, `aurora_internal/aurora_system_introspection.py`, `aurora_internal/aurora_universal_function_lineage.py`, `aurora_internal/lineage_canonical.py`, `aurora_warp_protocol.py`, `tensor_occupancy_warp_bridge.py`
-- Evidence composite `subsys:composite:genealogy:c9b3e419`: 7 files, cohesion 0.094, binding {'CALLS': 27, 'INSTANTIATES': 10, 'FEEDS': 67, 'SHARED_STATE': 6}. Files: `aurora_closure_basis.py`, `aurora_genealogy_environment.py`, `aurora_internal/aurora_ability_lineage_compiler.py`, `aurora_internal/aurora_lineage_bound_traits.py`, `aurora_internal/constraint_genealogy.py`, `aurora_internal/genealogy_evidence_journal.py`, `genealogy_signature_bridge.py`
+- Evidence composite `subsys:composite:genealogy:10b01d71`: 7 files, cohesion 0.078, binding {'INHERITS': 1, 'CALLS': 23, 'INSTANTIATES': 5, 'FEEDS': 24, 'SHARED_STATE': 4}. Files: `aurora_genealogy_representation_resolver.py`, `aurora_internal/aurora_manual_code_lineage.py`, `aurora_internal/aurora_system_introspection.py`, `aurora_internal/aurora_universal_function_lineage.py`, `aurora_internal/lineage_canonical.py`, `aurora_warp_protocol.py`, `tensor_occupancy_warp_bridge.py`
+- Evidence composite `subsys:composite:genealogy:c9b3e419`: 7 files, cohesion 0.089, binding {'CALLS': 27, 'INSTANTIATES': 10, 'FEEDS': 66, 'SHARED_STATE': 6}. Files: `aurora_closure_basis.py`, `aurora_genealogy_environment.py`, `aurora_internal/aurora_ability_lineage_compiler.py`, `aurora_internal/aurora_lineage_bound_traits.py`, `aurora_internal/constraint_genealogy.py`, `aurora_internal/genealogy_evidence_journal.py`, `genealogy_signature_bridge.py`
 - Declared composite `genealogy.1` (hub `aurora_internal/constraint_genealogy.py`): 12 files, 13 of 13 import links carry binding, status supported, closest evidence composite `subsys:composite:genealogy:c9b3e419` (overlap 0.583).
 - Declared composite `genealogy.2` (hub `aurora_genealogy_promotion_dimension_observer.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite none.
 - Declared composite `genealogy.3` (hub `aurora_internal/aurora_attribution_trace.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:genealogy:10b01d71` (overlap 0.125).
@@ -294,15 +294,16 @@ Declared: Constraint genealogy, code and ability lineage, function provenance, e
 
 Declared: Persistence, checkpoints, autonomy, runtime faults and health, metabolic clock, fail-closed guards.
 
-- Evidence composite `subsys:composite:governance:01effd21`: 17 files, cohesion 0.049, binding {'CALLS': 119, 'INSTANTIATES': 4, 'FEEDS': 22, 'SHARED_STATE': 4}. Files: `aurora_autonomy.py`, `aurora_checkpoint.py`, `aurora_dev_telemetry.py`, `aurora_governance_persistence_gateway.py`, `aurora_internal/aurora_identity_persistence.py`, `aurora_internal/aurora_leverage_relief.py`, `aurora_internal/aurora_metabolic_clock.py`, `aurora_internal/aurora_metabolic_steps.py`, `aurora_internal/aurora_persistence_audit.py`, `aurora_internal/aurora_persistence_utils.py`, `aurora_internal/aurora_rest_ledger.py`, `aurora_internal/aurora_runtime_constraint_governor.py` ...
-- Declared composite `governance.1` (hub `aurora_internal/aurora_runtime_faults.py`): 19 files, 22 of 25 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:governance:01effd21` (overlap 0.714).
-- Declared composite `governance.2` (hub `aurora_internal/aurora_metabolic_steps.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:governance:01effd21` (overlap 0.118).
+- Evidence composite `subsys:composite:governance:2753c48b`: 10 files, cohesion 0.053, binding {'CALLS': 54, 'INSTANTIATES': 4, 'FEEDS': 20, 'SHARED_STATE': 4}. Files: `aurora_autonomy.py`, `aurora_checkpoint.py`, `aurora_governance_persistence_gateway.py`, `aurora_internal/aurora_metabolic_clock.py`, `aurora_internal/aurora_metabolic_steps.py`, `aurora_internal/aurora_persistence_utils.py`, `aurora_internal/aurora_rest_ledger.py`, `aurora_internal/aurora_runtime_faults.py`, `aurora_internal/aurora_runtime_health.py`, `aurora_persistence_utils.py`
+- Evidence composite `subsys:composite:governance:a8c18fbb`: 2 files, cohesion 0.017, binding {'CALLS': 1, 'FEEDS': 2}. Files: `aurora_internal/aurora_identity_persistence.py`, `aurora_internal/aurora_persistence_audit.py`
+- Declared composite `governance.1` (hub `aurora_internal/aurora_runtime_faults.py`): 19 files, 22 of 25 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:governance:2753c48b` (overlap 0.381).
+- Declared composite `governance.2` (hub `aurora_internal/aurora_metabolic_steps.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:governance:2753c48b` (overlap 0.2).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
 | `aurora_autonomy.py` | name_and_docstring | desktop, phone | desktop_boot | autonomy | 1 | consistent |
 | `aurora_checkpoint.py` | name_and_docstring | desktop, phone | desktop_boot | checkpoint | 1 | consistent |
-| `aurora_dev_telemetry.py` | name_and_docstring | desktop | - | - | 0 | consistent |
+| `aurora_dev_telemetry.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_governance_persistence_gateway.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | aurora, persistence_gateway, state_persistence | 3 | consistent |
 | `aurora_internal/aurora_energy_layer_costs.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | accountant | 0 | consistent |
 | `aurora_internal/aurora_identity_persistence.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | conversation_memory, core_identity, enhanced_persist | 2 | consistent |
@@ -328,7 +329,7 @@ Declared: Persistence, checkpoints, autonomy, runtime faults and health, metabol
 
 Declared: Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here.
 
-- Evidence composite `subsys:composite:investigative:4f4bb621`: 4 files, cohesion 0.155, binding {'INSTANTIATES': 2, 'CALLS': 14, 'FEEDS': 30, 'SHARED_STATE': 2}. Files: `aurora_internal/aurora_quasiarch_observer.py`, `aurora_internal/quasiarch_development_inquiry.py`, `aurora_internal/quasiarch_observer/dimensional_memory.py`, `aurora_internal/quasiarch_observer/ghost_relics.py`
+- Evidence composite `subsys:composite:investigative:4f4bb621`: 4 files, cohesion 0.162, binding {'INSTANTIATES': 2, 'CALLS': 14, 'FEEDS': 30, 'SHARED_STATE': 2}. Files: `aurora_internal/aurora_quasiarch_observer.py`, `aurora_internal/quasiarch_development_inquiry.py`, `aurora_internal/quasiarch_observer/dimensional_memory.py`, `aurora_internal/quasiarch_observer/ghost_relics.py`
 - Evidence composite `subsys:composite:investigative:605f7d51`: 2 files, cohesion 0.104, binding {'CALLS': 5}. Files: `aurora_genealogy_difference_shadow.py`, `aurora_genealogy_difference_shadow_report.py`
 - Evidence composite `subsys:composite:investigative:c6e8f22f`: 2 files, cohesion 0.103, binding {'CALLS': 2, 'FEEDS': 2}. Files: `aurora_genealogy_difference_producer_observatory.py`, `aurora_genealogy_difference_producer_observatory_report.py`
 - Evidence composite `subsys:composite:investigative:d9f78b8b`: 2 files, cohesion 0.125, binding {'CALLS': 2, 'FEEDS': 2}. Files: `aurora_genealogy_cooccurrence_observatory.py`, `aurora_genealogy_cooccurrence_observatory_report.py`
@@ -358,7 +359,7 @@ Declared: Observers, canaries, probes, shadows, audits, reports and test setup. 
 | `aurora_internal/aurora_episode_slip_profiler.py` (also) | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
 | `aurora_internal/aurora_fault_audit.py` | reviewed | - | - | - | 0 | unverified |
 | `aurora_internal/aurora_pf1_5_instruments.py` (also) | reviewed | desktop, phone | desktop_turns | - | 0 | consistent |
-| `aurora_internal/aurora_quasiarch_observer.py` | reviewed | desktop, phone | desktop_boot, desktop_turns | quasiarch_observer | 2 | conflict: writes state that production code outside investigative work reads: store:qao_mutation_signal.json (read by aurora_daemon), store:runtime_state.json (read by flutter_app.android.app.src.main.python.aurora_historical_experience_environment) |
+| `aurora_internal/aurora_quasiarch_observer.py` | reviewed | desktop, phone | desktop_boot, desktop_turns | quasiarch_observer | 2 | consistent |
 | `aurora_internal/aurora_semantic_probe_battery.py` (also) | reviewed | desktop, phone | desktop_turns | - | 0 | consistent |
 | `aurora_internal/aurora_stack_trace_instrumentation.py` (also) | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
 | `aurora_internal/aurora_surface_doc.py` (also) | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
@@ -392,7 +393,7 @@ Declared: Observers, canaries, probes, shadows, audits, reports and test setup. 
 Declared: Behavioral identity, language state, lexicon, grammar and word use.
 
 - Evidence composite `subsys:composite:language:ab4e00b7`: 2 files, cohesion 0.028, binding {'CALLS': 6, 'FEEDS': 1}. Files: `aurora_internal/aurora_communication_emergence.py`, `aurora_internal/aurora_meaning_evolution.py`
-- Evidence composite `subsys:composite:language:f91cf40d`: 2 files, cohesion 0.09, binding {'CALLS': 4, 'INSTANTIATES': 2, 'FEEDS': 10}. Files: `aurora_internal/aurora_conversation_rubric_engine.py`, `aurora_internal/aurora_semantic_probe_battery.py`
+- Evidence composite `subsys:composite:language:f91cf40d`: 2 files, cohesion 0.078, binding {'CALLS': 4, 'INSTANTIATES': 2, 'FEEDS': 10}. Files: `aurora_internal/aurora_conversation_rubric_engine.py`, `aurora_internal/aurora_semantic_probe_battery.py`
 - Declared composite `language.1` (hub `aurora_internal/aurora_conversation_rubric_engine.py`): 3 files, 1 of 2 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:language:f91cf40d` (overlap 0.667).
 - Declared composite `language.2` (hub `aurora_grammar_engine.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite none.
 - Declared composite `language.3` (hub `aurora_internal/aurora_communication_emergence.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:language:ab4e00b7` (overlap 1.0).
@@ -420,10 +421,10 @@ Declared: Behavioral identity, language state, lexicon, grammar and word use.
 Declared: Training, dreams, curriculum, evolution chambers, curiosity and habitat.
 
 - Evidence composite `subsys:composite:learning:3874e50e`: 3 files, cohesion 0.162, binding {'CALLS': 12, 'FEEDS': 19}. Files: `aurora_internal/aurora_capability_binding.py`, `aurora_internal/aurora_learned_index.py`, `aurora_internal/aurora_learned_rules.py`
-- Evidence composite `subsys:composite:learning:680a4391`: 3 files, cohesion 0.028, binding {'INSTANTIATES': 2, 'CALLS': 2, 'SHARED_STATE': 1, 'FEEDS': 1}. Files: `aurora_experiential_sim.py`, `aurora_explore.py`, `aurora_training_pulse.py`
-- Evidence composite `subsys:composite:learning:6f24c869`: 4 files, cohesion 0.081, binding {'INSTANTIATES': 2, 'CALLS': 46, 'FEEDS': 32}. Files: `aurora_internal/aurora_code_evolution_chamber.py`, `aurora_internal/aurora_evolution_chamber.py`, `aurora_internal/aurora_evolution_hook.py`, `aurora_internal/aurora_evolved_surfaces.py`
-- Evidence composite `subsys:composite:learning:80bafba2`: 4 files, cohesion 0.229, binding {'INSTANTIATES': 4, 'CALLS': 15, 'FEEDS': 50}. Files: `aurora_internal/aurora_dream_curriculum_queue.py`, `aurora_internal/aurora_dream_evolution_orchestrator.py`, `aurora_internal/aurora_dream_genealogy_bridge.py`, `aurora_internal/aurora_episode_slip_profiler.py`
-- Evidence composite `subsys:composite:learning:b74d3707`: 2 files, cohesion 0.091, binding {'CALLS': 9, 'INSTANTIATES': 1, 'FEEDS': 12, 'SHARED_STATE': 1}. Files: `aurora_possibility_selves.py`, `aurora_quantum_dream_substrate.py`
+- Evidence composite `subsys:composite:learning:680a4391`: 3 files, cohesion 0.029, binding {'INSTANTIATES': 2, 'CALLS': 2, 'SHARED_STATE': 1, 'FEEDS': 1}. Files: `aurora_experiential_sim.py`, `aurora_explore.py`, `aurora_training_pulse.py`
+- Evidence composite `subsys:composite:learning:6f24c869`: 4 files, cohesion 0.082, binding {'INSTANTIATES': 2, 'CALLS': 46, 'FEEDS': 32}. Files: `aurora_internal/aurora_code_evolution_chamber.py`, `aurora_internal/aurora_evolution_chamber.py`, `aurora_internal/aurora_evolution_hook.py`, `aurora_internal/aurora_evolved_surfaces.py`
+- Evidence composite `subsys:composite:learning:80bafba2`: 4 files, cohesion 0.226, binding {'INSTANTIATES': 4, 'CALLS': 15, 'FEEDS': 48}. Files: `aurora_internal/aurora_dream_curriculum_queue.py`, `aurora_internal/aurora_dream_evolution_orchestrator.py`, `aurora_internal/aurora_dream_genealogy_bridge.py`, `aurora_internal/aurora_episode_slip_profiler.py`
+- Evidence composite `subsys:composite:learning:b74d3707`: 2 files, cohesion 0.101, binding {'CALLS': 9, 'INSTANTIATES': 1, 'FEEDS': 12, 'SHARED_STATE': 1}. Files: `aurora_possibility_selves.py`, `aurora_quantum_dream_substrate.py`
 - Evidence composite `subsys:composite:learning:f7283074`: 2 files, cohesion 0.014, binding {'CALLS': 2, 'FEEDS': 1}. Files: `aurora_classroom.py`, `aurora_internal/aurora_directed_training_corpus.py`
 - Declared composite `learning.1` (hub `aurora_internal/aurora_evolution_chamber.py`): 5 files, 4 of 5 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:learning:6f24c869` (overlap 0.8).
 - Declared composite `learning.2` (hub `aurora_dream_trainer.py`): 4 files, 3 of 3 import links carry binding, status supported, closest evidence composite `subsys:composite:learning:f7283074` (overlap 0.5).
@@ -448,7 +449,7 @@ Declared: Training, dreams, curriculum, evolution chambers, curiosity and habita
 | `aurora_internal/aurora_code_autoevolver.py` | name_and_docstring | desktop | desktop_boot | - | 0 | consistent |
 | `aurora_internal/aurora_code_evolution_chamber.py` | name_and_docstring | desktop, phone | desktop_boot | code_chamber, code_evolution_chamber | 2 | consistent |
 | `aurora_internal/aurora_cognitive_experience_chamber.py` | name_and_docstring | - | - | - | 0 | consistent |
-| `aurora_internal/aurora_corpus_lifecycle.py` | name_and_docstring | desktop | - | - | 0 | consistent |
+| `aurora_internal/aurora_corpus_lifecycle.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_internal/aurora_development_experiment.py` | name_and_docstring | - | - | - | 2 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `aurora_internal/aurora_developmental_ecology.py` | name_and_docstring | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `aurora_internal/aurora_directed_training_corpus.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 1 | consistent |
@@ -469,9 +470,9 @@ Declared: Training, dreams, curriculum, evolution chambers, curiosity and habita
 | `aurora_learning_probe.py` (also) | reviewed | phone | - | learning_probe | 1 | consistent |
 | `aurora_possibility_selves.py` | name_and_docstring | desktop, phone | - | - | 4 | consistent |
 | `aurora_quantum_dream_substrate.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
-| `aurora_reasoning_games.py` | name_and_docstring | - | - | - | 0 | consistent |
-| `aurora_response_teacher.py` | name_and_docstring | - | - | response_teacher | 1 | consistent |
-| `aurora_training_pulse.py` | name_and_docstring | desktop | - | - | 0 | consistent |
+| `aurora_reasoning_games.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
+| `aurora_response_teacher.py` | name_and_docstring | desktop, phone | - | response_teacher | 1 | consistent |
+| `aurora_training_pulse.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_training_run.py` | name_and_docstring | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `aurora_vocabulary_seed_apply.py` | name_and_docstring | phone | - | - | 0 | consistent |
 | `backfill_concept_associations.py` | name_and_docstring | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -503,7 +504,7 @@ Declared: SediMemory, working and interaction memory, turn and resolution record
 
 Declared: Sensory and hardware IO, intake, utterance parsing, expression and the reply well-formedness gate.
 
-- Evidence composite `subsys:composite:perception:ab562dfd`: 7 files, cohesion 0.071, binding {'INSTANTIATES': 11, 'CALLS': 32, 'FEEDS': 33, 'SHARED_STATE': 4}. Files: `aurora_articulation.py`, `aurora_concept_imager.py`, `aurora_expression_perception.py`, `aurora_hardware_io.py`, `aurora_image_ingestion.py`, `aurora_internal/aurora_pf1_5_instruments.py`, `aurora_vision_clustering.py`
+- Evidence composite `subsys:composite:perception:ab562dfd`: 7 files, cohesion 0.073, binding {'INSTANTIATES': 11, 'CALLS': 32, 'FEEDS': 31, 'SHARED_STATE': 4}. Files: `aurora_articulation.py`, `aurora_concept_imager.py`, `aurora_expression_perception.py`, `aurora_hardware_io.py`, `aurora_image_ingestion.py`, `aurora_internal/aurora_pf1_5_instruments.py`, `aurora_vision_clustering.py`
 - Declared composite `perception.1` (hub `aurora_expression_perception.py`): 9 files, 8 of 10 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:perception:ab562dfd` (overlap 0.6).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
@@ -528,19 +529,19 @@ Declared: Sensory and hardware IO, intake, utterance parsing, expression and the
 | `aurora_sensory_fallback.py` | name_and_docstring | - | - | - | 0 | consistent |
 | `aurora_streaming_expression.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_vision_clustering.py` | name_and_docstring | desktop, phone | desktop_boot | - | 0 | consistent |
-| `aurora_voice.py` | name_and_docstring | desktop | - | - | 5 | consistent |
+| `aurora_voice.py` | name_and_docstring | desktop, phone | - | - | 5 | consistent |
 | `aurora_voice_gate.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | addressed_pressure | 1 | consistent |
 | `termux_voice_bridge.sh` | location | - | - | - | 0 | - |
 
-#### Higher order: Reasoning and understanding (`subsys:category:reasoning`), 42 member(s)
+#### Higher order: Reasoning and understanding (`subsys:category:reasoning`), 43 member(s)
 
 Declared: Representational resolution, propositions, the causal reasoning waveform, comparison and understanding.
 
 - Evidence composite `subsys:composite:reasoning:53271342`: 2 files, cohesion 0.061, binding {'CALLS': 10, 'FEEDS': 18}. Files: `aurora_internal/aurora_confluence.py`, `aurora_internal/aurora_propositional_understanding.py`
-- Evidence composite `subsys:composite:reasoning:7255ef84`: 2 files, cohesion 0.05, binding {'CALLS': 2, 'FEEDS': 4}. Files: `aurora_internal/aurora_contradiction_perception.py`, `aurora_internal/aurora_relation_pairs.py`
-- Evidence composite `subsys:composite:reasoning:7b47d38a`: 4 files, cohesion 0.051, binding {'CALLS': 3, 'FEEDS': 13, 'INSTANTIATES': 2}. Files: `aurora_internal/aurora_entropy_detector.py`, `aurora_internal/aurora_operator_composer.py`, `aurora_internal/aurora_strategic_horizon.py`, `aurora_internal/aurora_worth_evaluator.py`
-- Evidence composite `subsys:composite:reasoning:929f8dd5`: 7 files, cohesion 0.203, binding {'INHERITS': 1, 'CALLS': 87, 'FEEDS': 187, 'SHARED_STATE': 12, 'INSTANTIATES': 3}. Files: `aurora_internal/aurora_live_possibility_frontier.py`, `aurora_reflexive_interpreter.py`, `aurora_representational_address.py`, `aurora_representational_resolution.py`, `aurora_representational_resolution_base.py`, `aurora_thought_formation.py`, `aurora_waveform_pressure.py`
-- Evidence composite `subsys:composite:reasoning:b1415b0b`: 4 files, cohesion 0.075, binding {'CALLS': 13, 'FEEDS': 28}. Files: `aurora_boundary_hypothesis.py`, `aurora_internal/aurora_comprehension_gap.py`, `aurora_internal/aurora_constraint_semantic_continuity.py`, `aurora_internal/aurora_recursive_causal_reasoning_waveform.py`
+- Evidence composite `subsys:composite:reasoning:7255ef84`: 2 files, cohesion 0.051, binding {'CALLS': 2, 'FEEDS': 4}. Files: `aurora_internal/aurora_contradiction_perception.py`, `aurora_internal/aurora_relation_pairs.py`
+- Evidence composite `subsys:composite:reasoning:7b47d38a`: 4 files, cohesion 0.053, binding {'CALLS': 3, 'FEEDS': 13, 'INSTANTIATES': 2}. Files: `aurora_internal/aurora_entropy_detector.py`, `aurora_internal/aurora_operator_composer.py`, `aurora_internal/aurora_strategic_horizon.py`, `aurora_internal/aurora_worth_evaluator.py`
+- Evidence composite `subsys:composite:reasoning:929f8dd5`: 7 files, cohesion 0.209, binding {'INHERITS': 1, 'CALLS': 88, 'FEEDS': 197, 'SHARED_STATE': 12, 'INSTANTIATES': 3}. Files: `aurora_internal/aurora_live_possibility_frontier.py`, `aurora_reflexive_interpreter.py`, `aurora_representational_address.py`, `aurora_representational_resolution.py`, `aurora_representational_resolution_base.py`, `aurora_thought_formation.py`, `aurora_waveform_pressure.py`
+- Evidence composite `subsys:composite:reasoning:b1415b0b`: 4 files, cohesion 0.076, binding {'CALLS': 13, 'FEEDS': 28}. Files: `aurora_boundary_hypothesis.py`, `aurora_internal/aurora_comprehension_gap.py`, `aurora_internal/aurora_constraint_semantic_continuity.py`, `aurora_internal/aurora_recursive_causal_reasoning_waveform.py`
 - Declared composite `reasoning.1` (hub `aurora_representational_address.py`): 8 files, 8 of 8 import links carry binding, status supported, closest evidence composite `subsys:composite:reasoning:929f8dd5` (overlap 0.875).
 - Declared composite `reasoning.2` (hub `aurora_internal/aurora_constraint_semantic_continuity.py`): 5 files, 3 of 4 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:reasoning:b1415b0b` (overlap 0.8).
 - Declared composite `reasoning.3` (hub `aurora_internal/aurora_strategic_horizon.py`): 4 files, 3 of 3 import links carry binding, status supported, closest evidence composite `subsys:composite:reasoning:7b47d38a` (overlap 1.0).
@@ -591,13 +592,14 @@ Declared: Representational resolution, propositions, the causal reasoning wavefo
 | `aurora_thought_formation.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
 | `aurora_toroidal_circulation.py` | name_and_docstring | desktop, phone | desktop_turns | - | 2 | consistent |
 | `aurora_waveform_pressure.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | pressure_pump | 0 | consistent |
+| `reply_aurora.py` (also) | reviewed | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 
 #### Higher order: Entry and runtime (`subsys:category:runtime`), 29 member(s)
 
 Declared: Entry points, the turn loop, process orchestration, launchers and service units.
 
-- Evidence composite `subsys:composite:runtime:0414c162`: 5 files, cohesion 0.029, binding {'INSTANTIATES': 4, 'FEEDS': 53, 'CALLS': 9, 'SHARED_STATE': 60}. Files: `aurora.py`, `aurora_daemon.py`, `aurora_internal/aurora_turn_chain.py`, `aurora_runtime.py`, `corpus_runner.py`
-- Declared composite `runtime.1` (hub `aurora.py`): 7 files, 6 of 7 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:runtime:0414c162` (overlap 0.714).
+- Evidence composite `subsys:composite:runtime:0414c162`: 5 files, cohesion 0.031, binding {'INSTANTIATES': 4, 'FEEDS': 53, 'CALLS': 9, 'SHARED_STATE': 60}. Files: `aurora.py`, `aurora_daemon.py`, `aurora_internal/aurora_turn_chain.py`, `aurora_runtime.py`, `corpus_runner.py`
+- Declared composite `runtime.1` (hub `aurora.py`): 7 files, 6 of 8 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:runtime:0414c162` (overlap 0.714).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
@@ -605,6 +607,7 @@ Declared: Entry points, the turn loop, process orchestration, launchers and serv
 | `aurora_daemon.py` | name_and_docstring | desktop | - | - | 48 | consistent |
 | `aurora_hub.py` | name_and_docstring | - | - | - | 5 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `aurora_internal/__init__.py` | name_and_docstring | - | desktop_boot | - | 0 | consistent |
+| `aurora_internal/aurora_quasiarch_observer.py` (also) | reviewed | desktop, phone | desktop_boot, desktop_turns | quasiarch_observer | 2 | consistent |
 | `aurora_internal/aurora_turn_chain.py` | name_and_docstring | desktop, phone | desktop_turns | - | 0 | consistent |
 | `aurora_internal/aurora_turn_compute_graph.py` | name_and_docstring | desktop, phone | desktop_turns | - | 0 | consistent |
 | `aurora_runtime.py` | name_and_docstring | desktop, phone | desktop_boot | - | 1 | consistent |
@@ -613,7 +616,6 @@ Declared: Entry points, the turn loop, process orchestration, launchers and serv
 | `deploy/aurora-strata-room.service` | location | - | - | - | 0 | - |
 | `deploy/aurora-subsurface.service` | location | - | - | - | 0 | - |
 | `deploy/aurora-surface.service` | location | - | - | - | 0 | - |
-| `reply_aurora.py` | reviewed | - | - | - | 0 | conflict: declared runtime but not reachable from any recorded entry point; no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `run_aurora.py` | name_and_docstring | desktop | - | - | 0 | consistent |
 | `run_chain.py` | name_and_docstring | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `run_corpus.py` | name_and_docstring | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -636,8 +638,8 @@ Declared: Entry points, the turn loop, process orchestration, launchers and serv
 Declared: The dual-strata package and the surface/subsurface daemons and substrate.
 
 - Evidence composite `subsys:composite:strata:46b5e9ce`: 4 files, cohesion 0.049, binding {'CALLS': 12, 'FEEDS': 14, 'INSTANTIATES': 2}. Files: `aurora_internal/dual_strata/presence_metrics.py`, `aurora_internal/dual_strata/subsurface_presence.py`, `aurora_internal/dual_strata/subsurface_presence_runtime.py`, `aurora_scout_daemon.py`
-- Evidence composite `subsys:composite:strata:a8913e4f`: 18 files, cohesion 0.338, binding {'INSTANTIATES': 25, 'CALLS': 105, 'FEEDS': 191}. Files: `aurora_internal/dual_strata/cers_bridge.py`, `aurora_internal/dual_strata/cers_deprecation.py`, `aurora_internal/dual_strata/cers_potential_trial.py`, `aurora_internal/dual_strata/cers_regulator.py`, `aurora_internal/dual_strata/cers_tensor_locator.py`, `aurora_internal/dual_strata/conscious_frame.py`, `aurora_internal/dual_strata/contextual_overlay.py`, `aurora_internal/dual_strata/crest.py`, `aurora_internal/dual_strata/dce_bridge.py`, `aurora_internal/dual_strata/micro_reasoning.py`, `aurora_internal/dual_strata/perturbation_probe.py`, `aurora_internal/dual_strata/prediction_field.py` ...
-- Evidence composite `subsys:composite:strata:ef2079cf`: 9 files, cohesion 0.275, binding {'CALLS': 55, 'FEEDS': 75, 'INSTANTIATES': 4, 'SHARED_STATE': 2}. Files: `aurora_internal/dual_strata/predictive_stager.py`, `aurora_internal/dual_strata/sensory_control_channel.py`, `aurora_internal/dual_strata/sensory_observation.py`, `aurora_internal/dual_strata/sensory_snapshot_channel.py`, `aurora_internal/dual_strata/strata_link.py`, `aurora_internal/dual_strata/strata_state_transfer.py`, `aurora_internal/dual_strata/surface_continuity_feed.py`, `aurora_internal/dual_strata/surface_sensory_proxy.py`, `aurora_surface_daemon.py`
+- Evidence composite `subsys:composite:strata:a8913e4f`: 18 files, cohesion 0.344, binding {'INSTANTIATES': 25, 'CALLS': 106, 'FEEDS': 191}. Files: `aurora_internal/dual_strata/cers_bridge.py`, `aurora_internal/dual_strata/cers_deprecation.py`, `aurora_internal/dual_strata/cers_potential_trial.py`, `aurora_internal/dual_strata/cers_regulator.py`, `aurora_internal/dual_strata/cers_tensor_locator.py`, `aurora_internal/dual_strata/conscious_frame.py`, `aurora_internal/dual_strata/contextual_overlay.py`, `aurora_internal/dual_strata/crest.py`, `aurora_internal/dual_strata/dce_bridge.py`, `aurora_internal/dual_strata/micro_reasoning.py`, `aurora_internal/dual_strata/perturbation_probe.py`, `aurora_internal/dual_strata/prediction_field.py` ...
+- Evidence composite `subsys:composite:strata:ef2079cf`: 9 files, cohesion 0.29, binding {'CALLS': 55, 'FEEDS': 75, 'INSTANTIATES': 4, 'SHARED_STATE': 2}. Files: `aurora_internal/dual_strata/predictive_stager.py`, `aurora_internal/dual_strata/sensory_control_channel.py`, `aurora_internal/dual_strata/sensory_observation.py`, `aurora_internal/dual_strata/sensory_snapshot_channel.py`, `aurora_internal/dual_strata/strata_link.py`, `aurora_internal/dual_strata/strata_state_transfer.py`, `aurora_internal/dual_strata/surface_continuity_feed.py`, `aurora_internal/dual_strata/surface_sensory_proxy.py`, `aurora_surface_daemon.py`
 - Declared composite `strata.1` (hub `aurora_internal/dual_strata/__init__.py`): 37 files, 58 of 80 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:strata:a8913e4f` (overlap 0.486).
 - Declared composite `strata.2` (hub `aurora_internal/aurora_surface_dispatcher.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite none.
 
@@ -678,7 +680,7 @@ Declared: The dual-strata package and the surface/subsurface daemons and substra
 | `aurora_internal/dual_strata/subsurface_projection.py` | name_and_docstring | desktop | - | - | 0 | consistent |
 | `aurora_internal/dual_strata/subsurface_state.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
 | `aurora_internal/dual_strata/subsystem_waveforms.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
-| `aurora_internal/dual_strata/surface_channel.py` | name_and_docstring | desktop | desktop_boot | - | 0 | consistent |
+| `aurora_internal/dual_strata/surface_channel.py` | name_and_docstring | desktop, phone | desktop_boot | - | 0 | consistent |
 | `aurora_internal/dual_strata/surface_continuity_feed.py` | name_and_docstring | desktop, phone | desktop_turns | - | 4 | consistent |
 | `aurora_internal/dual_strata/surface_sensory_proxy.py` | name_and_docstring | desktop, phone | - | sensory_crystal | 0 | consistent |
 | `aurora_internal/dual_strata/topological_semantic_coordinator.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 1 | consistent |
@@ -1169,7 +1171,7 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_zip_pipeline_learning_oets_promotion.py` | location | desktop, phone | - | conversation_memory | 0 | consistent |
 | `tests/test_zip_semantic_intention_reset.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 
-#### Higher order: Scripts, tooling and prototypes (`subsys:category:tooling`), 85 member(s)
+#### Higher order: Scripts, tooling and prototypes (`subsys:category:tooling`), 86 member(s)
 
 Declared: Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes.
 
@@ -1180,6 +1182,7 @@ Declared: Maintenance, audit, migration and analysis scripts, and the HTML and J
 |---|---|---|---|---|---:|---|
 | `constraint_prototype.html` | location | - | - | - | 0 | - |
 | `constraint_prototype.jsx` | location | - | - | - | 0 | - |
+| `reply_aurora.py` | reviewed | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/analyze_cross_generational_representations.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/analyze_native_representation_inquiries.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/append_to_doc.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -1267,6 +1270,10 @@ Declared: Maintenance, audit, migration and analysis scripts, and the HTML and J
 #### Higher order: Maintenance, audit and run scripts (`subsys:area:scripts`), 97 member(s) (grouped by path, inferred)
 
 `scripts/analyze_cross_generational_representations.py`, `scripts/analyze_native_representation_inquiries.py`, `scripts/append_to_doc.py`, `scripts/apply_vocabulary_seed.py`, `scripts/audit_actual_runtime_turn.py`, `scripts/audit_genealogy.py`, `scripts/audit_unified_response_regression.py`, `scripts/aurora_ci_segment.py`, `scripts/aurora_cold_archive.py`, `scripts/aurora_fault_instrumentation_injector.py`, `scripts/aurora_kg_observe.py`, `scripts/aurora_knowledge_graph.py`, `scripts/aurora_stack_exporter.py`, `scripts/aurora_state_compress.py`, `scripts/backfill_noncomp_and_relations.py`, `scripts/baseline_genealogy.py`, `scripts/bridge_ledger_to_noncomps.py`, `scripts/bridge_tensor_occupancy_to_warp.py`, `scripts/chain_dossier_codec.py`, `scripts/characterize_pf16_residue.py`, `scripts/chat_daemon.py`, `scripts/chatscriber.py`, `scripts/clean_corpus.py`, `scripts/compare_architectures.py`, `scripts/compare_genealogy_equivalence.py`, `scripts/compile_universal_function_lineage.py`, `scripts/generate_nc_lineage_docs.py`, `scripts/greeting_exposure_experiment.py`, `scripts/inject_math_forms_v2.py`, `scripts/m1_1a_tier1_backfill.py`, `scripts/m1_2_provenance_hygiene.py`, `scripts/m1_3_v0_rerun.py`, `scripts/map_turn_information_flow.py`, `scripts/measure_crystal_associations.py`, `scripts/measure_crystal_convergence.py`, `scripts/measure_crystal_facets.py`, `scripts/measure_crystal_grammar.py`, `scripts/measure_crystal_maturity.py`, `scripts/measure_crystal_promotion.py`, `scripts/measure_crystal_substitutability.py`, `scripts/measure_crystal_weave.py`, `scripts/measure_dream_ancestry.py`, `scripts/measure_evidence_journal.py`, `scripts/measure_input_attribution.py`, `scripts/measure_input_impact.py`, `scripts/measure_quasiarch_inquiry.py`, `scripts/measure_stream_provenance.py`, `scripts/measure_turn_baseline.py`, `scripts/noncomp_actuation_shadow_audit.py`, `scripts/pf1_0_attribution_run.py`, `scripts/pf1_5_instrument_revalidation.py`, `scripts/pf1_6_acceptance.py`, `scripts/pf3_1_carryover_trace.py`, `scripts/pf3_1_context_keywords_trace.py`, `scripts/pf3_1_frame_staleness_trace.py`, `scripts/pf3_3_descriptor_trace.py`, `scripts/pf3_3_frame_absence_trace.py`, `scripts/pf3_5_motif_watch_readout.py`, `scripts/populate_fgae_semantics.py`, `scripts/process_docs.py` ...
+
+#### Higher order: Test suite (`subsys:area:tests`), 469 member(s) (grouped by path, inferred)
+
+`tests/_engine_integration_test.py`, `tests/_pipeline_test.py`, `tests/run_intelligence_test_surface.py`, `tests/run_interaction_test.py`, `tests/test_ability_ancestral_provenance.py`, `tests/test_ability_origin_commit_pull.py`, `tests/test_abstention_rescue_retry.py`, `tests/test_acquisition_observation_framing_and_synthesis_validity.py`, `tests/test_afterthought_topic_identity_and_shard_collision_live.py`, `tests/test_afterthought_topic_identity_and_shard_collision_repair.py`, `tests/test_alignment.py`, `tests/test_ambient_audio_feature_handoff.py`, `tests/test_ambient_audio_raw_pcm_features.py`, `tests/test_ambient_visual_richer_features.py`, `tests/test_android_surface_subsurface_reconnection.py`, `tests/test_app_bridge_praxis.py`, `tests/test_articulation_semantic_strategy.py`, `tests/test_asked_thing_and_manner.py`, `tests/test_aurora_evolution_hook_equivalence.py`, `tests/test_aurora_habitat.py`, `tests/test_autoevolver_syntax_gate.py`, `tests/test_b1_1_envelope_shadow.py`, `tests/test_baseline_communication_apprenticeship.py`, `tests/test_baseline_genealogy.py`, `tests/test_battery_relevance_metric.py`, `tests/test_boundary_hypothesis_and_vocative_stripping.py`, `tests/test_boundary_surface_and_study_trace_regressions.py`, `tests/test_bounded_same_turn_evidence_wait.py`, `tests/test_bracket_tokens_not_words.py`, `tests/test_build694_instrumentation.py`, `tests/test_build694_required_regression.py`, `tests/test_build711_no_external_models.py`, `tests/test_build714_resolution_canaries.py`, `tests/test_build725_native_semantic_externalization.py`, `tests/test_build922_permanent_recognition.py`, `tests/test_canonical_noncomp_dimension.py`, `tests/test_capability_binding.py`, `tests/test_categorical_condition_search_admissibility.py`, `tests/test_causal_generation_acceptance.py`, `tests/test_causal_generation_batch_order.py`, `tests/test_causal_generation_daemon_concurrency.py`, `tests/test_causal_generation_daemon_concurrency_part2.py`, `tests/test_causal_generation_duplicate_target_audit.py`, `tests/test_causal_generation_infrastructure.py`, `tests/test_cers_bridge_tensor_trace_integration.py`, `tests/test_cers_conflict_monitoring_veto.py`, `tests/test_cers_geometry_deviation.py`, `tests/test_cers_shadow_error_logging.py`, `tests/test_cers_surface_salience.py`, `tests/test_cers_tensor_locator.py`, `tests/test_cers_topology_context.py`, `tests/test_ci_segment_dev_index_rolling_cap.py`, `tests/test_cir_wh_object_slot_guard.py`, `tests/test_classroom_behavior_modes_wiring.py`, `tests/test_classroom_curriculum_seeding.py`, `tests/test_classroom_divergence_cold_start.py`, `tests/test_classroom_perspective_rotation_and_watchdog.py`, `tests/test_clock_restart_accounting.py`, `tests/test_clone_harvest.py`, `tests/test_code_evolution_restart_heredity.py` ...
 
 ### Quasi: Phone app (`subsys:quasi:phone`), 22 base file(s)
 
