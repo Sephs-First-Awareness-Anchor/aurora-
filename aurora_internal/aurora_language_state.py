@@ -39,8 +39,7 @@ from enum import Enum
 # SHARED UTILITIES
 # ============================================================================
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
 
 def _gen_id(prefix: str) -> str:
     return f"{prefix}_{hashlib.md5(f'{time.time()}{random.random()}'.encode()).hexdigest()[:10]}"

@@ -81,8 +81,7 @@ except ImportError as _aurora_boundary_exc:
 # SHARED UTILITIES
 # ============================================================================
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
 
 
 def _generate_id(prefix: str) -> str:

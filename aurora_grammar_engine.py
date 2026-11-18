@@ -49,8 +49,7 @@ from aurora_internal.aurora_turn_persistence import batch_defer
 # Utilities
 # ---------------------------------------------------------------------------
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
 
 
 # ---------------------------------------------------------------------------

@@ -19,8 +19,7 @@ from dataclasses import dataclass, field
 from typing import Any, Deque, Dict, List, Tuple
 
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
 
 
 @dataclass

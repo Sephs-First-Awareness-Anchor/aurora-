@@ -233,8 +233,7 @@ def _consume_semantic_dim_tags(dominant_axis: str) -> List[str]:
     return tags_out
 
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_pressure_mathematics_tracker import clamp as _clamp
 
 
 def _generation_role_name(gen: int) -> str:
