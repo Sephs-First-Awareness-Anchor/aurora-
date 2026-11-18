@@ -136,6 +136,7 @@ def test_coverage_boundary_is_stated(mapping):
 def test_composites_and_exercises_match_the_source(mapping, render):
     fresh = render.apply_derived(ROOT, copy.deepcopy(mapping))
     assert fresh["composites"] == mapping["composites"], "composites are stale: run --update-derived"
+    assert fresh["composite_candidates"] == mapping["composite_candidates"], "candidates are stale: run --update-derived"
     stale = [p for p, f in fresh["files"].items() if f != mapping["files"][p]]
     assert stale == [], "derived fields are stale for %s: run --update-derived" % stale[:10]
 
@@ -165,6 +166,39 @@ def test_every_composite_is_a_connected_group_inside_one_subsystem(mapping):
     assert listed == {p for p, f in files.items() if f["composite"]}
 
 
+# ---- the knowledge graph's evidence is folded in, not invented --------------
+
+def test_import_only_groups_are_not_promoted(mapping):
+    files = mapping["files"]
+    for cid, c in mapping["composites"].items():
+        assert c["support"] in ("supported", "partly_supported", "unchecked"), cid
+    for cid, c in mapping["composite_candidates"].items():
+        assert c["support"] == "import_only", cid
+        assert cid not in mapping["composites"], cid
+        assert all(files[p]["composite"] is None for p in c["members"]), "%s members must stay base files" % cid
+
+
+def test_every_graph_verdict_names_a_group_that_still_exists(mapping):
+    groups = {frozenset(c["members"]) for c in mapping["composites"].values()}
+    groups |= {frozenset(c["members"]) for c in mapping["composite_candidates"].values()}
+    for verdict in mapping["graph_evidence"]["composite_support"]:
+        assert frozenset(verdict["members"]) in groups, (
+            "graph verdict for %s matches no current group: re-check with the knowledge graph" % verdict["members"][:3])
+
+
+def test_cross_domain_links_are_recorded_candidates_between_domains(mapping):
+    files = mapping["files"]
+    links = mapping["graph_evidence"]["cross_domain_links"]
+    assert links, "the graph's cross-domain links are recorded"
+    for link in links:
+        a, b = link["files"]
+        assert a in files and b in files, link["files"]
+        assert files[a]["domain"] != files[b]["domain"], link["files"]
+        assert link["kinds"] and all(v > 0 for v in link["kinds"].values()), link["files"]
+    for cid, c in mapping["composites"].items():
+        assert len({files[p]["domain"] for p in c["members"]}) == 1, "%s spans domains without Sir's word" % cid
+
+
 # ---- the generated map agrees with the record -------------------------------
 
 def test_markdown_map_is_generated_from_the_record(mapping, render):
@@ -191,7 +225,7 @@ def test_layer_assignments_agree_everywhere_in_the_map(mapping):
         if not m:
             continue
         cells = [c.strip() for c in line.split("|")[1:-1]]
-        if part == "## Desktop layers (L1 to L8)" and section in heads:
+        if part == "## Desktop layers (L0 to L8)" and section in heads:
             assert m.group(1) not in in_sections, "%s is in two layer sections" % m.group(1)
             in_sections[m.group(1)] = heads[section]
         elif part == "## Every file by domain and subsystem":

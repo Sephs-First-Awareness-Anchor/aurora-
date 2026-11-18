@@ -4,7 +4,7 @@
 
 <!-- Generated from docs/module_ownership.json by scripts/render_module_ownership.py. Do not edit by hand. -->
 
-This map places every source file in the repository on one ladder, the way her crystals are built. The layers (L1 to L8) stay the one architecture of desktop Aurora; the ladder is a view over the files for finding things, and it never moves a file, changes an import or adds a package. Moving files would change the paths that her code lineage, function ids and fault records are keyed by, so files stay where they are (decided 2026-11-18).
+This map places every source file in the repository on one ladder, the way her crystals are built. The layers (L0 to L8) stay the one architecture of desktop Aurora; the ladder is a view over the files for finding things, and it never moves a file, changes an import or adds a package. Moving files would change the paths that her code lineage, function ids and fault records are keyed by, so files stay where they are (decided 2026-11-18).
 
 | Order | Holds |
 |---|---|
@@ -36,9 +36,9 @@ Not covered:
 
 | Quasi (domain) | Holds | Subsystems | Composites | Files |
 |---|---|---|---|---|
-| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 44 | 927 |
+| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 43 | 927 |
 | Phone app | The Flutter app with its Android services and on-device Python. | 5 | 4 | 22 |
-| ACM | The Rust kernel, its runner and the native Python ACM runtime. | 8 | 6 | 30 |
+| ACM | The Rust kernel, its runner and the native Python ACM runtime. | 8 | 3 | 30 |
 | Repository and CI | Workflows that build, test and run the other domains. | 1 | 0 | 6 |
 
 ## Quasi: Desktop Aurora
@@ -58,8 +58,8 @@ Not covered:
 | Governance, persistence and health | Persistence, checkpoints, autonomy, runtime faults and health, metabolic clock, fail-closed guards. | 2 | 21 | 2 |
 | Dual strata (surface and subsurface) | The dual-strata package and the surface/subsurface daemons and substrate. | 2 | 39 | 7 |
 | Bridges and external tools | Praxis, ACM, scouting, research dispatch and tool registries. | 3 | 9 | 8 |
-| Investigative and diagnostic | Read-only observers, canaries, probes, shadows, audits, reports and test setup. The QuasiArch observer stays here. | 5 | 12 | 23 |
-| Tests | The pytest suite. Each test lists the files it exercises. | 3 | 6 | 459 |
+| Investigative and diagnostic | Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here. | 5 | 12 | 23 |
+| Tests | The pytest suite. Each test lists the files it exercises. | 2 | 4 | 461 |
 | Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 0 | 0 | 85 |
 
 ## Quasi: Phone app
@@ -76,12 +76,12 @@ Not covered:
 
 | Higher order (subsystem) | Holds | Composites | Files in composites | Base files |
 |---|---|---|---|---|
-| ACM core | Axes, crystal, drift and sedi modules of the kernel. | 1 | 5 | 0 |
-| Constraint physics machine | CPM organs and scheduler. | 1 | 3 | 0 |
+| ACM core | Axes, crystal, drift and sedi modules of the kernel. | 0 | 0 | 5 |
+| Constraint physics machine | CPM organs and scheduler. | 0 | 0 | 3 |
 | X-Aurora ISA, VM and JIT | The instruction set, virtual machine and JIT. | 1 | 4 | 0 |
 | Expression | Face, colour and renderer. | 1 | 4 | 0 |
 | Hardware drivers | IDT, PIC, PIT, ports, PS/2 and UART. | 1 | 7 | 0 |
-| Bridge protocol | The kernel side of the bridge to her Python stack. | 1 | 2 | 0 |
+| Bridge protocol | The kernel side of the bridge to her Python stack. | 0 | 0 | 2 |
 | Boot and runner | The kernel entry point, the host runner and the boot script. | 0 | 0 | 4 |
 | Native Python runtime | The Python-native ACM runtime. | 0 | 0 | 1 |
 
@@ -91,7 +91,13 @@ Not covered:
 |---|---|---|---|---|
 | CI workflows | GitHub Actions workflows for runs, clones, experiments, the APK and Python CI. | 0 | 0 | 6 |
 
-## Desktop layers (L1 to L8)
+## Desktop layers (L0 to L8)
+
+### L0 (Foundational contract)
+
+| Module | Role | Subsystem |
+|---|---|---|
+| `foundational_contract.py` | layer file | Foundation and constraint layers |
 
 ### L1 (IVM / geometry substrate)
 
@@ -164,7 +170,7 @@ State: `aurora_conversation_memory.json` and the state JSON artifacts are runtim
 
 ## Reviewed against what the code does
 
-Every Python module in desktop Aurora's runtime was screened for who imports it and whether it writes files. These 28 files were then read, because the screen showed duties beyond their name or because their name and their job differ.
+Every Python module in desktop Aurora's runtime was screened for who imports it and whether it writes files. These 29 files were then read, because the screen showed duties beyond their name or because their name and their job differ.
 
 | File | Subsystem | Also | What it actually does |
 |---|---|---|---|
@@ -175,88 +181,157 @@ Every Python module in desktop Aurora's runtime was screened for who imports it 
 | `aurora_internal/aurora_fault_audit.py` | Investigative and diagnostic | – | AST audit for swallowed exceptions, used by the fault instrumentation script and tests. |
 | `aurora_internal/aurora_local_llm_bridge.py` | Governance, persistence and health | – | Fail-closed guard: the retired local-model adapter keeps its names so stale imports fail closed, and there is no model path. Only tests import it. |
 | `aurora_internal/aurora_pf1_5_instruments.py` | Perception and expression | Investigative and diagnostic | wellformed_and_coherent decides whether a candidate reply is accepted, in aurora.py and aurora_working_memory.py. Measuring PF1.5 is its second job. |
-| `aurora_internal/aurora_quasiarch_observer.py` | Investigative and diagnostic | – | The QuasiArch observer. aurora.py boots it at L8+; it observes and writes its own state (interventions, ghost relics); its answers carry authoritative False and active steering is opt-in. |
+| `aurora_internal/aurora_quasiarch_observer.py` | Investigative and diagnostic | – | The QuasiArch observer, a live organ: aurora.py boots it at L8+, it runs during boot and every turn, and it writes its own state (interventions, ghost relics). Its answers carry authoritative False and active steering is opt-in. |
 | `aurora_internal/aurora_runtime_health.py` | Governance, persistence and health | – | Readiness semantics (degraded is not ready unless a caller opts in). Not wired into the runtime: tests and the fault audit use it. |
 | `aurora_internal/aurora_semantic_probe_battery.py` | Identity and language | Investigative and diagnostic | Its function-word set _STRONG_FUNCTION_WORDS is used by aurora_proposition_frame.py and aurora_constraint_semantic_continuity.py, and its _parseable check by aurora_expression_perception.py. The probe battery itself is diagnostic. |
 | `aurora_internal/aurora_stack_trace_instrumentation.py` | Genealogy, lineage and evidence | Investigative and diagnostic | instrument_stack wraps runtime methods to record call lineage when AURORA_STACK_TRACE is on. Off by default. |
 | `aurora_internal/aurora_surface_doc.py` | Dual strata (surface and subsurface) | Investigative and diagnostic | full_report() gives aurora_surface_dispatcher.py its axis-to-surface routing table, and it writes a pressure log. |
 | `aurora_internal/aurora_system_introspection.py` | Genealogy, lineage and evidence | Investigative and diagnostic | Source-derived map of executable functions (function ids are module.qualname) and per-turn decision provenance. aurora.py boots it and connects it to perception; it writes its own state and does not change response selection. |
 | `aurora_internal/dual_strata/perturbation_probe.py` | Dual strata (surface and subsurface) | Investigative and diagnostic | Run by the topological semantic coordinator through run_perturbation_probe. |
-| `aurora_internal/quasiarch_development_inquiry.py` | Investigative and diagnostic | – | Development inquiry helper used only by the QuasiArch observer. |
+| `aurora_internal/quasiarch_development_inquiry.py` | Investigative and diagnostic | – | Development inquiry helper for the QuasiArch observer. It runs wherever the observer runs, which includes the phone app's runtime. |
 | `aurora_internal/quasiarch_observer/__init__.py` | Crystal ops | Investigative and diagnostic | Re-exports the package. aurora_interaction_processing.py imports CrystalInstance and CrystalOrder through it, which loads every submodule when interaction processing boots. |
 | `aurora_internal/quasiarch_observer/crystal_engine.py` | Crystal ops | Investigative and diagnostic | Crystal law: what each facet and relational point means at each crystal order (CrystalEngine, FacetLaw, RelationalPointLaw, CrystalOrder). QuasiArch reads it, and CrystalOrder is also the order ladder of the live interaction crystals in aurora_interaction_processing.py, so it is operational, not only investigative. |
-| `aurora_internal/quasiarch_observer/dimensional_memory.py` | Investigative and diagnostic | – | QuasiArch lineage memory (DimensionalMemory, IntegratedMemoryPipeline). Loaded with the package, but only the QuasiArch observer calls it. |
+| `aurora_internal/quasiarch_observer/dimensional_memory.py` | Investigative and diagnostic | – | QuasiArch lineage memory (DimensionalMemory, IntegratedMemoryPipeline). Only the QuasiArch observer calls it, and it runs during boot and turns because the observer does. |
 | `aurora_internal/quasiarch_observer/dimensional_processing.py` | Crystal ops | Investigative and diagnostic | CrystalInstance, RelationalPoint, crystal formation and promotion. InteractionCrystalInstance in aurora_interaction_processing.py subclasses CrystalInstance and builds RelationalPoint objects, and aurora.py boots InteractionProcessing, so these types hold live state. |
-| `aurora_internal/quasiarch_observer/ghost_relics.py` | Investigative and diagnostic | – | Ghost relic records (GhostRelic, GhostRelicSystem). Loaded with the package, but only the QuasiArch observer calls it. |
-| `aurora_learning_probe.py` | Investigative and diagnostic | – | Standalone learning probe. Nothing in covered code imports it. |
+| `aurora_internal/quasiarch_observer/ghost_relics.py` | Investigative and diagnostic | – | Ghost relic records (GhostRelic, GhostRelicSystem). Only the QuasiArch observer calls it; it runs at boot when the observer starts. |
+| `aurora_learning_probe.py` | Investigative and diagnostic | Learning, dreams and development | LearningProbe, a live organ on the phone: the phone app's aurora_bridge.py starts it as systems['learning_probe'] and it appends to aurora_state/learning_probe.jsonl. Nothing on desktop imports it. |
 | `conftest.py` | Investigative and diagnostic | – | pytest setup only: puts the repository root on sys.path for tests/. Not part of the runtime. |
 | `flutter_app/android/app/src/main/python/aurora_bridge.py` | On-device Python | – | Chaquopy entry point that AuroraService.kt calls. It boots the root aurora.py stack and exposes text in and text out, so audio stays on the Kotlin and Flutter side. |
 | `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | On-device Python | – | Rehearsal environment that scores her rehearsed reply against what was really said next. aurora.py's change lineage names it as a target file, and tests import it by module name, so desktop depends on it too. |
 | `flutter_app/android/app/src/main/python/cv2.py` | On-device Python | – | Android stand-in for opencv: numpy and Pillow versions of the cv2 calls her stack uses, with camera frames fed in from the Kotlin CameraX bridge. |
-| `run_full_competency_gauntlet.py` | Investigative and diagnostic | – | Script entry point for the competency gauntlet; writes its own results. Nothing in covered code imports it. |
-| `run_gauntlet.py` | Investigative and diagnostic | – | Script entry point that runs the gauntlet and writes its own results. Nothing in covered code imports it. |
-| `run_probe_battery.py` | Investigative and diagnostic | – | Script entry point for the semantic probe battery; writes its own results. Nothing in covered code imports it. |
+| `reply_aurora.py` | Entry and runtime | – | Command-line entry point Sir runs by hand: it appends his reply to the correspondence loop's from_sunni.jsonl, which her runtime reads. No boot path reaches it, by design. |
+| `run_full_competency_gauntlet.py` | Investigative and diagnostic | – | Script entry point for the competency gauntlet. It writes aurora_state/last_full_competency_gauntlet.json. Nothing in covered code imports it. |
+| `run_gauntlet.py` | Investigative and diagnostic | – | Script entry point that boots the daemon and runs the gauntlet. It writes aurora_state/daemon.log and its own results under aurora_state. Nothing in covered code imports it. |
+| `run_probe_battery.py` | Investigative and diagnostic | – | Script entry point for the semantic probe battery. It boots against a scratch copy of aurora_state and writes results to aurora_state/probe_battery/results/. Nothing in covered code imports it. |
 
 ## Composites
 
-A composite is a connected group of two or more files in one subsystem, joined by import edges that stay inside that subsystem. Edges come from Python imports (desktop by dotted path from the repo root, other domains by module name in their own folder), Dart imports, Rust mod declarations and crate, super and self paths, and Kotlin or Java class names used in the same folder. Shell, batch, PowerShell, HTML, JSX, systemd and workflow files have no import edges here, so they stay base files. A composite is named after its subsystem and numbered by size; its hub is the member with the most links inside it.
+A composite is a connected group of two or more files in one subsystem, joined by import edges that stay inside that subsystem. Edges come from Python imports (desktop by dotted path from the repo root, other domains by module name in their own folder), Dart imports, Rust mod declarations and crate, super and self paths, and Kotlin or Java class names used in the same folder. Shell, batch, PowerShell, HTML, JSX, systemd and workflow files have no import edges here, so they stay base files. A composite is named after its subsystem and numbered by size; its hub is the member with the most links inside it. A candidate the knowledge graph marks import_only is not promoted; it is listed under composite_candidates and its files stay base files.
 
-| Composite | Subsystem | Hub | Files |
-|---|---|---|---|
-| `runtime.1` | Entry and runtime | `aurora.py` | 7 |
-| `foundation.1` | Foundation and constraint layers | `aurora_internal/aurora_noncomp_registry.py` | 15 |
-| `foundation.2` | Foundation and constraint layers | `aurora_computational_model.py` | 2 |
-| `foundation.3` | Foundation and constraint layers | `aurora_internal/aurora_pressure_classifier.py` | 2 |
-| `foundation.4` | Foundation and constraint layers | `aurora_manifold_directory_reader.py` | 2 |
-| `dimensional.1` | Beings and dimensional systems | `aurora_consciousness_engine.py` | 4 |
-| `crystal.1` | Crystal ops | `aurora_internal/crystal_runtime.py` | 14 |
-| `crystal.2` | Crystal ops | `aurora_interaction_processing.py` | 5 |
-| `crystal.3` | Crystal ops | `aurora_internal/aurora_lexical_crystals.py` | 3 |
-| `crystal.4` | Crystal ops | `aurora_crystal_state_bridge.py` | 2 |
-| `memory.1` | Memory | `aurora_interaction_memory.py` | 2 |
-| `reasoning.1` | Reasoning and understanding | `aurora_representational_address.py` | 8 |
-| `reasoning.2` | Reasoning and understanding | `aurora_internal/aurora_constraint_semantic_continuity.py` | 5 |
-| `reasoning.3` | Reasoning and understanding | `aurora_internal/aurora_strategic_horizon.py` | 4 |
-| `reasoning.4` | Reasoning and understanding | `aurora_internal/aurora_confluence.py` | 2 |
-| `reasoning.5` | Reasoning and understanding | `aurora_internal/aurora_contradiction_perception.py` | 2 |
-| `genealogy.1` | Genealogy, lineage and evidence | `aurora_internal/constraint_genealogy.py` | 12 |
-| `genealogy.2` | Genealogy, lineage and evidence | `aurora_genealogy_promotion_dimension_observer.py` | 2 |
-| `genealogy.3` | Genealogy, lineage and evidence | `aurora_internal/aurora_attribution_trace.py` | 2 |
-| `learning.1` | Learning, dreams and development | `aurora_internal/aurora_evolution_chamber.py` | 5 |
-| `learning.2` | Learning, dreams and development | `aurora_dream_trainer.py` | 4 |
-| `learning.3` | Learning, dreams and development | `aurora_internal/aurora_dream_evolution_orchestrator.py` | 4 |
-| `learning.4` | Learning, dreams and development | `aurora_training_pulse.py` | 3 |
-| `learning.5` | Learning, dreams and development | `aurora_internal/aurora_capability_binding.py` | 3 |
-| `learning.6` | Learning, dreams and development | `aurora_possibility_selves.py` | 2 |
-| `perception.1` | Perception and expression | `aurora_expression_perception.py` | 9 |
-| `language.1` | Identity and language | `aurora_internal/aurora_conversation_rubric_engine.py` | 3 |
-| `language.2` | Identity and language | `aurora_grammar_engine.py` | 2 |
-| `language.3` | Identity and language | `aurora_internal/aurora_communication_emergence.py` | 2 |
-| `governance.1` | Governance, persistence and health | `aurora_internal/aurora_runtime_faults.py` | 19 |
-| `governance.2` | Governance, persistence and health | `aurora_internal/aurora_metabolic_steps.py` | 2 |
-| `strata.1` | Dual strata (surface and subsurface) | `aurora_internal/dual_strata/__init__.py` | 37 |
-| `strata.2` | Dual strata (surface and subsurface) | `aurora_internal/aurora_surface_dispatcher.py` | 2 |
-| `bridges.1` | Bridges and external tools | `aurora_internal/scouting/contracts.py` | 4 |
-| `bridges.2` | Bridges and external tools | `aurora_praxis_messenger.py` | 3 |
-| `bridges.3` | Bridges and external tools | `aurora_desktop_agent.py` | 2 |
-| `investigative.1` | Investigative and diagnostic | `aurora_genealogy_cooccurrence_observatory.py` | 4 |
-| `investigative.2` | Investigative and diagnostic | `aurora_causal_vs_representational_probe.py` | 2 |
-| `investigative.3` | Investigative and diagnostic | `aurora_genealogy_difference_shadow.py` | 2 |
-| `investigative.4` | Investigative and diagnostic | `aurora_internal/aurora_quasiarch_observer.py` | 2 |
-| `investigative.5` | Investigative and diagnostic | `aurora_internal/quasiarch_observer/dimensional_memory.py` | 2 |
-| `tests.1` | Tests | `tests/test_communication_bar.py` | 2 |
-| `tests.2` | Tests | `tests/test_confluence.py` | 2 |
-| `tests.3` | Tests | `tests/test_generation_collapse_regression.py` | 2 |
-| `phone_ui.1` | App shell and screens | `flutter_app/lib/main.dart` | 4 |
-| `phone_habitat.1` | Habitat | `flutter_app/lib/habitat/habitat_gesture_layer.dart` | 6 |
-| `phone_python.1` | On-device Python | `flutter_app/android/app/src/main/python/aurora_bridge.py` | 2 |
-| `phone_android.1` | Android services | `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt` | 5 |
-| `acm_core.1` | ACM core | `aurora-acm/kernel/src/acm/axes.rs` | 5 |
-| `acm_cpm.1` | Constraint physics machine | `aurora-acm/kernel/src/cpm/mod.rs` | 3 |
-| `acm_xaurora.1` | X-Aurora ISA, VM and JIT | `aurora-acm/kernel/src/xaurora/isa.rs` | 4 |
-| `acm_expression.1` | Expression | `aurora-acm/kernel/src/expression/mod.rs` | 4 |
-| `acm_hw.1` | Hardware drivers | `aurora-acm/kernel/src/hw/mod.rs` | 7 |
-| `acm_bridge.1` | Bridge protocol | `aurora-acm/kernel/src/bridge/mod.rs` | 2 |
+Support is the knowledge graph's verdict: `supported` and `partly_supported` mean calls, data flow, spawns or shared state join the files as well as imports; `unchecked` means the graph has not seen this group yet.
+
+| Composite | Subsystem | Hub | Files | Support |
+|---|---|---|---|---|
+| `runtime.1` | Entry and runtime | `aurora.py` | 7 | partly_supported |
+| `foundation.1` | Foundation and constraint layers | `aurora_internal/aurora_noncomp_registry.py` | 15 | partly_supported |
+| `foundation.2` | Foundation and constraint layers | `aurora_computational_model.py` | 2 | supported |
+| `foundation.3` | Foundation and constraint layers | `aurora_internal/aurora_pressure_classifier.py` | 2 | supported |
+| `foundation.4` | Foundation and constraint layers | `aurora_manifold_directory_reader.py` | 2 | supported |
+| `dimensional.1` | Beings and dimensional systems | `aurora_consciousness_engine.py` | 4 | partly_supported |
+| `crystal.1` | Crystal ops | `aurora_internal/crystal_runtime.py` | 14 | supported |
+| `crystal.2` | Crystal ops | `aurora_interaction_processing.py` | 5 | partly_supported |
+| `crystal.3` | Crystal ops | `aurora_internal/aurora_lexical_crystals.py` | 3 | supported |
+| `crystal.4` | Crystal ops | `aurora_crystal_state_bridge.py` | 2 | supported |
+| `memory.1` | Memory | `aurora_interaction_memory.py` | 2 | supported |
+| `reasoning.1` | Reasoning and understanding | `aurora_representational_address.py` | 8 | supported |
+| `reasoning.2` | Reasoning and understanding | `aurora_internal/aurora_constraint_semantic_continuity.py` | 5 | partly_supported |
+| `reasoning.3` | Reasoning and understanding | `aurora_internal/aurora_strategic_horizon.py` | 4 | supported |
+| `reasoning.4` | Reasoning and understanding | `aurora_internal/aurora_confluence.py` | 2 | supported |
+| `reasoning.5` | Reasoning and understanding | `aurora_internal/aurora_contradiction_perception.py` | 2 | supported |
+| `genealogy.1` | Genealogy, lineage and evidence | `aurora_internal/constraint_genealogy.py` | 12 | supported |
+| `genealogy.2` | Genealogy, lineage and evidence | `aurora_genealogy_promotion_dimension_observer.py` | 2 | supported |
+| `genealogy.3` | Genealogy, lineage and evidence | `aurora_internal/aurora_attribution_trace.py` | 2 | supported |
+| `learning.1` | Learning, dreams and development | `aurora_internal/aurora_evolution_chamber.py` | 5 | partly_supported |
+| `learning.2` | Learning, dreams and development | `aurora_dream_trainer.py` | 4 | supported |
+| `learning.3` | Learning, dreams and development | `aurora_internal/aurora_dream_evolution_orchestrator.py` | 4 | supported |
+| `learning.4` | Learning, dreams and development | `aurora_training_pulse.py` | 3 | supported |
+| `learning.5` | Learning, dreams and development | `aurora_internal/aurora_capability_binding.py` | 3 | supported |
+| `learning.6` | Learning, dreams and development | `aurora_possibility_selves.py` | 2 | supported |
+| `perception.1` | Perception and expression | `aurora_expression_perception.py` | 9 | partly_supported |
+| `language.1` | Identity and language | `aurora_internal/aurora_conversation_rubric_engine.py` | 3 | partly_supported |
+| `language.2` | Identity and language | `aurora_grammar_engine.py` | 2 | supported |
+| `language.3` | Identity and language | `aurora_internal/aurora_communication_emergence.py` | 2 | supported |
+| `governance.1` | Governance, persistence and health | `aurora_internal/aurora_runtime_faults.py` | 19 | partly_supported |
+| `governance.2` | Governance, persistence and health | `aurora_internal/aurora_metabolic_steps.py` | 2 | supported |
+| `strata.1` | Dual strata (surface and subsurface) | `aurora_internal/dual_strata/__init__.py` | 37 | partly_supported |
+| `strata.2` | Dual strata (surface and subsurface) | `aurora_internal/aurora_surface_dispatcher.py` | 2 | supported |
+| `bridges.1` | Bridges and external tools | `aurora_internal/scouting/contracts.py` | 4 | supported |
+| `bridges.2` | Bridges and external tools | `aurora_praxis_messenger.py` | 3 | supported |
+| `bridges.3` | Bridges and external tools | `aurora_desktop_agent.py` | 2 | supported |
+| `investigative.1` | Investigative and diagnostic | `aurora_genealogy_cooccurrence_observatory.py` | 4 | supported |
+| `investigative.2` | Investigative and diagnostic | `aurora_causal_vs_representational_probe.py` | 2 | supported |
+| `investigative.3` | Investigative and diagnostic | `aurora_genealogy_difference_shadow.py` | 2 | supported |
+| `investigative.4` | Investigative and diagnostic | `aurora_internal/aurora_quasiarch_observer.py` | 2 | supported |
+| `investigative.5` | Investigative and diagnostic | `aurora_internal/quasiarch_observer/dimensional_memory.py` | 2 | supported |
+| `tests.1` | Tests | `tests/test_communication_bar.py` | 2 | supported |
+| `tests.2` | Tests | `tests/test_confluence.py` | 2 | supported |
+| `phone_ui.1` | App shell and screens | `flutter_app/lib/main.dart` | 4 | partly_supported |
+| `phone_habitat.1` | Habitat | `flutter_app/lib/habitat/habitat_gesture_layer.dart` | 6 | partly_supported |
+| `phone_python.1` | On-device Python | `flutter_app/android/app/src/main/python/aurora_bridge.py` | 2 | supported |
+| `phone_android.1` | Android services | `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt` | 5 | supported |
+| `acm_xaurora.1` | X-Aurora ISA, VM and JIT | `aurora-acm/kernel/src/xaurora/isa.rs` | 4 | partly_supported |
+| `acm_expression.1` | Expression | `aurora-acm/kernel/src/expression/mod.rs` | 4 | partly_supported |
+| `acm_hw.1` | Hardware drivers | `aurora-acm/kernel/src/hw/mod.rs` | 7 | partly_supported |
+
+### Not promoted: imports only
+
+Imports join these files, but the knowledge graph found no call, flow, spawn or shared state between them, so they stay base files.
+
+| Candidate | Subsystem | Files |
+|---|---|---|
+| `tests.3` | Tests | `tests/test_generation_collapse_regression.py`, `tests/test_pf1_5_instruments.py` |
+| `acm_core.1` | ACM core | `aurora-acm/kernel/src/acm/axes.rs`, `aurora-acm/kernel/src/acm/crystal.rs`, `aurora-acm/kernel/src/acm/drift.rs`, `aurora-acm/kernel/src/acm/mod.rs`, `aurora-acm/kernel/src/acm/sedi.rs` |
+| `acm_cpm.1` | Constraint physics machine | `aurora-acm/kernel/src/cpm/mod.rs`, `aurora-acm/kernel/src/cpm/organ.rs`, `aurora-acm/kernel/src/cpm/scheduler.rs` |
+| `acm_bridge.1` | Bridge protocol | `aurora-acm/kernel/src/bridge/mod.rs`, `aurora-acm/kernel/src/bridge/protocol.rs` |
+
+## Cross-domain links (candidates, not promoted)
+
+What the knowledge graph found when it checked this record. A composite the graph marks import_only (no call, flow, spawn or shared state joins its files) is not promoted: it stays a candidate and its files stay base files. Cross-domain links are evidence-backed candidates for higher-order links; none is promoted without Sir's word. Knowledge graph, PR #263 at commit 099d43f: knowledge_graph/coverage/composites.json and claims.json.
+
+| Files | Domains | Edges the graph found |
+|---|---|---|
+| `aurora_internal/aurora_runtime_faults.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 77, IMPORTS 1 |
+| `concept_crystal.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 22, IMPORTS 1, INSTANTIATES 1 |
+| `aurora_habitat.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 12, IMPORTS 1, INSTANTIATES 1 |
+| `aurora_internal/aurora_constraint_manifold_patched.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | INSTANTIATES 12 |
+| `aurora_internal/dual_strata/strata_link.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 11, IMPORTS 1 |
+| `aurora_waveform_pressure.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 8, IMPORTS 1 |
+| `aurora_praxis_bridge.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 7, IMPORTS 1 |
+| `aurora_internal/aurora_lexical_grounding.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 6, IMPORTS 1 |
+| `aurora_praxis_messenger.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 6, IMPORTS 1 |
+| `aurora_dream_trainer.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 4, IMPORTS 1, INSTANTIATES 1 |
+| `aurora_reasoning_games.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 4, IMPORTS 1, INSTANTIATES 1 |
+| `flutter_app/android/app/src/main/python/aurora_bridge.py` and `geological_baseline.py` | phone and desktop | CALLS 4, IMPORTS 1, INSTANTIATES 1 |
+| `aurora.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 4, IMPORTS 1 |
+| `aurora_internal/dual_strata/sensory_snapshot_channel.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 4, IMPORTS 1 |
+| `constraint_evolutionary_sim.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 3, IMPORTS 1, INSTANTIATES 1 |
+| `aurora_internal/aurora_communication_emergence.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 4 |
+| `aurora_internal/aurora_live_experience.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 3, IMPORTS 1 |
+| `aurora_language_field.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 2, IMPORTS 1, INSTANTIATES 1 |
+| `aurora_curiosity_engine.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1, INSTANTIATES 1 |
+| `aurora_habitat_motivation.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 2, IMPORTS 1 |
+| `aurora_internal/aurora_clone_harvest.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 2, IMPORTS 1 |
+| `aurora_internal/aurora_reasoning_paths.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 2, IMPORTS 1 |
+| `aurora_internal/aurora_resolution_ledger.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 2, IMPORTS 1 |
+| `aurora_internal/aurora_runtime_faults.py` and `flutter_app/android/app/src/main/python/cv2.py` | desktop and phone | CALLS 2, IMPORTS 1 |
+| `aurora_internal/aurora_sensory_crystal.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 2, IMPORTS 1 |
+| `aurora_internal/aurora_turn_persistence.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 2, IMPORTS 1 |
+| `aurora_internal/lesson_replay.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 2, IMPORTS 1 |
+| `aurora_learning_probe.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1, INSTANTIATES 1 |
+| `aurora_self_grounding.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1, INSTANTIATES 1 |
+| `aurora-acm/native/aurora_acm_native.py` and `aurora_i_state_beings.py` | acm and desktop | IMPORTS 1, INSTANTIATES 1 |
+| `aurora-acm/native/aurora_acm_native.py` and `aurora_ivm.py` | acm and desktop | IMPORTS 1, INSTANTIATES 1 |
+| `aurora-acm/native/aurora_acm_native.py` and `foundational_contract.py` | acm and desktop | IMPORTS 1, INSTANTIATES 1 |
+| `aurora_computational_model.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | IMPORTS 1, INSTANTIATES 1 |
+| `aurora_internal/aurora_clone_harvest.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_internal/aurora_confluence.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_internal/aurora_constraint_semantic_continuity.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_internal/aurora_representation_exchange.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 2 |
+| `aurora_internal/dual_strata/subsurface_presence_runtime.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_internal/tool_registry.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_persistence_utils.py` and `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_quantum_dream_substrate.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_scout_daemon.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_sensory_fallback.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora_tool_mind.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | IMPORTS 1, INSTANTIATES 1 |
+| `aurora_vocabulary_seed_apply.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | CALLS 1, IMPORTS 1 |
+| `aurora-acm/kernel/src/bridge/mod.rs` and `aurora_acm_bridge.py` | acm and desktop | endpoint:SUBSCRIBES/EMITS 1 |
+| `aurora-acm/kernel/src/bridge/protocol.rs` and `aurora_acm_bridge.py` | acm and desktop | endpoint:EMITS/SUBSCRIBES 1 |
+| `aurora_internal/dual_strata/__init__.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | IMPORTS 1 |
+| `aurora_sedimemory.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | IMPORTS 1 |
+| `aurora_simulation_engine.py` and `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop and phone | IMPORTS 1 |
+| `flutter_app/android/app/src/main/python/aurora_bridge.py` and `foundational_contract.py` | phone and desktop | IMPORTS 1 |
+| `flutter_app/android/app/src/main/python/aurora_bridge.py` and `tests/test_capability_binding.py` | phone and desktop | CALLS 1 |
 
 ## Every file by domain and subsystem
 
@@ -278,7 +353,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `deploy/aurora-strata-room.service` |  |  | location |
 | `deploy/aurora-subsurface.service` |  |  | location |
 | `deploy/aurora-surface.service` |  |  | location |
-| `reply_aurora.py` |  |  | name_and_docstring |
+| `reply_aurora.py` |  |  | reviewed |
 | `run_aurora.py` |  |  | name_and_docstring |
 | `run_chain.py` |  |  | name_and_docstring |
 | `run_corpus.py` | runtime.1 |  | name_and_docstring |
@@ -336,7 +411,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `aurora_noncomp_layer_compiler.py` | foundation.1 |  | name_and_docstring |
 | `aurora_noncomp_manifold_compiler.py` | foundation.1 |  | name_and_docstring |
 | `aurora_pressure_ontology.py` |  |  | name_and_docstring |
-| `foundational_contract.py` | foundation.1 |  | name_and_docstring |
+| `foundational_contract.py` | foundation.1 | L0 | name_and_docstring |
 
 ### Desktop Aurora / Beings and dimensional systems
 
@@ -893,7 +968,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_genealogy_source_freshness.py` |  |  | location |
 | `tests/test_genealogy_tag_scan_equivalence.py` |  |  | location |
 | `tests/test_general_execution_foundry.py` |  |  | location |
-| `tests/test_generation_collapse_regression.py` | tests.3 |  | location |
+| `tests/test_generation_collapse_regression.py` |  |  | location |
 | `tests/test_geological_write.py` |  |  | location |
 | `tests/test_golden_transcript_validation.py` |  |  | location |
 | `tests/test_governance_liveness.py` |  |  | location |
@@ -1002,7 +1077,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_pf1_2_transport.py` |  |  | location |
 | `tests/test_pf1_3_motif_selection.py` |  |  | location |
 | `tests/test_pf1_4_slot_binding.py` |  |  | location |
-| `tests/test_pf1_5_instruments.py` | tests.3 |  | location |
+| `tests/test_pf1_5_instruments.py` |  |  | location |
 | `tests/test_pf3_1_carryover_isolation.py` |  |  | location |
 | `tests/test_pf3_1_cooccurrence_hub_leak.py` |  |  | location |
 | `tests/test_pf3_1_frame_staleness.py` |  |  | location |
@@ -1320,19 +1395,19 @@ Composite is blank for a base file that no import joins to another file in its s
 
 | File | Composite | Layer | Basis |
 |---|---|---|---|
-| `aurora-acm/kernel/src/acm/axes.rs` | acm_core.1 |  | location |
-| `aurora-acm/kernel/src/acm/crystal.rs` | acm_core.1 |  | location |
-| `aurora-acm/kernel/src/acm/drift.rs` | acm_core.1 |  | location |
-| `aurora-acm/kernel/src/acm/mod.rs` | acm_core.1 |  | location |
-| `aurora-acm/kernel/src/acm/sedi.rs` | acm_core.1 |  | location |
+| `aurora-acm/kernel/src/acm/axes.rs` |  |  | location |
+| `aurora-acm/kernel/src/acm/crystal.rs` |  |  | location |
+| `aurora-acm/kernel/src/acm/drift.rs` |  |  | location |
+| `aurora-acm/kernel/src/acm/mod.rs` |  |  | location |
+| `aurora-acm/kernel/src/acm/sedi.rs` |  |  | location |
 
 ### ACM / Constraint physics machine
 
 | File | Composite | Layer | Basis |
 |---|---|---|---|
-| `aurora-acm/kernel/src/cpm/mod.rs` | acm_cpm.1 |  | location |
-| `aurora-acm/kernel/src/cpm/organ.rs` | acm_cpm.1 |  | location |
-| `aurora-acm/kernel/src/cpm/scheduler.rs` | acm_cpm.1 |  | location |
+| `aurora-acm/kernel/src/cpm/mod.rs` |  |  | location |
+| `aurora-acm/kernel/src/cpm/organ.rs` |  |  | location |
+| `aurora-acm/kernel/src/cpm/scheduler.rs` |  |  | location |
 
 ### ACM / X-Aurora ISA, VM and JIT
 
@@ -1368,8 +1443,8 @@ Composite is blank for a base file that no import joins to another file in its s
 
 | File | Composite | Layer | Basis |
 |---|---|---|---|
-| `aurora-acm/kernel/src/bridge/mod.rs` | acm_bridge.1 |  | location |
-| `aurora-acm/kernel/src/bridge/protocol.rs` | acm_bridge.1 |  | location |
+| `aurora-acm/kernel/src/bridge/mod.rs` |  |  | location |
+| `aurora-acm/kernel/src/bridge/protocol.rs` |  |  | location |
 
 ### ACM / Boot and runner
 
