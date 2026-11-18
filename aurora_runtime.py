@@ -7305,263 +7305,294 @@ class RuntimeCLI:
     def _handle_interrupt(self, sig, frame) -> None:
         print("\n[CLI] Interrupt — type 'quit' to exit or continue.")
 
+    # Command name -> handler method. One line per command; aliases share a handler.
+    _COMMANDS: Dict[str, str] = {
+        'tick': '_cmd_tick',
+        'inject': '_cmd_inject',
+        'custom': '_cmd_custom',
+        'chain': '_cmd_chain',
+        'register': '_cmd_register',
+        'conflict': '_cmd_conflict',
+        'episode': '_cmd_episode',
+        'epoch': '_cmd_epoch',
+        'bridge': '_cmd_bridge',
+        'status': '_cmd_status',
+        'pressure': '_cmd_pressure',
+        'links': '_cmd_links',
+        'learned': '_cmd_learned',
+        'actions': '_cmd_actions',
+        'evolution': '_cmd_evolution',
+        'uptime': '_cmd_uptime',
+        'code_ops': '_cmd_code_ops',
+        'code_status': '_cmd_code_status',
+        'code_pressure': '_cmd_code_pressure',
+        'code_stage': '_cmd_code_stage',
+        'code_simulate': '_cmd_code_simulate',
+        'code_finalize': '_cmd_code_finalize',
+        'code_autoevolve': '_cmd_code_autoevolve',
+        'save': '_cmd_save',
+        'answer': '_cmd_answer',
+        'quit': '_cmd_quit',
+        'exit': '_cmd_quit',
+        'q': '_cmd_quit',
+        'help': '_cmd_help',
+        '?': '_cmd_help',
+    }
+
     def _dispatch(self, cmd: str, args: List[str]) -> None:
         s = self.runtime.steerer
         if s is None:
             print("[CLI] Runtime not booted.")
             return
 
-        # ── Chain ────────────────────────────────────────────────
-        if cmd == "tick":
-            n       = int(args[0]) if args else 1
-            results = s.tick(n)
-            relief  = sum(1 for r in results if r is not None)
-            print(f"  {n} ticks → {relief} relief event(s)")
-
-        elif cmd == "inject":
-            if not args:
-                print("  Usage: inject <action_name>")
-            else:
-                result = s.inject(" ".join(args))
-                print(f"  Relief: {result is not None}")
-
-        elif cmd == "custom":
-            if len(args) < 2:
-                print("  Usage: custom <name> <axis1,axis2,...>")
-                print("  Axes: existence temporal energy boundary agency")
-            else:
-                name   = args[0]
-                axes   = frozenset(a.strip() for a in args[1].split(","))
-                result = s.inject_custom(name, axes)
-                print(f"  Relief: {result is not None}")
-
-        elif cmd == "chain":
-            n     = int(args[0]) if args else 1000
-            epoch = int(args[1]) if len(args) > 1 else 200
-            s.chain_burst(n, epoch_size=epoch, verbose=True)
-
-        elif cmd == "register":
-            if len(args) < 2:
-                print("  Usage: register <name> <axis1,axis2,...>")
-            else:
-                name = args[0]
-                axes = frozenset(a.strip() for a in args[1].split(","))
-                s.register_action(name, axes)
-
-        elif cmd == "conflict":
-            rounds = int(args[0]) if args else 3
-            info = s.inject_conflict_rounds(rounds=rounds, verbose=False)
-            print(f"  Conflict rounds: injected={info['injected']} resolved={info['resolved']}")
-
-        # ── Simulation ───────────────────────────────────────────
-        elif cmd == "episode":
-            result = s.sim_episode()
-            if result:
-                print(f"  Episode: "
-                      f"fitness={getattr(result,'avg_fitness',0):.3f}  "
-                      f"engagement={getattr(result,'final_engagement',0):.3f}  "
-                      f"turns={getattr(result,'turns',0)}")
-
-        elif cmd == "epoch":
-            n_eps  = int(args[0]) if args else 4
-            n_turn = int(args[1]) if len(args) > 1 else 5
-            result = s.sim_epoch(episodes=n_eps, turns=n_turn)
-            if result:
-                print(f"  Epoch complete: "
-                      f"fitness={result.get('avg_fitness',0):.3f}  "
-                      f"episodes={result.get('episodes','?')}")
-
-        # ── Sync ─────────────────────────────────────────────────
-        elif cmd == "bridge":
-            events = self.runtime.bridge.inject_promoted_links()
-            print(f"  Bridge sync: {len(events)} link(s) injected")
-
-        # ── Info ─────────────────────────────────────────────────
-        elif cmd == "status":
-            s.status()
-
-        elif cmd == "pressure":
-            s.pressure_report()
-
-        elif cmd == "links":
-            top = int(args[0]) if args else 10
-            s.links(top_n=top)
-
-        elif cmd == "learned":
-            s.what_learned()
-
-        elif cmd == "actions":
-            s.available_actions()
-
-        elif cmd == "evolution":
-            s.print_evolution_report()
-
-        elif cmd == "uptime":
-            u = self.runtime.uptime()
-            print(f"  Uptime: {u:.1f}s  ({u/60:.1f} min)")
-
-        elif cmd == "code_ops":
-            ops = self.runtime.code_operator_specs()
-            if not ops:
-                print("  Code operator catalog unavailable.")
-            else:
-                print("  Code mutation operators:")
-                for op in ops:
-                    print(f"    - {op['key']}: {op['description']}")
-                    print(f"      constraints={op['constraints']}  effect={op['expected_effect']}")
-
-        elif cmd == "code_status":
-            st = self.runtime.code_mutation_status()
-            print(f"  enabled={st.get('enabled')}  pending={st.get('pending_count')}  recent={st.get('recent_count')}")
-            latest = dict(st.get("latest", {}) or {})
-            if latest:
-                print(
-                    f"  latest: tick={latest.get('tick')} accepted={latest.get('accepted')} "
-                    f"net={float(latest.get('net_benefit',0.0)):+.6f}"
-                )
-            chamber = dict(st.get("chamber", {}) or {})
-            if chamber:
-                print(
-                    f"  chamber: ticks={chamber.get('tick_count')} accepted={chamber.get('accepted_count')} "
-                    f"rejected={chamber.get('rejected_count')} links={chamber.get('total_links')}"
-                )
-            lin = dict(st.get("lineage", {}) or {})
-            if lin:
-                ripple_roots = len(list(lin.get("top_ripple_roots", []) or []))
-                print(
-                    f"  lineage: nodes={lin.get('nodes')} edges={lin.get('edges')} "
-                    f"roots={lin.get('children_roots')} ripple_roots={ripple_roots}"
-                )
-
-        elif cmd == "code_pressure":
-            files = [x.strip() for x in str(args[0]).split(",") if x.strip()] if args else []
-            rep = self.runtime.code_pressure_report(target_files=files)
-            if not rep:
-                print("  Code chamber unavailable.")
-            else:
-                p = dict(rep.get("pressure", {}) or {})
-                print(
-                    "  pressure: "
-                    + ", ".join([f"{ax}={float(p.get(ax,0.0)):.4f}" for ax in ("X", "T", "N", "B", "A")])
-                )
-                sps = dict(rep.get("subsystem_pressures", {}) or {})
-                if sps:
-                    print("  subsystem pressure:")
-                    for k in sorted(sps.keys()):
-                        v = dict(sps.get(k, {}) or {})
-                        print(
-                            f"    - {k}: "
-                            + ", ".join([f"{ax}={float(v.get(ax,0.0)):.3f}" for ax in ("X", "T", "N", "B", "A")])
-                        )
-                grads = dict(rep.get("operator_gradients", {}) or {})
-                if grads:
-                    print(
-                        "  code operator gradients: "
-                        + ", ".join([f"{ax}={float(grads.get(ax,0.0)):+.4f}" for ax in ("X", "T", "N", "B", "A")])
-                    )
-
-        elif cmd == "code_stage":
-            if len(args) < 3:
-                print("  Usage: code_stage <operator_key> <name> <file1,file2,...> [axis1,axis2,...]")
-            else:
-                op_key = str(args[0]).strip()
-                name = str(args[1]).strip()
-                files = [x.strip() for x in str(args[2]).split(",") if x.strip()]
-                axes = [x.strip() for x in str(args[3]).split(",")] if len(args) > 3 else []
-                try:
-                    rec = self.runtime.stage_code_mutation(
-                        name=name,
-                        operator_key=op_key,
-                        target_files=files,
-                        constraints=axes,
-                    )
-                    print(
-                        f"  staged mutation_id={rec.get('mutation_id')} "
-                        f"constraints={rec.get('constraints')} targets={rec.get('targets')}"
-                    )
-                except Exception as e:
-                    print(f"  code_stage failed: {e}")
-
-        elif cmd == "code_simulate":
-            if not args:
-                print("  Usage: code_simulate <mutation_id> [chain_ticks] [episodes] [turns]")
-            else:
-                mid = str(args[0]).strip()
-                ticks = int(args[1]) if len(args) > 1 else 200
-                episodes = int(args[2]) if len(args) > 2 else 1
-                turns = int(args[3]) if len(args) > 3 else 4
-                try:
-                    rec = self.runtime.code_simulate_mutation(
-                        mutation_id=mid,
-                        chain_ticks=ticks,
-                        episodes=episodes,
-                        turns=turns,
-                        verbose=False,
-                    )
-                    print(
-                        f"  simulate: passed={rec.get('passed')} "
-                        f"reliefΔ={rec.get('relief_delta')} linksΔ={rec.get('links_delta')} "
-                        f"fitness={float(rec.get('avg_fitness',0.0)):.3f}"
-                    )
-                except Exception as e:
-                    print(f"  code_simulate failed: {e}")
-
-        elif cmd == "code_finalize":
-            if not args:
-                print("  Usage: code_finalize <mutation_id>")
-            else:
-                try:
-                    rec = self.runtime.finalize_code_mutation(args[0])
-                    print(
-                        f"  finalized tick={rec.get('tick')} accepted={rec.get('accepted')} "
-                        f"net={float(rec.get('net_benefit',0.0)):+.6f}"
-                    )
-                except Exception as e:
-                    print(f"  code_finalize failed: {e}")
-
-        elif cmd == "code_autoevolve":
-            if len(args) < 2:
-                print("  Usage: code_autoevolve <operator_key> <file1,file2,...> [chain_ticks] [episodes] [turns]")
-            else:
-                op_key = str(args[0]).strip()
-                files = [x.strip() for x in str(args[1]).split(",") if x.strip()]
-                ticks = int(args[2]) if len(args) > 2 else 200
-                episodes = int(args[3]) if len(args) > 3 else 1
-                turns = int(args[4]) if len(args) > 4 else 4
-                try:
-                    rec = self.runtime.code_autoevolve_once(
-                        operator_key=op_key,
-                        target_files=files,
-                        chain_ticks=ticks,
-                        episodes=episodes,
-                        turns=turns,
-                        dry_run=False,
-                    )
-                    final = dict(rec.get("final", {}) or {})
-                    print(
-                        f"  autoevolve: accepted={final.get('accepted')} "
-                        f"changes={rec.get('applied_changes')} rollback={rec.get('rolled_back')} "
-                        f"net={float(final.get('net_benefit',0.0)):+.6f}"
-                    )
-                except Exception as e:
-                    print(f"  code_autoevolve failed: {e}")
-
-        # ── Persistence ───────────────────────────────────────────
-        elif cmd == "save":
-            self.runtime.save()
-
-        elif cmd == "answer":
-            print("  Usage: answer <text>")
-
-        # ── Exit ─────────────────────────────────────────────────
-        elif cmd in ("quit", "exit", "q"):
-            self._running = False
-
-        elif cmd in ("help", "?"):
-            print(HELP_TEXT)
-
-        else:
+        handler = self._COMMANDS.get(cmd)
+        if handler is None:
             print(f"  Unknown command '{cmd}'. Type 'help' for options.")
+            return
+        getattr(self, handler)(s, args)
+
+    def _cmd_tick(self, s, args: List[str]) -> None:
+        n       = int(args[0]) if args else 1
+        results = s.tick(n)
+        relief  = sum(1 for r in results if r is not None)
+        print(f"  {n} ticks → {relief} relief event(s)")
+
+    def _cmd_inject(self, s, args: List[str]) -> None:
+        if not args:
+            print("  Usage: inject <action_name>")
+        else:
+            result = s.inject(" ".join(args))
+            print(f"  Relief: {result is not None}")
+
+    def _cmd_custom(self, s, args: List[str]) -> None:
+        if len(args) < 2:
+            print("  Usage: custom <name> <axis1,axis2,...>")
+            print("  Axes: existence temporal energy boundary agency")
+        else:
+            name   = args[0]
+            axes   = frozenset(a.strip() for a in args[1].split(","))
+            result = s.inject_custom(name, axes)
+            print(f"  Relief: {result is not None}")
+
+    def _cmd_chain(self, s, args: List[str]) -> None:
+        n     = int(args[0]) if args else 1000
+        epoch = int(args[1]) if len(args) > 1 else 200
+        s.chain_burst(n, epoch_size=epoch, verbose=True)
+
+    def _cmd_register(self, s, args: List[str]) -> None:
+        if len(args) < 2:
+            print("  Usage: register <name> <axis1,axis2,...>")
+        else:
+            name = args[0]
+            axes = frozenset(a.strip() for a in args[1].split(","))
+            s.register_action(name, axes)
+
+    def _cmd_conflict(self, s, args: List[str]) -> None:
+        rounds = int(args[0]) if args else 3
+        info = s.inject_conflict_rounds(rounds=rounds, verbose=False)
+        print(f"  Conflict rounds: injected={info['injected']} resolved={info['resolved']}")
+
+    def _cmd_episode(self, s, args: List[str]) -> None:
+        result = s.sim_episode()
+        if result:
+            print(f"  Episode: "
+                  f"fitness={getattr(result,'avg_fitness',0):.3f}  "
+                  f"engagement={getattr(result,'final_engagement',0):.3f}  "
+                  f"turns={getattr(result,'turns',0)}")
+
+    def _cmd_epoch(self, s, args: List[str]) -> None:
+        n_eps  = int(args[0]) if args else 4
+        n_turn = int(args[1]) if len(args) > 1 else 5
+        result = s.sim_epoch(episodes=n_eps, turns=n_turn)
+        if result:
+            print(f"  Epoch complete: "
+                  f"fitness={result.get('avg_fitness',0):.3f}  "
+                  f"episodes={result.get('episodes','?')}")
+
+    def _cmd_bridge(self, s, args: List[str]) -> None:
+        events = self.runtime.bridge.inject_promoted_links()
+        print(f"  Bridge sync: {len(events)} link(s) injected")
+
+    def _cmd_status(self, s, args: List[str]) -> None:
+        s.status()
+
+    def _cmd_pressure(self, s, args: List[str]) -> None:
+        s.pressure_report()
+
+    def _cmd_links(self, s, args: List[str]) -> None:
+        top = int(args[0]) if args else 10
+        s.links(top_n=top)
+
+    def _cmd_learned(self, s, args: List[str]) -> None:
+        s.what_learned()
+
+    def _cmd_actions(self, s, args: List[str]) -> None:
+        s.available_actions()
+
+    def _cmd_evolution(self, s, args: List[str]) -> None:
+        s.print_evolution_report()
+
+    def _cmd_uptime(self, s, args: List[str]) -> None:
+        u = self.runtime.uptime()
+        print(f"  Uptime: {u:.1f}s  ({u/60:.1f} min)")
+
+    def _cmd_code_ops(self, s, args: List[str]) -> None:
+        ops = self.runtime.code_operator_specs()
+        if not ops:
+            print("  Code operator catalog unavailable.")
+        else:
+            print("  Code mutation operators:")
+            for op in ops:
+                print(f"    - {op['key']}: {op['description']}")
+                print(f"      constraints={op['constraints']}  effect={op['expected_effect']}")
+
+    def _cmd_code_status(self, s, args: List[str]) -> None:
+        st = self.runtime.code_mutation_status()
+        print(f"  enabled={st.get('enabled')}  pending={st.get('pending_count')}  recent={st.get('recent_count')}")
+        latest = dict(st.get("latest", {}) or {})
+        if latest:
+            print(
+                f"  latest: tick={latest.get('tick')} accepted={latest.get('accepted')} "
+                f"net={float(latest.get('net_benefit',0.0)):+.6f}"
+            )
+        chamber = dict(st.get("chamber", {}) or {})
+        if chamber:
+            print(
+                f"  chamber: ticks={chamber.get('tick_count')} accepted={chamber.get('accepted_count')} "
+                f"rejected={chamber.get('rejected_count')} links={chamber.get('total_links')}"
+            )
+        lin = dict(st.get("lineage", {}) or {})
+        if lin:
+            ripple_roots = len(list(lin.get("top_ripple_roots", []) or []))
+            print(
+                f"  lineage: nodes={lin.get('nodes')} edges={lin.get('edges')} "
+                f"roots={lin.get('children_roots')} ripple_roots={ripple_roots}"
+            )
+
+    def _cmd_code_pressure(self, s, args: List[str]) -> None:
+        files = [x.strip() for x in str(args[0]).split(",") if x.strip()] if args else []
+        rep = self.runtime.code_pressure_report(target_files=files)
+        if not rep:
+            print("  Code chamber unavailable.")
+        else:
+            p = dict(rep.get("pressure", {}) or {})
+            print(
+                "  pressure: "
+                + ", ".join([f"{ax}={float(p.get(ax,0.0)):.4f}" for ax in ("X", "T", "N", "B", "A")])
+            )
+            sps = dict(rep.get("subsystem_pressures", {}) or {})
+            if sps:
+                print("  subsystem pressure:")
+                for k in sorted(sps.keys()):
+                    v = dict(sps.get(k, {}) or {})
+                    print(
+                        f"    - {k}: "
+                        + ", ".join([f"{ax}={float(v.get(ax,0.0)):.3f}" for ax in ("X", "T", "N", "B", "A")])
+                    )
+            grads = dict(rep.get("operator_gradients", {}) or {})
+            if grads:
+                print(
+                    "  code operator gradients: "
+                    + ", ".join([f"{ax}={float(grads.get(ax,0.0)):+.4f}" for ax in ("X", "T", "N", "B", "A")])
+                )
+
+    def _cmd_code_stage(self, s, args: List[str]) -> None:
+        if len(args) < 3:
+            print("  Usage: code_stage <operator_key> <name> <file1,file2,...> [axis1,axis2,...]")
+        else:
+            op_key = str(args[0]).strip()
+            name = str(args[1]).strip()
+            files = [x.strip() for x in str(args[2]).split(",") if x.strip()]
+            axes = [x.strip() for x in str(args[3]).split(",")] if len(args) > 3 else []
+            try:
+                rec = self.runtime.stage_code_mutation(
+                    name=name,
+                    operator_key=op_key,
+                    target_files=files,
+                    constraints=axes,
+                )
+                print(
+                    f"  staged mutation_id={rec.get('mutation_id')} "
+                    f"constraints={rec.get('constraints')} targets={rec.get('targets')}"
+                )
+            except Exception as e:
+                print(f"  code_stage failed: {e}")
+
+    def _cmd_code_simulate(self, s, args: List[str]) -> None:
+        if not args:
+            print("  Usage: code_simulate <mutation_id> [chain_ticks] [episodes] [turns]")
+        else:
+            mid = str(args[0]).strip()
+            ticks = int(args[1]) if len(args) > 1 else 200
+            episodes = int(args[2]) if len(args) > 2 else 1
+            turns = int(args[3]) if len(args) > 3 else 4
+            try:
+                rec = self.runtime.code_simulate_mutation(
+                    mutation_id=mid,
+                    chain_ticks=ticks,
+                    episodes=episodes,
+                    turns=turns,
+                    verbose=False,
+                )
+                print(
+                    f"  simulate: passed={rec.get('passed')} "
+                    f"reliefΔ={rec.get('relief_delta')} linksΔ={rec.get('links_delta')} "
+                    f"fitness={float(rec.get('avg_fitness',0.0)):.3f}"
+                )
+            except Exception as e:
+                print(f"  code_simulate failed: {e}")
+
+    def _cmd_code_finalize(self, s, args: List[str]) -> None:
+        if not args:
+            print("  Usage: code_finalize <mutation_id>")
+        else:
+            try:
+                rec = self.runtime.finalize_code_mutation(args[0])
+                print(
+                    f"  finalized tick={rec.get('tick')} accepted={rec.get('accepted')} "
+                    f"net={float(rec.get('net_benefit',0.0)):+.6f}"
+                )
+            except Exception as e:
+                print(f"  code_finalize failed: {e}")
+
+    def _cmd_code_autoevolve(self, s, args: List[str]) -> None:
+        if len(args) < 2:
+            print("  Usage: code_autoevolve <operator_key> <file1,file2,...> [chain_ticks] [episodes] [turns]")
+        else:
+            op_key = str(args[0]).strip()
+            files = [x.strip() for x in str(args[1]).split(",") if x.strip()]
+            ticks = int(args[2]) if len(args) > 2 else 200
+            episodes = int(args[3]) if len(args) > 3 else 1
+            turns = int(args[4]) if len(args) > 4 else 4
+            try:
+                rec = self.runtime.code_autoevolve_once(
+                    operator_key=op_key,
+                    target_files=files,
+                    chain_ticks=ticks,
+                    episodes=episodes,
+                    turns=turns,
+                    dry_run=False,
+                )
+                final = dict(rec.get("final", {}) or {})
+                print(
+                    f"  autoevolve: accepted={final.get('accepted')} "
+                    f"changes={rec.get('applied_changes')} rollback={rec.get('rolled_back')} "
+                    f"net={float(final.get('net_benefit',0.0)):+.6f}"
+                )
+            except Exception as e:
+                print(f"  code_autoevolve failed: {e}")
+
+    def _cmd_save(self, s, args: List[str]) -> None:
+        self.runtime.save()
+
+    def _cmd_answer(self, s, args: List[str]) -> None:
+        print("  Usage: answer <text>")
+
+    def _cmd_quit(self, s, args: List[str]) -> None:
+        self._running = False
+
+    def _cmd_help(self, s, args: List[str]) -> None:
+        print(HELP_TEXT)
 
 
 # =============================================================================
