@@ -120,8 +120,10 @@ def build_perspective_projections(
     complete currently-relevant projection frontier. The engine uses that
     complete frontier before it may conclude that perspective is exhausted.
     """
-    results: List[Dict[str, Any]] = []
-    seen = set()
+    # Distinct lenses/sources that yield the same projected RepresentationalRef
+    # are one consumable view; the least-dimensional lens wins, then the
+    # strongest structural pressure, with projection identity a neutral tie.
+    best_by_view: Dict[str, Dict[str, Any]] = {}
     for source_id, source_ref, evidence in sorted(structural_sources, key=lambda x: str(x[0])):
         for perspective in _canonical_perspectives():
             projected, exposed = _project(ref, source_ref, perspective)
@@ -133,7 +135,7 @@ def build_perspective_projections(
                 sorted(exposed)[0],
             )
             pid = _projection_id(ref, source_ref, perspective, projected)
-            results.append({
+            item = {
                 "mode": "perspective_projection",
                 "projection_id": pid,
                 "field": primary,
@@ -152,8 +154,13 @@ def build_perspective_projections(
                     "exposed_fields": dict(exposed),
                     **dict(evidence or {}),
                 },
-            })
-    results.sort(key=lambda p: (len(p["pressure_perspective"]), p["projection_id"]))
+            }
+            item["projection_view_key"] = _projection_view_key(item)
+            previous = best_by_view.get(item["projection_view_key"])
+            if previous is None or _projection_priority(item) < _projection_priority(previous):
+                best_by_view[item["projection_view_key"]] = item
+    results = list(best_by_view.values())
+    results.sort(key=_projection_priority)
     if max_projections is None:
         return results
     return results[:max(0, int(max_projections))]
@@ -169,17 +176,22 @@ class RepresentationalResolutionEngine(_BaseEngine):
             self._projection_events = []
         if not hasattr(self, "_projection_resolution_hold"):
             self._projection_resolution_hold = False
+        # Optic episodes keyed by ref.  Nothing caches a frontier here any more
+        # (it is rebuilt from the real mirrors each time), but the episode-end
+        # hooks still clear this slot, so it must exist.
+        if not hasattr(self, "_projection_frontiers"):
+            self._projection_frontiers = {}
 
     def _projection_event(self, ref, pending, outcome, evaluation=None):
         self._projection_state()
         candidate = dict(pending.get("candidate") or {})
         self._projection_events.append({
             "ref": ref.encode(),
-            "projection_id": c.get("projection_id"),
-            "projected_ref": c.get("projected_ref"),
-            "pressure_perspective": list(c.get("pressure_perspective") or ()),
-            "exposed_fields": dict(c.get("exposed_fields") or {}),
-            "source_ref": c.get("source_ref"),
+            "projection_id": candidate.get("projection_id"),
+            "projected_ref": candidate.get("projected_ref"),
+            "pressure_perspective": list(candidate.get("pressure_perspective") or ()),
+            "exposed_fields": dict(candidate.get("exposed_fields") or {}),
+            "source_ref": candidate.get("source_ref"),
             "outcome": outcome,
             "evaluation": dict(evaluation or {}),
         })
@@ -508,6 +520,13 @@ class RepresentationalResolutionEngine(_BaseEngine):
         self._projection_state()
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
+        if pending is None and self.inadequacy_pressure(ref) > 0.0:
+            self.investigate_if_pressured(
+                ref,
+                consumer=str(consumer or "provisional_reader"),
+                context_scope=context_scope,
+            )
+            pending = self._active_stage_for_ref.get(key)
         if pending is None or pending.get("mode") != "perspective_projection":
             return super().provisional_resolution(ref)
         try:
@@ -679,6 +698,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         return "failed"
 
     def _clear_frontier_if_pressure_resolved(self, ref: RepresentationalRef) -> None:
+        self._projection_state()
         if self.inadequacy_pressure(ref) <= 0.0:
             self._projection_frontiers.pop(ref.encode(), None)
 
@@ -687,6 +707,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         try:
             return super().complete_field_inquiry(ref, candidate, stage, **kwargs)
         finally:
+            self._projection_state()
             self._projection_frontiers.pop(ref.encode(), None)
 
     def record_pressure_observation(
@@ -702,6 +723,31 @@ class RepresentationalResolutionEngine(_BaseEngine):
         consumer="observer",
     ):
         """Record consequence pressure without claiming projection consumption."""
+        self._projection_state()
+        previous_hold = self._projection_resolution_hold
+        self._projection_resolution_hold = True
+        try:
+            result = _BaseEngine.record_participation(
+                self,
+                ref,
+                pressure_before=pressure_before,
+                pressure_after=pressure_after,
+                source=source,
+                context_tag=context_tag,
+                extra_trace=extra_trace,
+                notes=notes,
+                consumer=consumer,
+                candidate_evaluation=None,
+            )
+        finally:
+            self._projection_resolution_hold = previous_hold
+        self._clear_frontier_if_pressure_resolved(ref)
+        return result
+
+    def record_participation(self, ref, *, pressure_before, pressure_after, source,
+                             context_tag="", extra_trace=None, notes=None,
+                             consumer="auto", candidate_evaluation=None):
+        """A real consumer's participation: closes a staged projection's test."""
         self._projection_state()
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
@@ -734,7 +780,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
                 candidate_evaluation=None,
             )
         finally:
-            self._projection_resolution_hold = False
+            self._projection_resolution_hold = previous_hold
 
         outcome = self._projection_consequence(ref, pending, candidate_evaluation)
         if outcome == "adequate" and self.inadequacy_pressure(ref) <= 0.0:
@@ -857,14 +903,27 @@ def record_ref_participation_from_scores(systems, ref_encoded, dimension_scores,
         for trace_id in (extra_trace_ids or [])
     ]
     try:
-        engine.record_participation(
-            ref,
-            pressure_before=before,
-            pressure_after=after,
-            source=source,
-            context_tag=context_tag,
-            extra_trace=trace,
-            candidate_evaluation=candidate_evaluation,
-        )
+        # A score with no candidate evaluation only reports consequence; it may
+        # raise inadequacy pressure but never stages or completes a projection
+        # it did not use.  Only a real consumer's evaluation closes one.
+        if candidate_evaluation is None:
+            engine.record_pressure_observation(
+                ref,
+                pressure_before=before,
+                pressure_after=after,
+                source=source,
+                context_tag=context_tag,
+                extra_trace=trace,
+            )
+        else:
+            engine.record_participation(
+                ref,
+                pressure_before=before,
+                pressure_after=after,
+                source=source,
+                context_tag=context_tag,
+                extra_trace=trace,
+                candidate_evaluation=candidate_evaluation,
+            )
     except Exception:
         pass
