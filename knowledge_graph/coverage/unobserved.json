@@ -2400,6 +2400,7 @@
   "fn:aurora_internal.aurora_runtime_constraint_governor._normalize_axis_map",
   "fn:aurora_internal.aurora_runtime_faults._offer_fault_as_lived_consequence",
   "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder",
+  "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder._aurora_fault",
   "fn:aurora_internal.aurora_second_gen.SecondGenEvolutionInjector.__init__",
   "fn:aurora_internal.aurora_second_gen.SecondGenEvolutionInjector._load_pool",
   "fn:aurora_internal.aurora_second_gen.SecondGenEvolutionInjector._load_registry",
