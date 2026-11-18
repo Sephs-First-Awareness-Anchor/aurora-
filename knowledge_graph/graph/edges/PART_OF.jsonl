@@ -90,9 +90,6 @@
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:composite:tests:b277a8d4", "target": "subsys:category:tests", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:composite:tooling:1128286a", "target": "subsys:category:tooling", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:composite:tooling:f81153a5", "target": "subsys:category:tooling", "type": "PART_OF", "weight": 1}
-{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:acm_bridge.1", "target": "subsys:category:acm_bridge", "type": "PART_OF", "weight": 1}
-{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:acm_core.1", "target": "subsys:category:acm_core", "type": "PART_OF", "weight": 1}
-{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:acm_cpm.1", "target": "subsys:category:acm_cpm", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:acm_expression.1", "target": "subsys:category:acm_expression", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:acm_hw.1", "target": "subsys:category:acm_hw", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:acm_xaurora.1", "target": "subsys:category:acm_xaurora", "type": "PART_OF", "weight": 1}
@@ -143,7 +140,6 @@
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:strata.2", "target": "subsys:category:strata", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:tests.1", "target": "subsys:category:tests", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:tests.2", "target": "subsys:category:tests", "type": "PART_OF", "weight": 1}
-{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:declared:tests.3", "target": "subsys:category:tests", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "subsys:layer:L0", "target": "layer:L0", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "subsys:layer:L1", "target": "layer:L1", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "subsys:layer:L2", "target": "layer:L2", "type": "PART_OF", "weight": 1}

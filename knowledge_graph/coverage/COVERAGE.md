@@ -1,7 +1,7 @@
 # What the knowledge graph covers, and what it does not
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `2b5de7eaa60f`, generator 2.0.0.
+Source commit `d9a335038080`, generator 2.0.0.
 
 Nothing here is hidden by a summary: every unresolved call site is in `unresolved_calls.jsonl`, every file's status in `files.jsonl`, every claim check in `claims.json`, and every statically reachable function that no recorded run entered in `unobserved.json`.
 
@@ -9,24 +9,24 @@ Nothing here is hidden by a summary: every unresolved call site is in `unresolve
 
 | status | files | meaning |
 |---|---:|---|
-| not_analysed | 3380 | data, config, images and other files: listed, not read |
+| not_analysed | 3376 | data, config, images and other files: listed, not read |
 | parsed_ast | 909 | Python, parsed with ast: calls, state, flow |
 | scanned_references | 107 | Markdown: the code, stores and organs it names |
 | parsed_regex | 47 | Rust, Dart, Kotlin, Java: read with patterns, calls matched by name |
-| scanned_launches | 27 | shell, workflows, web: only the Python modules they launch |
+| scanned_launches | 31 | shell, workflows, service units, web: only the modules and scripts they launch |
 
 ## Calls without a resolved target
 
-34972 method calls inside Aurora's code have no static target. External library calls and calls on built-in values are listed with their reason but not counted as gaps.
+35009 method calls inside Aurora's code have no static target. External library calls and calls on built-in values are listed with their reason but not counted as gaps.
 
 | reason | sites | what would resolve it |
 |---|---:|---|
-| untyped_local | 20768 | a type the code does not state (assignment from an untyped call) |
-| builtin_value | 19679 | nothing: str, dict, list and similar |
-| external | 12457 | nothing: a library outside the repo |
-| dynamic_receiver | 5322 | the result of a call or subscript; runtime evidence |
+| untyped_local | 20789 | a type the code does not state (assignment from an untyped call) |
+| builtin_value | 19693 | nothing: str, dict, list and similar |
+| external | 12461 | nothing: a library outside the repo |
+| dynamic_receiver | 5337 | the result of a call or subscript; runtime evidence |
 | untyped_attribute | 3686 | self.x whose class is never stated; an annotation or runtime evidence |
-| untyped_module_state | 1985 | a module global whose type is not stated |
+| untyped_module_state | 1986 | a module global whose type is not stated |
 | unknown_member | 1288 | a name the target class or module does not define (dynamic or inherited from outside) |
 | untyped_parameter | 1199 | a parameter without an annotation |
 | organ_receiver | 724 | systems[key] where the organ has no single implementing class |
@@ -37,11 +37,11 @@ Every edge says how it is known. implemented: read from code. declared: stated i
 
 | basis | edges |
 |---|---:|
-| implemented | 137463 |
-| declared | 13050 |
+| implemented | 137478 |
+| declared | 13045 |
 | observed | 4822 |
 | implemented+observed | 3801 |
-| inferred | 1544 |
+| inferred | 1548 |
 | implemented+inferred | 2 |
 
 ## Runtime evidence
@@ -54,7 +54,7 @@ Paths no recording covers: the phone runtime past the boot stages listed, the AC
 
 ## Declared ownership and its boundary
 
-Layer and category come from `docs/module_ownership.json` (aurora.module_ownership/2, sha256 146b36876c1f83f2). They are claims, kept apart from what the code and the runs show.
+Layer and category come from `docs/module_ownership.json` (aurora.module_ownership/2, sha256 561e8c185309d9c6). They are claims, kept apart from what the code and the runs show.
 
 > Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.
 
@@ -65,20 +65,7 @@ Not covered by the mapping:
 - `Cargo.toml, pubspec.yaml, Gradle files, buildozer.spec, requirements and pytest.ini`: Build and dependency configuration
 - `flutter_app/android/ resources and manifests`: Android resources and XML configuration
 
-Claim checks: conflict 9, consistent 341, unverified 557.
-
-9 layer assignment(s) differ between the mapping and docs/LAYER_MODULE_OWNERSHIP.md:
-- `mod:foundational_contract`: markdown layer:L0, mapping None
-- `mod:aurora_autonomy`: markdown None, mapping layer:L8
-- `mod:aurora_checkpoint`: markdown None, mapping layer:L8
-- `mod:aurora_internal.aurora_braided_substrate`: markdown None, mapping layer:L8
-- `mod:aurora_internal.aurora_comprehension_gap`: markdown None, mapping layer:L8
-- `mod:aurora_internal.aurora_identity_persistence`: markdown None, mapping layer:L8
-- `mod:aurora_internal.aurora_language_state`: markdown None, mapping layer:L6
-- `mod:aurora_internal.aurora_ontological_scaffolding`: markdown None, mapping layer:L8
-- `mod:aurora_internal.aurora_utterance_parser`: markdown None, mapping layer:L8
-
-4 mapped path(s) have no module in the tree: `deploy/aurora-strata-hub.service`, `deploy/aurora-strata-room.service`, `deploy/aurora-subsurface.service`, `deploy/aurora-surface.service`
+Claim checks: conflict 3, consistent 345, unverified 559.
 
 ## Reading impact
 

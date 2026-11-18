@@ -5223,7 +5223,7 @@
 {"builtin_value": 11, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._analyze_owner"}
 {"builtin_value": 1, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._code_id"}
 {"builtin_value": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._code_index"}
-{"builtin_value": 11, "owner": "fn:scripts.aurora_knowledge_graph.Builder._compare_declared_composites"}
+{"builtin_value": 12, "owner": "fn:scripts.aurora_knowledge_graph.Builder._compare_declared_composites"}
 {"builtin_value": 3, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._concepts_from_literals"}
 {"builtin_value": 6, "owner": "fn:scripts.aurora_knowledge_graph.Builder._cross_domain_links"}
 {"builtin_value": 1, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._dart_edges"}
@@ -5246,7 +5246,7 @@
 {"external": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder._http_handlers"}
 {"builtin_value": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder._index_suffixes"}
 {"builtin_value": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder._is_test_rel"}
-{"external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._layer_doc"}
+{"external": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder._layer_doc"}
 {"builtin_value": 7, "owner": "fn:scripts.aurora_knowledge_graph.Builder._local_names"}
 {"external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._manifold_directory"}
 {"builtin_value": 6, "owner": "fn:scripts.aurora_knowledge_graph.Builder._mask_text"}
@@ -5283,9 +5283,9 @@
 {"external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_documents"}
 {"builtin_value": 16, "external": 5, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_hierarchy"}
 {"builtin_value": 4, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_imports"}
-{"builtin_value": 4, "external": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_intent"}
+{"builtin_value": 3, "external": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_intent"}
 {"external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_module_aliases"}
-{"builtin_value": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_other_sources"}
+{"builtin_value": 1, "external": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_other_sources"}
 {"builtin_value": 4, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_polyglot"}
 {"builtin_value": 2, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_runtime"}
 {"builtin_value": 5, "owner": "fn:scripts.aurora_knowledge_graph.Builder.reachable"}
@@ -5296,7 +5296,7 @@
 {"builtin_value": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder.store_node"}
 {"builtin_value": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.unresolved_reason"}
 {"builtin_value": 5, "owner": "fn:scripts.aurora_knowledge_graph.Builder.validate"}
-{"builtin_value": 15, "owner": "fn:scripts.aurora_knowledge_graph.Builder.verify_claims"}
+{"builtin_value": 21, "owner": "fn:scripts.aurora_knowledge_graph.Builder.verify_claims"}
 {"builtin_value": 4, "owner": "fn:scripts.aurora_knowledge_graph.Graph.add_edge"}
 {"builtin_value": 1, "owner": "fn:scripts.aurora_knowledge_graph.Graph.add_node"}
 {"external": 3, "owner": "fn:scripts.aurora_knowledge_graph.Graph.content_hash"}
@@ -5335,7 +5335,7 @@
 {"builtin_value": 1, "external": 3, "owner": "fn:scripts.aurora_knowledge_graph.write_jsonld"}
 {"external": 1, "owner": "fn:scripts.aurora_knowledge_graph.write_schema"}
 {"builtin_value": 11, "external": 4, "owner": "fn:scripts.aurora_knowledge_graph.write_sharded"}
-{"builtin_value": 35, "owner": "fn:scripts.aurora_knowledge_graph.write_subsystems_md"}
+{"builtin_value": 37, "owner": "fn:scripts.aurora_knowledge_graph.write_subsystems_md"}
 {"builtin_value": 18, "owner": "fn:scripts.aurora_knowledge_graph.write_summary"}
 {"builtin_value": 1, "owner": "fn:scripts.aurora_knowledge_graph.write_summary.top"}
 {"builtin_value": 19, "owner": "fn:scripts.aurora_stack_exporter.build_document"}
@@ -5532,13 +5532,13 @@
 {"external": 2, "owner": "fn:scripts.render_module_ownership._rust_children_dir"}
 {"builtin_value": 2, "owner": "fn:scripts.render_module_ownership._rust_crate_src"}
 {"external": 3, "owner": "fn:scripts.render_module_ownership.dart_edges"}
-{"builtin_value": 2, "owner": "fn:scripts.render_module_ownership.derive"}
+{"builtin_value": 4, "owner": "fn:scripts.render_module_ownership.derive"}
 {"external": 1, "owner": "fn:scripts.render_module_ownership.dump_mapping"}
 {"builtin_value": 1, "external": 5, "owner": "fn:scripts.render_module_ownership.jvm_edges"}
 {"external": 1, "owner": "fn:scripts.render_module_ownership.load_mapping"}
 {"builtin_value": 2, "external": 2, "owner": "fn:scripts.render_module_ownership.main"}
 {"builtin_value": 6, "external": 4, "owner": "fn:scripts.render_module_ownership.python_edges"}
-{"builtin_value": 6, "owner": "fn:scripts.render_module_ownership.render"}
+{"builtin_value": 10, "owner": "fn:scripts.render_module_ownership.render"}
 {"builtin_value": 1, "external": 1, "owner": "fn:scripts.render_module_ownership.rust_edges"}
 {"builtin_value": 1, "external": 4, "owner": "fn:scripts.render_module_ownership.scan"}
 {"builtin_value": 6, "external": 4, "owner": "fn:scripts.repair_stale_priority_depth.repair"}
@@ -7573,7 +7573,7 @@
 {"external": 14, "owner": "mod:scripts.aurora_ci_segment"}
 {"external": 1, "owner": "mod:scripts.aurora_fault_instrumentation_injector"}
 {"external": 2, "owner": "mod:scripts.aurora_kg_observe"}
-{"builtin_value": 1, "external": 17, "owner": "mod:scripts.aurora_knowledge_graph"}
+{"builtin_value": 1, "external": 18, "owner": "mod:scripts.aurora_knowledge_graph"}
 {"builtin_value": 3, "external": 2, "owner": "mod:scripts.backfill_noncomp_and_relations"}
 {"external": 1, "owner": "mod:scripts.baseline_genealogy"}
 {"external": 5, "owner": "mod:scripts.bridge_tensor_occupancy_to_warp"}

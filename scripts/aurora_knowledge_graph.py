@@ -166,7 +166,7 @@ EDGE_TYPES: Dict[str, Dict[str, Any]] = {
     "DOCUMENTS": {"source": ["Document"], "target": CODE + ["StateStore", "BusChannel", "Organ", "SourceFile"],
                   "description": "A document that names this code, store, bus slot or organ."},
     "TESTS": {"source": ["Module"], "target": ["Module"], "description": "A test module importing the module under test."},
-    "RUNS": {"source": ["SourceFile"], "target": ["Module"], "description": "A shell script or workflow launching a module."},
+    "RUNS": {"source": ["SourceFile"], "target": ["Module", "SourceFile"], "description": "A shell script, workflow or service unit launching a module or a script."},
     "EXPRESSES": {"source": CODE, "target": VOCAB,
                   "description": "Code that carries an Aurora concept. provenance ast (literals) or name (identifiers)."},
     "MAPS_TO": {"source": ["IStatePair"], "target": ["ConstraintAxis"], "description": "I-State pair of an axis."},
@@ -331,6 +331,7 @@ _PYFILE = re.compile(r"(?<![\w/.])([\w][\w/\-]*\.py)\b")
 _IDENT_CHAIN = re.compile(r"^[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*$")
 _AUTH_RE = re.compile(r"Authors?:\s*Sunni\s*\(Sir\)\s*Morningstar\s*(?:&|and)\s*Cael\s*Devo", re.I)
 _PY_LAUNCH = re.compile(r"python[0-9.]*(?:\.exe)?\s+(?:-[A-Za-z]+\s+)*(?:-m\s+([\w.]+)|([\w./\\\-]+\.py))")
+_SYSTEMD_EXEC = re.compile(r"^\s*(ExecStart|ExecStartPre|ExecStartPost|ExecStop|ExecReload)\s*=\s*(.+)$")
 _RUST_MOD = re.compile(r"^\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+(\w+)\s*;", re.M)
 _RUST_USE = re.compile(r"^\s*(?:pub\s+)?use\s+crate::([\w:]+)", re.M)
 _DART_IMPORT = re.compile(r"""^\s*(?:import|export|part)\s+['"]([^'"]+\.dart)['"]""", re.M)
@@ -751,7 +752,8 @@ class Builder:
     @staticmethod
     def _other_language(r: str) -> Optional[str]:
         suffix_map = {".rs": "rust", ".dart": "dart", ".kt": "kotlin", ".java": "java", ".sh": "shell", ".bat": "batch",
-                      ".ps1": "powershell", ".jsx": "jsx", ".js": "javascript", ".html": "html"}
+                      ".ps1": "powershell", ".jsx": "jsx", ".js": "javascript", ".html": "html",
+                      ".service": "systemd"}
         if r.startswith(".github/workflows/") and r.endswith((".yml", ".yaml")):
             return "github-workflow"
         for s, lang in suffix_map.items():
@@ -2738,11 +2740,14 @@ class Builder:
     def _layer_doc(self, rel: str, lines: List[str]) -> None:
         current = None
         for i, line in enumerate(lines, 1):
-            mt = re.match(r"^##\s+(L\d|Orchestrator)\b", line)
+            mt = re.match(r"^#{2,3}\s+(L\d|Orchestrator)\b", line)
             if mt:
                 current = "layer:" + ("ORCH" if mt.group(1) == "Orchestrator" else mt.group(1))
                 continue
-            if current and line.lstrip().startswith("-"):
+            if current and re.match(r"^#{1,3}\s", line):
+                current = None
+                continue
+            if current and line.lstrip().startswith(("-", "|")):
                 for tok in _BACKTICK.findall(line):
                     if not tok.endswith(".py"):
                         continue
@@ -2778,7 +2783,21 @@ class Builder:
                 self._rust_edges(p, rel, text, by_rel)
             elif lang == "dart":
                 self._dart_edges(p, rel, text, by_rel)
-            if lang in ("shell", "batch", "powershell", "github-workflow"):
+            if lang == "systemd":
+                # ExecStart and friends name the script or interpreter the unit runs; the repo root is a placeholder
+                for i, line in enumerate(text.splitlines(), 1):
+                    mx = _SYSTEMD_EXEC.match(line)
+                    if not mx:
+                        continue
+                    for tok in mx.group(2).split():
+                        tok = re.sub(r"^[-@:+!]+", "", tok)
+                        tok = re.sub(r"^(?:__AURORA_ROOT__|%h/[^/]+|\$\{?\w+\}?)/", "", tok).lstrip("./")
+                        if ("src:" + tok) in g.nodes:
+                            g.add_edge("src:" + rel, "RUNS", "src:" + tok, evidence=(rel, i), provenance="regex")
+                        elif tok in self.mod_by_rel:
+                            g.add_edge("src:" + rel, "RUNS", self.mod_by_rel[tok].nid, evidence=(rel, i),
+                                       provenance="regex")
+            if lang in ("shell", "batch", "powershell", "github-workflow", "systemd"):
                 for i, line in enumerate(text.splitlines(), 1):
                     for mod_name, path in _PY_LAUNCH.findall(line):
                         targets: List[str] = []
@@ -3423,7 +3442,8 @@ class Builder:
         if path is None:
             cand = self.root / self.ont.get("ownership_mapping", "docs/module_ownership.json")
             path = cand if cand.exists() else None
-        doc_owned = {(e["source"], e["target"]) for e in g.edges.values() if e["type"] == "OWNED_BY"}
+        anchor_owned = {(e["source"], e["target"]) for e in g.edges.values()
+                        if e["type"] == "OWNED_BY" and "ontology" in e["provenance"]}
         if path is not None and path.exists():
             data = json.loads(path.read_text(encoding="utf-8"))
             self.ownership_meta = {"path": str(path.relative_to(self.root)) if str(path).startswith(str(self.root))
@@ -3446,6 +3466,9 @@ class Builder:
                            holds=c.get("holds", ""), declared=True, declared_domain=c.get("domain"))
             self.declared_domains: List[Dict[str, Any]] = list(data.get("domains") or []) if v2 else []
             self.declared_composites: Dict[str, Dict[str, Any]] = dict(data.get("composites") or {}) if v2 else {}
+            # candidates the record holds back (import-only so far) are checked the same way but never promoted
+            self.declared_candidates: Dict[str, Dict[str, Any]] = dict(data.get("composite_candidates") or {}) \
+                if v2 else {}
             self.ownership_meta["declared_files"] = len(records)
             mapped_layer: Dict[str, str] = {}
             for rel, rec in sorted(records.items()):
@@ -3475,20 +3498,27 @@ class Builder:
                         g.add_edge(m.nid, "OWNED_BY", lid, evidence=ev, provenance="claim",
                                    layer_role=rec.get("layer_role"))
                         mapped_layer[m.nid] = lid
+            # layer names come from the record too; the markdown is rendered from it and is not parsed here
+            for lay in (data.get("layers") or []) if v2 else []:
+                lid = "layer:" + ("ORCH" if lay.get("id") == "orchestrator" else lay.get("id", ""))
+                if lid in g.nodes:
+                    g.nodes[lid]["declared_name"] = lay.get("name", "")
+                    g.nodes[lid].pop("declared_missing", None)
+                elif lay.get("id"):
+                    g.add_node(lid, "Layer", name=lay.get("name", lay["id"]), layer_id=lay["id"],
+                               declared_name=lay.get("name", ""))
             for rec in data.get("layer_records_without_file") or []:
                 lid = "layer:" + ("ORCH" if rec.get("layer") == "orchestrator" else rec.get("layer", ""))
                 if lid in g.nodes:
                     g.nodes[lid].setdefault("declared_missing", [])
                     if rec["path"] not in g.nodes[lid]["declared_missing"]:
                         g.nodes[lid]["declared_missing"].append(rec["path"])
-            # the markdown and the mapping must agree; disagreements are recorded, not resolved
-            for src, lid in sorted(doc_owned):
+            # the record must agree with the ontology's own layer anchors (one file per layer); a module the
+            # record puts in a layer the ontology does not anchor is normal and not a disagreement
+            for src, lid in sorted(anchor_owned):
                 if mapped_layer.get(src) != lid:
-                    self.claim_disagreements.append({"module": src, "markdown_layer": lid,
+                    self.claim_disagreements.append({"module": src, "anchor_layer": lid,
                                                      "mapping_layer": mapped_layer.get(src)})
-            for src, lid in sorted(mapped_layer.items()):
-                if (src, lid) not in doc_owned and doc_owned:
-                    self.claim_disagreements.append({"module": src, "markdown_layer": None, "mapping_layer": lid})
         else:
             self.ownership_meta = {"path": None, "note": "no canonical mapping found; layer ownership read from "
                                                          "docs/LAYER_MODULE_OWNERSHIP.md"}
@@ -3582,12 +3612,18 @@ class Builder:
         for rt in self.ont.get("runtimes", []):
             self.runtime_reach[rt["id"]] = self.reachable(rt.get("entrypoints", []), flow)
         writes: Counter = Counter()
+        own_writes: Dict[str, Set[str]] = defaultdict(set)
+        state_readers: Dict[str, Set[str]] = defaultdict(set)
         inbound_prod: Dict[str, Set[str]] = defaultdict(set)
         organ_mods: Dict[str, Set[str]] = defaultdict(set)
         for (s, et, d), e in g.edges.items():
             ms, md = self.module_of(s), self.module_of(d)
             if et == "WRITES" and d.startswith("store:") and ms:
                 writes[ms] += 1
+            if et == "WRITES" and d.startswith(("store:", "bus:")) and ms:
+                own_writes[ms].add(d)
+            if et == "READS" and d.startswith(("store:", "bus:")) and ms:
+                state_readers[d].add(ms)
             if et in ("CALLS", "INSTANTIATES", "IMPORTS") and ms and md and ms != md:
                 mm = self.mod_by_id.get(ms)
                 if mm and mm.role not in ("test", "script", "tool"):
@@ -3623,15 +3659,39 @@ class Builder:
             notes: List[str] = []
             cats = [claim.get("category")] + list(claim.get("also") or [])
             operational = bool(ev["organs"]) or bool(ev["observed_in"]) or bool(ev["reachable_from"])
+            observations: List[str] = []
             if claim.get("category") == "investigative" and "investigative" == cats[0] and len(cats) == 1:
+                # an investigative file may run live and keep its own records (the QuasiArch observer, the
+                # learning probe); it conflicts with its claim only when state it writes is read by production
+                # code outside investigative work, which makes it an input to her, not an observer of her
+                fed: List[str] = []
+                setup: List[str] = []
+                for t in sorted(own_writes.get(nid, ())):
+                    # an entry point that builds her systems dict for its own run is setting the run up; a bus slot
+                    # it fills there lives only in that process
+                    if t.startswith("bus:") and n.get("is_entrypoint"):
+                        setup.append(t)
+                        continue
+                    for r in state_readers.get(t, ()):
+                        if r == nid:
+                            continue
+                        rm = self.mod_by_id.get(r)
+                        rcat = (g.nodes.get(r, {}).get("claim") or {}).get("category")
+                        if rm is not None and rm.role not in ("test", "script", "tool") \
+                                and rcat not in ("investigative", "tests"):
+                            fed.append(f"{t} (read by {r.split(':', 1)[1]})")
+                            break
+                if fed:
+                    notes.append("writes state that production code outside investigative work reads: "
+                                 + ", ".join(fed[:4]))
                 if ev["organs"]:
-                    notes.append(f"implements live organ(s) {', '.join(ev['organs'][:4])}")
-                if ev["store_writes"]:
-                    notes.append(f"writes {ev['store_writes']} persisted store reference(s)")
+                    observations.append(f"live organ(s) {', '.join(ev['organs'][:4])}")
+                if ev["store_writes"] and not fed:
+                    observations.append(f"keeps its own records ({ev['store_writes']} store reference(s))")
                 if ev["observed_in"]:
-                    notes.append(f"ran in {', '.join(ev['observed_in'])}")
-                elif ev["reachable_from"]:
-                    notes.append(f"reachable from the {', '.join(ev['reachable_from'])} runtime")
+                    observations.append(f"ran in {', '.join(ev['observed_in'])}")
+                if setup:
+                    observations.append("fills bus slot(s) for its own run: " + ", ".join(setup[:4]))
             if claim.get("category") == "runtime" and not ev["reachable_from"] and not ev["observed_in"] \
                     and not n.get("is_entrypoint"):
                 notes.append("declared runtime but not reachable from any recorded entry point")
@@ -3642,7 +3702,8 @@ class Builder:
             status = "conflict" if notes else ("consistent" if (operational or ev["production_importers"])
                                                 else "unverified")
             notes += gaps
-            self.claim_checks[nid] = {"status": status, "notes": notes, "claim_basis": claim.get("basis")}
+            self.claim_checks[nid] = {"status": status, "notes": notes, "observations": observations,
+                                      "claim_basis": claim.get("basis")}
             n["claim_check"] = status
 
     # ================================================================ pass 9: crystal hierarchy
@@ -3833,18 +3894,22 @@ class Builder:
             if n["type"] in ("Module", "SourceFile") and n.get("path"):
                 nid_of[n["path"]] = nid
         ev_members: Dict[str, Set[str]] = {c["id"]: set(c["members"]) for c in self.composites}
-        for cid, rec in sorted(getattr(self, "declared_composites", {}).items()):
+        todo = [(cid, rec, False) for cid, rec in sorted(getattr(self, "declared_composites", {}).items())]
+        todo += [(cid, rec, True) for cid, rec in sorted(getattr(self, "declared_candidates", {}).items())]
+        for cid, rec, candidate in todo:
             members = [m for m in rec.get("members", [])]
             found = [nid_of[m] for m in members if m in nid_of]
             fset = set(found)
-            sid = f"subsys:declared:{cid}"
-            g.add_node(sid, "Subsystem", name=f"{cid} (declared composite)", kind="declared_composite",
-                       level="composite", declared=True, hub=rec.get("hub"), members=len(members))
-            parent = f"subsys:category:{rec.get('subsystem')}"
-            if parent in g.nodes:
-                g.add_edge(sid, "PART_OF", parent, provenance="claim")
-            for nid in found:
-                g.add_edge(nid, "MEMBER_OF", sid, provenance="claim", method=["declared_composite"])
+            sid = None
+            if not candidate:
+                sid = f"subsys:declared:{cid}"
+                g.add_node(sid, "Subsystem", name=f"{cid} (declared composite)", kind="declared_composite",
+                           level="composite", declared=True, hub=rec.get("hub"), members=len(members))
+                parent = f"subsys:category:{rec.get('subsystem')}"
+                if parent in g.nodes:
+                    g.add_edge(sid, "PART_OF", parent, provenance="claim")
+                for nid in found:
+                    g.add_edge(nid, "MEMBER_OF", sid, provenance="claim", method=["declared_composite"])
             links = []
             for a, b in rec.get("links") or []:
                 na, nb = nid_of.get(a), nid_of.get(b)
@@ -3869,13 +3934,15 @@ class Builder:
             status = ("supported" if links and bound_links == len(links)
                       else "partly_supported" if bound_links else "import_only")
             self.declared_composite_checks.append({
-                "id": cid, "subsystem": rec.get("subsystem"), "domain": rec.get("domain"), "hub": rec.get("hub"),
+                "id": cid, "candidate": candidate, "subsystem": rec.get("subsystem"), "domain": rec.get("domain"),
+                "hub": rec.get("hub"),
                 "members": members, "missing_from_graph": [m for m in members if m not in nid_of],
                 "declared_links": len(links), "links_with_binding": bound_links, "status": status,
                 "internal_binding": dict(internal),
                 "cohesion": round(tot / (tot + external), 3) if tot + external else 0.0,
                 "best_evidence_composite": best, "jaccard": round(best_j, 3), "links": links})
-            g.nodes[sid]["claim_check"] = status
+            if sid:
+                g.nodes[sid]["claim_check"] = status
 
     def _cross_domain_links(self, dom_of: Dict[str, str]) -> None:
         """Links between files in different domains, from implemented or observed edges: direct code edges, and
@@ -4842,7 +4909,7 @@ def write_coverage_md(path: Path, meta: Dict[str, Any], g: Graph, b: "Builder") 
     L.append("|---|---:|---|")
     meaning = {"parsed_ast": "Python, parsed with ast: calls, state, flow", "parse_failed": "Python that did not parse",
                "parsed_regex": "Rust, Dart, Kotlin, Java: read with patterns, calls matched by name",
-               "scanned_launches": "shell, workflows, web: only the Python modules they launch",
+               "scanned_launches": "shell, workflows, service units, web: only the modules and scripts they launch",
                "scanned_references": "Markdown: the code, stores and organs it names",
                "not_analysed": "data, config, images and other files: listed, not read"}
     for st, n in sorted(c["files"].items(), key=lambda kv: -kv[1]):
@@ -4912,10 +4979,10 @@ def write_coverage_md(path: Path, meta: Dict[str, Any], g: Graph, b: "Builder") 
         L.append(f"Claim checks: " + ", ".join(f"{k} {v}" for k, v in sorted(c["claim_checks"].items())) + ".")
         if c["claim_disagreements"]:
             L.append("")
-            L.append(f"{len(c['claim_disagreements'])} layer assignment(s) differ between the mapping and "
-                     f"docs/LAYER_MODULE_OWNERSHIP.md:")
+            L.append(f"{len(c['claim_disagreements'])} layer anchor(s) of the ontology are placed differently "
+                     f"by the mapping:")
             for d in c["claim_disagreements"][:40]:
-                L.append(f"- `{d['module']}`: markdown {d['markdown_layer']}, mapping {d['mapping_layer']}")
+                L.append(f"- `{d['module']}`: ontology {d['anchor_layer']}, mapping {d['mapping_layer']}")
         if c["claims_missing"]:
             L.append("")
             L.append(f"{len(c['claims_missing'])} mapped path(s) have no module in the tree: "
@@ -5011,6 +5078,16 @@ def write_subsystems_md(path: Path, meta: Dict[str, Any], g: Graph, b: "Builder"
                          f"{chk.get('status', '-')}{': ' + '; '.join(chk['notes']) if chk.get('notes') else ''} |")
             L.append("")
     cross = getattr(b, "cross_domain", [])
+    cands = [c for c in getattr(b, "declared_composite_checks", []) if c.get("candidate")]
+    if cands:
+        L += ["## Composite candidates the record holds back", "",
+              "The record lists these as candidates, not composites, and their files stay base files. Each is checked "
+              "here like a declared composite, so a candidate whose links gain binding can be promoted.", ""]
+        for dc in cands:
+            L.append(f"- `{dc['id']}` ({dc['domain']}, {dc['subsystem']}): {len(dc['members'])} files, "
+                     f"{dc['links_with_binding']} of {dc['declared_links']} import links carry binding, "
+                     f"status {dc['status']}.")
+        L.append("")
     L += ["## Links across domains", "",
           f"{len(cross)} file pairs in different domains are joined by implemented or observed edges, or meet at one "
           "endpoint (method channel, Chaquopy call, HTTP route, frame). The 40 strongest:", "",

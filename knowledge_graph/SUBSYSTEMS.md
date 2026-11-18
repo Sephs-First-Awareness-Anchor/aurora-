@@ -1,7 +1,7 @@
 # Aurora's crystal ladder: declared responsibility against implemented and observed behaviour
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `2b5de7eaa60f`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
+Source commit `d9a335038080`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
 
 The repository is the king quasi. Each domain is a quasi, each declared subsystem a higher-order unit, and every file a base unit. Domains and subsystems are claims from the ownership mapping. A composite is promoted only when the graph shows its files bound by calls, instantiation, inheritance, spawns, callbacks, value flow or shared state; the mapping's own composites (built from imports) are listed beside them with how much of that binding their links carry. A conflict means the evidence points beyond the declared subsystem; it is a question to review, not a correction.
 
@@ -26,8 +26,6 @@ Declared: The kernel entry point, the host runner and the boot script.
 
 Declared: The kernel side of the bridge to her Python stack.
 
-- Declared composite `acm_bridge.1` (hub `aurora-acm/kernel/src/bridge/mod.rs`): 2 files, 0 of 1 import links carry binding, status import_only, closest evidence composite none.
-
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
 | `aurora-acm/kernel/src/bridge/mod.rs` | location | - | - | - | 0 | - |
@@ -36,8 +34,6 @@ Declared: The kernel side of the bridge to her Python stack.
 #### Higher order: ACM core (`subsys:category:acm_core`), 5 member(s)
 
 Declared: Axes, crystal, drift and sedi modules of the kernel.
-
-- Declared composite `acm_core.1` (hub `aurora-acm/kernel/src/acm/axes.rs`): 5 files, 0 of 7 import links carry binding, status import_only, closest evidence composite none.
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
@@ -50,8 +46,6 @@ Declared: Axes, crystal, drift and sedi modules of the kernel.
 #### Higher order: Constraint physics machine (`subsys:category:acm_cpm`), 3 member(s)
 
 Declared: CPM organs and scheduler.
-
-- Declared composite `acm_cpm.1` (hub `aurora-acm/kernel/src/cpm/mod.rs`): 3 files, 0 of 3 import links carry binding, status import_only, closest evidence composite none.
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
@@ -112,7 +106,7 @@ Declared: The instruction set, virtual machine and JIT.
 | `aurora-acm/kernel/src/xaurora/mod.rs` | location | - | - | - | 0 | - |
 | `aurora-acm/kernel/src/xaurora/vm.rs` | location | - | - | - | 0 | - |
 
-### Quasi: Desktop Aurora (`subsys:quasi:desktop`), 925 base file(s)
+### Quasi: Desktop Aurora (`subsys:quasi:desktop`), 929 base file(s)
 
 Declared: Her Python runtime and everything that runs, tests or maintains it on a computer.
 
@@ -332,7 +326,7 @@ Declared: Persistence, checkpoints, autonomy, runtime faults and health, metabol
 
 #### Higher order: Investigative and diagnostic (`subsys:category:investigative`), 45 member(s)
 
-Declared: Read-only observers, canaries, probes, shadows, audits, reports and test setup. The QuasiArch observer stays here.
+Declared: Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here.
 
 - Evidence composite `subsys:composite:investigative:4f4bb621`: 4 files, cohesion 0.155, binding {'INSTANTIATES': 2, 'CALLS': 14, 'FEEDS': 30, 'SHARED_STATE': 2}. Files: `aurora_internal/aurora_quasiarch_observer.py`, `aurora_internal/quasiarch_development_inquiry.py`, `aurora_internal/quasiarch_observer/dimensional_memory.py`, `aurora_internal/quasiarch_observer/ghost_relics.py`
 - Evidence composite `subsys:composite:investigative:605f7d51`: 2 files, cohesion 0.104, binding {'CALLS': 5}. Files: `aurora_genealogy_difference_shadow.py`, `aurora_genealogy_difference_shadow_report.py`
@@ -364,20 +358,20 @@ Declared: Read-only observers, canaries, probes, shadows, audits, reports and te
 | `aurora_internal/aurora_episode_slip_profiler.py` (also) | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
 | `aurora_internal/aurora_fault_audit.py` | reviewed | - | - | - | 0 | unverified |
 | `aurora_internal/aurora_pf1_5_instruments.py` (also) | reviewed | desktop, phone | desktop_turns | - | 0 | consistent |
-| `aurora_internal/aurora_quasiarch_observer.py` | reviewed | desktop, phone | desktop_boot, desktop_turns | quasiarch_observer | 2 | conflict: implements live organ(s) quasiarch_observer; writes 2 persisted store reference(s); ran in desktop_boot, desktop_turns |
+| `aurora_internal/aurora_quasiarch_observer.py` | reviewed | desktop, phone | desktop_boot, desktop_turns | quasiarch_observer | 2 | conflict: writes state that production code outside investigative work reads: store:qao_mutation_signal.json (read by aurora_daemon), store:runtime_state.json (read by flutter_app.android.app.src.main.python.aurora_historical_experience_environment) |
 | `aurora_internal/aurora_semantic_probe_battery.py` (also) | reviewed | desktop, phone | desktop_turns | - | 0 | consistent |
 | `aurora_internal/aurora_stack_trace_instrumentation.py` (also) | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
 | `aurora_internal/aurora_surface_doc.py` (also) | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
 | `aurora_internal/aurora_system_introspection.py` (also) | reviewed | desktop, phone | desktop_boot, desktop_turns | system_introspection | 4 | consistent |
 | `aurora_internal/dual_strata/mtsl_acceptance_report.py` | name_and_docstring | - | - | - | 0 | unverified |
 | `aurora_internal/dual_strata/perturbation_probe.py` (also) | reviewed | desktop, phone | - | - | 0 | consistent |
-| `aurora_internal/quasiarch_development_inquiry.py` | reviewed | desktop, phone | - | - | 0 | conflict: reachable from the desktop, phone runtime |
+| `aurora_internal/quasiarch_development_inquiry.py` | reviewed | desktop, phone | - | - | 0 | consistent |
 | `aurora_internal/quasiarch_observer/__init__.py` (also) | reviewed | - | desktop_boot | - | 0 | consistent |
 | `aurora_internal/quasiarch_observer/crystal_engine.py` (also) | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
-| `aurora_internal/quasiarch_observer/dimensional_memory.py` | reviewed | desktop, phone | desktop_boot, desktop_turns | - | 0 | conflict: ran in desktop_boot, desktop_turns |
+| `aurora_internal/quasiarch_observer/dimensional_memory.py` | reviewed | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
 | `aurora_internal/quasiarch_observer/dimensional_processing.py` (also) | reviewed | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
-| `aurora_internal/quasiarch_observer/ghost_relics.py` | reviewed | desktop, phone | desktop_boot | - | 0 | conflict: ran in desktop_boot |
-| `aurora_learning_probe.py` | reviewed | phone | - | learning_probe | 1 | conflict: implements live organ(s) learning_probe; writes 1 persisted store reference(s); reachable from the phone runtime |
+| `aurora_internal/quasiarch_observer/ghost_relics.py` | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
+| `aurora_learning_probe.py` | reviewed | phone | - | learning_probe | 1 | consistent |
 | `aurora_learning_report.py` | name_and_docstring | - | - | - | 0 | unverified |
 | `aurora_rank6_shadow_analysis.py` | name_and_docstring | - | - | - | 0 | consistent |
 | `aurora_representational_canary.py` | name_and_docstring | - | - | - | 0 | unverified |
@@ -387,9 +381,9 @@ Declared: Read-only observers, canaries, probes, shadows, audits, reports and te
 | `aurora_representational_emergence_observatory.py` | name_and_docstring | - | - | - | 0 | unverified |
 | `aurora_same_input_history_canary.py` | name_and_docstring | - | - | - | 0 | unverified |
 | `conftest.py` | reviewed | - | - | - | 0 | unverified |
-| `run_full_competency_gauntlet.py` | reviewed | - | - | - | 1 | conflict: writes 1 persisted store reference(s) |
-| `run_gauntlet.py` | reviewed | - | - | - | 2 | conflict: writes 2 persisted store reference(s) |
-| `run_probe_battery.py` | reviewed | - | - | - | 3 | conflict: writes 3 persisted store reference(s) |
+| `run_full_competency_gauntlet.py` | reviewed | - | - | - | 1 | unverified |
+| `run_gauntlet.py` | reviewed | - | - | - | 2 | conflict: writes state that production code outside investigative work reads: store:daemon.log (read by aurora_metabolic_distiller) |
+| `run_probe_battery.py` | reviewed | - | - | - | 3 | unverified |
 | `scripts/reset_quasiarch_observer_state.sh` | location | - | - | - | 0 | - |
 | `test_constraint_reasoner.py` | name_and_docstring | - | - | - | 0 | unverified |
 
@@ -421,7 +415,7 @@ Declared: Behavioral identity, language state, lexicon, grammar and word use.
 | `aurora_language_structure_fitness.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_self_grounding.py` | name_and_docstring | desktop, phone | desktop_turns | - | 0 | consistent |
 
-#### Higher order: Learning, dreams and development (`subsys:category:learning`), 42 member(s)
+#### Higher order: Learning, dreams and development (`subsys:category:learning`), 43 member(s)
 
 Declared: Training, dreams, curriculum, evolution chambers, curiosity and habitat.
 
@@ -472,6 +466,7 @@ Declared: Training, dreams, curriculum, evolution chambers, curiosity and habita
 | `aurora_internal/aurora_second_gen.py` | name_and_docstring | desktop | - | - | 0 | consistent |
 | `aurora_internal/aurora_variant_promotion.py` | name_and_docstring | desktop, phone | desktop_boot | variant_promoter | 0 | consistent |
 | `aurora_internal/lesson_replay.py` | name_and_docstring | - | - | - | 0 | consistent |
+| `aurora_learning_probe.py` (also) | reviewed | phone | - | learning_probe | 1 | consistent |
 | `aurora_possibility_selves.py` | name_and_docstring | desktop, phone | - | - | 4 | consistent |
 | `aurora_quantum_dream_substrate.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_reasoning_games.py` | name_and_docstring | - | - | - | 0 | consistent |
@@ -597,7 +592,7 @@ Declared: Representational resolution, propositions, the causal reasoning wavefo
 | `aurora_toroidal_circulation.py` | name_and_docstring | desktop, phone | desktop_turns | - | 2 | consistent |
 | `aurora_waveform_pressure.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | pressure_pump | 0 | consistent |
 
-#### Higher order: Entry and runtime (`subsys:category:runtime`), 25 member(s)
+#### Higher order: Entry and runtime (`subsys:category:runtime`), 29 member(s)
 
 Declared: Entry points, the turn loop, process orchestration, launchers and service units.
 
@@ -614,7 +609,11 @@ Declared: Entry points, the turn loop, process orchestration, launchers and serv
 | `aurora_internal/aurora_turn_compute_graph.py` | name_and_docstring | desktop, phone | desktop_turns | - | 0 | consistent |
 | `aurora_runtime.py` | name_and_docstring | desktop, phone | desktop_boot | - | 1 | consistent |
 | `corpus_runner.py` | name_and_docstring | desktop, phone | desktop_turns | curriculum_tension | 0 | consistent |
-| `reply_aurora.py` | name_and_docstring | - | - | - | 0 | conflict: declared runtime but not reachable from any recorded entry point; no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `deploy/aurora-strata-hub.service` | location | - | - | - | 0 | - |
+| `deploy/aurora-strata-room.service` | location | - | - | - | 0 | - |
+| `deploy/aurora-subsurface.service` | location | - | - | - | 0 | - |
+| `deploy/aurora-surface.service` | location | - | - | - | 0 | - |
+| `reply_aurora.py` | reviewed | - | - | - | 0 | conflict: declared runtime but not reachable from any recorded entry point; no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `run_aurora.py` | name_and_docstring | desktop | - | - | 0 | consistent |
 | `run_chain.py` | name_and_docstring | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `run_corpus.py` | name_and_docstring | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -701,7 +700,6 @@ Declared: The pytest suite. Each test lists the files it exercises.
 - Evidence composite `subsys:composite:tests:b277a8d4`: 2 files, cohesion 0.095, binding {'CALLS': 2, 'FEEDS': 2}. Files: `tests/test_representation_exchange.py`, `tests/test_resolution_ledger.py`
 - Declared composite `tests.1` (hub `tests/test_communication_bar.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:tests:40dfbc82` (overlap 1.0).
 - Declared composite `tests.2` (hub `tests/test_confluence.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:tests:14c6dc66` (overlap 1.0).
-- Declared composite `tests.3` (hub `tests/test_generation_collapse_regression.py`): 2 files, 0 of 1 import links carry binding, status import_only, closest evidence composite none.
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
@@ -1359,6 +1357,15 @@ Declared: GitHub Actions workflows for runs, clones, experiments, the APK and Py
 | `.github/workflows/build-apk.yml` | location | - | - | - | 0 | - |
 | `.github/workflows/flutter-android.yml` | location | - | - | - | 0 | - |
 | `.github/workflows/python-ci.yml` | location | - | - | - | 0 | - |
+
+## Composite candidates the record holds back
+
+The record lists these as candidates, not composites, and their files stay base files. Each is checked here like a declared composite, so a candidate whose links gain binding can be promoted.
+
+- `acm_bridge.1` (acm, acm_bridge): 2 files, 0 of 1 import links carry binding, status import_only.
+- `acm_core.1` (acm, acm_core): 5 files, 0 of 7 import links carry binding, status import_only.
+- `acm_cpm.1` (acm, acm_cpm): 3 files, 0 of 3 import links carry binding, status import_only.
+- `tests.3` (desktop, tests): 2 files, 0 of 1 import links carry binding, status import_only.
 
 ## Links across domains
 

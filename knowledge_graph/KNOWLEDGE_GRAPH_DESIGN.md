@@ -2,7 +2,7 @@
 
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Generator:** `scripts/aurora_knowledge_graph.py`, version 2.0.0, stdlib only, Python 3.9+
-**Built from:** `claude/knowledge-graph` at `2b5de7e` (main `f5c7beb` plus the ownership record of PR #262), with the desktop boot and turn recordings in `knowledge_graph/runtime/`.
+**Built from:** `claude/knowledge-graph` at `d9a3350` (main `f5c7beb` plus the ownership record of PR #262 at `a02d553`), with the desktop boot and turn recordings in `knowledge_graph/runtime/`.
 
 `// ⚙ Preemptive hardening applied — 6 known patterns enforced.` (authorship header, `aurora_` prefix, canonical X/T/N/B/A symbols, canonical I-State order, the exact re-entry sequence, 25 channels and 625 slots)
 
@@ -136,14 +136,16 @@ Committed recordings: `desktop_boot` (entry `aurora.boot_aurora`, 2,833 pairs) a
 3. **Higher order:** the record's subsystems (the category column), each `PART_OF` its declared domain. Members that sit in another domain are listed, not moved.
 4. **Composite:** two kinds, kept apart.
    - *Evidence composites* are promoted only on evidence: files bound by calls, flows, spawns or shared state, not by imports alone.
-   - *Declared composites* are the record's own. Each import link in one is checked for binding and the composite is marked `supported`, `partly_supported` or `import_only`, with the evidence composite it overlaps most.
+   - *Declared composites* are the record's own. Each import link in one is checked for binding and the composite is marked `supported`, `partly_supported` or `import_only`, with the evidence composite it overlaps most. The record's `composite_candidates` are checked the same way and listed apart; they are never promoted here.
 5. **Base:** the files, each with its claim check.
 
 Links across domains (a file in one domain joined by implemented or observed edges, or meeting at one endpoint, with a file in another) are listed in `coverage/composites.json` and at the end of `SUBSYSTEMS.md`.
 
 ## 9. Claims against the code
 
-Every claim the record makes about a file (layer, subsystem, duties, what it exercises) is checked against what the graph shows the file doing. The result is `consistent`, `conflict` or `unverified`, with the evidence profile behind it. A name is never taken as a job description: a claim with nothing in the code either way stays `unverified`.
+Every claim the record makes about a file (layer, subsystem, duties, what it exercises) is checked against what the graph shows the file doing. Layers and their names come from the record's `layers` and `files[path].layer`; the rendered `docs/LAYER_MODULE_OWNERSHIP.md` is not parsed, and the only layer cross-check is against the ontology's one anchor file per layer. The result is `consistent`, `conflict` or `unverified`, with the evidence profile behind it. A name is never taken as a job description: a claim with nothing in the code either way stays `unverified`.
+
+An investigative file may run live and keep its own records, as the QuasiArch observer and the learning probe do. It conflicts with its claim only when a store or bus slot it writes is read by production code outside investigative work. An entry point that fills bus slots in a systems dict it built for its own run is setting the run up, and that is noted, not flagged.
 
 ## 10. Comparing two builds
 
@@ -165,17 +167,19 @@ It also reports function identity changes, stored state, fault references, devel
 
 | measure | value |
 |---|---:|
-| nodes / edges | 34,499 / 160,682 |
+| nodes / edges | 34,504 / 160,696 |
 | Python modules parsed | 909 |
 | Rust, Dart, Kotlin, Java files read by pattern | 47 |
-| files listed but not read (data, config, images) | 3,380 |
-| method calls in Aurora's code with no static target | 34,972 |
-| of which untyped locals / dynamic receivers / untyped attributes | 20,768 / 5,322 / 3,686 |
-| library calls and calls on built-in values (not gaps) | 12,457 / 19,679 |
+| shell, workflow, service unit and web files scanned for what they launch | 31 |
+| files listed but not read (data, config, images) | 3,376 |
+| method calls in Aurora's code with no static target | 35,009 |
+| of which untyped locals / dynamic receivers / untyped attributes | 20,789 / 5,337 / 3,686 |
+| library calls and calls on built-in values (not gaps) | 12,461 / 19,693 |
 | organs with an implementing class | 100 of 181 |
 | nodes a recording entered | 7,289 |
 | thread and timer starts confirmed by a recording | 14 of 115 |
-| claim checks: consistent / conflict / unverified | 341 / 9 / 557 |
+| claim checks: consistent / conflict / unverified | 345 / 3 / 559 |
+| declared composites: supported / partly supported; candidates import_only | 35 / 15; 4 |
 
 ## 12. Limits, stated plainly
 

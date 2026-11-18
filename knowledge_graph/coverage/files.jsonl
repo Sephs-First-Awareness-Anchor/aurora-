@@ -3706,10 +3706,10 @@
 {"path": "corpus_runner.py", "status": "parsed_ast"}
 {"path": "crystalzip.py", "status": "parsed_ast"}
 {"path": "current_requirements.txt", "status": "not_analysed"}
-{"path": "deploy/aurora-strata-hub.service", "status": "not_analysed"}
-{"path": "deploy/aurora-strata-room.service", "status": "not_analysed"}
-{"path": "deploy/aurora-subsurface.service", "status": "not_analysed"}
-{"path": "deploy/aurora-surface.service", "status": "not_analysed"}
+{"path": "deploy/aurora-strata-hub.service", "status": "scanned_launches"}
+{"path": "deploy/aurora-strata-room.service", "status": "scanned_launches"}
+{"path": "deploy/aurora-subsurface.service", "status": "scanned_launches"}
+{"path": "deploy/aurora-surface.service", "status": "scanned_launches"}
 {"path": "docs/# AURORA RECURSIVE CREST PROPAGATION #U2014 IMPLEMENTATION DIRECTIVE.pdf", "status": "not_analysed"}
 {"path": "docs/# AURORA RECURSIVE CREST PROPAGATION — IMPLEMENTATION DIRECTIVE.pdf", "status": "not_analysed"}
 {"path": "docs/#U201cCoherence", "status": "not_analysed"}

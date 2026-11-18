@@ -340,12 +340,13 @@
       ]
     },
     "RUNS": {
-      "description": "A shell script or workflow launching a module.",
+      "description": "A shell script, workflow or service unit launching a module or a script.",
       "source": [
         "SourceFile"
       ],
       "target": [
-        "Module"
+        "Module",
+        "SourceFile"
       ]
     },
     "SPAWNS": {
