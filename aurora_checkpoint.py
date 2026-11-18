@@ -26,6 +26,7 @@ import threading
 import logging
 from typing import Dict, Optional, List, Callable
 from dataclasses import dataclass, field, asdict
+from aurora_persistence_utils import DictRecord
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class WriteResult(Enum):
 
 
 @dataclass
-class CorpusCursor:
+class CorpusCursor(DictRecord):
     """Tracks exact position in corpus ingestion."""
     file_id:    str   = ""
     file_path:  str   = ""
@@ -62,16 +63,9 @@ class CorpusCursor:
         self.chunk_id     = chunk_id
         self.total_items_processed += 1
 
-    def to_dict(self) -> Dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> "CorpusCursor":
-        return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
-
 
 @dataclass
-class RollingStats:
+class RollingStats(DictRecord):
     """Rolling statistics that survive crashes."""
     defs_learned:      int   = 0
     relations_added:   int   = 0
@@ -81,13 +75,6 @@ class RollingStats:
     rejected:          int   = 0
     session_start:     float = field(default_factory=time.time)
     total_save_count:  int   = 0
-
-    def to_dict(self) -> Dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> "RollingStats":
-        return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
 
 
 @dataclass

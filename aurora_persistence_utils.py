@@ -138,22 +138,25 @@ from typing import List
 
 logger = logging.getLogger(__name__)
 
+class DictRecord:
+    """Mixin for flat dataclasses: field-order to_dict and a from_dict that ignores unknown keys."""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]):
+        return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
+
+
 @dataclass
-class DeviceRecord:
+class DeviceRecord(DictRecord):
     """Record of a device that has hosted Aurora."""
     hostname:      str
     last_seen:     float
     last_sync:     float
     session_count: int   = 1
     notes:         str   = ""
-
-    def to_dict(self) -> Dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> "DeviceRecord":
-        return cls(**{k: v for k, v in d.items()
-                      if k in cls.__dataclass_fields__})
 
 
 class DeviceAwareness:

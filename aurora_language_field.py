@@ -32,6 +32,7 @@ import os
 import sys
 import time
 from dataclasses import asdict, dataclass, field
+from aurora_persistence_utils import DictRecord
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -139,7 +140,7 @@ class ProtoLanguage:
 
 
 @dataclass
-class LSAEntry:
+class LSAEntry(DictRecord):
     """
     One crossing path in the Lexical-Semantic Archive.
     Two-factor gate: n_cost ↓ with use, b_gate ↑ with use.
@@ -168,13 +169,6 @@ class LSAEntry:
     receiver_outcome_mean:   float = 0.0
     last_receiver_label:     str = ""
     last_evidence_confidence: float = 0.0
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: dict) -> "LSAEntry":
-        return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
 
 
 # ---------------------------------------------------------------------------

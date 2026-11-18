@@ -41,6 +41,7 @@ import threading
 import time
 from collections import OrderedDict, defaultdict, deque
 from dataclasses import dataclass, field, replace
+from aurora_persistence_utils import DictRecord
 from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 # ---------------------------------------------------------------------------
@@ -1338,16 +1339,13 @@ class TraceItem:
 # ---------------------------------------------------------------------------
 
 @dataclass
-class PressureVec:
+class PressureVec(DictRecord):
     """5-axis pressure vector. Higher = worse."""
     X: float = 0.0
     T: float = 0.0
     N: float = 0.0
     B: float = 0.0
     A: float = 0.0
-
-    def to_dict(self) -> Dict[str, float]:
-        return {"X": self.X, "T": self.T, "N": self.N, "B": self.B, "A": self.A}
 
     def relief_from(self, earlier: "PressureVec") -> "PressureVec":
         """Component-wise: earlier - self (positive means pressure dropped)."""

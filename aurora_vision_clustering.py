@@ -38,6 +38,7 @@ import urllib.parse
 from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field, asdict
+from aurora_persistence_utils import DictRecord
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ except ImportError as _aurora_boundary_exc:
 # ============================================================================
 
 @dataclass
-class VisualFeatureVector:
+class VisualFeatureVector(DictRecord):
     """Feature vector for a single image."""
     image_path:   str
     image_hash:   str
@@ -105,14 +106,6 @@ class VisualFeatureVector:
             self.saturation,
             min(self.aspect_ratio, 3.0) / 3.0,
         ]
-
-    def to_dict(self) -> Dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> "VisualFeatureVector":
-        return cls(**{k: v for k, v in d.items()
-                      if k in cls.__dataclass_fields__})
 
 
 class FeatureExtractor:
@@ -228,7 +221,7 @@ class FeatureExtractor:
 # ============================================================================
 
 @dataclass
-class VisualCluster:
+class VisualCluster(DictRecord):
     """A cluster of visually similar images."""
     cluster_id:    str
     centroid:      List[float]   # 8-dim centroid
@@ -255,14 +248,6 @@ class VisualCluster:
         distances = [_euclidean(self.centroid, v) for v in vectors]
         avg_dist = sum(distances) / len(distances)
         return max(0.0, 1.0 - avg_dist)
-
-    def to_dict(self) -> Dict:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> "VisualCluster":
-        return cls(**{k: v for k, v in d.items()
-                      if k in cls.__dataclass_fields__})
 
 
 def _euclidean(a: List[float], b: List[float]) -> float:

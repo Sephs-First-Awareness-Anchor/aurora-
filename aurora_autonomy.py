@@ -44,6 +44,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Callable, Tuple
 from dataclasses import dataclass, field
+from aurora_persistence_utils import DictRecord
 from datetime import datetime, date
 from enum import Enum, auto
 
@@ -139,7 +140,7 @@ class AutonomyBoundaries:
 # ============================================================================
 
 @dataclass
-class DailyQuotas:
+class DailyQuotas(DictRecord):
     """Tracks daily usage against limits."""
     date: str = field(default_factory=lambda: str(date.today()))
     inquiries_used: int = 0
@@ -161,17 +162,6 @@ class DailyQuotas:
             self.files_read = 0
             self.dreams_used = 0
             logger.info("[AUTONOMY] Daily quotas reset for new day")
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "date": self.date,
-            "inquiries_used": self.inquiries_used,
-            "study_cycles_used": self.study_cycles_used,
-            "observations_used": self.observations_used,
-            "speakups_count": self.speakups_count,
-            "files_read": self.files_read,
-            "dreams_used": self.dreams_used,
-        }
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'DailyQuotas':

@@ -87,6 +87,7 @@ import json
 import os
 import time
 from dataclasses import dataclass
+from aurora_persistence_utils import DictRecord
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -204,7 +205,7 @@ def _log_violation(state_dir: Optional[Path], reason: str, detail: Dict[str, Any
 # ============================================================================
 
 @dataclass
-class CommittedPrediction:
+class CommittedPrediction(DictRecord):
     message_id: str
     prev_hash: str
     entry_hash: str
@@ -215,20 +216,6 @@ class CommittedPrediction:
     axis_signature: str
     projected_accuracy: float
     committed_at: float
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "message_id": self.message_id,
-            "prev_hash": self.prev_hash,
-            "entry_hash": self.entry_hash,
-            "topic": self.topic,
-            "affect": self.affect,
-            "intent_type": self.intent_type,
-            "certainty_band": self.certainty_band,
-            "axis_signature": self.axis_signature,
-            "projected_accuracy": self.projected_accuracy,
-            "committed_at": self.committed_at,
-        }
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "CommittedPrediction":

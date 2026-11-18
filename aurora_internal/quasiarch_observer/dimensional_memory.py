@@ -26,6 +26,7 @@ import os
 import shutil
 import uuid
 from dataclasses import dataclass, field
+from aurora_persistence_utils import DictRecord
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
@@ -239,7 +240,7 @@ class DataNode:
 # ══════════════════════════════════════════════════════════════════════════════
 
 @dataclass
-class LineageEdge:
+class LineageEdge(DictRecord):
     """
     A directed edge in the crystal lineage graph.
 
@@ -253,17 +254,6 @@ class LineageEdge:
     child_order    : str = ""
     transition_type: str = ""   # "promotion" | "collapse" | "rotation_spawn"
     created_at     : str = field(default_factory=_utcnow)
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "edge_id"        : self.edge_id,
-            "parent_id"      : self.parent_id,
-            "parent_order"   : self.parent_order,
-            "child_id"       : self.child_id,
-            "child_order"    : self.child_order,
-            "transition_type": self.transition_type,
-            "created_at"     : self.created_at,
-        }
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "LineageEdge":

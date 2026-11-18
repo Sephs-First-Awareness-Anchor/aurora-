@@ -110,6 +110,7 @@ import hashlib
 import numpy as np
 from typing import Dict, List, Any, Optional, Tuple, Set, FrozenSet
 from dataclasses import dataclass, field
+from aurora_persistence_utils import DictRecord
 from collections import defaultdict
 from enum import Enum, IntEnum
 
@@ -1990,7 +1991,7 @@ class HeatLevel(Enum):
 # ============================================================================
 
 @dataclass
-class ContradictionRecord:
+class ContradictionRecord(DictRecord):
     """A stored contradiction as a first-class object."""
     contradiction_id: str
     claim_a:         str
@@ -2001,24 +2002,6 @@ class ContradictionRecord:
     resolution_note: str = ""
     created_at:      float = field(default_factory=time.time)
     resolved_at:     float = 0.0
-
-    def to_dict(self) -> Dict:
-        return {
-            "contradiction_id": self.contradiction_id,
-            "claim_a": self.claim_a,
-            "claim_b": self.claim_b,
-            "source_a": self.source_a,
-            "source_b": self.source_b,
-            "status": self.status,
-            "resolution_note": self.resolution_note,
-            "created_at": self.created_at,
-            "resolved_at": self.resolved_at,
-        }
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> 'ContradictionRecord':
-        return cls(**{k: v for k, v in d.items()
-                      if k in cls.__dataclass_fields__})
 
 
 class ContradictionLedger:

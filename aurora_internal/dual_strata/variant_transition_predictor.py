@@ -30,6 +30,7 @@ import json
 import os
 import time
 from dataclasses import dataclass
+from aurora_persistence_utils import DictRecord
 from typing import Any, Dict, List, Optional, Tuple
 
 SCHEMA_VERSION = 1
@@ -39,7 +40,7 @@ DEFAULT_PREDICTION_LIMIT = 5
 
 
 @dataclass
-class TransitionRecord:
+class TransitionRecord(DictRecord):
     from_variant_id: str
     to_variant_id: str
     observation_count: int = 0
@@ -54,17 +55,6 @@ class TransitionRecord:
         if total <= 0:
             return 0.5  # neutral prior, no evidence yet -- matches the
         return round(self.outcome_positive / total, 4)  # convention used throughout MTSL
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "from_variant_id": self.from_variant_id,
-            "to_variant_id": self.to_variant_id,
-            "observation_count": self.observation_count,
-            "outcome_positive": self.outcome_positive,
-            "outcome_negative": self.outcome_negative,
-            "first_seen": self.first_seen,
-            "last_seen": self.last_seen,
-        }
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "TransitionRecord":
