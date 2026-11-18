@@ -137,12 +137,25 @@ class _FieldLock:
     def __init__(self) -> None:
         self._inner = threading.Lock()
         self.last_released = 0.0
+        # Who holds the field and since when -- diagnostics only, so a turn
+        # that waited too long can say what it was waiting behind.
+        self.holder = ""
+        self.held_since = 0.0
+
+    def _took(self) -> None:
+        self.holder = threading.current_thread().name
+        self.held_since = time.time()
 
     def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
-        return self._inner.acquire(blocking, timeout)
+        got = self._inner.acquire(blocking, timeout)
+        if got:
+            self._took()
+        return got
 
     def release(self) -> None:
         self.last_released = time.time()
+        self.holder = ""
+        self.held_since = 0.0
         self._inner.release()
 
     def locked(self) -> bool:
@@ -150,6 +163,7 @@ class _FieldLock:
 
     def __enter__(self) -> bool:
         self._inner.acquire()
+        self._took()
         return True
 
     def __exit__(self, *exc) -> None:
@@ -157,6 +171,38 @@ class _FieldLock:
 
 
 _lock          = _FieldLock()
+
+# A live turn waiting for the field.  While one waits, no background source
+# starts anything new (see _background_breathing_room), so the present is
+# never queued behind a second background pass after the first one ends.
+_present_waiting: int = 0
+_present_waiting_lock = threading.Lock()
+
+
+def _present_is_waiting() -> bool:
+    return _present_waiting > 0
+
+
+class _PresentClaim:
+    """Take the field for a live turn, announcing the wait while it lasts.
+
+    Same lock, same serialisation as ``with _lock``; the only addition is
+    that background sources can see a turn is waiting and hold back.
+    """
+
+    def __enter__(self) -> bool:
+        global _present_waiting
+        with _present_waiting_lock:
+            _present_waiting += 1
+        try:
+            _lock.acquire()
+        finally:
+            with _present_waiting_lock:
+                _present_waiting -= 1
+        return True
+
+    def __exit__(self, *exc) -> None:
+        _lock.release()
 _boot_completed_at: float = 0.0
 # Background pacing (phone overload fix, 2026-11-07).  Every background
 # source -- historical replay, Praxis bridge, messenger and her reach-outs,
@@ -267,6 +313,10 @@ _CAMERA_ATTEND_RE = re.compile(
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
+# get_axis_state() reads her live state at most this often; the app polls
+# every second and the overlay every two, so one reading serves both.
+_AXIS_LIVE_MIN_INTERVAL_S: float = 0.9
+_axis_live_read_at: float = 0.0
 
 # Hardware body — battery, motion, light — pushed from Kotlin SensorManager.
 # Aurora perceives these as her own physical substrate: battery = energy, motion = movement, etc.
@@ -1727,7 +1777,9 @@ def _start_curiosity_engine(systems: dict) -> None:
         from aurora_tool_mind import ToolChoiceObserver  # type: ignore
 
         dim = systems.get("dimensional")
-        pressure_src = getattr(dim, "pressure_vec", None) if dim else None
+        # The engine reads pressure through ``_current_pressure_vec()``; the
+        # dimensional system itself is that source (it has no pressure_vec).
+        pressure_src = dim if (dim is not None and hasattr(dim, "_current_pressure_vec")) else None
         field_map_raw = getattr(dim, "field_map", None) if dim else None
         field_map = getattr(field_map_raw, "field_map", None) or field_map_raw
 
@@ -2273,6 +2325,8 @@ def _background_breathing_room(now: float = 0.0, *, yield_to_messenger: bool = T
     (phone fix, 2026-11-08: the faster loops always took the quiet window
     first and the messenger starved)."""
     now = now or time.time()
+    if _present_is_waiting():
+        return False
     if yield_to_messenger and _messenger_waiting():
         return False
     if _boot_completed_at <= 0.0 or now - _boot_completed_at < BOOT_SETTLE_S:
@@ -4980,8 +5034,9 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
             _admission_started = _tp_hm.perf_counter()
             try:
                 if _lock.locked():
-                    _record_turn_state(_turn_id, "surface_queued")
-                with _lock:
+                    _record_turn_state(_turn_id, "surface_queued",
+                                       field_holder=str(getattr(_lock, "holder", "") or ""))
+                with _PresentClaim():
                     _systems["_current_turn_id"] = _turn_id
                     _record_turn_state(
                         _turn_id, "surface_processing",
@@ -5427,7 +5482,15 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         if not _admitted:
             with _box_lock:
                 _box_state["delivered"] = True
-            _record_turn_state(_turn_id, "transport_failure", error="turn_admission_timeout")
+            # Nothing failed in transport: the field was busy the whole time.
+            # The turn is still queued and its answer arrives as a late
+            # completion; say what it waited behind.
+            _held_since = float(getattr(_lock, "held_since", 0.0) or 0.0)
+            _record_turn_state(
+                _turn_id, "timeout", error="turn_admission_timeout",
+                field_holder=str(getattr(_lock, "holder", "") or ""),
+                field_held_s=round(time.time() - _held_since, 1) if _held_since else None,
+            )
             return ""
 
         _surface_arrived = _box_event.wait(_SURFACE_WAIT_TIMEOUT_S)
@@ -8540,6 +8603,11 @@ def get_axis_state() -> str:
     Called from OverlayService.kt every 2 s via Chaquopy.
     """
     import json as _json
+    global _axis_live_read_at
+    now = time.time()
+    if now - _axis_live_read_at >= _AXIS_LIVE_MIN_INTERVAL_S:
+        _axis_live_read_at = now
+        _refresh_axis_state_from_systems()
     with _axis_state_lock:
         return _json.dumps(_last_axis_state)
 
@@ -8708,35 +8776,65 @@ def get_concept_crystal_state() -> str:
     return _json.dumps({"stats": stats, "top_nodes": top_nodes})
 
 
+def _live_pressure_axes() -> Optional[dict]:
+    """Her live pressure, read from the dimensional system each time it is asked.
+
+    DimensionalSystems has no ``pressure_vec`` attribute; the live reading is
+    its ``_current_pressure_vec()`` method (manifold aggregate plus the load of
+    whatever is active right now).  It is called every poll so the face moves
+    with her between turns, not only after one.  A turn can be reshaping the
+    crystals while the poll runs; that read is simply skipped and the next
+    poll catches up, with no fault recorded, because nothing failed.
+    """
+    if _systems is None:
+        return None
+    dim = _systems.get("dimensional")
+    reader = getattr(dim, "_current_pressure_vec", None) if dim is not None else None
+    if not callable(reader):
+        return None
+    try:
+        pv = reader()
+    except RuntimeError:
+        return None
+    if pv is None:
+        return None
+    out: dict = {}
+    for k in ("X", "T", "N", "B", "A"):
+        v = pv.get(k) if isinstance(pv, dict) else getattr(pv, k, None)
+        if v is None:
+            return None
+        out[k] = round(float(v), 4)
+    return out
+
+
 def _refresh_axis_state_from_systems() -> None:
-    """Pull current axis values from systems into the overlay cache."""
+    """Bring the face's live reading up to date.
+
+    X/T/N/B/A stay her expressed activation (written after each turn from
+    ``_prev_axis_activation``, Repair P).  Pressure is a separate live channel
+    under ``"pressure"`` so the face can show strain and relief as they happen
+    without overwriting what she last expressed.  The identity field's
+    per-axis pressure is the fallback when the dimensional reading is not
+    available.
+    """
     if _systems is None:
         return
     try:
-        axes: dict = {}
-        # Priority 1: dimensional system pressure vector
-        dim = _systems.get("dimensional")
-        if dim is not None:
-            pv = getattr(dim, "pressure_vec", None)
-            if isinstance(pv, dict):
-                axes = pv
-            elif pv is not None and hasattr(pv, "__iter__"):
-                for k, v in zip(["X", "T", "N", "B", "A"], pv):
-                    axes[k] = float(v)
-        # Priority 2: identity field axis_activation
-        if not axes:
+        pressure = _live_pressure_axes()
+        if pressure is None:
             ifield = _systems.get("identity_field")
-            if ifield is not None:
-                aa = getattr(ifield, "axis_activation", None)
-                if isinstance(aa, dict):
-                    axes = aa
-                elif aa is not None and hasattr(aa, "__iter__"):
-                    for k, v in zip(["X", "T", "N", "B", "A"], aa):
-                        axes[k] = float(v)
-        if axes:
-            with _axis_state_lock:
+            reader = getattr(ifield, "axis_pressure", None) if ifield is not None else None
+            if callable(reader):
+                pressure = {k: round(float(reader(i)), 4) for i, k in enumerate(("X", "T", "N", "B", "A"))}
+        activation = _systems.get("_prev_axis_activation")
+        with _axis_state_lock:
+            if isinstance(activation, dict) and activation:
                 for k in ("X", "T", "N", "B", "A"):
-                    _last_axis_state[k] = float(axes.get(k, 0.5))
+                    if k in activation:
+                        _last_axis_state[k] = float(activation[k])
+            if pressure:
+                _last_axis_state["pressure"] = pressure
+                _last_axis_state["pressure_at"] = round(time.time(), 3)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -8745,7 +8843,6 @@ def _refresh_axis_state_from_systems() -> None:
             exc=_aurora_boundary_exc,
             context={"function": "_refresh_axis_state_from_systems", "handler_line": 6537, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
         )
-        pass
 
 
 _EVO_BURST_CMD = re.compile(
@@ -9542,7 +9639,7 @@ def _self_monitor_loop() -> None:
             try:
                 from aurora_internal.aurora_turn_persistence import (
                     any_due as _any_due, flush_due as _flush_due)
-                if _any_due() and _lock.acquire(blocking=False):
+                if _any_due() and not _present_is_waiting() and _lock.acquire(blocking=False):
                     try:
                         _flush_due()
                     finally:
