@@ -97,6 +97,8 @@ Every node id is `<prefix>:<qualified name>`, readable and stable across builds:
 
 `aurora_state/x.json` and `state_dir / "x.json"` resolve to the same `store:x.json`. A recorded path such as `a/b/../../c.py` is normalised before it is matched, and per-run temp files become `<tempfile>`, so two runs meet on the same nodes.
 
+A module-level name bound to a function (`_clamp = clamp`), or to the nested function a factory returns (`_aurora_fault = bind_fault_recorder(__name__, "x.py")`), resolves to that definition, so calls through it keep their target. A class-level table of command names that a method calls through `getattr(self, name)` gives each listed method a CALLS edge.
+
 ## 5. Node types (25)
 
 Repository, Package, Module, Class, Function, Constant, Field, ExternalDependency, SourceFile, Endpoint, Signal, StateStore, BusChannel, Organ, EnvVar, Layer, Subsystem, ConstraintAxis, IStatePair, NonCompDimension, NonComp, ManifoldEntry, Concept, DoctrineRule, Document.
@@ -161,18 +163,18 @@ An investigative file may run live and keep its own records, as the QuasiArch ob
 | removed_with_code | the source or target was deleted |
 | lost | none of the above: the connection is gone |
 
-It also reports function identity changes, stored state, fault references, developmental records, module dependency shifts, diagnostic (logging) calls, evidence composites by overlap, and focus areas. `comparisons/TRIM_COMPARISON.md` is the comparison of main against the trim branch.
+It also reports function identity changes, stored state, fault references, developmental records, module dependency shifts, diagnostic (logging) calls, evidence composites by overlap, and focus areas. `comparisons/TRIM_COMPARISON.md` is the comparison of main (`f5c7beb`) against the restored trim branch (`75f1cef`), each built with this generator, the record at `a02d553` and its own recordings.
 
 ## 11. Coverage on this build
 
 | measure | value |
 |---|---:|
-| nodes / edges | 34,504 / 160,696 |
+| nodes / edges | 34,505 / 160,702 |
 | Python modules parsed | 909 |
 | Rust, Dart, Kotlin, Java files read by pattern | 47 |
 | shell, workflow, service unit and web files scanned for what they launch | 31 |
 | files listed but not read (data, config, images) | 3,376 |
-| method calls in Aurora's code with no static target | 35,009 |
+| method calls in Aurora's code with no static target | 35,011 |
 | of which untyped locals / dynamic receivers / untyped attributes | 20,789 / 5,337 / 3,686 |
 | library calls and calls on built-in values (not gaps) | 12,461 / 19,693 |
 | organs with an implementing class | 100 of 181 |

@@ -5263,6 +5263,7 @@
 {"builtin_value": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._polyglot_endpoints.py_target"}
 {"builtin_value": 3, "external": 3, "owner": "fn:scripts.aurora_knowledge_graph.Builder._registry"}
 {"builtin_value": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder._resolve_organ_receivers"}
+{"builtin_value": 4, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._returned_closure"}
 {"builtin_value": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder._rust_edges"}
 {"builtin_value": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._scopes"}
 {"builtin_value": 1, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder._slot"}
@@ -5285,7 +5286,7 @@
 {"builtin_value": 16, "external": 5, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_hierarchy"}
 {"builtin_value": 4, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_imports"}
 {"builtin_value": 3, "external": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_intent"}
-{"external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_module_aliases"}
+{"external": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_module_aliases"}
 {"builtin_value": 1, "external": 2, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_other_sources"}
 {"builtin_value": 4, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_polyglot"}
 {"builtin_value": 2, "external": 1, "owner": "fn:scripts.aurora_knowledge_graph.Builder.pass_runtime"}
