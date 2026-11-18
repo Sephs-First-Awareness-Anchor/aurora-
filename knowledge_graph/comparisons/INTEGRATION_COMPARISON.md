@@ -1,11 +1,11 @@
 # Architectural comparison
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Base `b649850b28ff` (claude/knowledge-graph), head `311eb097b936` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and a2b190674a85.
+Base `b649850b28ff` (claude/knowledge-graph), head `ebb54d370fbc` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and 54faf04a3973.
 
 ## 1. Function lineage
 
-17556 functions in base, 17591 in head. 1414 kept their identity with a changed body; 11 changed identity (moved or renamed); 25 were removed; 70 are new.
+17556 functions in base, 17605 in head. 1419 kept their identity with a changed body; 11 changed identity (moved or renamed); 26 were removed; 85 are new.
 
 A changed identity breaks any record keyed by the old id (lineage, provenance, fault and test references).
 
@@ -41,6 +41,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - removed: `fn:aurora_internal.constraint_genealogy._clamp`; still-present callers in base: `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger.__init__`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._compression_efficiency_for_pair`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._maintenance_discount`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._record_promotion_outcome`; ran in desktop_boot,desktop_turns
 - removed: `fn:aurora_ivm.ContradictionRecord.from_dict`; still-present callers in base: `fn:aurora_ivm.ContradictionLedger.load`
 - removed: `fn:aurora_language_field.LSAEntry.from_dict`; still-present callers in base: `fn:aurora_language_field.LanguageField._load_lsa`
+- removed: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection`; still-present callers in base: `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured`
 - removed: `fn:aurora_runtime._clamp`; still-present callers in base: `fn:aurora_runtime.ChainSimBridge._forward_to_sim`
 - removed: `fn:aurora_simulation_engine._clamp`; still-present callers in base: `fn:aurora_simulation_engine.ConsciousLearner.generate_pool`, `fn:aurora_simulation_engine.ConsciousLearner.import_state`, `fn:aurora_simulation_engine.SimulatedAvatar._behavior_adjustment`, `fn:aurora_simulation_engine.SimulatedAvatar._dimension_pressure_adjustment`; ran in desktop_turns
 - removed: `fn:aurora_vision_clustering.VisualCluster.from_dict`; still-present callers in base: `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`; ran in desktop_boot
@@ -51,6 +52,16 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - new: `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`, called by `fn:aurora_checkpoint.CheckpointManager.restore`, `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`, `fn:aurora_ivm.ContradictionLedger.load`, `fn:aurora_language_field.LanguageField._load_lsa`
 - new: `fn:aurora_internal.aurora_shared_helpers.clamp`, called by `fn:aurora_behavioral_identity.BehavioralIdentityEngine._apply_identity_homeostasis`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._constraint_axes`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._identity_floor_ratio`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._pressure_axes`
 - new: `fn:aurora_praxis_bridge.PraxisBridge.rebind_systems`, called by `fn:aurora_praxis_bridge.start_praxis_bridge`, `fn:tests.test_praxis_shared_state_and_discovery.test_rebind_with_the_same_dict_changes_nothing`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier`, `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref`, `fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._native_structural_finders_available`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier`, `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_from_candidates`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_was_attempted`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured`, `fn:aurora_representational_resolution.RepresentationalResolutionEngine.peek_projection`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured`
+- new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection`, called by `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured`
 - new: `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation`, called by `fn:aurora_representational_resolution.record_ref_participation_from_scores`, `fn:tests.test_habitat_discovery_canary_build717.test_habitat_discovery_canary_fails_on_samples_alone_no_genuine_learning`, `fn:tests.test_habitat_motivation_build717.test_earned_resolution_genuinely_increases_relevance_after_being_earned`
 - new: `fn:aurora_runtime.RuntimeCLI._cmd_actions`, called by `fn:aurora_runtime.RuntimeCLI._dispatch`
 - new: `fn:aurora_runtime.RuntimeCLI._cmd_answer`, called by `fn:aurora_runtime.RuntimeCLI._dispatch`
@@ -89,12 +100,17 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - new: `fn:tests.test_cognition_gap_wiring.test_no_curiosity_process_without_open_loops`, no static caller
 - new: `fn:tests.test_cognition_gap_wiring.test_open_curiosity_loops_is_a_snapshot_the_engine_still_owns`, no static caller
 - new: `fn:tests.test_cognition_gap_wiring.test_registered_gap_is_the_dict_the_curiosity_engine_reads`, no static caller
-- new: `fn:tests.test_perspective_merge_repair._fresh`, called by `fn:tests.test_perspective_merge_repair.test_episode_end_hooks_do_not_raise`, `fn:tests.test_perspective_merge_repair.test_observation_never_stages_and_restores_the_hold`, `fn:tests.test_perspective_merge_repair.test_projection_event_records_the_staged_candidate`
+- new: `fn:tests.test_perspective_merge_repair._fresh`, called by `fn:tests.test_perspective_merge_repair.test_episode_end_hooks_do_not_raise`, `fn:tests.test_perspective_merge_repair.test_no_mirror_bootstrap_walks_one_field_at_a_time`, `fn:tests.test_perspective_merge_repair.test_observation_leaves_a_consumers_pending_projection_and_reads`, `fn:tests.test_perspective_merge_repair.test_observation_never_stages_and_restores_the_hold`
 - new: `fn:tests.test_perspective_merge_repair.test_duplicate_projected_views_keep_one_cheapest_lens`, no static caller
 - new: `fn:tests.test_perspective_merge_repair.test_episode_end_hooks_do_not_raise`, no static caller
+- new: `fn:tests.test_perspective_merge_repair.test_no_mirror_bootstrap_walks_one_field_at_a_time`, no static caller
+- new: `fn:tests.test_perspective_merge_repair.test_observation_leaves_a_consumers_pending_projection_and_reads`, no static caller
 - new: `fn:tests.test_perspective_merge_repair.test_observation_never_stages_and_restores_the_hold`, no static caller
 - new: `fn:tests.test_perspective_merge_repair.test_observer_and_consumer_are_separate_methods_again`, no static caller
 - new: `fn:tests.test_perspective_merge_repair.test_projection_event_records_the_staged_candidate`, no static caller
+- new: `fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart`, no static caller
+- new: `fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart._Engine.record_participation`, no static caller
+- new: `fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart._Engine.record_pressure_observation`, no static caller
 - new: `fn:tests.test_pf3_1_cooccurrence_hub_leak._run`, called by `fn:tests.test_pf3_1_cooccurrence_hub_leak.test_cooccurrence_relations_excluded_from_context_enrichment`, `fn:tests.test_pf3_1_cooccurrence_hub_leak.test_mixed_relations_keep_only_non_cooccurrence`, `fn:tests.test_pf3_1_cooccurrence_hub_leak.test_non_cooccurrence_relations_still_enrich_context`
 - new: `fn:tests.test_praxis_shared_state_and_discovery._FakeGateway.__init__`, no static caller
 - new: `fn:tests.test_praxis_shared_state_and_discovery._FakeGateway.receive`, no static caller
@@ -110,15 +126,10 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - new: `fn:tests.test_praxis_shared_state_and_discovery.test_second_boot_rebinds_the_running_bridge_to_the_new_organism`, no static caller
 - new: `fn:tests.test_praxis_shared_state_and_discovery.test_witnessed_context_lands_in_her_own_systems_dict`, no static caller
 - new: `fn:tests.test_undefined_names_in_live_paths._undefined_names`, called by `fn:tests.test_undefined_names_in_live_paths.test_no_new_undefined_names`
-- new: `fn:tests.test_undefined_names_in_live_paths.test_comprehension_lookup_derives_its_own_prompt_text`, no static caller
-- new: `fn:tests.test_undefined_names_in_live_paths.test_no_new_undefined_names`, no static caller
-- new: `fn:tests.test_undefined_names_in_live_paths.test_phone_habitat_reset_answers_when_no_habitat`, no static caller
-- new: `fn:tests.test_undefined_names_in_live_paths.test_phone_habitat_reset_reports_success`, no static caller
-- new: `fn:tests.test_undefined_names_in_live_paths.test_phone_habitat_reset_reports_success._Habitat.reset`, no static caller
 
 ## 2. Relationships: consolidated against lost
 
-2264 relationships of base are not in head (structure and documentation edges left out). 1424 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 3 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 73 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 214 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 98 went with code that was removed. 139 are lost: the source still exists and no longer reaches the target by any of those routes. 2603 relationships are new.
+2289 relationships of base are not in head (structure and documentation edges left out). 1425 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 6 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 73 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 214 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 110 went with code that was removed. 148 are lost: the source still exists and no longer reaches the target by any of those routes. 2725 relationships are new.
 
 ### Retargeted: 313
 
@@ -127,87 +138,99 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - 6 CALLS to `from_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`
 - 5 FEEDS to `from_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`
 
-### Delegated through a module binding: 3
+### Delegated through a module binding: 6
 
-- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `projection_event` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `investigate_if_pressured` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `structural_projection_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `unresolved_field_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `ref_from_ability_id` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 
 ### Folded into a shared function: 73
 
 - 28 FEEDS to `to_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 2 READS to `created_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `B` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `observation_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `status` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `source_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `committed_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `message_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `edge_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `speakups_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `last_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `outcome_negative` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `date` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `T` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `source_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `certainty_band` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `outcome_positive` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `inquiries_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `child_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `claim_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `B` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `from_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `child_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `edge_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `N` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `source_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `T` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `transition_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `outcome_positive` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `parent_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `dreams_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `committed_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `outcome_negative` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `contradiction_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `observation_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `source_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `date` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `topic` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `child_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `study_cycles_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `resolution_note` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 
 ### Seen only in the base run: 214
 
 - 5 CALLS to `to_dict` now through ``
-- 3 CALLS to `get_stats` now through ``
 - 3 CALLS to `strengthen` now through ``
-- 2 CALLS to `warp_params` now through ``
-- 2 CALLS to `representation_discrepancy` now through ``
-- 2 CALLS to `semantic_coherence` now through ``
+- 3 CALLS to `get_stats` now through ``
 - 2 CALLS to `attach_live_response_simulation_bridge` now through ``
-- 2 CALLS to `coherence_index` now through ``
-- 2 CALLS to `looks_like_correction` now through ``
-- 2 CALLS to `activation` now through ``
-- 2 CALLS to `constraint_axes` now through ``
 - 2 CALLS to `load` now through ``
+- 2 CALLS to `warp_params` now through ``
+- 2 CALLS to `semantic_coherence` now through ``
+- 2 CALLS to `coherence_index` now through ``
 - 2 CALLS to `is_identity_question` now through ``
-- 1 CALLS to `summary` now through ``
-- 1 CALLS to `inject_into_oets` now through ``
-- 1 CALLS to `grounding_gap_strategy` now through ``
-- 1 CALLS to `reason_through_dominant` now through ``
-- 1 CALLS to `variance` now through ``
-- 1 CALLS to `recall_semantic` now through ``
-- 1 CALLS to `grounding_index` now through ``
-- 1 CALLS to `derive_self_application` now through ``
+- 2 CALLS to `looks_like_correction` now through ``
+- 2 CALLS to `constraint_axes` now through ``
+- 2 CALLS to `activation` now through ``
+- 2 CALLS to `representation_discrepancy` now through ``
+- 1 CALLS to `chain_down5_understanding` now through ``
+- 1 CALLS to `relevance_features_for_item` now through ``
+- 1 CALLS to `recall_confidence_boost` now through ``
+- 1 CALLS to `build_layer_profile` now through ``
+- 1 CALLS to `check_and_extend` now through ``
+- 1 CALLS to `causal_score` now through ``
 - 1 CALLS to `trajectory` now through ``
-- 1 CALLS to `add_term` now through ``
-- 1 CALLS to `semantic_translation_text` now through ``
-- 1 CALLS to `add_example` now through ``
-- 1 CALLS to `emit_trace_warp_signals` now through ``
-- 1 CALLS to `evolve_generation` now through ``
-- 1 CALLS to `surface_recent_context_horizon` now through ``
-- 1 CALLS to `check_repetition` now through ``
-- 1 CALLS to `build_sensory_native_meaning` now through ``
+- 1 CALLS to `maturity` now through ``
+- 1 CALLS to `classify_domain` now through ``
+- 1 CALLS to `distance_to` now through ``
+- 1 CALLS to `memory_sweep_snapshot` now through ``
+- 1 CALLS to `coarse_pos` now through ``
+- 1 CALLS to `should_prefer_live_perspective` now through ``
+- 1 CALLS to `emotional_state` now through ``
+- 1 CALLS to `response_is_grounded` now through ``
+- 1 CALLS to `relevant` now through ``
+- 1 CALLS to `gap_signature` now through ``
 
-### Lost (review each): IMPORTS 127, FEEDS 9, PART_OF 1, READS 1, MEMBER_OF 1
+### Lost (review each): IMPORTS 127, FEEDS 17, CALLS 1, MEMBER_OF 1, PART_OF 1, READS 1
 
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:356]
 - `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context` [base aurora_braid_wiring.py:255]
+- `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:424]
 - `fn:aurora_representational_address.RepresentationalRef.for_c1` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base tests/test_habitat_discovery_canary_build717.py:286]
-- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation` FEEDS `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref` [base aurora_representational_resolution.py:721]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier` FEEDS `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref` [base aurora_representational_resolution.py:413]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection` [base aurora_representational_resolution.py:363]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:356]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:356]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` [base aurora_representational_resolution.py:354]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` [base aurora_representational_resolution.py:370]
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_consequence` [base aurora_representational_resolution.py:739]
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event` [base aurora_representational_resolution.py:741]
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` [base aurora_representational_resolution.py:745]
 - `fn:aurora_representational_resolution.get_or_create_engine` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base aurora_representational_resolution.py:860]
+- `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection` [base aurora_representational_resolution.py:389]
+- `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:386]
 - `fn:tests.test_habitat_motivation_build717._drive_real_pressure` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base tests/test_habitat_motivation_build717.py:381]
 - `fn:tests.test_pf3_1_cooccurrence_hub_leak._build_fake_engine` FEEDS `fn:aurora_expression_perception.ExpressionPerceptionEngine._build_expression` [base tests/test_pf3_1_cooccurrence_hub_leak.py:100]
 - `mod:aurora-acm.native.aurora_acm_native` IMPORTS `ext:math` [base aurora-acm/native/aurora_acm_native.py:23]
@@ -341,8 +364,10 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `subsys:area:scripts` PART_OF `subsys:quasi:desktop` [base ?:0]
 - `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output` [base aurora.py:35899]
 
-### Removed with deleted code: FEEDS 98
+### Removed with deleted code: FEEDS 103, WRITES 3, CALLS 2, READS 2
 
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event` [base aurora_representational_resolution.py:423]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier` [base aurora_representational_resolution.py:403]
 - `field:aurora_internal.aurora_correspondence_loop.CommittedPrediction.committed_at` FEEDS `fn:aurora_internal.aurora_correspondence_loop.CommittedPrediction.to_dict` [base aurora_internal/aurora_correspondence_loop.py:220]
 - `field:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.first_seen` FEEDS `fn:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.to_dict` [base aurora_internal/dual_strata/variant_transition_predictor.py:59]
 - `field:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.child_id` FEEDS `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` [base aurora_internal/quasiarch_observer/dimensional_memory.py:258]
@@ -421,10 +446,8 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `fn:aurora_internal.constraint_genealogy._clamp` FEEDS `field:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._gradient_axis_ema` [base aurora_internal/constraint_genealogy.py:8999]
 - `fn:aurora_internal.constraint_genealogy._clamp` FEEDS `field:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._last_promotion_tick` [base aurora_internal/constraint_genealogy.py:2209]
 - `fn:aurora_internal.constraint_genealogy._clamp` FEEDS `field:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._training_plateau_pressure` [base aurora_internal/constraint_genealogy.py:8312]
-- `fn:aurora_internal.constraint_genealogy._clamp` FEEDS `field:aurora_internal.constraint_genealogy.GenealogyDilationGovernor._relief_history` [base aurora_internal/constraint_genealogy.py:1687]
-- `fn:aurora_internal.constraint_genealogy._clamp` FEEDS `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._compression_efficiency_for_pair` [base aurora_internal/constraint_genealogy.py:8959]
 
-### Consolidated: CALLS 1412, FEEDS 7, READS 3, WRITES 2
+### Consolidated: CALLS 1413, FEEDS 9, READS 2, WRITES 1
 
 - `fn:aurora.AxisProjector.project` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:3646]
 - `fn:aurora.ConstraintFieldBalancer._inject_to_genealogy` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:4347]
@@ -681,12 +704,19 @@ Logging calls: 431 in base, 431 in head.
 
 ### Interaction handling
 
-1 seed node(s); 69516 relationships around them in base, 70306 in head; 136 lost (not consolidated), 2568 new.
+1 seed node(s); 69516 relationships around them in base, 70375 in head; 143 lost (not consolidated), 2648 new.
 - lost: `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context`
+- lost: `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection`
 - lost: `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output`
 - lost: `fn:aurora_representational_address.RepresentationalRef.for_c1` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`
-- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation` FEEDS `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier` FEEDS `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates`
 - lost: `fn:aurora_representational_resolution.get_or_create_engine` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`
+- lost: `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection`
+- lost: `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection`
 - lost: `fn:tests.test_habitat_motivation_build717._drive_real_pressure` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`
 - lost: `fn:tests.test_pf3_1_cooccurrence_hub_leak._build_fake_engine` FEEDS `fn:aurora_expression_perception.ExpressionPerceptionEngine._build_expression`
 - lost: `mod:aurora-acm.native.aurora_acm_native` IMPORTS `ext:math`
@@ -715,13 +745,6 @@ Logging calls: 431 in base, 431 in head.
 - lost: `mod:aurora_i_state_beings` IMPORTS `ext:hashlib`
 - lost: `mod:aurora_i_state_beings` IMPORTS `ext:math`
 - lost: `mod:aurora_image_ingestion` IMPORTS `ext:dataclasses`
-- lost: `mod:aurora_image_ingestion` IMPORTS `ext:math`
-- lost: `mod:aurora_internal.aurora_attention_engine` IMPORTS `ext:math`
-- lost: `mod:aurora_internal.aurora_capability_assimilator` IMPORTS `ext:hashlib`
-- lost: `mod:aurora_internal.aurora_capability_assimilator` IMPORTS `ext:time`
-- lost: `mod:aurora_internal.aurora_conversation_episode_compiler` IMPORTS `ext:math`
-- lost: `mod:aurora_internal.aurora_conversation_rubric_engine` IMPORTS `ext:hashlib`
-- lost: `mod:aurora_internal.aurora_corpus_lifecycle` IMPORTS `ext:os`
 
 ### Praxis
 

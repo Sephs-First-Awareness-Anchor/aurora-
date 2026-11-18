@@ -1,7 +1,7 @@
 # Aurora's crystal ladder: declared responsibility against implemented and observed behaviour
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `311eb097b936`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
+Source commit `ebb54d370fbc`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
 
 The repository is the king quasi. Each domain is a quasi, each declared subsystem a higher-order unit, and every file a base unit. Domains and subsystems are claims from the ownership mapping. A composite is promoted only when the graph shows its files bound by calls, instantiation, inheritance, spawns, callbacks, value flow or shared state; the mapping's own composites (built from imports) are listed beside them with how much of that binding their links carry. A conflict means the evidence points beyond the declared subsystem; it is a question to review, not a correction.
 
@@ -382,7 +382,7 @@ Declared: Observers, canaries, probes, shadows, audits, reports and test setup. 
 | `aurora_same_input_history_canary.py` | name_and_docstring | - | - | - | 0 | unverified |
 | `conftest.py` | reviewed | - | - | - | 0 | unverified |
 | `run_full_competency_gauntlet.py` | reviewed | - | - | - | 1 | unverified |
-| `run_gauntlet.py` | reviewed | - | - | - | 2 | conflict: writes state that production code outside investigative work reads: store:daemon.log (read by aurora_hub) |
+| `run_gauntlet.py` | reviewed | - | - | - | 2 | conflict: writes state that production code outside investigative work reads: store:daemon.log (read by aurora_metabolic_distiller) |
 | `run_probe_battery.py` | reviewed | - | - | - | 3 | unverified |
 | `scripts/reset_quasiarch_observer_state.sh` | location | - | - | - | 0 | - |
 | `test_constraint_reasoner.py` | name_and_docstring | - | - | - | 0 | unverified |
@@ -539,7 +539,7 @@ Declared: Representational resolution, propositions, the causal reasoning wavefo
 - Evidence composite `subsys:composite:reasoning:53271342`: 2 files, cohesion 0.061, binding {'CALLS': 10, 'FEEDS': 18}. Files: `aurora_internal/aurora_confluence.py`, `aurora_internal/aurora_propositional_understanding.py`
 - Evidence composite `subsys:composite:reasoning:7255ef84`: 2 files, cohesion 0.05, binding {'CALLS': 2, 'FEEDS': 4}. Files: `aurora_internal/aurora_contradiction_perception.py`, `aurora_internal/aurora_relation_pairs.py`
 - Evidence composite `subsys:composite:reasoning:7b47d38a`: 4 files, cohesion 0.051, binding {'CALLS': 3, 'FEEDS': 13, 'INSTANTIATES': 2}. Files: `aurora_internal/aurora_entropy_detector.py`, `aurora_internal/aurora_operator_composer.py`, `aurora_internal/aurora_strategic_horizon.py`, `aurora_internal/aurora_worth_evaluator.py`
-- Evidence composite `subsys:composite:reasoning:929f8dd5`: 7 files, cohesion 0.205, binding {'INHERITS': 1, 'CALLS': 88, 'FEEDS': 194, 'SHARED_STATE': 12, 'INSTANTIATES': 3}. Files: `aurora_internal/aurora_live_possibility_frontier.py`, `aurora_reflexive_interpreter.py`, `aurora_representational_address.py`, `aurora_representational_resolution.py`, `aurora_representational_resolution_base.py`, `aurora_thought_formation.py`, `aurora_waveform_pressure.py`
+- Evidence composite `subsys:composite:reasoning:929f8dd5`: 7 files, cohesion 0.217, binding {'INHERITS': 1, 'CALLS': 97, 'FEEDS': 208, 'SHARED_STATE': 12, 'INSTANTIATES': 3}. Files: `aurora_internal/aurora_live_possibility_frontier.py`, `aurora_reflexive_interpreter.py`, `aurora_representational_address.py`, `aurora_representational_resolution.py`, `aurora_representational_resolution_base.py`, `aurora_thought_formation.py`, `aurora_waveform_pressure.py`
 - Evidence composite `subsys:composite:reasoning:b1415b0b`: 4 files, cohesion 0.075, binding {'CALLS': 13, 'FEEDS': 28}. Files: `aurora_boundary_hypothesis.py`, `aurora_internal/aurora_comprehension_gap.py`, `aurora_internal/aurora_constraint_semantic_continuity.py`, `aurora_internal/aurora_recursive_causal_reasoning_waveform.py`
 - Declared composite `reasoning.1` (hub `aurora_representational_address.py`): 8 files, 8 of 8 import links carry binding, status supported, closest evidence composite `subsys:composite:reasoning:929f8dd5` (overlap 0.875).
 - Declared composite `reasoning.2` (hub `aurora_internal/aurora_constraint_semantic_continuity.py`): 5 files, 3 of 4 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:reasoning:b1415b0b` (overlap 0.8).

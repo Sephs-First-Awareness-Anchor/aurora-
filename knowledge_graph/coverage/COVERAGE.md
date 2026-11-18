@@ -1,7 +1,7 @@
 # What the knowledge graph covers, and what it does not
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `311eb097b936`, generator 2.0.0.
+Source commit `ebb54d370fbc`, generator 2.0.0.
 
 Nothing here is hidden by a summary: every unresolved call site is in `unresolved_calls.jsonl`, every file's status in `files.jsonl`, every claim check in `claims.json`, and every statically reachable function that no recorded run entered in `unobserved.json`.
 
@@ -17,18 +17,18 @@ Nothing here is hidden by a summary: every unresolved call site is in `unresolve
 
 ## Calls without a resolved target
 
-35048 method calls inside Aurora's code have no static target. External library calls and calls on built-in values are listed with their reason but not counted as gaps.
+35074 method calls inside Aurora's code have no static target. External library calls and calls on built-in values are listed with their reason but not counted as gaps.
 
 | reason | sites | what would resolve it |
 |---|---:|---|
-| untyped_local | 20788 | a type the code does not state (assignment from an untyped call) |
-| builtin_value | 19708 | nothing: str, dict, list and similar |
+| untyped_local | 20808 | a type the code does not state (assignment from an untyped call) |
+| builtin_value | 19720 | nothing: str, dict, list and similar |
 | external | 12496 | nothing: a library outside the repo |
-| dynamic_receiver | 5341 | the result of a call or subscript; runtime evidence |
-| untyped_attribute | 3692 | self.x whose class is never stated; an annotation or runtime evidence |
+| dynamic_receiver | 5342 | the result of a call or subscript; runtime evidence |
+| untyped_attribute | 3698 | self.x whose class is never stated; an annotation or runtime evidence |
 | untyped_module_state | 1987 | a module global whose type is not stated |
-| unknown_member | 1288 | a name the target class or module does not define (dynamic or inherited from outside) |
-| untyped_parameter | 1227 | a parameter without an annotation |
+| unknown_member | 1286 | a name the target class or module does not define (dynamic or inherited from outside) |
+| untyped_parameter | 1228 | a parameter without an annotation |
 | organ_receiver | 725 | systems[key] where the organ has no single implementing class |
 
 ## Edge basis
@@ -37,7 +37,7 @@ Every edge says how it is known. implemented: read from code. declared: stated i
 
 | basis | edges |
 |---|---:|
-| implemented | 137877 |
+| implemented | 137989 |
 | declared | 12845 |
 | observed | 4858 |
 | implemented+observed | 3721 |
@@ -46,7 +46,7 @@ Every edge says how it is known. implemented: read from code. declared: stated i
 
 ## Runtime evidence
 
-Recorded scenarios: desktop_boot, desktop_turns. 7335 nodes were observed. 4422 functions are statically reachable from the desktop entry points but were not entered in any recorded run.
+Recorded scenarios: desktop_boot, desktop_turns. 7335 nodes were observed. 4431 functions are statically reachable from the desktop entry points but were not entered in any recorded run.
 - `desktop_boot`: entry `aurora.boot_aurora`, completed True, 2833 call pairs, 350.4 s
 - `desktop_turns`: entry `aurora.process_external_user_turn`, completed True, 4598 call pairs, 39.9 s
 

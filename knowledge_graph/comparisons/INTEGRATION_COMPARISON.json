@@ -1,6 +1,6 @@
 {
  "base": "b649850b28ff7e94f4da2447bb23c3804ea68450",
- "head": "311eb097b936e4e7865ed7159ba23bd502a52ff0",
+ "head": "ebb54d370fbc2e00105d3d73f74be9335a8285f1",
  "lineage": {
   "moved": [
    [
@@ -81,6 +81,7 @@
    "fn:aurora_internal.constraint_genealogy._clamp",
    "fn:aurora_ivm.ContradictionRecord.from_dict",
    "fn:aurora_language_field.LSAEntry.from_dict",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
    "fn:aurora_runtime._clamp",
    "fn:aurora_simulation_engine._clamp",
    "fn:aurora_vision_clustering.VisualCluster.from_dict",
@@ -93,6 +94,16 @@
    "fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict",
    "fn:aurora_internal.aurora_shared_helpers.clamp",
    "fn:aurora_praxis_bridge.PraxisBridge.rebind_systems",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._native_structural_finders_available",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_from_candidates",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_was_attempted",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
    "fn:aurora_runtime.RuntimeCLI._cmd_actions",
    "fn:aurora_runtime.RuntimeCLI._cmd_answer",
@@ -134,9 +145,14 @@
    "fn:tests.test_perspective_merge_repair._fresh",
    "fn:tests.test_perspective_merge_repair.test_duplicate_projected_views_keep_one_cheapest_lens",
    "fn:tests.test_perspective_merge_repair.test_episode_end_hooks_do_not_raise",
+   "fn:tests.test_perspective_merge_repair.test_no_mirror_bootstrap_walks_one_field_at_a_time",
+   "fn:tests.test_perspective_merge_repair.test_observation_leaves_a_consumers_pending_projection_and_reads",
    "fn:tests.test_perspective_merge_repair.test_observation_never_stages_and_restores_the_hold",
    "fn:tests.test_perspective_merge_repair.test_observer_and_consumer_are_separate_methods_again",
    "fn:tests.test_perspective_merge_repair.test_projection_event_records_the_staged_candidate",
+   "fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart",
+   "fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart._Engine.record_participation",
+   "fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart._Engine.record_pressure_observation",
    "fn:tests.test_pf3_1_cooccurrence_hub_leak._run",
    "fn:tests.test_praxis_shared_state_and_discovery._FakeGateway.__init__",
    "fn:tests.test_praxis_shared_state_and_discovery._FakeGateway.receive",
@@ -1295,12 +1311,16 @@
    "fn:aurora_reflexive_interpreter.ReflexiveInterpreter.interpret",
    "fn:aurora_reflexive_interpreter._project_noncomp_state",
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine._clear_frontier_if_pressure_resolved",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier",
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event",
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_state",
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine.complete_field_inquiry",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+   "fn:aurora_representational_resolution.RepresentationalResolutionEngine.peek_projection",
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine.provisional_resolution",
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
    "fn:aurora_representational_resolution.build_perspective_projections",
+   "fn:aurora_representational_resolution.record_ref_participation_from_scores",
    "fn:aurora_response_teacher.DuckDuckGoCollector.collect",
    "fn:aurora_response_teacher.HackerNewsCollector.collect",
    "fn:aurora_response_teacher.HumanResponseTeacher._log_session",
@@ -1570,6 +1590,7 @@
    "fn:tests.test_fault_instrumentation_injector.test_multiline_handler_body_unaffected_in_placement",
    "fn:tests.test_fault_instrumentation_injector.test_multiline_tuple_exception_header_is_handled",
    "fn:tests.test_fault_instrumentation_injector.test_single_line_handler_body_is_split_not_prepended",
+   "fn:tests.test_habitat_discovery_canary_build717.test_habitat_discovery_canary_phase_a_bootstrap_evaluation",
    "fn:tests.test_pf3_1_cooccurrence_hub_leak.test_cooccurrence_relations_excluded_from_context_enrichment",
    "fn:tests.test_pf3_1_cooccurrence_hub_leak.test_mixed_relations_keep_only_non_cooccurrence",
    "fn:tests.test_pf3_1_cooccurrence_hub_leak.test_non_cooccurrence_relations_still_enrich_context"
@@ -1585,6 +1606,19 @@
      [
       "aurora_braid_wiring.py",
       255
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      424
      ]
     ],
     "observed": false,
@@ -1621,17 +1655,99 @@
     "via": null
    },
    {
-    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier",
     "type": "FEEDS",
     "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref",
     "evidence": [
      [
       "aurora_representational_resolution.py",
-      721
+      413
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      363
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      356
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      356
      ],
      [
       "aurora_representational_resolution.py",
-      743
+      386
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      356
+     ],
+     [
+      "aurora_representational_resolution.py",
+      386
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      354
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      370
      ]
     ],
     "observed": false,
@@ -1692,6 +1808,32 @@
      [
       "tests/test_habitat_motivation_build717.py",
       381
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      389
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      386
      ]
     ],
     "observed": false,
@@ -8492,6 +8634,45 @@
    }
   ],
   "delegated": [
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      354
+     ]
+    ],
+    "observed": false,
+    "via": "cls:aurora_representational_resolution.RepresentationalResolutionEngine"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine._ref_from_ability_id",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      383
+     ]
+    ],
+    "observed": false,
+    "via": "cls:aurora_representational_resolution.RepresentationalResolutionEngine"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      370
+     ]
+    ],
+    "observed": false,
+    "via": "cls:aurora_representational_resolution.RepresentationalResolutionEngine"
+   },
    {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
     "type": "CALLS",
@@ -28246,6 +28427,32 @@
     "via": null
    },
    {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution._complete_candidate_capacity",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      340
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution._complete_candidate_capacity",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      340
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
     "type": "CALLS",
     "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.inadequacy_pressure",
@@ -28272,34 +28479,13 @@
     "via": null
    },
    {
-    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
-    "type": "READS",
-    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref",
+    "source": "fn:aurora_representational_resolution._complete_candidate_capacity",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine._bootstrap_domain_hypotheses",
     "evidence": [
      [
       "aurora_representational_resolution.py",
-      707
-     ],
-     [
-      "aurora_representational_resolution.py",
-      721
-     ]
-    ],
-    "observed": false,
-    "via": null
-   },
-   {
-    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
-    "type": "WRITES",
-    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref",
-    "evidence": [
-     [
-      "aurora_representational_resolution.py",
-      721
-     ],
-     [
-      "aurora_representational_resolution.py",
-      743
+      337
      ]
     ],
     "observed": false,
@@ -34295,6 +34481,170 @@
     "via": null
    },
    {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      423
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      403
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "FEEDS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      413
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "FEEDS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._candidate_downstream_effects",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      422
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      423
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      403
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      358
+     ],
+     [
+      "aurora_representational_resolution.py",
+      388
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      423
+     ],
+     [
+      "aurora_representational_resolution.py",
+      424
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._candidate_downstream_effects",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      422
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      413
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._candidate_downstream_effects",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      422
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._provisional_reads",
+    "evidence": [
+     [
+      "aurora_representational_resolution.py",
+      421
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
     "source": "fn:aurora_simulation_engine._clamp",
     "type": "FEEDS",
     "target": "field:aurora_simulation_engine.SimulatedAvatar.difficulty_multiplier",
@@ -34983,6 +35333,26 @@
     "source": "field:aurora_representational_address.RepresentationalRef.nc_law_c",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
+   },
+   {
+    "source": "field:aurora_representational_address.RepresentationalRef.nc_law_c",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
+   },
+   {
+    "source": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_attempt_counts",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_was_attempted"
+   },
+   {
+    "source": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection"
+   },
+   {
+    "source": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine.genealogy",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._native_structural_finders_available"
    },
    {
     "source": "field:aurora_simulation_engine.ConsciousLearner._by_concept",
@@ -43215,9 +43585,24 @@
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
+    "source": "fn:aurora_representational_address.RepresentationalRef.decode",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
+   },
+   {
     "source": "fn:aurora_representational_address.RepresentationalRef.encode",
     "type": "FEEDS",
     "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_address.RepresentationalRef.encode",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event"
+   },
+   {
+    "source": "fn:aurora_representational_address.RepresentationalRef.encode",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection"
    },
    {
     "source": "fn:aurora_representational_address.RepresentationalRef.for_c1",
@@ -43235,6 +43620,41 @@
     "target": "fn:aurora_representational_resolution.build_perspective_projections"
    },
    {
+    "source": "fn:aurora_representational_address.RepresentationalRef.unresolved_fields",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution._complete_candidate_capacity"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_from_candidates"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution._complete_candidate_capacity"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates"
+   },
+   {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._clear_frontier_if_pressure_resolved",
     "type": "CALLS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_state"
@@ -43248,6 +43668,251 @@
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._clear_frontier_if_pressure_resolved",
     "type": "WRITES",
     "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.build_perspective_projections"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "FEEDS",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.build_perspective_projections"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._native_structural_finders_available"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.unresolved_fields"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.unresolved_fields"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.encode"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_state"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.encode"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._native_structural_finders_available",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine.genealogy"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.encode"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.unresolved_fields"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._native_structural_finders_available"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_from_candidates"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine._ref_from_ability_id"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.ensure_registered"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.inadequacy_pressure"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.encode"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.unresolved_fields"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_from_structural_sources"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.build_perspective_projections"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.ensure_registered"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.inadequacy_pressure"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "INSTANTIATES",
+    "target": "cls:aurora_internal.constraint_genealogy.TraceItem"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._cost_ledger"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine.genealogy"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._cost_ledger"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_from_candidates",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine._ref_from_ability_id"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_from_candidates",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_sources_from_candidates",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine._ref_from_ability_id"
    },
    {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_state",
@@ -43255,6 +43920,101 @@
     "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
    },
    {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_was_attempted",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_attempt_counts"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.encode"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier_event"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.encode"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "FEEDS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.encode"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._candidate_downstream_effects"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._candidate_downstream_effects"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._provisional_reads"
+   },
+   {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.complete_field_inquiry",
     "type": "CALLS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_state"
@@ -43275,6 +44035,71 @@
     "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
    },
    {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier_event"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_was_attempted"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._field_candidates_after_frontier"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._frontier_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier_event"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._refresh_frontier_once"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_projection"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.peek_projection",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_was_attempted"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.peek_projection",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.provisional_resolution",
     "type": "CALLS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured"
@@ -43293,6 +44118,11 @@
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.provisional_resolution",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.inadequacy_pressure"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._clear_frontier_if_pressure_resolved"
    },
    {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
@@ -43327,7 +44157,17 @@
    {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
     "type": "FEEDS",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
+    "type": "FEEDS",
     "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._clear_frontier_if_pressure_resolved"
    },
    {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
@@ -43362,6 +44202,11 @@
    {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
     "type": "READS",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
+    "type": "READS",
     "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_resolution_hold"
    },
    {
@@ -43372,6 +44217,11 @@
    {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
     "type": "WRITES",
+    "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation",
+    "type": "WRITES",
     "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_resolution_hold"
    },
    {
@@ -43387,9 +44237,24 @@
    {
     "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
     "type": "FEEDS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._provisional_reads"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
+    "type": "FEEDS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._clear_frontier_if_pressure_resolved"
    },
    {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
+    "type": "READS",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._provisional_reads"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
+    "type": "WRITES",
+    "target": "field:aurora_representational_resolution_base.RepresentationalResolutionEngine._provisional_reads"
+   },
+   {
     "source": "fn:aurora_representational_resolution._canonical_perspectives",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution._projection_priority"
@@ -43398,6 +44263,11 @@
     "source": "fn:aurora_representational_resolution._canonical_perspectives",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution._projection_view_key"
+   },
+   {
+    "source": "fn:aurora_representational_resolution._complete_candidate_capacity",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates"
    },
    {
     "source": "fn:aurora_representational_resolution._project",
@@ -43428,6 +44298,11 @@
     "source": "fn:aurora_representational_resolution.build_perspective_projections",
     "type": "CALLS",
     "target": "fn:aurora_representational_resolution._projection_view_key"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.build_perspective_projections",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._discover_projection_frontier"
    },
    {
     "source": "fn:aurora_representational_resolution.build_perspective_projections",
@@ -43445,14 +44320,29 @@
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
+    "source": "fn:aurora_representational_resolution.get_or_create_engine",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
+   },
+   {
     "source": "fn:aurora_representational_resolution.record_ref_participation_from_scores",
     "type": "CALLS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
     "source": "fn:aurora_representational_resolution.record_ref_participation_from_scores",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.record_ref_participation_from_scores",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
+   },
+   {
+    "source": "fn:aurora_representational_resolution.record_ref_participation_from_scores",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
    },
    {
     "source": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation",
@@ -43460,9 +44350,19 @@
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
+    "source": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine._candidate_pool"
+   },
+   {
     "source": "fn:aurora_representational_resolution_base._clip01",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
+   },
+   {
+    "source": "fn:aurora_representational_resolution_base._clip01",
+    "type": "FEEDS",
+    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
    },
    {
     "source": "fn:aurora_response_teacher.DuckDuckGoCollector.collect",
@@ -45465,6 +46365,11 @@
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
+    "source": "fn:tests.test_habitat_discovery_canary_build717.test_habitat_discovery_canary_phase_a_bootstrap_evaluation",
+    "type": "CALLS",
+    "target": "fn:aurora_habitat_motivation.resolved_context_for_axis"
+   },
+   {
     "source": "fn:tests.test_habitat_motivation_build717._drive_real_pressure",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
@@ -45530,6 +46435,46 @@
     "target": "fn:tests.test_perspective_merge_repair._fresh"
    },
    {
+    "source": "fn:tests.test_perspective_merge_repair.test_no_mirror_bootstrap_walks_one_field_at_a_time",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.for_c1"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_no_mirror_bootstrap_walks_one_field_at_a_time",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.unresolved_fields"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_no_mirror_bootstrap_walks_one_field_at_a_time",
+    "type": "CALLS",
+    "target": "fn:tests.test_perspective_merge_repair._fresh"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_no_mirror_bootstrap_walks_one_field_at_a_time",
+    "type": "FEEDS",
+    "target": "fn:tests.test_perspective_merge_repair._fresh"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_observation_leaves_a_consumers_pending_projection_and_reads",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.encode"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_observation_leaves_a_consumers_pending_projection_and_reads",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.for_c1"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_observation_leaves_a_consumers_pending_projection_and_reads",
+    "type": "CALLS",
+    "target": "fn:tests.test_perspective_merge_repair._fresh"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_observation_leaves_a_consumers_pending_projection_and_reads",
+    "type": "FEEDS",
+    "target": "fn:tests.test_perspective_merge_repair._fresh"
+   },
+   {
     "source": "fn:tests.test_perspective_merge_repair.test_observation_never_stages_and_restores_the_hold",
     "type": "CALLS",
     "target": "fn:aurora_representational_address.RepresentationalRef.for_c1"
@@ -45563,6 +46508,21 @@
     "source": "fn:tests.test_perspective_merge_repair.test_projection_event_records_the_staged_candidate",
     "type": "FEEDS",
     "target": "fn:tests.test_perspective_merge_repair._fresh"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_address.RepresentationalRef.for_c1"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart",
+    "type": "CALLS",
+    "target": "fn:aurora_representational_resolution.record_ref_participation_from_scores"
+   },
+   {
+    "source": "fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart",
+    "type": "INSTANTIATES",
+    "target": "cls:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart._Engine"
    },
    {
     "source": "fn:tests.test_pf3_1_cooccurrence_hub_leak._build_fake_engine",

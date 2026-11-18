@@ -138,12 +138,12 @@
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.data",
+     "field:aurora_internal.tool_registry.ToolResult.success",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.success",
+     "field:aurora_internal.tool_registry.ToolResult.data",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ]
@@ -359,12 +359,12 @@
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior.aspects",
+     "fn:aurora_internal.crystal_interior._profile",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior._profile",
+     "fn:aurora_internal.crystal_interior.aspects",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ]
@@ -986,7 +986,7 @@
      "field:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger.links"
     ]
    ],
-   "external_binding": 1126,
+   "external_binding": 1127,
    "higher_order": "subsys:category:genealogy",
    "id": "subsys:composite:genealogy:c9b3e419",
    "members": [
@@ -1957,7 +1957,7 @@
      "fn:aurora_expression_perception.infer_word_role"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.candidate_pressure",
+     "field:aurora_articulation.ArticulationDecision.accepted",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
@@ -1967,7 +1967,7 @@
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.selected",
+     "field:aurora_articulation.ArticulationDecision.original_pressure",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ]
@@ -2260,7 +2260,7 @@
      "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for"
     ],
     [
-     "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for",
+     "field:aurora_internal.aurora_worth_evaluator.WorthTrajectory.FALLING",
      "FEEDS",
      "fn:aurora_internal.aurora_operator_composer.OperatorComposer._parent_trajectory_ok"
     ],
@@ -2308,13 +2308,13 @@
   },
   {
    "binding": {
-    "CALLS": 88,
-    "FEEDS": 194,
+    "CALLS": 97,
+    "FEEDS": 208,
     "INHERITS": 1,
     "INSTANTIATES": 3,
     "SHARED_STATE": 12
    },
-   "cohesion": 0.205,
+   "cohesion": 0.217,
    "evidence": [
     [
      "cls:aurora_representational_resolution.RepresentationalResolutionEngine",
@@ -2427,7 +2427,7 @@
      "fn:aurora_internal.aurora_live_possibility_frontier._projection_contexts_for_candidate"
     ]
    ],
-   "external_binding": 1153,
+   "external_binding": 1160,
    "higher_order": "subsys:category:reasoning",
    "id": "subsys:composite:reasoning:929f8dd5",
    "members": [
@@ -2533,12 +2533,12 @@
     [
      "mod:aurora",
      "SHARES",
-     "organ:consciousness"
+     "organ:ExistenceMode"
     ],
     [
      "mod:aurora",
      "SHARES",
-     "organ:identity"
+     "organ:consciousness"
     ]
    ],
    "external_binding": 4197,
@@ -5209,7 +5209,7 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
+       "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
@@ -5219,7 +5219,7 @@
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
       [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
+       "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ]
@@ -5286,7 +5286,7 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
+       "field:aurora_internal.scouting.contracts.ScoutReport.contradictions"
       ],
       [
        "mod:aurora_internal.scouting.contracts",
@@ -5296,7 +5296,7 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.evidence_items"
+       "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
       ]
      ],
      "link": [
@@ -5722,12 +5722,12 @@
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior.aspects",
+       "fn:aurora_internal.crystal_interior._profile",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior._profile",
+       "fn:aurora_internal.crystal_interior.aspects",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ]
@@ -6908,7 +6908,7 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.B",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.N",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
@@ -6918,7 +6918,7 @@
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.X",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.T",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ]
@@ -10339,14 +10339,14 @@
   {
    "best_evidence_composite": "subsys:composite:reasoning:929f8dd5",
    "candidate": false,
-   "cohesion": 0.197,
+   "cohesion": 0.208,
    "declared_links": 8,
    "domain": "desktop",
    "hub": "aurora_representational_address.py",
    "id": "reasoning.1",
    "internal_binding": {
-    "CALLS": 88,
-    "FEEDS": 194,
+    "CALLS": 97,
+    "FEEDS": 208,
     "INHERITS": 1,
     "INSTANTIATES": 4,
     "SHARED_STATE": 12
@@ -10455,8 +10455,8 @@
     },
     {
      "binding": {
-      "CALLS": 16,
-      "FEEDS": 37
+      "CALLS": 22,
+      "FEEDS": 47
      },
      "evidence": [
       [
@@ -10509,8 +10509,8 @@
     },
     {
      "binding": {
-      "CALLS": 27,
-      "FEEDS": 63,
+      "CALLS": 30,
+      "FEEDS": 67,
       "INHERITS": 1,
       "SHARED_STATE": 11
      },
@@ -10755,7 +10755,7 @@
        "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for"
       ],
       [
-       "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for",
+       "field:aurora_internal.aurora_worth_evaluator.WorthTrajectory.FALLING",
        "FEEDS",
        "fn:aurora_internal.aurora_operator_composer.OperatorComposer._parent_trajectory_ok"
       ]
@@ -12388,7 +12388,7 @@
        "fn:aurora_internal.dual_strata.topology_tracker.TopologyFingerprint.from_signature"
       ],
       [
-       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.sinks",
+       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.regime",
        "FEEDS",
        "fn:aurora_internal.dual_strata.semantic_variant_registry.TopologyProfile.from_signature"
       ]

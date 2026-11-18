@@ -1,6 +1,6 @@
 {
  "authors": "Sunni (Sir) Morningstar & Cael Devo",
- "content_hash": "7ba6e0dcf46c84df930dd3dad14a3da2e7bcbe69f41404ae0f1e42341112a580",
+ "content_hash": "214628d0a7af863ab3fef27d90ac9862d924d54869a99a91d028aaf68c8ad1b2",
  "coverage": {
   "claim_checks": {
    "conflict": 1,
@@ -9,7 +9,7 @@
   },
   "edge_basis": {
    "declared": 12845,
-   "implemented": 137877,
+   "implemented": 137989,
    "implemented+inferred": 2,
    "implemented+observed": 3721,
    "inferred": 1555,
@@ -23,35 +23,35 @@
    "scanned_references": 106
   },
   "observed_nodes": 7335,
-  "unresolved_internal_calls": 35048,
+  "unresolved_internal_calls": 35074,
   "unresolved_reasons": {
-   "builtin_value": 19708,
-   "dynamic_receiver": 5341,
+   "builtin_value": 19720,
+   "dynamic_receiver": 5342,
    "external": 12496,
    "organ_receiver": 725,
-   "unknown_member": 1288,
-   "untyped_attribute": 3692,
-   "untyped_local": 20788,
+   "unknown_member": 1286,
+   "untyped_attribute": 3698,
+   "untyped_local": 20808,
    "untyped_module_state": 1987,
-   "untyped_parameter": 1227
+   "untyped_parameter": 1228
   }
  },
- "edge_count": 160858,
+ "edge_count": 160970,
  "edge_types": {
-  "CALLS": 28409,
+  "CALLS": 28444,
   "CITES": 345,
   "COMPOSED_OF": 300,
-  "CONTAINS": 29964,
+  "CONTAINS": 29979,
   "DOCUMENTS": 9620,
   "EMITS": 10,
   "EXPRESSES": 5119,
-  "FEEDS": 33189,
+  "FEEDS": 33234,
   "GOVERNS": 716,
   "HANDLES": 47,
   "IMPLEMENTED_BY": 151,
   "IMPORTS": 7549,
   "INHERITS": 150,
-  "INSTANTIATES": 5318,
+  "INSTANTIATES": 5320,
   "INVOKES": 101,
   "MAPS_TO": 5,
   "MEMBER_OF": 3256,
@@ -61,7 +61,7 @@
   "PASSES_CALLBACK": 589,
   "PERSISTS_TO": 104,
   "PRECEDES": 15,
-  "READS": 21377,
+  "READS": 21386,
   "REFERENCES": 1466,
   "REGISTERS": 607,
   "ROUTES_TO": 120,
@@ -70,15 +70,15 @@
   "SUBSCRIBES": 4,
   "TESTS": 1243,
   "USES_ORGAN": 1432,
-  "WRITES": 9248
+  "WRITES": 9254
  },
- "generated_at": "2026-11-18T19:29:26Z",
+ "generated_at": "2026-11-18T23:35:09Z",
  "generator": "scripts/aurora_knowledge_graph.py",
  "generator_version": "2.0.0",
- "node_count": 34532,
+ "node_count": 34547,
  "node_types": {
   "BusChannel": 340,
-  "Class": 1727,
+  "Class": 1728,
   "Concept": 37,
   "Constant": 2505,
   "ConstraintAxis": 5,
@@ -88,7 +88,7 @@
   "EnvVar": 53,
   "ExternalDependency": 126,
   "Field": 7038,
-  "Function": 17591,
+  "Function": 17605,
   "IStatePair": 5,
   "Layer": 10,
   "ManifoldEntry": 125,
@@ -142,8 +142,8 @@
  ],
  "schema_version": "2.0.0",
  "source_branch": "claude/aurora-integration-20261118",
- "source_commit": "311eb097b936e4e7865ed7159ba23bd502a52ff0",
- "static_content_hash": "a2b190674a853c8b7d166b6af8b724a74aaa60850e9b4a686d5d2df4b67b8563",
+ "source_commit": "ebb54d370fbc2e00105d3d73f74be9335a8285f1",
+ "static_content_hash": "54faf04a39732936e8ee3eb34bc112d961bc914c8aa520c1442ccabf4a7763c4",
  "title": "Aurora codebase knowledge graph",
  "warnings": []
 }
