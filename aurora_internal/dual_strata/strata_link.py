@@ -49,6 +49,22 @@ OWNERSHIP
   (FIX-A125): the active Surface checkpoints its state on the Subsurface
   device, and only a device presenting that checkpoint's token may claim.
 
+FENCING AND LIVED MOMENTS (surface restructure, 2026-11-18)
+  * The leaving device freezes on disk BEFORE it commits a checkpoint, and
+    home refuses a handoff commit from a source that has not frozen.  A lost
+    reply leaves the source frozen until home confirms there is no checkpoint
+    (or the source cancels), so a failed move never revives two surfaces.
+  * The client keeps its role, epoch and readiness on disk, so a device that
+    was the holder when it lost the link stays present away from home, and a
+    device that never was cannot start living on its own.
+  * Every lived moment is numbered (device, epoch, seq) by stamp_lived_moment.
+    A device that has since been superseded still delivers what it lived in
+    its own epochs (up to where its freeze sealed them); home integrates it
+    once, however late it comes.  Anything else waits on that device, kept.
+  * The outbox never evicts a lived turn.  Under storage pressure new turns
+    are kept in a compact form; if even that cannot be written the condition
+    is raised and the turn stays in the continuity feed.
+
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
@@ -79,7 +95,11 @@ HEALTH_PATH = "/strata/v1/health"
 
 MAX_BODY_BYTES = 4 * 1024 * 1024
 MAX_BATCH = 32
-MAX_OUTBOX_RECORDS = 5000
+MAX_OUTBOX_RECORDS = 5000      # soft budget: past it, new events are kept compact
+OUTBOX_MAX_BYTES = 32 * 1024 * 1024   # soft size budget for the outbox file
+LOW_FREE_BYTES = 64 * 1024 * 1024     # device free space below which turns go compact
+# Sensory detail a compact lived turn leaves out; identity, text and state stay.
+COMPACT_DROPS = ("visual_description", "audio_description", "recent_speech")
 MAX_CLOCK_SKEW_S = 300.0
 
 _PROJECTION_FILENAME = "subsurface_projection.json"
@@ -175,17 +195,27 @@ def verify(secret: str, timestamp: str, body: bytes, signature: str,
 class DurableOutbox:
     """Records waiting to cross the link, kept on disk until acknowledged.
 
-    kind "event": every record is kept, in order.
+    kind "event": every record is kept, in order, until acknowledged.  A lived
+                  event is never evicted, however long the link is down.
     kind "state": only the newest record of a channel is kept (latest wins),
                   so an unchanged or superseded state is never sent twice.
-    The outbox is bounded.  If it overflows, the OLDEST events are dropped and
-    counted in overflow_dropped -- reported, never silent.
+    The outbox has a soft budget (record count, file size, and the device's
+    free space).  Past it, new events are stored compact (COMPACT_DROPS left
+    out) and counted; a write that still fails raises OSError to the caller,
+    which keeps the event where it already was.  overflow_dropped is kept for
+    older readers and stays 0: nothing is dropped any more.
     """
 
-    def __init__(self, path: Path, *, max_records: int = MAX_OUTBOX_RECORDS) -> None:
+    def __init__(self, path: Path, *, max_records: int = MAX_OUTBOX_RECORDS,
+                 max_bytes: int = OUTBOX_MAX_BYTES, low_free_bytes: int = LOW_FREE_BYTES,
+                 free_space: Optional[Callable[[Path], int]] = None) -> None:
         self.path = Path(path)
         self.max_records = int(max_records)
+        self.max_bytes = int(max_bytes)
+        self.low_free_bytes = int(low_free_bytes)
+        self._free_space = free_space or _free_bytes
         self._lock = threading.RLock()
+        self.last_write_error = ""
 
     def _load(self) -> Dict[str, Any]:
         data = _read_json(self.path, {})
@@ -196,29 +226,55 @@ class DurableOutbox:
         return {
             "next_seq": max(int(data.get("next_seq", 1) or 1), highest + 1),
             "overflow_dropped": int(data.get("overflow_dropped", 0) or 0),
+            "compacted": int(data.get("compacted", 0) or 0),
             "seen": [str(s) for s in (data.get("seen") or [])][-400:],
             "records": records,
         }
 
+    def pressed(self, data: Optional[Dict[str, Any]] = None) -> bool:
+        """True when the outbox is past its budget or the device is short of space."""
+        data = data if data is not None else self._load()
+        if len(data["records"]) >= self.max_records:
+            return True
+        try:
+            if self.path.exists() and self.path.stat().st_size >= self.max_bytes:
+                return True
+        except OSError:
+            pass
+        try:
+            return int(self._free_space(self.path.parent)) < self.low_free_bytes
+        except Exception:
+            return False
+
     def append(self, channel: str, kind: str, payload: Any, *, dedupe_id: str = "") -> int:
-        """Returns the record's seq, or 0 when dedupe_id was already queued."""
+        """Returns the record's seq, or 0 when dedupe_id was already queued.
+        Raises OSError when the record cannot be written at all."""
         with self._lock:
             data = self._load()
             if dedupe_id:
                 if dedupe_id in data["seen"]:
                     return 0
-                data["seen"] = (data["seen"] + [dedupe_id])[-400:]
             if kind == "state":
                 data["records"] = [r for r in data["records"] if r.get("channel") != channel]
+            compact = False
+            if kind == "event" and isinstance(payload, dict) and self.pressed(data):
+                payload = {k: v for k, v in payload.items() if k not in COMPACT_DROPS}
+                payload["compact"] = True
+                compact = True
             seq = data["next_seq"]
             data["next_seq"] = seq + 1
             data["records"].append({"seq": seq, "channel": str(channel), "kind": str(kind),
                                     "at": time.time(), "payload": payload})
-            overflow = len(data["records"]) - self.max_records
-            if overflow > 0:
-                data["records"] = data["records"][overflow:]
-                data["overflow_dropped"] += overflow
-            _atomic_write_json(self.path, data)
+            if dedupe_id:
+                data["seen"] = (data["seen"] + [dedupe_id])[-400:]
+            if compact:
+                data["compacted"] += 1
+            try:
+                _atomic_write_json(self.path, data)
+            except OSError as exc:
+                self.last_write_error = f"{type(exc).__name__}: {exc}"[:200]
+                raise
+            self.last_write_error = ""
             return seq
 
     def pending(self, limit: int = MAX_BATCH) -> List[Dict[str, Any]]:
@@ -236,12 +292,78 @@ class DurableOutbox:
                 _atomic_write_json(self.path, data)
             return dropped
 
-    def stats(self) -> Dict[str, int]:
+    def stats(self) -> Dict[str, Any]:
         with self._lock:
             data = self._load()
-            return {"pending": len(data["records"]),
-                    "next_seq": data["next_seq"],
-                    "overflow_dropped": data["overflow_dropped"]}
+            out: Dict[str, Any] = {"pending": len(data["records"]),
+                                   "next_seq": data["next_seq"],
+                                   "overflow_dropped": data["overflow_dropped"]}
+            pressed = self.pressed(data)
+            if data["compacted"]:
+                out["compacted"] = data["compacted"]
+            if pressed or self.last_write_error:
+                out["condition"] = "storage_exhausted" if self.last_write_error else "storage_low"
+            if self.last_write_error:
+                out["last_write_error"] = self.last_write_error
+            return out
+
+
+def _free_bytes(path: Path) -> int:
+    probe = Path(path)
+    while not probe.exists() and probe != probe.parent:
+        probe = probe.parent
+    return int(shutil.disk_usage(str(probe)).free)
+
+
+# ---------------------------------------------------------------------------
+# Lived-moment numbering (device, epoch, seq)
+# ---------------------------------------------------------------------------
+
+_STAMP_LOCK = threading.RLock()
+
+
+def current_epoch(state_dir: Any, surface_id: str = "") -> int:
+    """The epoch this device last confirmed as holder.  A paired device reads
+    its own client state; the Subsurface device's own surface reads the
+    server record when it is the owner."""
+    root = link_dir(state_dir)
+    client = _read_json(root / "client_state.json", {})
+    if isinstance(client, dict) and client.get("epoch") is not None:
+        return int(client.get("epoch") or 0)
+    server = _read_json(root / "server_state.json", {})
+    if isinstance(server, dict) and (not surface_id or server.get("owner") == surface_id):
+        return int(server.get("epoch", 0) or 0)
+    return 0
+
+
+def lived_high_water(state_dir: Any) -> int:
+    """The last lived seq this device numbered in its current epoch."""
+    with _STAMP_LOCK:
+        surface_id = surface_identity(state_dir)
+        numbering = _read_json(link_dir(state_dir) / "lived_numbering.json", {})
+        if not isinstance(numbering, dict) or numbering.get("surface_id") != surface_id \
+                or int(numbering.get("epoch", -1)) != current_epoch(state_dir, surface_id):
+            return 0
+        return int(numbering.get("seq", 0) or 0)
+
+
+def stamp_lived_moment(state_dir: Any) -> Dict[str, Any]:
+    """Number one lived moment on this device: {surface_id, epoch, seq}.
+
+    The sequence restarts at 1 in each epoch, and is persisted before it is
+    returned, so a number is never reused after a crash."""
+    with _STAMP_LOCK:
+        root = link_dir(state_dir)
+        surface_id = surface_identity(state_dir)
+        epoch = current_epoch(state_dir, surface_id)
+        path = root / "lived_numbering.json"
+        numbering = _read_json(path, {})
+        if not isinstance(numbering, dict) or numbering.get("surface_id") != surface_id \
+                or int(numbering.get("epoch", -1)) != epoch:
+            numbering = {"surface_id": surface_id, "epoch": epoch, "seq": 0}
+        numbering["seq"] = int(numbering.get("seq", 0) or 0) + 1
+        _atomic_write_json(path, numbering)
+        return {"surface_id": surface_id, "epoch": epoch, "seq": numbering["seq"]}
 
 
 # ---------------------------------------------------------------------------
@@ -263,8 +385,13 @@ def collect_surface_uplink(state_dir: Any, outbox: DurableOutbox) -> int:
         if not packet_id:
             continue
         clean = {k: v for k, v in packet.items() if k not in ("consumed", "consumed_at")}
-        if outbox.append("continuity", "event", clean, dedupe_id=packet_id):
-            queued += 1
+        try:
+            if outbox.append("continuity", "event", clean, dedupe_id=packet_id):
+                queued += 1
+        except OSError:
+            # The outbox could not take it: the packets stay unconsumed in the
+            # feed, where they already are, and the condition shows in stats.
+            return queued
     if packets:
         read_and_clear_continuity_packets(state_dir)
     queued += _collect_sensory_snapshot(state_dir, outbox)
@@ -301,8 +428,10 @@ def _collect_sensory_snapshot(state_dir: Any, outbox: DurableOutbox) -> int:
         return 0
 
 
-def apply_uplink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
-    """Subsurface side.  Returns "applied", "duplicate" or "unknown_channel"."""
+def apply_uplink_record(state_dir: Any, record: Mapping[str, Any], *, late: bool = False) -> str:
+    """Subsurface side.  Returns "applied", "duplicate" or "unknown_channel".
+    ``late`` marks a continuity packet delivered by a device that has since
+    been superseded; it is integrated like any other, tagged as late."""
     channel = str(record.get("channel") or "")
     if channel == "raw_input" and isinstance(record.get("payload"), dict):
         payload = record["payload"]
@@ -311,7 +440,8 @@ def apply_uplink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
         return "applied"
     if channel == "continuity":
         from aurora_internal.dual_strata.surface_continuity_feed import deposit_continuity_packet
-        return "applied" if deposit_continuity_packet(state_dir, dict(record.get("payload") or {})) else "duplicate"
+        return "applied" if deposit_continuity_packet(state_dir, dict(record.get("payload") or {}),
+                                                      late=late) else "duplicate"
     if channel == "sensory_snapshot" and isinstance(record.get("payload"), dict):
         from aurora_internal.dual_strata.sensory_snapshot_channel import snapshot_path
         path = snapshot_path(state_dir)
@@ -422,7 +552,8 @@ class StrataLinkServer:
         self._thread: Optional[threading.Thread] = None
         self.counters: Dict[str, int] = {"syncs": 0, "applied": 0, "duplicates": 0,
                                          "unknown_channel": 0, "apply_errors": 0,
-                                         "rejected_signature": 0, "standby_syncs": 0}
+                                         "rejected_signature": 0, "standby_syncs": 0,
+                                         "late_applied": 0}
         self.last_error = ""
 
     # -- state --------------------------------------------------------------
@@ -439,7 +570,69 @@ class StrataLinkServer:
                 "last_seen": {str(k): float(v or 0.0) for k, v in dict(data.get("last_seen") or {}).items()},
                 "memo": dict(data.get("memo") or {}),
                 "handoff": dict(data["handoff"]) if isinstance(data.get("handoff"), dict) else None,
-                "migrations": [m for m in (data.get("migrations") or []) if isinstance(m, dict)][-20:]}
+                "migrations": [m for m in (data.get("migrations") or []) if isinstance(m, dict)][-20:],
+                "owner_epochs": self._owner_epochs(data),
+                # epoch -> the last lived seq its holder had when it froze
+                "sealed": {str(k): int(v or 0) for k, v in dict(data.get("sealed") or {}).items()}}
+
+    @staticmethod
+    def _owner_epochs(data: Mapping[str, Any]) -> Dict[str, str]:
+        """Which device held each epoch, so what a superseded device lived in
+        its own epochs can still be told apart from anything else."""
+        record = {str(k): str(v) for k, v in dict(data.get("owner_epochs") or {}).items() if v}
+        owner, epoch = str(data.get("owner") or ""), int(data.get("epoch", 0) or 0)
+        if owner and epoch and str(epoch) not in record:
+            record[str(epoch)] = owner
+        if len(record) > 500:
+            record = dict(sorted(record.items(), key=lambda kv: int(kv[0]))[-500:])
+        return record
+
+    def _take_ownership(self, state: Dict[str, Any], surface_id: str, now: float) -> None:
+        state["epoch"] += 1
+        state["owner"] = surface_id
+        state["claimed_at"] = now
+        state["owner_epochs"][str(state["epoch"])] = surface_id
+        # Staged downlink was prepared for the previous owner's numbering; the
+        # new owner starts its own.
+        self.outbox.ack(10 ** 18)
+        state["memo"] = {}
+
+    def _accept_from_superseded(self, state: Dict[str, Any], surface_id: str,
+                                records: List[Dict[str, Any]], up_ack: int) -> int:
+        """A device that is not the holder may still be carrying what it lived
+        while it was.  Continuity it lived in an epoch it held, up to where
+        that epoch was sealed by its freeze, is integrated (once, tagged
+        late).  Anything else waits on the device, unacknowledged, exactly as
+        a standby device's records always have: kept, never dropped."""
+        owned = {int(e) for e, sid in state["owner_epochs"].items() if sid == surface_id}
+        if not owned:
+            return up_ack
+        for record in sorted(records, key=lambda r: int(r.get("seq", 0) or 0)):
+            seq = int(record.get("seq", 0) or 0)
+            if seq <= up_ack:
+                self.counters["duplicates"] += 1
+                continue
+            payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
+            if record.get("channel") != "continuity" or record.get("kind") != "event":
+                break
+            if str(payload.get("surface_id") or surface_id) != surface_id:
+                break
+            if payload.get("epoch") is not None:
+                lived_epoch = int(payload.get("epoch") or 0)
+                sealed = state["sealed"].get(str(lived_epoch))
+                if lived_epoch not in owned or (sealed is not None and int(payload.get("seq", 0) or 0) > int(sealed)):
+                    break
+            try:
+                outcome = apply_uplink_record(self.state_dir, record, late=True)
+            except Exception as exc:
+                self.counters["apply_errors"] += 1
+                self.last_error = f"{type(exc).__name__}: {exc}"[:200]
+                break
+            self.counters["late_applied" if outcome == "applied" else "duplicates"] += 1
+            up_ack = seq
+            state["applied"][surface_id] = seq
+            _atomic_write_json(self._state_path, state)
+        return up_ack
 
     def downlink_enabled(self) -> bool:
         return (link_dir(self.state_dir) / "downlink_enabled").exists()
@@ -474,13 +667,7 @@ class StrataLinkServer:
                 else:
                     handoff["claimed_by"] = surface_id
             if not state["owner"] or wants_claim:
-                state["epoch"] += 1
-                state["owner"] = surface_id
-                state["claimed_at"] = now
-                # Staged downlink was prepared for the previous owner's
-                # numbering; the new owner starts its own.
-                self.outbox.ack(10 ** 18)
-                state["memo"] = {}
+                self._take_ownership(state, surface_id, now)
             active = state["owner"] == surface_id
             # Downlink numbering belongs to one (server instance, epoch).  A
             # Surface still holding an older key must not acknowledge by it.
@@ -518,12 +705,17 @@ class StrataLinkServer:
                     down = self.outbox.pending(MAX_BATCH)
             else:
                 self.counters["standby_syncs"] += 1
+                up_ack = self._accept_from_superseded(
+                    state, surface_id, [r for r in (request.get("up") or []) if isinstance(r, dict)], up_ack)
             _atomic_write_json(self._state_path, state)
             response = {"v": LINK_VERSION, "epoch": state["epoch"], "owner": state["owner"],
                         "role": "active" if active else "standby", "link_key": link_key,
                         "up_ack": up_ack, "down": down,
                         "downlink_enabled": self.downlink_enabled()}
             response["surface_ready"] = active and not bool(state.get("handoff"))
+            # Lets a source whose commit reply was lost learn whether the
+            # checkpoint landed (it stays frozen) or not (it may thaw).
+            response["handoff_from"] = str((state.get("handoff") or {}).get("from") or "")
             if refused:
                 response["error"] = refused
             if state_result is not None:
@@ -554,12 +746,8 @@ class StrataLinkServer:
                 if not pending or pending.get("from") != surface_id or not hmac.compare_digest(
                         str(op.get("token") or ""), str(pending.get("token") or "")):
                     return {"ok": False, "error": "source_and_checkpoint_token_required"}
-                state["owner"] = surface_id
-                state["epoch"] += 1
-                state["claimed_at"] = now
                 state["handoff"] = None
-                state["memo"] = {}
-                self.outbox.ack(10 ** 18)
+                self._take_ownership(state, surface_id, now)
                 self._drop_handoff()
                 return {"ok": True, "cancelled": True}
             if not active:
@@ -601,6 +789,14 @@ class StrataLinkServer:
                 if bad:
                     return {"ok": False, "error": "incomplete", "bad": bad[:20], "bad_count": len(bad)}
                 meta, manifest = transfer.meta(), transfer.raw_manifest()
+                if meta.get("purpose") == "handoff" and not op.get("source_frozen"):
+                    # One holder at a time: the source must already be fenced
+                    # on its own disk before home holds its checkpoint.
+                    return {"ok": False, "error": "source_not_frozen"}
+                if meta.get("purpose") == "handoff":
+                    # Seal the epoch: what the source lived up to its freeze
+                    # is hers wherever it arrives; nothing after it is.
+                    state["sealed"][str(state["epoch"])] = int(op.get("lived_seq", 0) or 0)
                 if meta.get("purpose") == "seed":
                     if not self.state_install_allowed:
                         return {"ok": False, "error": "cold_seed_required; stop the resident before installing state"}
@@ -836,14 +1032,61 @@ class StrataLinkClient:
         self._sync_lock = threading.RLock()
         self._claim_path = link_dir(self.state_dir) / "claim_pending"
         self.online = False
-        self.role = "unknown"
-        self.surface_ready = False
-        self.epoch = 0
+        # Role, readiness and epoch survive a restart: the device that held
+        # her when the link dropped stays present away from home; a device
+        # that never held her cannot start living on its own.
+        saved = self._load_client_state()
+        self.role = str(saved.get("role") or "unknown")
+        self.surface_ready = bool(saved.get("surface_ready", False))
+        self.epoch = int(saved.get("epoch", 0) or 0)
+        self.last_confirmed_at = float(saved.get("confirmed_at", 0.0) or 0.0)
         self.rtt_ms = 0.0
         self.last_sync_at = 0.0
         self.last_error = ""
         self.counters: Dict[str, int] = {"syncs": 0, "sent": 0, "received": 0,
                                          "failures": 0, "bad_signature": 0}
+
+    def _load_client_state(self) -> Dict[str, Any]:
+        data = _read_json(self._state_path, {})
+        return data if isinstance(data, dict) else {}
+
+    def _save_client_state(self, **updates: Any) -> Dict[str, Any]:
+        data = self._load_client_state()
+        data.update(updates)
+        _atomic_write_json(self._state_path, data)
+        return data
+
+    def _confirm(self, response: Mapping[str, Any]) -> None:
+        """Take the holder's view from a verified response and keep it on disk."""
+        self.role = str(response.get("role") or self.role or "unknown")
+        self.surface_ready = bool(response.get("surface_ready", self.role == "active"))
+        self.epoch = int(response.get("epoch", self.epoch) or 0)
+        self.last_confirmed_at = time.time()
+        self._save_client_state(role=self.role, surface_ready=self.surface_ready, epoch=self.epoch,
+                                owner=str(response.get("owner") or ""), confirmed_at=self.last_confirmed_at)
+        self._resolve_inflight_handoff(str(response.get("handoff_from") or ""))
+
+    def _frozen_path(self) -> Path:
+        return link_dir(self.state_dir) / "surface_frozen"
+
+    def _resolve_inflight_handoff(self, handoff_from: str) -> None:
+        """A checkpoint commit whose reply never came: home now says whether
+        it landed.  Landed (or the role moved on) keeps the freeze; no
+        checkpoint while this device still holds her lifts it."""
+        saved = self._load_client_state()
+        if not saved.get("handoff_in_flight"):
+            return
+        if handoff_from == self.surface_id or self.role != "active":
+            self._save_client_state(handoff_in_flight=None)
+            return
+        if not handoff_from:
+            self._frozen_path().unlink(missing_ok=True)
+            self._save_client_state(handoff_in_flight=None)
+            self.surface_ready = self.role == "active"
+
+    def away(self) -> bool:
+        """Holding her, with home out of reach: she stays present here."""
+        return (not self.online) and self.role == "active" and self.surface_ready
 
     def _http_transport(self, body: bytes, headers: Dict[str, str]) -> Tuple[bytes, Mapping[str, str]]:
         request = urllib.request.Request(self.endpoint + SYNC_PATH, data=body, method="POST",
@@ -906,9 +1149,7 @@ class StrataLinkClient:
         self.last_sync_at = time.time()
         self.last_error = str(response.get("error") or "")
         self.counters["syncs"] += 1
-        self.role = str(response.get("role") or "unknown")
-        self.surface_ready = bool(response.get("surface_ready", self.role == "active"))
-        self.epoch = int(response.get("epoch", 0) or 0)
+        self._confirm(response)
         if self.role == "active" and self._claim_path.exists():
             try:
                 self._claim_path.unlink()
@@ -918,7 +1159,7 @@ class StrataLinkClient:
         if new_key != link_key:
             # A new epoch or a rebuilt Subsurface numbers its downlink afresh.
             link_key, down_applied = new_key, 0
-            _atomic_write_json(self._state_path, {"link_key": link_key, "down_applied": 0})
+            self._save_client_state(link_key=link_key, down_applied=0)
         sent = self.outbox.ack(int(response.get("up_ack", 0) or 0))
         self.counters["sent"] += sent
         received = 0
@@ -934,7 +1175,7 @@ class StrataLinkClient:
                 break
             down_applied = seq
             received += 1
-            _atomic_write_json(self._state_path, {"link_key": link_key, "down_applied": down_applied})
+            self._save_client_state(link_key=link_key, down_applied=down_applied)
         self.counters["received"] += received
         return bool(sent or received)
 
@@ -966,9 +1207,7 @@ class StrataLinkClient:
         except Exception:
             raise TransferError("response not JSON")
         self.online = True
-        self.role = str(response.get("role") or self.role)
-        self.surface_ready = bool(response.get("surface_ready", self.role == "active"))
-        self.epoch = int(response.get("epoch", self.epoch) or 0)
+        self._confirm(response)
         return response
 
     def _state_call(self, op: Dict[str, Any], **extra: Any) -> Dict[str, Any]:
@@ -1052,10 +1291,27 @@ class StrataLinkClient:
                             progress(row["path"], sent, total)
                         if reply.get("complete") or not data:
                             break
-            done = self._state_call({"op": "commit", "transfer_id": tid})
             if purpose == "handoff":
-                (link_dir(self.state_dir) / "surface_frozen").write_text(str(time.time()), encoding="utf-8")
+                # Freeze before release: fenced on this disk first, then the
+                # checkpoint is committed.  If the reply is lost the freeze
+                # stays until home says no checkpoint landed.
+                self._frozen_path().write_text(str(time.time()), encoding="utf-8")
                 self.surface_ready = False
+                self._save_client_state(surface_ready=False, handoff_in_flight=tid)
+                try:
+                    done = self._state_call({"op": "commit", "transfer_id": tid, "source_frozen": True,
+                                             "lived_seq": lived_high_water(self.state_dir)})
+                except st.TransferError as exc:
+                    if not str(exc).startswith(("link down", "response")):
+                        # Home answered and refused: no checkpoint exists.
+                        self._frozen_path().unlink(missing_ok=True)
+                        self._save_client_state(handoff_in_flight=None)
+                        self.surface_ready = self.role == "active"
+                    raise
+                self._save_client_state(handoff_in_flight=None, surface_ready=False)
+                self.surface_ready = False
+            else:
+                done = self._state_call({"op": "commit", "transfer_id": tid})
             shutil.rmtree(snap, ignore_errors=True)
             return {"ok": True, "purpose": purpose, "transfer_id": tid, "digest": digest,
                     "files": len(manifest), "skipped_already_there": len(have),
@@ -1068,7 +1324,8 @@ class StrataLinkClient:
         with self._sync_lock:
             try:
                 result = self._state_call({"op": "handoff_cancel", "token": str(token)})
-                (link_dir(self.state_dir) / "surface_frozen").unlink(missing_ok=True)
+                self._frozen_path().unlink(missing_ok=True)
+                self._save_client_state(handoff_in_flight=None)
                 self.sync_once()
                 return result
             except Exception as exc:
@@ -1138,6 +1395,11 @@ class StrataLinkClient:
                 # restored its present-frame state, not merely received bytes.
                 restore_callback()
             self._state_call({"op": "handoff_complete", "digest": digest})
+            # This device is now the one holder; a freeze left from an earlier
+            # time it was the source no longer applies.
+            self._frozen_path().unlink(missing_ok=True)
+            self._save_client_state(handoff_in_flight=None)
+            self.sync_once()
             staging.discard()
             return {"ok": True, "digest": digest, "files": len(manifest),
                     "reused_local": reused, "bytes_pulled": pulled, "epoch": self.epoch,
@@ -1191,7 +1453,7 @@ class StrataLinkClient:
 
     def status(self) -> Dict[str, Any]:
         if not self.online:
-            label = "offline"
+            label = "away" if self.away() else "offline"
         elif self.role == "standby":
             label = "standby"
         else:
@@ -1200,6 +1462,9 @@ class StrataLinkClient:
                 "surface_id": self.surface_id, "role": self.role, "epoch": self.epoch,
                 "thread_alive": bool(self._thread and self._thread.is_alive()),
                 "rtt_ms": round(self.rtt_ms, 1), "last_sync_at": self.last_sync_at,
+                "surface_ready": self.surface_ready, "away": self.away(),
+                "frozen": self._frozen_path().exists(),
+                "home_last_confirmed_at": self.last_confirmed_at,
                 "up_outbox": self.outbox.stats(), "last_error": self.last_error,
                 **self.counters}
 
