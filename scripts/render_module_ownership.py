@@ -294,7 +294,12 @@ def derive(root: str, mapping: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str
             stack.extend(neighbours[node] - seen)
         groups.append(sorted(group))
 
+    support = {
+        frozenset(s["members"]): s["status"]
+        for s in mapping.get("graph_evidence", {}).get("composite_support", [])
+    }
     composites: Dict[str, Any] = {}
+    candidates: Dict[str, Any] = {}
     membership: Dict[str, Optional[str]] = {p: None for p in files}
     by_subsystem: Dict[str, List[List[str]]] = defaultdict(list)
     for g in groups:
@@ -305,13 +310,18 @@ def derive(root: str, mapping: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str
             cid = "%s.%d" % (subsystem, i)
             members = set(g)
             hub = sorted(g, key=lambda p: (-len(neighbours[p] & members), p))[0]
-            composites[cid] = {
+            entry = {
                 "domain": files[g[0]]["domain"],
                 "subsystem": subsystem,
                 "hub": hub,
                 "members": g,
                 "links": sorted([a, b] for a in g for b in neighbours[a] if b in members and a < b),
+                "support": support.get(frozenset(g), "unchecked"),
             }
+            if entry["support"] == "import_only":
+                candidates[cid] = entry
+                continue
+            composites[cid] = entry
             for p in g:
                 membership[p] = cid
 
@@ -319,12 +329,13 @@ def derive(root: str, mapping: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str
         p: sorted(b for b in edges.get(p, ()) if files[b]["subsystem"] != "tests")
         for p, f in sorted(files.items()) if f["subsystem"] == "tests"
     }
-    return composites, membership, exercises
+    return composites, candidates, membership, exercises
 
 
 def apply_derived(root: str, mapping: Dict[str, Any]) -> Dict[str, Any]:
-    composites, membership, exercises = derive(root, mapping)
+    composites, candidates, membership, exercises = derive(root, mapping)
     mapping["composites"] = composites
+    mapping["composite_candidates"] = candidates
     for p, f in mapping["files"].items():
         f["composite"] = membership[p]
         if f["subsystem"] == "tests":
@@ -351,7 +362,7 @@ def render(mapping: Dict[str, Any]) -> str:
     add("")
     add("<!-- Generated from docs/module_ownership.json by scripts/render_module_ownership.py. Do not edit by hand. -->")
     add("")
-    add("This map places every source file in the repository on one ladder, the way her crystals are built. The layers (L1 to L8) stay the one architecture of desktop Aurora; the ladder is a view over the files for finding things, and it never moves a file, changes an import or adds a package. Moving files would change the paths that her code lineage, function ids and fault records are keyed by, so files stay where they are (decided 2026-11-18).")
+    add("This map places every source file in the repository on one ladder, the way her crystals are built. The layers (L0 to L8) stay the one architecture of desktop Aurora; the ladder is a view over the files for finding things, and it never moves a file, changes an import or adds a package. Moving files would change the paths that her code lineage, function ids and fault records are keyed by, so files stay where they are (decided 2026-11-18).")
     add("")
     add("| Order | Holds |")
     add("|---|---|")
@@ -403,7 +414,7 @@ def render(mapping: Dict[str, Any]) -> str:
             add("| %s | %s | %d | %d | %d |" % (s["name"], s["holds"], n_comp, in_comp, base))
         add("")
 
-    add("## Desktop layers (L1 to L8)")
+    add("## Desktop layers (L0 to L8)")
     add("")
     for layer in mapping["layers"]:
         lid = layer["id"]
@@ -441,11 +452,38 @@ def render(mapping: Dict[str, Any]) -> str:
     add("")
     add(mapping["evidence_rules"]["composite_rule"])
     add("")
-    add("| Composite | Subsystem | Hub | Files |")
-    add("|---|---|---|---|")
-    for cid, c in composites.items():
-        add("| `%s` | %s | `%s` | %d |" % (cid, subs[c["subsystem"]]["name"], c["hub"], len(c["members"])))
+    add("Support is the knowledge graph's verdict: `supported` and `partly_supported` mean calls, data flow, spawns or shared state join the files as well as imports; `unchecked` means the graph has not seen this group yet.")
     add("")
+    add("| Composite | Subsystem | Hub | Files | Support |")
+    add("|---|---|---|---|---|")
+    for cid, c in composites.items():
+        add("| `%s` | %s | `%s` | %d | %s |" % (cid, subs[c["subsystem"]]["name"], c["hub"], len(c["members"]), c["support"]))
+    add("")
+    candidates = mapping.get("composite_candidates", {})
+    if candidates:
+        add("### Not promoted: imports only")
+        add("")
+        add("Imports join these files, but the knowledge graph found no call, flow, spawn or shared state between them, so they stay base files.")
+        add("")
+        add("| Candidate | Subsystem | Files |")
+        add("|---|---|---|")
+        for cid, c in candidates.items():
+            add("| `%s` | %s | %s |" % (cid, subs[c["subsystem"]]["name"], ", ".join("`%s`" % m for m in c["members"])))
+        add("")
+
+    evidence = mapping.get("graph_evidence")
+    if evidence:
+        add("## Cross-domain links (candidates, not promoted)")
+        add("")
+        add("%s %s" % (evidence["note"], evidence["source"]))
+        add("")
+        add("| Files | Domains | Edges the graph found |")
+        add("|---|---|---|")
+        for link in evidence["cross_domain_links"]:
+            a, b = link["files"]
+            kinds = ", ".join("%s %d" % (k, v) for k, v in sorted(link["kinds"].items()))
+            add("| `%s` and `%s` | %s and %s | %s |" % (a, b, files[a]["domain"], files[b]["domain"], kinds))
+        add("")
 
     add("## Every file by domain and subsystem")
     add("")

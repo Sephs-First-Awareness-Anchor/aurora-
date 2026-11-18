@@ -95,7 +95,7 @@
   "location": "Assigned from where the file sits and its name (tests/, scripts/, the phone app's and the ACM's folders)."
  },
  "evidence_rules": {
-  "composite_rule": "A composite is a connected group of two or more files in one subsystem, joined by import edges that stay inside that subsystem. Edges come from Python imports (desktop by dotted path from the repo root, other domains by module name in their own folder), Dart imports, Rust mod declarations and crate, super and self paths, and Kotlin or Java class names used in the same folder. Shell, batch, PowerShell, HTML, JSX, systemd and workflow files have no import edges here, so they stay base files. A composite is named after its subsystem and numbered by size; its hub is the member with the most links inside it.",
+  "composite_rule": "A composite is a connected group of two or more files in one subsystem, joined by import edges that stay inside that subsystem. Edges come from Python imports (desktop by dotted path from the repo root, other domains by module name in their own folder), Dart imports, Rust mod declarations and crate, super and self paths, and Kotlin or Java class names used in the same folder. Shell, batch, PowerShell, HTML, JSX, systemd and workflow files have no import edges here, so they stay base files. A composite is named after its subsystem and numbered by size; its hub is the member with the most links inside it. A candidate the knowledge graph marks import_only is not promoted; it is listed under composite_candidates and its files stay base files.",
   "dart_package": {
    "name": "aurora_app",
    "lib_dir": "flutter_app/lib"
@@ -206,7 +206,7 @@
    "id": "investigative",
    "domain": "desktop",
    "name": "Investigative and diagnostic",
-   "holds": "Read-only observers, canaries, probes, shadows, audits, reports and test setup. The QuasiArch observer stays here."
+   "holds": "Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here."
   },
   {
    "id": "tests",
@@ -306,6 +306,10 @@
   }
  ],
  "layers": [
+  {
+   "id": "L0",
+   "name": "Foundational contract"
+  },
   {
    "id": "L1",
    "name": "IVM / geometry substrate"
@@ -413,7 +417,8 @@
      "corpus_runner.py",
      "run_corpus.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "foundation.1": {
    "domain": "desktop",
@@ -521,7 +526,8 @@
      "aurora_ivm.py",
      "foundational_contract.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "foundation.2": {
    "domain": "desktop",
@@ -536,7 +542,8 @@
      "aurora_computational_model.py",
      "aurora_constraint_head.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "foundation.3": {
    "domain": "desktop",
@@ -551,7 +558,8 @@
      "aurora_internal/aurora_pressure_classifier.py",
      "aurora_internal/aurora_pressure_router.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "foundation.4": {
    "domain": "desktop",
@@ -566,7 +574,8 @@
      "aurora_manifold_directory_reader.py",
      "aurora_manifold_lookup.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "dimensional.1": {
    "domain": "desktop",
@@ -599,7 +608,8 @@
      "aurora_i_state_beings.py",
      "aurora_simulation_engine.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "crystal.1": {
    "domain": "desktop",
@@ -742,7 +752,8 @@
      "aurora_internal/crystal_store.py",
      "aurora_internal/crystal_weave.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "crystal.2": {
    "domain": "desktop",
@@ -780,7 +791,8 @@
      "aurora_internal/quasiarch_observer/crystal_engine.py",
      "aurora_internal/quasiarch_observer/dimensional_processing.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "crystal.3": {
    "domain": "desktop",
@@ -804,7 +816,8 @@
      "aurora_internal/aurora_representation_crystals.py",
      "concept_crystal.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "crystal.4": {
    "domain": "desktop",
@@ -819,7 +832,8 @@
      "aurora_crystal_state_bridge.py",
      "crystalzip.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "memory.1": {
    "domain": "desktop",
@@ -834,7 +848,8 @@
      "aurora_interaction_memory.py",
      "aurora_internal/aurora_turn_persistence.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "reasoning.1": {
    "domain": "desktop",
@@ -883,7 +898,8 @@
      "aurora_thought_formation.py",
      "aurora_waveform_pressure.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "reasoning.2": {
    "domain": "desktop",
@@ -913,7 +929,8 @@
      "aurora_internal/aurora_constraint_semantic_continuity.py",
      "aurora_internal/aurora_recursive_causal_reasoning_waveform.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "reasoning.3": {
    "domain": "desktop",
@@ -938,7 +955,8 @@
      "aurora_internal/aurora_strategic_horizon.py",
      "aurora_internal/aurora_worth_evaluator.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "reasoning.4": {
    "domain": "desktop",
@@ -953,7 +971,8 @@
      "aurora_internal/aurora_confluence.py",
      "aurora_internal/aurora_propositional_understanding.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "reasoning.5": {
    "domain": "desktop",
@@ -968,7 +987,8 @@
      "aurora_internal/aurora_contradiction_perception.py",
      "aurora_internal/aurora_relation_pairs.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "genealogy.1": {
    "domain": "desktop",
@@ -1041,7 +1061,8 @@
      "aurora_warp_protocol.py",
      "tensor_occupancy_warp_bridge.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "genealogy.2": {
    "domain": "desktop",
@@ -1056,7 +1077,8 @@
      "aurora_genealogy_promotion_dimension_observer.py",
      "aurora_genealogy_same_event_correlation.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "genealogy.3": {
    "domain": "desktop",
@@ -1071,7 +1093,8 @@
      "aurora_internal/aurora_attribution_trace.py",
      "aurora_internal/aurora_system_introspection.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "learning.1": {
    "domain": "desktop",
@@ -1105,7 +1128,8 @@
      "aurora_internal/aurora_evolution_chamber.py",
      "aurora_internal/aurora_evolved_surfaces.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "learning.2": {
    "domain": "desktop",
@@ -1130,7 +1154,8 @@
      "aurora_dream_trainer.py",
      "aurora_internal/aurora_learning_pipeline.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "learning.3": {
    "domain": "desktop",
@@ -1159,7 +1184,8 @@
      "aurora_internal/aurora_dream_genealogy_bridge.py",
      "aurora_internal/aurora_episode_slip_profiler.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "learning.4": {
    "domain": "desktop",
@@ -1179,7 +1205,8 @@
      "aurora_explore.py",
      "aurora_training_pulse.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "learning.5": {
    "domain": "desktop",
@@ -1203,7 +1230,8 @@
      "aurora_internal/aurora_learned_index.py",
      "aurora_internal/aurora_learned_rules.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "learning.6": {
    "domain": "desktop",
@@ -1218,7 +1246,8 @@
      "aurora_possibility_selves.py",
      "aurora_quantum_dream_substrate.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "perception.1": {
    "domain": "desktop",
@@ -1276,7 +1305,8 @@
      "aurora_image_ingestion.py",
      "aurora_vision_clustering.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "language.1": {
    "domain": "desktop",
@@ -1296,7 +1326,8 @@
      "aurora_internal/aurora_conversation_rubric_engine.py",
      "aurora_internal/aurora_specialized_avatar_synthesizer.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "language.2": {
    "domain": "desktop",
@@ -1311,7 +1342,8 @@
      "aurora_grammar_engine.py",
      "aurora_internal/aurora_language_state.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "language.3": {
    "domain": "desktop",
@@ -1326,7 +1358,8 @@
      "aurora_internal/aurora_communication_emergence.py",
      "aurora_internal/aurora_meaning_evolution.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "governance.1": {
    "domain": "desktop",
@@ -1454,7 +1487,8 @@
      "aurora_persistence_utils.py",
      "aurora_support_stack.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "governance.2": {
    "domain": "desktop",
@@ -1469,7 +1503,8 @@
      "aurora_internal/aurora_metabolic_steps.py",
      "aurora_internal/aurora_rest_ledger.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "strata.1": {
    "domain": "desktop",
@@ -1835,7 +1870,8 @@
      "aurora_internal/dual_strata/topology_frame.py",
      "aurora_internal/dual_strata/topology_tracker.py"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "strata.2": {
    "domain": "desktop",
@@ -1850,7 +1886,8 @@
      "aurora_internal/aurora_surface_dispatcher.py",
      "aurora_internal/aurora_surface_doc.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "bridges.1": {
    "domain": "desktop",
@@ -1879,7 +1916,8 @@
      "aurora_internal/scouting/contracts.py",
      "aurora_internal/scouting/subsurface_scout_bridge.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "bridges.2": {
    "domain": "desktop",
@@ -1899,7 +1937,8 @@
      "aurora_praxis_messenger.py",
      "aurora_social_corroboration.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "bridges.3": {
    "domain": "desktop",
@@ -1914,7 +1953,8 @@
      "aurora_desktop_agent.py",
      "aurora_internal/tool_registry.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "investigative.1": {
    "domain": "desktop",
@@ -1939,7 +1979,8 @@
      "aurora_genealogy_difference_producer_observatory.py",
      "aurora_genealogy_difference_producer_observatory_report.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "investigative.2": {
    "domain": "desktop",
@@ -1954,7 +1995,8 @@
      "aurora_causal_vs_representational_probe.py",
      "aurora_rank6_shadow_analysis.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "investigative.3": {
    "domain": "desktop",
@@ -1969,7 +2011,8 @@
      "aurora_genealogy_difference_shadow.py",
      "aurora_genealogy_difference_shadow_report.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "investigative.4": {
    "domain": "desktop",
@@ -1984,7 +2027,8 @@
      "aurora_internal/aurora_quasiarch_observer.py",
      "aurora_internal/quasiarch_development_inquiry.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "investigative.5": {
    "domain": "desktop",
@@ -1999,7 +2043,8 @@
      "aurora_internal/quasiarch_observer/dimensional_memory.py",
      "aurora_internal/quasiarch_observer/ghost_relics.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "tests.1": {
    "domain": "desktop",
@@ -2014,7 +2059,8 @@
      "tests/test_communication_bar.py",
      "tests/test_communication_emergence.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "tests.2": {
    "domain": "desktop",
@@ -2029,22 +2075,8 @@
      "tests/test_confluence.py",
      "tests/test_propositional_understanding.py"
     ]
-   ]
-  },
-  "tests.3": {
-   "domain": "desktop",
-   "subsystem": "tests",
-   "hub": "tests/test_generation_collapse_regression.py",
-   "members": [
-    "tests/test_generation_collapse_regression.py",
-    "tests/test_pf1_5_instruments.py"
    ],
-   "links": [
-    [
-     "tests/test_generation_collapse_regression.py",
-     "tests/test_pf1_5_instruments.py"
-    ]
-   ]
+   "support": "supported"
   },
   "phone_ui.1": {
    "domain": "phone",
@@ -2069,7 +2101,8 @@
      "flutter_app/lib/screens/home_screen.dart",
      "flutter_app/lib/widgets/aurora_orb.dart"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "phone_habitat.1": {
    "domain": "phone",
@@ -2112,7 +2145,8 @@
      "flutter_app/lib/habitat/habitat_model.dart",
      "flutter_app/lib/habitat/habitat_renderer.dart"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "phone_python.1": {
    "domain": "phone",
@@ -2127,7 +2161,8 @@
      "flutter_app/android/app/src/main/python/aurora_bridge.py",
      "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
     ]
-   ]
+   ],
+   "support": "supported"
   },
   "phone_android.1": {
    "domain": "phone",
@@ -2161,73 +2196,8 @@
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
     ]
-   ]
-  },
-  "acm_core.1": {
-   "domain": "acm",
-   "subsystem": "acm_core",
-   "hub": "aurora-acm/kernel/src/acm/axes.rs",
-   "members": [
-    "aurora-acm/kernel/src/acm/axes.rs",
-    "aurora-acm/kernel/src/acm/crystal.rs",
-    "aurora-acm/kernel/src/acm/drift.rs",
-    "aurora-acm/kernel/src/acm/mod.rs",
-    "aurora-acm/kernel/src/acm/sedi.rs"
    ],
-   "links": [
-    [
-     "aurora-acm/kernel/src/acm/axes.rs",
-     "aurora-acm/kernel/src/acm/crystal.rs"
-    ],
-    [
-     "aurora-acm/kernel/src/acm/axes.rs",
-     "aurora-acm/kernel/src/acm/drift.rs"
-    ],
-    [
-     "aurora-acm/kernel/src/acm/axes.rs",
-     "aurora-acm/kernel/src/acm/mod.rs"
-    ],
-    [
-     "aurora-acm/kernel/src/acm/axes.rs",
-     "aurora-acm/kernel/src/acm/sedi.rs"
-    ],
-    [
-     "aurora-acm/kernel/src/acm/crystal.rs",
-     "aurora-acm/kernel/src/acm/mod.rs"
-    ],
-    [
-     "aurora-acm/kernel/src/acm/drift.rs",
-     "aurora-acm/kernel/src/acm/mod.rs"
-    ],
-    [
-     "aurora-acm/kernel/src/acm/mod.rs",
-     "aurora-acm/kernel/src/acm/sedi.rs"
-    ]
-   ]
-  },
-  "acm_cpm.1": {
-   "domain": "acm",
-   "subsystem": "acm_cpm",
-   "hub": "aurora-acm/kernel/src/cpm/mod.rs",
-   "members": [
-    "aurora-acm/kernel/src/cpm/mod.rs",
-    "aurora-acm/kernel/src/cpm/organ.rs",
-    "aurora-acm/kernel/src/cpm/scheduler.rs"
-   ],
-   "links": [
-    [
-     "aurora-acm/kernel/src/cpm/mod.rs",
-     "aurora-acm/kernel/src/cpm/organ.rs"
-    ],
-    [
-     "aurora-acm/kernel/src/cpm/mod.rs",
-     "aurora-acm/kernel/src/cpm/scheduler.rs"
-    ],
-    [
-     "aurora-acm/kernel/src/cpm/organ.rs",
-     "aurora-acm/kernel/src/cpm/scheduler.rs"
-    ]
-   ]
+   "support": "supported"
   },
   "acm_xaurora.1": {
    "domain": "acm",
@@ -2264,7 +2234,8 @@
      "aurora-acm/kernel/src/xaurora/mod.rs",
      "aurora-acm/kernel/src/xaurora/vm.rs"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "acm_expression.1": {
    "domain": "acm",
@@ -2297,7 +2268,8 @@
      "aurora-acm/kernel/src/expression/mod.rs",
      "aurora-acm/kernel/src/expression/renderer.rs"
     ]
-   ]
+   ],
+   "support": "partly_supported"
   },
   "acm_hw.1": {
    "domain": "acm",
@@ -2357,22 +2329,8 @@
      "aurora-acm/kernel/src/hw/port.rs",
      "aurora-acm/kernel/src/hw/uart.rs"
     ]
-   ]
-  },
-  "acm_bridge.1": {
-   "domain": "acm",
-   "subsystem": "acm_bridge",
-   "hub": "aurora-acm/kernel/src/bridge/mod.rs",
-   "members": [
-    "aurora-acm/kernel/src/bridge/mod.rs",
-    "aurora-acm/kernel/src/bridge/protocol.rs"
    ],
-   "links": [
-    [
-     "aurora-acm/kernel/src/bridge/mod.rs",
-     "aurora-acm/kernel/src/bridge/protocol.rs"
-    ]
-   ]
+   "support": "partly_supported"
   }
  },
  "files": {
@@ -2446,7 +2404,7 @@
    "domain": "acm",
    "subsystem": "acm_core",
    "also": [],
-   "composite": "acm_core.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2457,7 +2415,7 @@
    "domain": "acm",
    "subsystem": "acm_core",
    "also": [],
-   "composite": "acm_core.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2468,7 +2426,7 @@
    "domain": "acm",
    "subsystem": "acm_core",
    "also": [],
-   "composite": "acm_core.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2479,7 +2437,7 @@
    "domain": "acm",
    "subsystem": "acm_core",
    "also": [],
-   "composite": "acm_core.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2490,7 +2448,7 @@
    "domain": "acm",
    "subsystem": "acm_core",
    "also": [],
-   "composite": "acm_core.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2501,7 +2459,7 @@
    "domain": "acm",
    "subsystem": "acm_bridge",
    "also": [],
-   "composite": "acm_bridge.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2512,7 +2470,7 @@
    "domain": "acm",
    "subsystem": "acm_bridge",
    "also": [],
-   "composite": "acm_bridge.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2523,7 +2481,7 @@
    "domain": "acm",
    "subsystem": "acm_cpm",
    "also": [],
-   "composite": "acm_cpm.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2534,7 +2492,7 @@
    "domain": "acm",
    "subsystem": "acm_cpm",
    "also": [],
-   "composite": "acm_cpm.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -2545,7 +2503,7 @@
    "domain": "acm",
    "subsystem": "acm_cpm",
    "also": [],
-   "composite": "acm_cpm.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "rust",
@@ -4523,7 +4481,7 @@
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "The QuasiArch observer. aurora.py boots it at L8+; it observes and writes its own state (interventions, ghost relics); its answers carry authoritative False and active steering is opt-in."
+   "duties": "The QuasiArch observer, a live organ: aurora.py boots it at L8+, it runs during boot and every turn, and it writes its own state (interventions, ghost relics). Its answers carry authoritative False and active steering is opt-in."
   },
   "aurora_internal/aurora_reasoning_paths.py": {
    "domain": "desktop",
@@ -5633,7 +5591,7 @@
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "Development inquiry helper used only by the QuasiArch observer."
+   "duties": "Development inquiry helper for the QuasiArch observer. It runs wherever the observer runs, which includes the phone app's runtime."
   },
   "aurora_internal/quasiarch_observer/__init__.py": {
    "domain": "desktop",
@@ -5670,7 +5628,7 @@
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "QuasiArch lineage memory (DimensionalMemory, IntegratedMemoryPipeline). Loaded with the package, but only the QuasiArch observer calls it."
+   "duties": "QuasiArch lineage memory (DimensionalMemory, IntegratedMemoryPipeline). Only the QuasiArch observer calls it, and it runs during boot and turns because the observer does."
   },
   "aurora_internal/quasiarch_observer/dimensional_processing.py": {
    "domain": "desktop",
@@ -5694,7 +5652,7 @@
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "Ghost relic records (GhostRelic, GhostRelicSystem). Loaded with the package, but only the QuasiArch observer calls it."
+   "duties": "Ghost relic records (GhostRelic, GhostRelicSystem). Only the QuasiArch observer calls it; it runs at boot when the observer starts."
   },
   "aurora_internal/scouting/__init__.py": {
    "domain": "desktop",
@@ -5809,13 +5767,15 @@
   "aurora_learning_probe.py": {
    "domain": "desktop",
    "subsystem": "investigative",
-   "also": [],
+   "also": [
+    "learning"
+   ],
    "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "Standalone learning probe. Nothing in covered code imports it."
+   "duties": "LearningProbe, a live organ on the phone: the phone app's aurora_bridge.py starts it as systems['learning_probe'] and it appends to aurora_state/learning_probe.jsonl. Nothing on desktop imports it."
   },
   "aurora_learning_report.py": {
    "domain": "desktop",
@@ -6856,8 +6816,8 @@
    "subsystem": "foundation",
    "also": [],
    "composite": "foundation.1",
-   "layer": null,
-   "layer_role": null,
+   "layer": "L0",
+   "layer_role": "layer file",
    "language": "python",
    "basis": "name_and_docstring",
    "duties": null
@@ -6892,8 +6852,8 @@
    "layer": null,
    "layer_role": null,
    "language": "python",
-   "basis": "name_and_docstring",
-   "duties": null
+   "basis": "reviewed",
+   "duties": "Command-line entry point Sir runs by hand: it appends his reply to the correspondence loop's from_sunni.jsonl, which her runtime reads. No boot path reaches it, by design."
   },
   "run_aurora.py": {
    "domain": "desktop",
@@ -6937,7 +6897,7 @@
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "Script entry point for the competency gauntlet; writes its own results. Nothing in covered code imports it."
+   "duties": "Script entry point for the competency gauntlet. It writes aurora_state/last_full_competency_gauntlet.json. Nothing in covered code imports it."
   },
   "run_gauntlet.py": {
    "domain": "desktop",
@@ -6948,7 +6908,7 @@
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "Script entry point that runs the gauntlet and writes its own results. Nothing in covered code imports it."
+   "duties": "Script entry point that boots the daemon and runs the gauntlet. It writes aurora_state/daemon.log and its own results under aurora_state. Nothing in covered code imports it."
   },
   "run_gui_linux_mac.sh": {
    "domain": "desktop",
@@ -6992,7 +6952,7 @@
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "Script entry point for the semantic probe battery; writes its own results. Nothing in covered code imports it."
+   "duties": "Script entry point for the semantic probe battery. It boots against a scratch copy of aurora_state and writes results to aurora_state/probe_battery/results/. Nothing in covered code imports it."
   },
   "scripts/analyze_cross_generational_representations.py": {
    "domain": "desktop",
@@ -10953,7 +10913,7 @@
    "domain": "desktop",
    "subsystem": "tests",
    "also": [],
-   "composite": "tests.3",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -12669,7 +12629,7 @@
    "domain": "desktop",
    "subsystem": "tests",
    "also": [],
-   "composite": "tests.3",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -15396,6 +15356,1167 @@
    "exercises": [
     "aurora.py"
    ]
+  }
+ },
+ "graph_evidence": {
+  "source": "Knowledge graph, PR #263 at commit 099d43f: knowledge_graph/coverage/composites.json and claims.json.",
+  "note": "What the knowledge graph found when it checked this record. A composite the graph marks import_only (no call, flow, spawn or shared state joins its files) is not promoted: it stays a candidate and its files stay base files. Cross-domain links are evidence-backed candidates for higher-order links; none is promoted without Sir's word.",
+  "composite_support": [
+   {
+    "members": [
+     "aurora-acm/kernel/src/bridge/mod.rs",
+     "aurora-acm/kernel/src/bridge/protocol.rs"
+    ],
+    "status": "import_only"
+   },
+   {
+    "members": [
+     "aurora-acm/kernel/src/acm/axes.rs",
+     "aurora-acm/kernel/src/acm/crystal.rs",
+     "aurora-acm/kernel/src/acm/drift.rs",
+     "aurora-acm/kernel/src/acm/mod.rs",
+     "aurora-acm/kernel/src/acm/sedi.rs"
+    ],
+    "status": "import_only"
+   },
+   {
+    "members": [
+     "aurora-acm/kernel/src/cpm/mod.rs",
+     "aurora-acm/kernel/src/cpm/organ.rs",
+     "aurora-acm/kernel/src/cpm/scheduler.rs"
+    ],
+    "status": "import_only"
+   },
+   {
+    "members": [
+     "aurora-acm/kernel/src/expression/color.rs",
+     "aurora-acm/kernel/src/expression/face.rs",
+     "aurora-acm/kernel/src/expression/mod.rs",
+     "aurora-acm/kernel/src/expression/renderer.rs"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora-acm/kernel/src/hw/idt.rs",
+     "aurora-acm/kernel/src/hw/mod.rs",
+     "aurora-acm/kernel/src/hw/pic.rs",
+     "aurora-acm/kernel/src/hw/pit.rs",
+     "aurora-acm/kernel/src/hw/port.rs",
+     "aurora-acm/kernel/src/hw/ps2.rs",
+     "aurora-acm/kernel/src/hw/uart.rs"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora-acm/kernel/src/xaurora/isa.rs",
+     "aurora-acm/kernel/src/xaurora/jit.rs",
+     "aurora-acm/kernel/src/xaurora/mod.rs",
+     "aurora-acm/kernel/src/xaurora/vm.rs"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_internal/scouting/backends.py",
+     "aurora_internal/scouting/broker.py",
+     "aurora_internal/scouting/contracts.py",
+     "aurora_internal/scouting/subsurface_scout_bridge.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_praxis_initiative.py",
+     "aurora_praxis_messenger.py",
+     "aurora_social_corroboration.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_desktop_agent.py",
+     "aurora_internal/tool_registry.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_crystal_ingestion.py",
+     "aurora_internal/crystal_associations.py",
+     "aurora_internal/crystal_convergence.py",
+     "aurora_internal/crystal_facets.py",
+     "aurora_internal/crystal_grammar.py",
+     "aurora_internal/crystal_interior.py",
+     "aurora_internal/crystal_lexicon.py",
+     "aurora_internal/crystal_maturity.py",
+     "aurora_internal/crystal_promotion.py",
+     "aurora_internal/crystal_runtime.py",
+     "aurora_internal/crystal_sensory.py",
+     "aurora_internal/crystal_store.py",
+     "aurora_internal/crystal_substitutability.py",
+     "aurora_internal/crystal_weave.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_interaction_engine.py",
+     "aurora_interaction_processing.py",
+     "aurora_internal/quasiarch_observer/__init__.py",
+     "aurora_internal/quasiarch_observer/crystal_engine.py",
+     "aurora_internal/quasiarch_observer/dimensional_processing.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_lexical_crystals.py",
+     "aurora_internal/aurora_representation_crystals.py",
+     "concept_crystal.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_crystal_state_bridge.py",
+     "crystalzip.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_consciousness_engine.py",
+     "aurora_dimensional_systems.py",
+     "aurora_i_state_beings.py",
+     "aurora_simulation_engine.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_constraint_emission.py",
+     "aurora_constraint_engine.py",
+     "aurora_constraint_manifold.py",
+     "aurora_constraint_manifold_compiler.py",
+     "aurora_constraint_unit_adapter.py",
+     "aurora_internal/aurora_constraint_manifold_patched.py",
+     "aurora_internal/aurora_leverage_scalar.py",
+     "aurora_internal/aurora_noncomp_registry.py",
+     "aurora_internal/aurora_ontological_scaffolding.py",
+     "aurora_internal/aurora_polarity_gradient.py",
+     "aurora_internal/aurora_pressure_ledger.py",
+     "aurora_ivm.py",
+     "aurora_noncomp_layer_compiler.py",
+     "aurora_noncomp_manifold_compiler.py",
+     "foundational_contract.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_computational_model.py",
+     "aurora_constraint_head.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_pressure_classifier.py",
+     "aurora_internal/aurora_pressure_router.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_manifold_directory_reader.py",
+     "aurora_manifold_lookup.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_closure_basis.py",
+     "aurora_genealogy_environment.py",
+     "aurora_genealogy_representation_resolver.py",
+     "aurora_internal/aurora_ability_lineage_compiler.py",
+     "aurora_internal/aurora_lineage_bound_traits.py",
+     "aurora_internal/aurora_manual_code_lineage.py",
+     "aurora_internal/constraint_genealogy.py",
+     "aurora_internal/genealogy_evidence_journal.py",
+     "aurora_internal/lineage_canonical.py",
+     "aurora_warp_protocol.py",
+     "genealogy_signature_bridge.py",
+     "tensor_occupancy_warp_bridge.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_genealogy_promotion_dimension_observer.py",
+     "aurora_genealogy_same_event_correlation.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_attribution_trace.py",
+     "aurora_internal/aurora_system_introspection.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_autonomy.py",
+     "aurora_checkpoint.py",
+     "aurora_dev_telemetry.py",
+     "aurora_governance_persistence_gateway.py",
+     "aurora_internal/aurora_energy_layer_costs.py",
+     "aurora_internal/aurora_identity_persistence.py",
+     "aurora_internal/aurora_leverage_relief.py",
+     "aurora_internal/aurora_metabolic_clock.py",
+     "aurora_internal/aurora_persistence_audit.py",
+     "aurora_internal/aurora_persistence_utils.py",
+     "aurora_internal/aurora_runtime_constraint_governor.py",
+     "aurora_internal/aurora_runtime_faults.py",
+     "aurora_internal/aurora_runtime_health.py",
+     "aurora_internal/aurora_state_context.py",
+     "aurora_metabolic_distiller.py",
+     "aurora_offline_resilience.py",
+     "aurora_persistence_utils.py",
+     "aurora_support_stack.py",
+     "aurora_telemetry.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_metabolic_steps.py",
+     "aurora_internal/aurora_rest_ledger.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_genealogy_cooccurrence_observatory.py",
+     "aurora_genealogy_cooccurrence_observatory_report.py",
+     "aurora_genealogy_difference_producer_observatory.py",
+     "aurora_genealogy_difference_producer_observatory_report.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_causal_vs_representational_probe.py",
+     "aurora_rank6_shadow_analysis.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_genealogy_difference_shadow.py",
+     "aurora_genealogy_difference_shadow_report.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_quasiarch_observer.py",
+     "aurora_internal/quasiarch_development_inquiry.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/quasiarch_observer/dimensional_memory.py",
+     "aurora_internal/quasiarch_observer/ghost_relics.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_conversation_rubric_engine.py",
+     "aurora_internal/aurora_semantic_probe_battery.py",
+     "aurora_internal/aurora_specialized_avatar_synthesizer.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_grammar_engine.py",
+     "aurora_internal/aurora_language_state.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_communication_emergence.py",
+     "aurora_internal/aurora_meaning_evolution.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_evolution_stack.py",
+     "aurora_internal/aurora_code_evolution_chamber.py",
+     "aurora_internal/aurora_evolution_chamber.py",
+     "aurora_internal/aurora_evolution_hook.py",
+     "aurora_internal/aurora_evolved_surfaces.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_classroom.py",
+     "aurora_dream_trainer.py",
+     "aurora_internal/aurora_directed_training_corpus.py",
+     "aurora_internal/aurora_learning_pipeline.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_dream_curriculum_queue.py",
+     "aurora_internal/aurora_dream_evolution_orchestrator.py",
+     "aurora_internal/aurora_dream_genealogy_bridge.py",
+     "aurora_internal/aurora_episode_slip_profiler.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_experiential_sim.py",
+     "aurora_explore.py",
+     "aurora_training_pulse.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_capability_binding.py",
+     "aurora_internal/aurora_learned_index.py",
+     "aurora_internal/aurora_learned_rules.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_possibility_selves.py",
+     "aurora_quantum_dream_substrate.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_interaction_memory.py",
+     "aurora_internal/aurora_turn_persistence.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_concept_imager.py",
+     "aurora_expression_perception.py",
+     "aurora_hardware_io.py",
+     "aurora_image_ingestion.py",
+     "aurora_internal/aurora_pf1_5_instruments.py",
+     "aurora_internal/aurora_sender_state.py",
+     "aurora_live_vision.py",
+     "aurora_perception_primitives.py",
+     "aurora_vision_clustering.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/BootCompletedReceiver.kt",
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt",
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "flutter_app/lib/habitat/habitat_bridge.dart",
+     "flutter_app/lib/habitat/habitat_gesture_layer.dart",
+     "flutter_app/lib/habitat/habitat_model.dart",
+     "flutter_app/lib/habitat/habitat_renderer.dart",
+     "flutter_app/lib/screens/habitat_self_screen.dart",
+     "flutter_app/lib/screens/habitat_space_screen.dart"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "flutter_app/android/app/src/main/python/aurora_bridge.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "flutter_app/lib/main.dart",
+     "flutter_app/lib/screens/home_screen.dart",
+     "flutter_app/lib/screens/hub_screen.dart",
+     "flutter_app/lib/widgets/aurora_orb.dart"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_constraint_reasoner.py",
+     "aurora_internal/aurora_live_possibility_frontier.py",
+     "aurora_reflexive_interpreter.py",
+     "aurora_representational_address.py",
+     "aurora_representational_resolution.py",
+     "aurora_representational_resolution_base.py",
+     "aurora_thought_formation.py",
+     "aurora_waveform_pressure.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_boundary_hypothesis.py",
+     "aurora_internal/aurora_comprehension_gap.py",
+     "aurora_internal/aurora_constraint_semantic_continuity.py",
+     "aurora_internal/aurora_recursive_causal_reasoning_waveform.py",
+     "aurora_referent_hypothesis.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_entropy_detector.py",
+     "aurora_internal/aurora_operator_composer.py",
+     "aurora_internal/aurora_strategic_horizon.py",
+     "aurora_internal/aurora_worth_evaluator.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_confluence.py",
+     "aurora_internal/aurora_propositional_understanding.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_contradiction_perception.py",
+     "aurora_internal/aurora_relation_pairs.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora.py",
+     "aurora_daemon.py",
+     "aurora_internal/__init__.py",
+     "aurora_internal/aurora_turn_chain.py",
+     "aurora_runtime.py",
+     "corpus_runner.py",
+     "run_corpus.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_internal/dual_strata/__init__.py",
+     "aurora_internal/dual_strata/activation_field.py",
+     "aurora_internal/dual_strata/cers_bridge.py",
+     "aurora_internal/dual_strata/cers_deprecation.py",
+     "aurora_internal/dual_strata/cers_potential_trial.py",
+     "aurora_internal/dual_strata/cers_regulator.py",
+     "aurora_internal/dual_strata/cers_tensor_locator.py",
+     "aurora_internal/dual_strata/conscious_frame.py",
+     "aurora_internal/dual_strata/contextual_overlay.py",
+     "aurora_internal/dual_strata/crest.py",
+     "aurora_internal/dual_strata/dce_bridge.py",
+     "aurora_internal/dual_strata/downward_traversal.py",
+     "aurora_internal/dual_strata/lifecycle_catalog.py",
+     "aurora_internal/dual_strata/micro_reasoning.py",
+     "aurora_internal/dual_strata/perturbation_probe.py",
+     "aurora_internal/dual_strata/prediction_field.py",
+     "aurora_internal/dual_strata/predictive_stager.py",
+     "aurora_internal/dual_strata/presence_metrics.py",
+     "aurora_internal/dual_strata/semantic_intention_bridge.py",
+     "aurora_internal/dual_strata/semantic_variant_registry.py",
+     "aurora_internal/dual_strata/sensory_control_channel.py",
+     "aurora_internal/dual_strata/sensory_observation.py",
+     "aurora_internal/dual_strata/sensory_snapshot_channel.py",
+     "aurora_internal/dual_strata/sleep_cycle.py",
+     "aurora_internal/dual_strata/strata_link.py",
+     "aurora_internal/dual_strata/strata_state_transfer.py",
+     "aurora_internal/dual_strata/subsurface_presence.py",
+     "aurora_internal/dual_strata/subsurface_presence_runtime.py",
+     "aurora_internal/dual_strata/subsurface_state.py",
+     "aurora_internal/dual_strata/subsystem_waveforms.py",
+     "aurora_internal/dual_strata/surface_continuity_feed.py",
+     "aurora_internal/dual_strata/surface_sensory_proxy.py",
+     "aurora_internal/dual_strata/topological_semantic_coordinator.py",
+     "aurora_internal/dual_strata/topology_frame.py",
+     "aurora_internal/dual_strata/topology_tracker.py",
+     "aurora_scout_daemon.py",
+     "aurora_surface_daemon.py"
+    ],
+    "status": "partly_supported"
+   },
+   {
+    "members": [
+     "aurora_internal/aurora_surface_dispatcher.py",
+     "aurora_internal/aurora_surface_doc.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "tests/test_communication_bar.py",
+     "tests/test_communication_emergence.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "tests/test_confluence.py",
+     "tests/test_propositional_understanding.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "tests/test_generation_collapse_regression.py",
+     "tests/test_pf1_5_instruments.py"
+    ],
+    "status": "import_only"
+   }
+  ],
+  "cross_domain_links": [
+   {
+    "files": [
+     "aurora_internal/aurora_runtime_faults.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 77,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "concept_crystal.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 22,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_habitat.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 12,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_constraint_manifold_patched.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "INSTANTIATES": 12
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/dual_strata/strata_link.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 11,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_waveform_pressure.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 8,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_praxis_bridge.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 7,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_lexical_grounding.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 6,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_praxis_messenger.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 6,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_dream_trainer.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 4,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_reasoning_games.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 4,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "flutter_app/android/app/src/main/python/aurora_bridge.py",
+     "geological_baseline.py"
+    ],
+    "kinds": {
+     "CALLS": 4,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 4,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/dual_strata/sensory_snapshot_channel.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 4,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "constraint_evolutionary_sim.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 3,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_communication_emergence.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 4
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_live_experience.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 3,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_language_field.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_curiosity_engine.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_habitat_motivation.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_clone_harvest.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_reasoning_paths.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_resolution_ledger.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_runtime_faults.py",
+     "flutter_app/android/app/src/main/python/cv2.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_sensory_crystal.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_turn_persistence.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/lesson_replay.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 2,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_learning_probe.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_self_grounding.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora-acm/native/aurora_acm_native.py",
+     "aurora_i_state_beings.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora-acm/native/aurora_acm_native.py",
+     "aurora_ivm.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora-acm/native/aurora_acm_native.py",
+     "foundational_contract.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_computational_model.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_clone_harvest.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_confluence.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_constraint_semantic_continuity.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/aurora_representation_exchange.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 2
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/dual_strata/subsurface_presence_runtime.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/tool_registry.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_persistence_utils.py",
+     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_quantum_dream_substrate.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_scout_daemon.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_sensory_fallback.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_tool_mind.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1,
+     "INSTANTIATES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_vocabulary_seed_apply.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "CALLS": 1,
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora-acm/kernel/src/bridge/mod.rs",
+     "aurora_acm_bridge.py"
+    ],
+    "kinds": {
+     "endpoint:SUBSCRIBES/EMITS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora-acm/kernel/src/bridge/protocol.rs",
+     "aurora_acm_bridge.py"
+    ],
+    "kinds": {
+     "endpoint:EMITS/SUBSCRIBES": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_internal/dual_strata/__init__.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_sedimemory.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "aurora_simulation_engine.py",
+     "flutter_app/android/app/src/main/python/aurora_bridge.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "flutter_app/android/app/src/main/python/aurora_bridge.py",
+     "foundational_contract.py"
+    ],
+    "kinds": {
+     "IMPORTS": 1
+    }
+   },
+   {
+    "files": [
+     "flutter_app/android/app/src/main/python/aurora_bridge.py",
+     "tests/test_capability_binding.py"
+    ],
+    "kinds": {
+     "CALLS": 1
+    }
+   }
+  ]
+ },
+ "composite_candidates": {
+  "tests.3": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "hub": "tests/test_generation_collapse_regression.py",
+   "members": [
+    "tests/test_generation_collapse_regression.py",
+    "tests/test_pf1_5_instruments.py"
+   ],
+   "links": [
+    [
+     "tests/test_generation_collapse_regression.py",
+     "tests/test_pf1_5_instruments.py"
+    ]
+   ],
+   "support": "import_only"
+  },
+  "acm_core.1": {
+   "domain": "acm",
+   "subsystem": "acm_core",
+   "hub": "aurora-acm/kernel/src/acm/axes.rs",
+   "members": [
+    "aurora-acm/kernel/src/acm/axes.rs",
+    "aurora-acm/kernel/src/acm/crystal.rs",
+    "aurora-acm/kernel/src/acm/drift.rs",
+    "aurora-acm/kernel/src/acm/mod.rs",
+    "aurora-acm/kernel/src/acm/sedi.rs"
+   ],
+   "links": [
+    [
+     "aurora-acm/kernel/src/acm/axes.rs",
+     "aurora-acm/kernel/src/acm/crystal.rs"
+    ],
+    [
+     "aurora-acm/kernel/src/acm/axes.rs",
+     "aurora-acm/kernel/src/acm/drift.rs"
+    ],
+    [
+     "aurora-acm/kernel/src/acm/axes.rs",
+     "aurora-acm/kernel/src/acm/mod.rs"
+    ],
+    [
+     "aurora-acm/kernel/src/acm/axes.rs",
+     "aurora-acm/kernel/src/acm/sedi.rs"
+    ],
+    [
+     "aurora-acm/kernel/src/acm/crystal.rs",
+     "aurora-acm/kernel/src/acm/mod.rs"
+    ],
+    [
+     "aurora-acm/kernel/src/acm/drift.rs",
+     "aurora-acm/kernel/src/acm/mod.rs"
+    ],
+    [
+     "aurora-acm/kernel/src/acm/mod.rs",
+     "aurora-acm/kernel/src/acm/sedi.rs"
+    ]
+   ],
+   "support": "import_only"
+  },
+  "acm_cpm.1": {
+   "domain": "acm",
+   "subsystem": "acm_cpm",
+   "hub": "aurora-acm/kernel/src/cpm/mod.rs",
+   "members": [
+    "aurora-acm/kernel/src/cpm/mod.rs",
+    "aurora-acm/kernel/src/cpm/organ.rs",
+    "aurora-acm/kernel/src/cpm/scheduler.rs"
+   ],
+   "links": [
+    [
+     "aurora-acm/kernel/src/cpm/mod.rs",
+     "aurora-acm/kernel/src/cpm/organ.rs"
+    ],
+    [
+     "aurora-acm/kernel/src/cpm/mod.rs",
+     "aurora-acm/kernel/src/cpm/scheduler.rs"
+    ],
+    [
+     "aurora-acm/kernel/src/cpm/organ.rs",
+     "aurora-acm/kernel/src/cpm/scheduler.rs"
+    ]
+   ],
+   "support": "import_only"
+  },
+  "acm_bridge.1": {
+   "domain": "acm",
+   "subsystem": "acm_bridge",
+   "hub": "aurora-acm/kernel/src/bridge/mod.rs",
+   "members": [
+    "aurora-acm/kernel/src/bridge/mod.rs",
+    "aurora-acm/kernel/src/bridge/protocol.rs"
+   ],
+   "links": [
+    [
+     "aurora-acm/kernel/src/bridge/mod.rs",
+     "aurora-acm/kernel/src/bridge/protocol.rs"
+    ]
+   ],
+   "support": "import_only"
   }
  }
 }
