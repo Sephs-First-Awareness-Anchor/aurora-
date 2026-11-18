@@ -2222,9 +2222,9 @@ def habitat_reset() -> str:
     """Full reset -- human-only, Hub-triggered (spec section 32)."""
     import json as _json
     if _habitat is None:
-        return json.dumps({"error": "habitat_not_initialized"})
+        return _json.dumps({"error": "habitat_not_initialized"})
     _habitat.reset()
-    return json.dumps({"success": True})
+    return _json.dumps({"success": True})
 
 
 def _messenger_waiting() -> bool:
@@ -4620,6 +4620,9 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
             _capability_learning_mode    = False
             _capability_learning_context = {}
             _pending_capability_gap      = {}
+            # The gap is answered; the curiosity engine reads it from the
+            # shared systems dict, so clear it there too.
+            _systems.pop("_pending_capability_gap", None)
             skill_acknowledged = True
             # Retrospective: before/after temporal deposit — one of the most
             # significant growth events in Aurora's field.
@@ -6876,6 +6879,12 @@ def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) ->
         "gap_domain":  _pending_capability_gap["gap_domain"],
         "asked_at":    _t.time(),
     }
+    # The curiosity engine pursues an unresolved inability from
+    # systems["_pending_capability_gap"] (aurora_curiosity_engine.py), but the
+    # gap only ever lived in this module's global, so that pursuit never ran.
+    # Share the same dict, so the engine's _investigated mark is seen here.
+    if _systems is not None:
+        _systems["_pending_capability_gap"] = _pending_capability_gap
     log.info(
         "Capability gap registered: domain=%r task=%r pre_A=%.2f post_A=%.2f",
         _pending_capability_gap["gap_domain"],

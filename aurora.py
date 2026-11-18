@@ -27963,7 +27963,11 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 ev = _poedex_lookup_evidence(
                     embedded,
                     systems,
-                    request_text=search_prompt_text,
+                    # search_prompt_text is a local of _run_live_response_turn,
+                    # not of this function: naming it here raised NameError, so
+                    # every explicit lookup on this path failed silently.
+                    # Same derivation as that function.
+                    request_text=str((lookup_request or {}).get('source_text') or user_text),
                     timeout=12.0,
                     use_researcher=True,
                     pipeline_state=pipeline_state if isinstance(pipeline_state, dict) else None,
@@ -28723,7 +28727,11 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 ev = _poedex_lookup_evidence(
                     resolved_query,
                     systems,
-                    request_text=search_prompt_text,
+                    # search_prompt_text is a local of _run_live_response_turn,
+                    # not of this function: naming it here raised NameError, so
+                    # every explicit lookup on this path failed silently.
+                    # Same derivation as that function.
+                    request_text=str((lookup_request or {}).get('source_text') or user_text),
                     timeout=12.0,
                     use_researcher=True,
                     pipeline_state=pipeline_state if isinstance(pipeline_state, dict) else None,
@@ -35896,7 +35904,9 @@ def _run_live_response_turn(
                 "axes": dict(_rc_contract.get("runtime_axes") or {}),
                 "dominant": str(_ps.get("collective_dominant_axis") or ""),
                 "conf": round(float(getattr(resp_A, "confidence", 0.5) or 0.5), 3),
-                "nc": str((systems.get("_noncomp_output") or {}).get("nc_name") or ""),
+                # _apply_noncomp_output_guidance writes _last_noncomp_output;
+                # "_noncomp_output" was never written, so "nc" was always "".
+                "nc": str((systems.get("_last_noncomp_output") or {}).get("nc_name") or ""),
                 "tone": str(tone or ""),
             }
             conversation_memory.record_exchange(

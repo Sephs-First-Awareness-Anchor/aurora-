@@ -88,36 +88,48 @@ def _build_fake_engine(node):
     return fake_self
 
 
+# The enrichment site was later changed (see the comment at the top of
+# ExpressionPerceptionEngine._build_expression): pulled words are no longer
+# written into composer._context_keywords at all, only bridged into the
+# lexicon as available vocabulary, and build_relevance_anchor_set does the
+# one-hop weighting.  The FIX-A048 exclusion still holds at the bridge: a
+# co-occurrence-sourced neighbour is never bridged.  These tests now check
+# that contract; the earlier ones indexed set_context calls that no longer
+# happen and failed with IndexError on main.
+
+def _run(fake_self):
+    ExpressionPerceptionEngine._build_expression(
+        fake_self, offspring=None, assembly=None, i_state="i_is", input_text="market")
+
+
 def test_cooccurrence_relations_excluded_from_context_enrichment():
     """A co-occurrence-sourced relation (the saturated-hub shape confirmed
-    live: "planning" reaching unrelated turns) must not be pulled into
-    context_keywords."""
+    live: "planning" reaching unrelated turns) must not be pulled in."""
     node = _FakeNode(relations={
         "market->planning": _FakeRelation("market", "planning", "co-occurrence"),
     })
     fake_self = _build_fake_engine(node)
+    _run(fake_self)
 
-    ExpressionPerceptionEngine._build_expression(
-        fake_self, offspring=None, assembly=None, i_state="i_is", input_text="market")
-
-    final_context = fake_self.composer.set_context_calls[-1]
-    assert "planning" not in final_context
+    assert "planning" not in fake_self.lexicon.entries
+    assert "planning" not in fake_self.composer._context_keywords
+    assert all("planning" not in call for call in fake_self.composer.set_context_calls)
 
 
 def test_non_cooccurrence_relations_still_enrich_context():
     """Deliberate, structural relations (definition_analysis, category_
-    sharing, etc.) are real signal and must still flow through -- this
-    fix must not blanket-suppress the enrichment mechanism itself."""
+    sharing, etc.) are real signal and must still be made available --
+    this fix must not blanket-suppress the enrichment mechanism itself."""
     node = _FakeNode(relations={
         "market->economy": _FakeRelation("market", "economy", "category_sharing"),
     })
     fake_self = _build_fake_engine(node)
+    _run(fake_self)
 
-    ExpressionPerceptionEngine._build_expression(
-        fake_self, offspring=None, assembly=None, i_state="i_is", input_text="market")
-
-    final_context = fake_self.composer.set_context_calls[-1]
-    assert "economy" in final_context
+    assert "economy" in fake_self.lexicon.entries
+    assert fake_self.lexicon.entries["economy"].lineage == "oets"
+    # Availability only: the pulled word is not promoted to a direct anchor.
+    assert fake_self.composer._context_keywords == ["market"]
 
 
 def test_mixed_relations_keep_only_non_cooccurrence():
@@ -126,10 +138,7 @@ def test_mixed_relations_keep_only_non_cooccurrence():
         "market->economy": _FakeRelation("market", "economy", "category_sharing"),
     })
     fake_self = _build_fake_engine(node)
+    _run(fake_self)
 
-    ExpressionPerceptionEngine._build_expression(
-        fake_self, offspring=None, assembly=None, i_state="i_is", input_text="market")
-
-    final_context = fake_self.composer.set_context_calls[-1]
-    assert "economy" in final_context
-    assert "planning" not in final_context
+    assert "economy" in fake_self.lexicon.entries
+    assert "planning" not in fake_self.lexicon.entries

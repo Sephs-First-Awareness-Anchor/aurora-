@@ -6168,7 +6168,7 @@ def _build_ui():
                     exc=exc,
                     context={"function": "_run", "handler_line": 5752, "source_file": "aurora_hub.py"},
                 )
-                root.after(0, lambda: _dg_log(f"[scan error] {exc}"))
+                root.after(0, lambda _exc=exc: _dg_log(f"[scan error] {_exc}"))
                 root.after(0, _dg_scan_done, -1)
 
         threading.Thread(target=_run, daemon=True, name="diag-scan").start()
@@ -6264,7 +6264,7 @@ def _build_ui():
                     exc=exc,
                     context={"function": "_run", "handler_line": 5827, "source_file": "aurora_hub.py"},
                 )
-                root.after(0, lambda: _dg_log(f"[enforcer error] {exc}"))
+                root.after(0, lambda _exc=exc: _dg_log(f"[enforcer error] {_exc}"))
                 root.after(0, lambda: _dg_deploy_done(-1, p))
 
         threading.Thread(target=_run, daemon=True, name="diag-deploy").start()
@@ -6309,6 +6309,7 @@ def _build_ui():
             # Feed verdict to Researcher → ClaudeTrainer learns from each fix
             def _run_learn():
                 try:
+                    import subprocess  # never imported in this module
                     subprocess.run(
                         [sys.executable, str(_BASE_DIR / "quasiarch_diag.py"), "--learn", "--quiet"],
                         cwd=str(_BASE_DIR), capture_output=True,
@@ -6398,7 +6399,7 @@ def _build_ui():
                         exc=exc,
                         context={"function": "_run", "handler_line": 5947, "source_file": "aurora_hub.py"},
                     )
-                    root.after(0, lambda: _dg_log(f"[reverse] backup restore failed: {exc}"))
+                    root.after(0, lambda _exc=exc: _dg_log(f"[reverse] backup restore failed: {_exc}"))
 
             # Attempt 2: git revert if backup gone but commit known
             if not reversed_ok and commit_sha:
@@ -6421,7 +6422,7 @@ def _build_ui():
                         exc=exc,
                         context={"function": "_run", "handler_line": 5963, "source_file": "aurora_hub.py"},
                     )
-                    root.after(0, lambda: _dg_log(f"[reverse] git revert error: {exc}"))
+                    root.after(0, lambda _exc=exc: _dg_log(f"[reverse] git revert error: {_exc}"))
 
             if not reversed_ok:
                 root.after(0, lambda: _dg_log(
@@ -6479,7 +6480,7 @@ def _build_ui():
                     exc=exc,
                     context={"function": "_run", "handler_line": 6014, "source_file": "aurora_hub.py"},
                 )
-                root.after(0, lambda: _dg_log(f"[sweep error] {exc}"))
+                root.after(0, lambda _exc=exc: _dg_log(f"[sweep error] {_exc}"))
                 root.after(0, lambda: _dg_sweep_done(-1))
 
         def _dg_sweep_done(rc: int) -> None:
