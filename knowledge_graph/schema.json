@@ -1,0 +1,518 @@
+{
+  "authors": "Sunni (Sir) Morningstar & Cael Devo",
+  "edge_record": {
+    "confidence": "0-1",
+    "evidence": "up to 3 [path, line] pairs",
+    "provenance": "ast | regex | doc | ontology | filesystem | name",
+    "source": "node id",
+    "target": "node id",
+    "type": "edge type",
+    "weight": "times this relation was seen"
+  },
+  "edge_types": {
+    "CALLS": {
+      "description": "A call. confidence 1.0 exact or observed, 0.9 self/super, 0.8 typed, 0.6-0.7 by unique name in Rust, Dart, Kotlin, Java.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "Function"
+      ]
+    },
+    "CITES": {
+      "description": "Code that names a FIX-### entry.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "DoctrineRule"
+      ]
+    },
+    "COMPOSED_OF": {
+      "description": "A Non-Comp's axis and dimension; a manifold entry's Non-Comp and base axis.",
+      "source": [
+        "NonComp",
+        "ManifoldEntry"
+      ],
+      "target": [
+        "ConstraintAxis",
+        "NonCompDimension",
+        "NonComp"
+      ]
+    },
+    "CONTAINS": {
+      "description": "Structural ownership: repo > package > module or source file > class > method.",
+      "source": [
+        "Repository",
+        "Package",
+        "Module",
+        "Class",
+        "Function",
+        "SourceFile"
+      ],
+      "target": [
+        "Package",
+        "Module",
+        "Class",
+        "Function",
+        "Constant",
+        "SourceFile",
+        "Document",
+        "Field"
+      ]
+    },
+    "DOCUMENTS": {
+      "description": "A document that names this code, store, bus slot or organ.",
+      "source": [
+        "Document"
+      ],
+      "target": [
+        "Module",
+        "Class",
+        "Function",
+        "StateStore",
+        "BusChannel",
+        "Organ",
+        "SourceFile"
+      ]
+    },
+    "EMITS": {
+      "description": "Sends an event, frame or message to an endpoint.",
+      "source": [
+        "Module",
+        "Class",
+        "Function",
+        "SourceFile"
+      ],
+      "target": [
+        "Endpoint"
+      ]
+    },
+    "EXPRESSES": {
+      "description": "Code that carries an Aurora concept. provenance ast (literals) or name (identifiers).",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "ConstraintAxis",
+        "IStatePair",
+        "NonComp",
+        "NonCompDimension",
+        "Concept"
+      ]
+    },
+    "FEEDS": {
+      "description": "Information flow: a value produced by the source lands in the target. attrs: via (functions where the hand-off happens), roles (assign, argument, receiver, return, store_write, payload).",
+      "source": [
+        "Function",
+        "Class",
+        "Endpoint",
+        "Field",
+        "StateStore",
+        "EnvVar",
+        "BusChannel",
+        "Organ",
+        "Signal"
+      ],
+      "target": [
+        "Function",
+        "Field",
+        "StateStore",
+        "EnvVar",
+        "BusChannel",
+        "Organ",
+        "Signal",
+        "Endpoint"
+      ]
+    },
+    "GOVERNS": {
+      "description": "A registry entry that names this code or store.",
+      "source": [
+        "DoctrineRule"
+      ],
+      "target": [
+        "Module",
+        "Class",
+        "Function",
+        "StateStore",
+        "BusChannel"
+      ]
+    },
+    "HANDLES": {
+      "description": "Receives calls arriving at an endpoint.",
+      "source": [
+        "Module",
+        "Class",
+        "Function",
+        "SourceFile"
+      ],
+      "target": [
+        "Endpoint"
+      ]
+    },
+    "IMPLEMENTED_BY": {
+      "description": "The class of the object registered in the slot.",
+      "source": [
+        "Organ"
+      ],
+      "target": [
+        "Class"
+      ]
+    },
+    "IMPORTS": {
+      "description": "An import. attrs: names (imported symbols), lazy (inside a function).",
+      "source": [
+        "Module",
+        "SourceFile"
+      ],
+      "target": [
+        "Module",
+        "Package",
+        "ExternalDependency",
+        "SourceFile"
+      ]
+    },
+    "INHERITS": {
+      "description": "A base class, implemented trait or interface. attrs: names (base name when external).",
+      "source": [
+        "Class"
+      ],
+      "target": [
+        "Class",
+        "ExternalDependency"
+      ]
+    },
+    "INSTANTIATES": {
+      "description": "A constructor call.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "Class"
+      ]
+    },
+    "INVOKES": {
+      "description": "Calls across a runtime or language boundary.",
+      "source": [
+        "Module",
+        "Class",
+        "Function",
+        "SourceFile"
+      ],
+      "target": [
+        "Endpoint"
+      ]
+    },
+    "MAPS_TO": {
+      "description": "I-State pair of an axis.",
+      "source": [
+        "IStatePair"
+      ],
+      "target": [
+        "ConstraintAxis"
+      ]
+    },
+    "MEMBER_OF": {
+      "description": "A module's part in a responsibility. attrs: method (declared_layer, organ, name_pattern, path).",
+      "source": [
+        "Module",
+        "SourceFile"
+      ],
+      "target": [
+        "Subsystem"
+      ]
+    },
+    "OVERRIDES": {
+      "description": "A method that redefines a method of a base class.",
+      "source": [
+        "Function"
+      ],
+      "target": [
+        "Function"
+      ]
+    },
+    "OWNED_BY": {
+      "description": "Layer ownership, as declared.",
+      "source": [
+        "Module"
+      ],
+      "target": [
+        "Layer"
+      ]
+    },
+    "PART_OF": {
+      "description": "A stage that belongs to a sequence; a subsystem that sits in a layer.",
+      "source": [
+        "Concept",
+        "Subsystem"
+      ],
+      "target": [
+        "Concept",
+        "Layer",
+        "Subsystem"
+      ]
+    },
+    "PASSES_CALLBACK": {
+      "description": "Hands a function reference to other code to call later. attrs: to (receiving callee), params.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "Function"
+      ]
+    },
+    "PERSISTS_TO": {
+      "description": "A class whose methods write this store (derived from WRITES).",
+      "source": [
+        "Class"
+      ],
+      "target": [
+        "StateStore"
+      ]
+    },
+    "PRECEDES": {
+      "description": "Canonical order: L0 > L8, re-entry stages, observer levels.",
+      "source": [
+        "Layer",
+        "Concept"
+      ],
+      "target": [
+        "Layer",
+        "Concept"
+      ]
+    },
+    "READS": {
+      "description": "Reads a field, persisted file, environment variable, bus slot or pipeline signal.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "Field",
+        "StateStore",
+        "EnvVar",
+        "BusChannel",
+        "Organ",
+        "Signal"
+      ]
+    },
+    "REFERENCES": {
+      "description": "Names a persisted file without a read or write visible in the same statement.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "StateStore"
+      ]
+    },
+    "REGISTERS": {
+      "description": "Places an object into a systems slot.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "Organ"
+      ]
+    },
+    "ROUTES_TO": {
+      "description": "Where an endpoint delivers the work: the function that runs on the far side.",
+      "source": [
+        "Endpoint"
+      ],
+      "target": [
+        "Function",
+        "Class"
+      ]
+    },
+    "RUNS": {
+      "description": "A shell script or workflow launching a module.",
+      "source": [
+        "SourceFile"
+      ],
+      "target": [
+        "Module"
+      ]
+    },
+    "SPAWNS": {
+      "description": "Starts work that runs later or elsewhere. attrs: mechanisms (thread, timer, executor, task, call_later, atexit, signal, android_service).",
+      "source": [
+        "Module",
+        "Class",
+        "Function",
+        "SourceFile"
+      ],
+      "target": [
+        "Function",
+        "Class"
+      ]
+    },
+    "SUBSCRIBES": {
+      "description": "Listens for events, frames or messages at an endpoint.",
+      "source": [
+        "Module",
+        "Class",
+        "Function",
+        "SourceFile"
+      ],
+      "target": [
+        "Endpoint"
+      ]
+    },
+    "TESTS": {
+      "description": "A test module importing the module under test.",
+      "source": [
+        "Module"
+      ],
+      "target": [
+        "Module"
+      ]
+    },
+    "USES_ORGAN": {
+      "description": "Reads a systems slot to use the organ in it.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "Organ"
+      ]
+    },
+    "WRITES": {
+      "description": "Writes or mutates a field, persisted file, environment variable, bus slot or pipeline signal.",
+      "source": [
+        "Module",
+        "Class",
+        "Function"
+      ],
+      "target": [
+        "Field",
+        "StateStore",
+        "EnvVar",
+        "BusChannel",
+        "Organ",
+        "Signal"
+      ]
+    }
+  },
+  "id_format": "<prefix>:<qualified name>, e.g. mod:aurora_internal.aurora_leverage_scalar, fn:aurora.boot_aurora, store:aurora_oets_web.json",
+  "node_types": {
+    "BusChannel": {
+      "description": "A systems[\"_key\"] bus slot: signals passed between organs.",
+      "prefix": "bus"
+    },
+    "Class": {
+      "description": "A class, struct, enum, trait or object definition. language: python, rust, dart, kotlin, java.",
+      "prefix": "cls"
+    },
+    "Concept": {
+      "description": "A named Aurora subsystem or a stage of a canonical sequence.",
+      "prefix": "concept"
+    },
+    "Constant": {
+      "description": "An UPPER_CASE module- or class-level assignment.",
+      "prefix": "const"
+    },
+    "ConstraintAxis": {
+      "description": "One of the five canonical constraint axes X, T, N, B, A.",
+      "prefix": "axis"
+    },
+    "DoctrineRule": {
+      "description": "A FIX-### entry of the known fixes registry.",
+      "prefix": "rule"
+    },
+    "Document": {
+      "description": "A Markdown document in the repo.",
+      "prefix": "doc"
+    },
+    "Endpoint": {
+      "description": "A point where one runtime or language hands work to another. protocol: methodchannel, eventchannel, chaquopy, http, frame, android_intent.",
+      "prefix": "endpoint"
+    },
+    "EnvVar": {
+      "description": "An environment variable the code reads or sets.",
+      "prefix": "env"
+    },
+    "ExternalDependency": {
+      "description": "A top-level import outside the repo. ecosystem: stdlib, builtins, third_party.",
+      "prefix": "ext"
+    },
+    "Field": {
+      "description": "A state holder: an instance or class attribute, or module-level state that functions change. kind: instance, class, module_state.",
+      "prefix": "field"
+    },
+    "Function": {
+      "description": "A function or method in any analysed language. kind: function, method, staticmethod, classmethod, property, nested.",
+      "prefix": "fn"
+    },
+    "IStatePair": {
+      "description": "One of the five I-State polarity pairs.",
+      "prefix": "istate"
+    },
+    "Layer": {
+      "description": "An architectural layer, L0-L8, or the Orchestrator.",
+      "prefix": "layer"
+    },
+    "ManifoldEntry": {
+      "description": "One file in the constraint manifold directory.",
+      "prefix": "manifold"
+    },
+    "Module": {
+      "description": "A Python source file. role: core, internal, package_init, test, script, tool, app.",
+      "prefix": "mod"
+    },
+    "NonComp": {
+      "description": "One of the 25 Non-Comps (axis x dimension).",
+      "prefix": "nc"
+    },
+    "NonCompDimension": {
+      "description": "One of the five Non-Comp representational dimensions.",
+      "prefix": "ncdim"
+    },
+    "Organ": {
+      "description": "A systems[\"key\"] slot holding a live subsystem object.",
+      "prefix": "organ"
+    },
+    "Package": {
+      "description": "A Python package (a directory with __init__.py).",
+      "prefix": "pkg"
+    },
+    "Repository": {
+      "description": "The repository root.",
+      "prefix": "repo"
+    },
+    "Signal": {
+      "description": "A key of a turn's pipeline state (pipeline_state[\"key\"]).",
+      "prefix": "signal"
+    },
+    "SourceFile": {
+      "description": "A non-Python source file (Rust, Dart, Kotlin, Java, shell, workflow, web).",
+      "prefix": "src"
+    },
+    "StateStore": {
+      "description": "A persisted file the code reads or writes, named relative to the state dir.",
+      "prefix": "store"
+    },
+    "Subsystem": {
+      "description": "A responsibility: a layer, a named Aurora subsystem or an organ's implementation. basis says whether it is declared or inferred.",
+      "prefix": "subsys"
+    }
+  },
+  "schema_version": "2.0.0",
+  "title": "Aurora knowledge graph schema"
+}
