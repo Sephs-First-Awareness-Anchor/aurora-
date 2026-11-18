@@ -127,8 +127,10 @@ class StatusReceiver:
         self.frames_recv = 0
         self.last_status: Optional[Dict] = None
         self._buf        = bytearray()
+        self.invalid_frames = 0
 
-    def feed(self, data: bytes) -> None:
+    def feed(self, data: bytes):
+        decoded = []
         self._buf.extend(data)
         while len(self._buf) >= 15:
             idx = -1
@@ -142,17 +144,26 @@ class StatusReceiver:
             if len(self._buf) < 15:
                 break
             frame = bytes(self._buf[:15])
-            self._buf = self._buf[15:]
             status = self._decode(frame)
             if status:
+                self._buf = self._buf[15:]
                 self.last_status = status
                 self.frames_recv += 1
+                decoded.append(status)
                 if self.verbose and self.frames_recv % 300 == 0:
                     s = status
                     print(f"[STATUS #{self.frames_recv}] "
                           f"expr={s['expression']}  "
                           f"cryst={s['crystal_count']}  sedi={s['sedi_depth']}  "
                           f"tick={s['tick']}", flush=True)
+            else:
+                self.invalid_frames += 1
+                del self._buf[0]  # retain a possible valid header inside the bad frame
+        return decoded
+
+
+    def reset(self):
+        self._buf.clear()
 
     def _decode(self, frame: bytes) -> Optional[Dict]:
         if frame[0] != STS_MAGIC0 or frame[1] != STS_MAGIC1:
@@ -398,10 +409,13 @@ def run(systems: Dict[str, Any], host: str = 'localhost', port: int = 4567,
                       f"B={axes['B']:.2f} A={axes['A']:.2f}", flush=True)
 
             # Drain STATUS frames from kernel → cognitive waveform tick
+            statuses = []
             try:
                 data = sock.recv(256)
                 if data:
-                    status_rx.feed(data)
+                    statuses = status_rx.feed(data)
+                else:
+                    raise ConnectionResetError("kernel closed the bridge")
             except BlockingIOError as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -412,12 +426,8 @@ def run(systems: Dict[str, Any], host: str = 'localhost', port: int = 4567,
                 )
                 pass
 
-            # Tick cognitive waveform: use last known status or synthesize from axes
-            status = status_rx.last_status or {
-                'axes': axes, 'expression': 'Neutral',
-                'crystal_count': 0, 'sedi_depth': 0, 'tick': frames_tx,
-            }
-            _wave_tick_cognitive(systems, status, verbose)
+            for status in statuses:
+                _wave_tick_cognitive(systems, status, verbose)
 
         except (BrokenPipeError, OSError) as e:
             print(f'[BRIDGE] Connection lost ({e}), reconnecting...', flush=True)
@@ -432,9 +442,113 @@ def run(systems: Dict[str, Any], host: str = 'localhost', port: int = 4567,
                 )
                 pass
             sock = None
+            status_rx.reset()
             continue
 
         time.sleep(interval)
+
+
+class HostedACMBridge:
+    """Stoppable I/O carrier; resident scheduler alone owns cognitive work.
+
+    Every valid status is counted, including repeated kernel ticks. The
+    consumer may coalesce state observations, but never fabricates a tick.
+    """
+    def __init__(self, axes, receive, *, host="127.0.0.1", port=4567, hz=60.0):
+        if not 0 < hz <= 240:
+            raise ValueError("bridge frequency must be in (0, 240]")
+        self.axes, self.receive = axes, receive
+        self.host, self.port, self.hz = host, int(port), float(hz)
+        self.parser = StatusReceiver()
+        self._stop = threading.Event()
+        self._thread = None
+        self._sock = None
+        self.connected = False
+        self.frames_tx = self.reconnects = self.skipped_ticks = self.resets = 0
+        self.duplicate_ticks = 0
+        self.unwrapped_tick = 0
+        self._last_tick = None
+        self.last_received = 0.0
+        self.started_at = time.monotonic()
+        self.last_error = ""
+
+    def feed(self, data):
+        statuses = self.parser.feed(data)
+        for status in statuses:
+            tick = int(status["tick"])
+            if self._last_tick is None:
+                self.unwrapped_tick = tick
+            else:
+                delta = (tick - self._last_tick) & 0xffffffff
+                if delta == 0:
+                    self.duplicate_ticks += 1
+                elif delta < 0x80000000:
+                    self.skipped_ticks += max(0, delta - 1)
+                    self.unwrapped_tick += delta
+                else:
+                    self.resets += 1
+                    # Preserve a monotonic scheduler clock across kernel reboot.
+                    self.unwrapped_tick += 1
+            self._last_tick = tick
+            self.last_received = time.monotonic()
+            self.receive(status)
+        return statuses
+
+    def _run(self):
+        while not self._stop.is_set():
+            started = time.monotonic()
+            try:
+                if self._sock is None:
+                    self._sock = socket.create_connection((self.host, self.port), timeout=1)
+                    self._sock.settimeout(0.01)
+                    self.connected = True
+                    self.reconnects += 1
+                    self.parser.reset()
+                self._sock.sendall(encode_frame(self.axes()))
+                self.frames_tx += 1
+                try:
+                    data = self._sock.recv(4096)
+                    if not data:
+                        raise ConnectionResetError("kernel closed the bridge")
+                    self.feed(data)
+                except socket.timeout:
+                    pass
+                self.last_error = ""
+            except OSError as exc:
+                self.connected = False
+                self.last_error = f"{type(exc).__name__}: {exc}"
+                if self._sock:
+                    self._sock.close()
+                self._sock = None
+                self._stop.wait(1)
+            self._stop.wait(max(0, 1 / self.hz - (time.monotonic() - started)))
+        if self._sock:
+            self._sock.close()
+            self._sock = None
+        self.connected = False
+
+    def start(self):
+        if self._thread and self._thread.is_alive():
+            return False
+        self._stop.clear()
+        self._thread = threading.Thread(target=self._run, name="aurora-acm-io", daemon=True)
+        self._thread.start()
+        return True
+
+    def stop(self, timeout=3):
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout)
+
+    def status(self):
+        age = time.monotonic() - self.last_received if self.last_received else None
+        label = "disconnected" if not self.connected else "stalled" if age is None or age > 3 else "connected"
+        return {"status": label, "frames_tx": self.frames_tx, "frames_rx": self.parser.frames_recv,
+                "invalid_frames": self.parser.invalid_frames, "reconnects": self.reconnects,
+                "observed_rx_hz": round(self.parser.frames_recv / max(.001, time.monotonic() - self.started_at), 2),
+                "skipped_kernel_ticks": self.skipped_ticks, "duplicate_tick_statuses": self.duplicate_ticks,
+                "kernel_resets": self.resets, "unwrapped_tick": self.unwrapped_tick,
+                "last_received_seconds_ago": age, "last_error": self.last_error}
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────

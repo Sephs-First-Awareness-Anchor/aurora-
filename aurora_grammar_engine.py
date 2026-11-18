@@ -573,6 +573,7 @@ class MotifLineage:
         self._invalid_shape_logged: Set[str] = set()
         self._starvation_logged: Set[int] = set()
         self._trace_history: deque = deque(maxlen=120)
+        self._clone_harvest_chunks: Set[str] = set()
         self._load()
 
     # ---- R1.9.3 L1: skeleton clause-shape validity ------------------------
@@ -969,6 +970,7 @@ class MotifLineage:
                 "motifs":    {k: v.to_dict() for k, v in self._motifs.items()},
                 "discourse": {k: v.to_dict() for k, v in self._discourse.items()},
                 "saved_at":  time.time(),
+                "clone_harvest_chunks": sorted(self._clone_harvest_chunks),
             }
             tmp = self._state_path + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
@@ -991,6 +993,7 @@ class MotifLineage:
             if os.path.exists(self._state_path):
                 with open(self._state_path, encoding="utf-8") as f:
                     data = json.load(f)
+                self._clone_harvest_chunks = set(data.get("clone_harvest_chunks", []))
                 for k, v in data.get("motifs", {}).items():
                     self._motifs[k] = StructuralMotif.from_dict(v)
                 for k, v in data.get("discourse", {}).items():
@@ -1811,13 +1814,16 @@ class GrammarEngine:
                 credited += 1
         return credited
 
-    def absorb_clone_motifs(self, records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def absorb_clone_motifs(self, records: List[Dict[str, Any]], *, persist: bool = True,
+                            harvest_chunk_id: str = "") -> Dict[str, Any]:
         """FIX-A113: what her clones' rehearsal credited or failed in each
         sentence shape.  The counts are added to her own lineage and her own
         promotion rule decides what becomes promoted."""
         lineage = self._lineage
         absorbed = promoted = demoted = 0
         with lineage._lock:
+            if harvest_chunk_id and harvest_chunk_id in lineage._clone_harvest_chunks:
+                return {"absorbed": 0, "promoted": 0, "demoted": 0, "already_absorbed_chunk": 1}
             for rec in list(records or []):
                 try:
                     seq = tuple(TokenRole(r) for r in list(rec.get("seq") or []))
@@ -1837,7 +1843,9 @@ class GrammarEngine:
                 elif m.promoted and m.should_demote():
                     m.promoted = False
                     demoted += 1
-        if absorbed:
+            if harvest_chunk_id:
+                lineage._clone_harvest_chunks.add(harvest_chunk_id)
+        if absorbed and persist:
             lineage.save()
         return {"absorbed": absorbed, "promoted": promoted, "demoted": demoted}
 

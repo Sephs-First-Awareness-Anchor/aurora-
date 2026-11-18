@@ -26,23 +26,45 @@ import math
 import os
 import re
 import time
+import threading
+import contextlib
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 _BASE_DIR = Path(__file__).parent.parent.parent  # aurora_strata/
 _STATE_DIR = _BASE_DIR / "aurora_state"
 _QUEUE_PATH = _STATE_DIR / "predictive_frame_queue.json"
+_DEFAULT_QUEUE_PATH = _QUEUE_PATH
 
 
-def _queue_path() -> Path:
+def _queue_path(state_dir=None) -> Path:
     """Resolve the active state directory at I/O time, not import time.
 
     Cross-device Surface instances may have different state directories.
     Existing callers without an override retain the historical repo path.
     """
+    if state_dir is not None:
+        return Path(state_dir) / "predictive_frame_queue.json"
+    if _QUEUE_PATH != _DEFAULT_QUEUE_PATH:
+        return _QUEUE_PATH
     configured = os.environ.get("AURORA_STATE_DIR", "").strip()
+    if not configured:
+        from aurora_internal.aurora_state_context import get_active_state_dir
+        configured = get_active_state_dir() or ""
     return (Path(configured).expanduser() if configured else _STATE_DIR) / "predictive_frame_queue.json"
 _MAX_FRAMES = 8
+_QUEUE_LOCKS = {}
+_QUEUE_LOCKS_GUARD = threading.Lock()
+
+
+@contextlib.contextmanager
+def _queue_lock(state_dir=None):
+    from aurora_internal.process_lock import ProcessLock
+    path = _queue_path(state_dir).resolve().with_suffix(".lock")
+    with _QUEUE_LOCKS_GUARD:
+        lock = _QUEUE_LOCKS.setdefault(str(path), ProcessLock(path))
+    with lock:
+        yield
 
 # ---------------------------------------------------------------------------
 # 31-pressure constraint language perspectives — all non-empty subsets of
@@ -294,9 +316,9 @@ def _extract_slot_projections(projection: Dict[str, Any]) -> List[Dict[str, Any]
 # Queue I/O
 # ---------------------------------------------------------------------------
 
-def _load_queue() -> List[Dict[str, Any]]:
+def _load_queue(state_dir=None) -> List[Dict[str, Any]]:
     try:
-        path = _queue_path()
+        path = _queue_path(state_dir)
         if path.exists():
             data = json.loads(path.read_text(encoding="utf-8"))
             return data if isinstance(data, list) else []
@@ -312,9 +334,9 @@ def _load_queue() -> List[Dict[str, Any]]:
     return []
 
 
-def _save_queue(frames: List[Dict[str, Any]]) -> None:
+def _save_queue(frames: List[Dict[str, Any]], state_dir=None) -> None:
     try:
-        path = _queue_path()
+        path = _queue_path(state_dir)
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = str(path) + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
@@ -348,9 +370,17 @@ class PredictiveStager:
     """
 
     @staticmethod
-    def push_staged_frame(projection: Dict[str, Any]) -> None:
+    def push_staged_frame(projection: Dict[str, Any], *, state_dir=None) -> None:
+        with _queue_lock(state_dir):
+            PredictiveStager._push_staged_frame(projection, state_dir=state_dir)
+
+    @staticmethod
+    def _push_staged_frame(projection: Dict[str, Any], *, state_dir=None) -> None:
         """Push a validated subsurface projection as a staged candidate frame."""
-        frames = _load_queue()
+        frames = _load_queue(state_dir)
+        projection = dict(projection)
+        projection.setdefault("staged_at", time.time())
+        projection.setdefault("expires_at", float(projection["staged_at"]) + 30.0)
         projection = dict(projection or {})
         projection.setdefault("slot_projections", _extract_slot_projections(projection))
         frame = {
@@ -361,27 +391,42 @@ class PredictiveStager:
         frames.append(frame)
         if len(frames) > _MAX_FRAMES:
             frames = frames[-_MAX_FRAMES:]
-        _save_queue(frames)
+        _save_queue(frames, state_dir)
 
     @staticmethod
-    def pop_staged_frame(context_hash: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def pop_staged_frame(context_hash: Optional[str] = None, *, state_dir=None) -> Optional[Dict[str, Any]]:
         """Pop the freshest unconsumed staged frame, optionally matching context_hash."""
-        frames = PredictiveStager.pop_staged_frames(context_hash=context_hash, limit=1)
+        frames = PredictiveStager.pop_staged_frames(context_hash=context_hash, limit=1, state_dir=state_dir)
         return frames[0] if frames else None
 
     @staticmethod
     def pop_staged_frames(
         context_hash: Optional[str] = None,
         limit: int = _MAX_FRAMES,
+        *, state_dir=None, epoch=None,
     ) -> List[Dict[str, Any]]:
+        with _queue_lock(state_dir):
+            return PredictiveStager._pop_staged_frames(context_hash, limit, state_dir=state_dir, epoch=epoch)
+
+    @staticmethod
+    def _pop_staged_frames(context_hash=None, limit=_MAX_FRAMES, *, state_dir=None, epoch=None):
         """Pop up to limit freshest unconsumed staged frames."""
-        frames = _load_queue()
+        frames = _load_queue(state_dir)
         if not frames:
             return []
         selected: List[Dict[str, Any]] = []
         for i in range(len(frames) - 1, -1, -1):
             frame = frames[i]
+            if not isinstance(frame, dict):
+                continue
             if frame.get("consumed"):
+                continue
+            projection = frame.get("projection")
+            if not isinstance(projection, dict):
+                continue
+            expiry = projection.get("expires_at", float(frame.get("ts", 0)) + 30)
+            if time.time() > float(expiry) or (epoch is not None and projection.get("epoch", epoch) != epoch):
+                frames[i]["consumed"] = True
                 continue
             if context_hash is not None:
                 frame_hash = frame.get("projection", {}).get("context_hash")
@@ -394,17 +439,40 @@ class PredictiveStager:
             if len(selected) >= max(1, int(limit or 1)):
                 break
         if selected:
-            _save_queue(frames)
+            _save_queue(frames, state_dir)
         return selected
 
     @staticmethod
-    def pop_all_recent_frames(max_frames: int = _MAX_FRAMES) -> List[Dict[str, Any]]:
+    def pop_all_recent_frames(max_frames: int = _MAX_FRAMES, *, state_dir=None, epoch=None) -> List[Dict[str, Any]]:
         """Pop up to max_frames unconsumed frames (newest first).
 
         Called by Surface before each user turn to harvest all pending
         Subsurface perspective passes.
         """
-        return PredictiveStager.pop_staged_frames(limit=max_frames)
+        return PredictiveStager.pop_staged_frames(limit=max_frames, state_dir=state_dir, epoch=epoch)
+
+    @staticmethod
+    def relay_to(outbox, state_dir):
+        """Copy to the durable link outbox before consuming; retries dedupe."""
+        from aurora_internal.desktop.common import digest
+        queued = 0
+        with _queue_lock(state_dir):
+            frames = _load_queue(state_dir)
+            for frame in frames:
+                if not isinstance(frame, dict) or frame.get("consumed"):
+                    continue
+                projection = frame.get("projection")
+                if not isinstance(projection, dict):
+                    continue
+                projection = dict(projection)
+                projection.setdefault("staged_at", frame.get("ts", 0))
+                projection.setdefault("expires_at", float(projection["staged_at"]) + 30)
+                if time.time() <= float(projection["expires_at"]):
+                    queued += bool(outbox.append("predictive_frame", "event", projection,
+                                                dedupe_id="prediction:" + digest(projection)))
+                frame["consumed"] = True
+            _save_queue(frames, state_dir)
+        return queued
 
     @staticmethod
     def harvest_into_systems(systems: Dict[str, Any], max_frames: int = _MAX_FRAMES) -> int:
@@ -418,7 +486,7 @@ class PredictiveStager:
         and the earlier call's values remain in systems untouched.
         """
         try:
-            frames = PredictiveStager.pop_all_recent_frames(max_frames=max_frames)
+            frames = PredictiveStager.pop_all_recent_frames(max_frames=max_frames, state_dir=systems.get("state_dir"))
             if frames:
                 systems["_staged_subsurface_frames"] = frames
                 systems["_staged_subsurface_frame"] = frames[0]
@@ -505,8 +573,13 @@ class PredictiveStager:
                 "working_memory": wm_snapshot,
                 "conscious_frame": cf_snapshot,
             }
+            raw = systems.get("_anticipatory_input") or {}
+            if float(raw.get("expires_at", 0)) >= time.time():
+                projection["unprocessed_input"] = {"input_id": raw.get("input_id"), "text": raw.get("text", "")}
+                projection["evidence_basis"] = "hypothesis_from_unprocessed_input"
+                projection["expires_at"] = raw["expires_at"]
             projection["slot_projections"] = _extract_slot_projections(projection)
-            PredictiveStager.push_staged_frame(projection)
+            PredictiveStager.push_staged_frame(projection, state_dir=systems.get("state_dir"))
             return True
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(

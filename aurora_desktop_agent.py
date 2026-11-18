@@ -27,7 +27,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-_STATE_DIR = Path(__file__).parent / "aurora_state"
+_STATE_DIR = Path(os.environ.get("AURORA_STATE_DIR") or Path(__file__).parent / "aurora_state").resolve()
 _SNAP_DIR  = _STATE_DIR / "vision_seeds" / "browser"
 _SNAP_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -68,6 +68,12 @@ _SEARCH_ENGINES: Dict[str, str] = {
 # ---------------------------------------------------------------------------
 def _xdg_open(target: str) -> Dict[str, Any]:
     """Open a URL or file using xdg-open with the session's D-Bus environment."""
+    if os.name == "nt":
+        try:
+            os.startfile(target)
+            return {"ok": True, "url": target, "method": "windows_shell", "initiated": True}
+        except OSError as exc:
+            return {"ok": False, "error": str(exc)}
     env = dict(os.environ)
     # Inject D-Bus so xdg-open can reach the desktop session
     from pathlib import Path as _Path
@@ -134,6 +140,8 @@ class DesktopAgent:
     def _detect_display() -> Dict[str, str]:
         """Detect the active X11/Wayland display from known socket paths."""
         extra: Dict[str, str] = {}
+        if os.name == "nt":
+            return extra
         # Prefer whatever is already set in the environment
         if os.environ.get("DISPLAY"):
             extra["DISPLAY"] = os.environ["DISPLAY"]
@@ -466,6 +474,18 @@ def research(query: str, engine: str = "duckduckgo", max_chars: int = 2000) -> D
 def launch_application(app_name: str) -> Dict[str, Any]:
     """Launch a desktop application by name."""
     name = app_name.lower().strip()
+    if os.name == "nt":
+        launchers = {"terminal": "powershell.exe", "files": "explorer.exe", "file manager": "explorer.exe",
+                     "text editor": "notepad.exe", "calculator": "calc.exe", "chrome": "chrome.exe",
+                     "edge": "msedge.exe", "firefox": "firefox.exe", "vscode": "code.cmd"}
+        exe = shutil.which(launchers.get(name, name))
+        if not exe:
+            return {"ok": False, "error": f"no launcher found for '{app_name}'"}
+        try:
+            proc = subprocess.Popen([exe], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return {"ok": True, "launched": exe, "pid": proc.pid, "initiated": True}
+        except OSError as exc:
+            return {"ok": False, "error": str(exc)}
     candidates = _APP_LAUNCHERS.get(name) or [name]
 
     # Build display-aware environment so the launched app can connect to the
@@ -529,6 +549,17 @@ def system_operation(op: str, confirm: bool = False) -> Dict[str, Any]:
     Destructive ops (reboot, shutdown) require confirm=True.
     """
     op = op.lower().strip()
+    if os.name == "nt":
+        if op == "lock":
+            import ctypes
+            return {"ok": bool(ctypes.windll.user32.LockWorkStation()), "op": op}
+        if op in {"reboot", "shutdown", "poweroff"}:
+            if not confirm:
+                return {"ok": False, "requires_confirm": True, "error": "explicit confirmation required"}
+            proc = subprocess.run(["shutdown.exe", "/r" if op == "reboot" else "/s", "/t", "0"],
+                                  capture_output=True, text=True, timeout=5)
+            return {"ok": proc.returncode == 0, "op": op, "error": proc.stderr}
+        return {"ok": False, "error": "Windows operation has no verified adapter"}
 
     if op in _DESTRUCTIVE_OPS:
         if not confirm:
@@ -742,7 +773,7 @@ def shell_command(cmd: str, cwd: str = None, bg: bool = False) -> Dict[str, Any]
             return {"ok": True, "pid": proc.pid, "bg": True}
         else:
             proc = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True, timeout=60)
-            return {"ok": True, "stdout": proc.stdout, "stderr": proc.stderr, "returncode": proc.returncode}
+            return {"ok": proc.returncode == 0, "stdout": proc.stdout, "stderr": proc.stderr, "returncode": proc.returncode}
     except Exception as e:
         _aurora_record_exception_from_locals(
             locals(),
@@ -812,7 +843,7 @@ def macro_automation(op: str, x: int = None, y: int = None, text: str = "", key:
     """Take physical control of mouse/keyboard."""
     try:
         import pyautogui
-        pyautogui.FAILSAFE = False # Prevent aborts if mouse is in corner
+        pyautogui.FAILSAFE = True  # Preserve the owner's physical stop gesture.
     except ImportError as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),

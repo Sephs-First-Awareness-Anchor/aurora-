@@ -434,6 +434,7 @@ _TURN_ADMISSION_TIMEOUT_S: float = 180.0
 # diagnostically distinct from Aurora genuinely speaking unprompted, even
 # though both are delivered to Flutter through the same poll transport.
 _late_surface_response: str = ""
+_late_surface_responses = []
 _late_surface_response_lock = threading.Lock()
 
 
@@ -442,7 +443,7 @@ def _store_late_surface_response(turn_id: str, text: str) -> None:
     if not text:
         return
     with _late_surface_response_lock:
-        _late_surface_response = text
+        _late_surface_responses.append({"turn_id": turn_id, "text": text})
     log.info("Late surface response stored for %s (%d chars)", turn_id, len(text))
 
 
@@ -452,8 +453,7 @@ def get_late_surface_response() -> str:
     that finished deciding after the Surface wait already timed out."""
     global _late_surface_response
     with _late_surface_response_lock:
-        val = _late_surface_response
-        _late_surface_response = ""
+        val = _late_surface_responses.pop(0)["text"] if _late_surface_responses else ""
     return val
 
 
@@ -2438,16 +2438,29 @@ def strata_link_transfer(action: str, token: str = "") -> str:
         client = _sl.start_strata_link_client_if_configured(_dir)
         if client is None:
             return _json.dumps({"ok": False, "error": "not paired with a Subsurface device"})
-        if action == "seed":
-            result = client.push_state("seed")
-        elif action == "handoff_checkpoint":
-            result = client.push_state("handoff")
-        elif action == "handoff_claim":
-            result = client.pull_handoff(token)
-        elif action == "verify":
-            result = client.verify_sync()
-        else:
-            result = {"ok": False, "error": f"unknown action: {action}"}
+        with _lock:
+            if action == "seed":
+                result = client.push_state("seed")
+            elif action == "handoff_checkpoint":
+                from aurora_internal.dual_strata.surface_working_state import capture
+                with _late_surface_response_lock:
+                    capture(_systems, _dir, app_state={"late_responses": list(_late_surface_responses)})
+                result = client.push_state("handoff")
+            elif action == "handoff_claim":
+                def install_surface():
+                    from aurora_internal.dual_strata.surface_working_state import restore
+                    restored = restore(_systems, _dir)
+                    with _late_surface_response_lock:
+                        _late_surface_responses[:] = restored.get("late_responses", [])
+                result = client.pull_handoff(token, restore_callback=install_surface)
+                if result.get("ok"):
+                    (_sl.link_dir(_dir) / "surface_frozen").unlink(missing_ok=True)
+            elif action == "handoff_cancel":
+                result = client.cancel_handoff(token)
+            elif action == "verify":
+                result = client.verify_sync()
+            else:
+                result = {"ok": False, "error": f"unknown action: {action}"}
         return _json.dumps(result, default=str)
     except Exception as exc:
         return _json.dumps({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
@@ -2488,6 +2501,7 @@ def initialize(state_dir: str = "") -> str:
     _boot_state.update({"stage": "initialize() entered", "finished": False, "aborted": ""})
     global _strata_state_dir
     _strata_state_dir = state_dir if state_dir else "aurora_state"
+    os.environ["AURORA_STATE_DIR"] = os.path.abspath(_strata_state_dir)
     _praxis_start_errors.update({"bridge": "", "messenger": ""})
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis, _praxis_messenger
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()

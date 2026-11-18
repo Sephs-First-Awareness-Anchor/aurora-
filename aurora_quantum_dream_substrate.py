@@ -92,12 +92,14 @@ class CrystalEntanglementRegistry:
             if genealogy is None or not hasattr(genealogy, "recent_promotions"):
                 return 0
             promotions = list(genealogy.recent_promotions or [])[-20:]
-            # Group by shared parent
+            # Resolve ancestry from the canonical link DAG. A name prefix is
+            # not a parent and cannot manufacture an inherited relationship.
             parent_map: Dict[str, List[str]] = {}
             for p in promotions:
-                concept = str(p) if not isinstance(p, dict) else str(p.get("concept", ""))
-                parent  = concept.rsplit("_", 1)[0] if "_" in concept else concept[:5]
-                parent_map.setdefault(parent, []).append(concept)
+                concept = str(p) if not isinstance(p, dict) else str(p.get("link_id") or p.get("concept", ""))
+                link = getattr(genealogy, "links", {}).get(concept)
+                for parent in getattr(link, "parents", []) or []:
+                    parent_map.setdefault(str(parent), []).append(concept)
             for parent, siblings in parent_map.items():
                 if len(siblings) < 2:
                     continue
@@ -106,7 +108,7 @@ class CrystalEntanglementRegistry:
                         a, b = siblings[i], siblings[j]
                         key = (min(a, b), max(a, b))
                         if key not in self._seen:
-                            strength = random.uniform(0.55, 0.85)
+                            strength = 1.0  # ancestry overlap, not an earned causal confidence
                             self._pairs.append((a, b, strength))
                             self._seen.add(key)
                             added += 1
@@ -123,23 +125,14 @@ class CrystalEntanglementRegistry:
 
     def propagate(self, systems: Dict[str, Any]) -> None:
         """
-        For each entangled pair where one partner just received a promotion
-        weight delta, apply _ENTANGLEMENT_TRANSFER_RATE × delta to the other.
+        Offer associative attention to the existing activation field. Dream
+        co-activation cannot create earned genealogy or experiential evidence.
         """
         if not self._pairs:
             return
         try:
-            genealogy = systems.get("genealogy")
-            if genealogy is None or not hasattr(genealogy, "tick_crystal_promotion"):
-                return
-            for (a, b, strength) in self._pairs:
-                # Stochastic: each pair has a chance to propagate each cycle
-                if random.random() > strength * 0.5:
-                    continue
-                delta = random.uniform(0.05, 0.15) * strength * _ENTANGLEMENT_TRANSFER_RATE
-                # Propagate in both directions (entanglement is symmetric)
-                genealogy.tick_crystal_promotion(b, delta=delta, source=f"entangle:{a}")
-                genealogy.tick_crystal_promotion(a, delta=delta, source=f"entangle:{b}")
+            systems["_dream_association_seeds"] = list(dict.fromkeys(
+                concept for a, b, strength in self._pairs[-40:] for concept in (a, b)))
         except Exception as exc:
             _aurora_record_exception_from_locals(
                 locals(),

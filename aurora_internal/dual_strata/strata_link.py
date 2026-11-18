@@ -87,6 +87,32 @@ HANDOFF_TTL_S = 3600.0          # a checkpoint waits this long for its claimant
 MAX_SENSORY_SNAPSHOT_BYTES = 1_500_000
 
 
+def publish_raw_input(state_dir, text):
+    """Disposable pre-processing feed; it is never a completed lived event."""
+    if not str(text).strip():
+        return
+    packet = {"input_id": uuid.uuid4().hex, "text": str(text)[:16000], "at": time.time(),
+              "expires_at": time.time() + 30, "basis": "unprocessed_input"}
+    _atomic_write_json(link_dir(state_dir) / "raw_input.json", packet)
+    if _CLIENT is not None and _CLIENT.state_dir.resolve() == Path(state_dir).resolve():
+        _CLIENT.outbox.append("raw_input", "state", packet)
+
+
+def require_surface_admission(systems):
+    """Fence actual conscious turns, not just their outbound transport."""
+    source = str(systems.get("_turn_source_label") or "")
+    root = Path(str(systems.get("state_dir") or "aurora_state"))
+    if (link_dir(root) / "surface_frozen").exists():
+        raise RuntimeError("surface_frozen_for_handoff")
+    server = systems.get("_strata_link_server")
+    sid = systems.get("_desktop_surface_id")
+    if server is not None and sid and not server.surface_ready(sid):
+        raise RuntimeError("surface_standby")
+    client = systems.get("strata_link")
+    if client is not None and (client.role != "active" or not client.surface_ready):
+        raise RuntimeError("surface_standby_or_not_restored")
+
+
 # ---------------------------------------------------------------------------
 # Small file helpers
 # ---------------------------------------------------------------------------
@@ -107,9 +133,9 @@ def _read_json(path: Path, default: Any) -> Any:
 
 
 def _atomic_write_json(path: Path, payload: Any) -> None:
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(json.dumps(payload, default=str), encoding="utf-8")
-    os.replace(str(tmp), str(path))
+    from aurora_persistence_utils import atomic_write_json
+    if not atomic_write_json(path, payload, default=str):
+        raise OSError(f"could not persist {path.name}")
 
 
 def _read_text(path: Path) -> str:
@@ -278,6 +304,11 @@ def _collect_sensory_snapshot(state_dir: Any, outbox: DurableOutbox) -> int:
 def apply_uplink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
     """Subsurface side.  Returns "applied", "duplicate" or "unknown_channel"."""
     channel = str(record.get("channel") or "")
+    if channel == "raw_input" and isinstance(record.get("payload"), dict):
+        payload = record["payload"]
+        if float(payload.get("expires_at", 0)) >= time.time():
+            _atomic_write_json(link_dir(state_dir) / "raw_input.json", payload)
+        return "applied"
     if channel == "continuity":
         from aurora_internal.dual_strata.surface_continuity_feed import deposit_continuity_packet
         return "applied" if deposit_continuity_packet(state_dir, dict(record.get("payload") or {})) else "duplicate"
@@ -324,10 +355,7 @@ def collect_subsurface_downlink(state_dir: Any, outbox: DurableOutbox, memo: Dic
         pass
     try:
         from aurora_internal.dual_strata.predictive_stager import PredictiveStager
-        for frame in reversed(PredictiveStager.pop_all_recent_frames() or []):  # oldest first
-            if isinstance(frame, dict):
-                outbox.append("predictive_frame", "event", frame)
-                queued += 1
+        queued += PredictiveStager.relay_to(outbox, state_dir)
     except Exception:
         pass
     return queued
@@ -344,7 +372,7 @@ def apply_downlink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
         return "applied"
     if channel == "predictive_frame" and isinstance(payload, dict):
         from aurora_internal.dual_strata.predictive_stager import PredictiveStager
-        PredictiveStager.push_staged_frame(payload)
+        PredictiveStager.push_staged_frame(payload, state_dir=state_dir)
         return "applied"
     if channel == "sensory_guidance" and isinstance(payload, dict):
         from aurora_internal.dual_strata.sensory_snapshot_channel import (
@@ -380,10 +408,12 @@ class StrataLinkServer:
     """Runs inside the Subsurface process (aurora_daemon), so it shares the
     continuity feed's in-process lock with the Subsurface loop that reads it."""
 
-    def __init__(self, state_dir: Any, *, host: str = "0.0.0.0", port: int = DEFAULT_PORT) -> None:
+    def __init__(self, state_dir: Any, *, host: str = "0.0.0.0", port: int = DEFAULT_PORT,
+                 state_install_allowed: bool = True) -> None:
         self.state_dir = Path(str(state_dir))
         self.host = str(host)
         self.port = int(port)
+        self.state_install_allowed = state_install_allowed
         self.secret = ensure_secret(self.state_dir)
         self._state_path = link_dir(self.state_dir) / "server_state.json"
         self.outbox = DurableOutbox(link_dir(self.state_dir) / "down_outbox.json")
@@ -426,13 +456,17 @@ class StrataLinkServer:
             self.counters["syncs"] += 1
             state["last_seen"][surface_id] = now
             handoff = state.get("handoff")
-            if handoff and now - float(handoff.get("at", 0.0) or 0.0) > HANDOFF_TTL_S:
-                self._drop_handoff()
-                state["handoff"] = handoff = None
+            expired = bool(handoff and now - float(handoff.get("at", 0.0) or 0.0) > HANDOFF_TTL_S)
             wants_claim = bool(request.get("claim")) and state["owner"] != surface_id
             refused = ""
+            if wants_claim and state["owner"] and not handoff:
+                wants_claim, refused = False, "checkpoint_handoff_required"
             if wants_claim and handoff and state["owner"]:
-                if not hmac.compare_digest(str(request.get("handoff_token") or ""),
+                if expired:
+                    wants_claim, refused = False, "handoff_expired; cancel from the source and prepare again"
+                elif handoff.get("claimed_by") not in (None, surface_id):
+                    wants_claim, refused = False, "handoff_already_claimed"
+                elif not hmac.compare_digest(str(request.get("handoff_token") or ""),
                                            str(handoff.get("token") or "")):
                     # A checkpoint is waiting for its claimant: a stateless
                     # claim must not take the Surface role out from under it.
@@ -456,6 +490,8 @@ class StrataLinkServer:
             state_result: Optional[Dict[str, Any]] = None
             if isinstance(request.get("state_op"), dict):
                 state_result = self._state_op(state, surface_id, active, dict(request["state_op"]), now)
+                active = state["owner"] == surface_id
+                link_key = f"{state['instance']}:{state['epoch']}"
             if active:
                 records = [r for r in (request.get("up") or []) if isinstance(r, dict)]
                 for record in sorted(records, key=lambda r: int(r.get("seq", 0) or 0)):
@@ -477,7 +513,7 @@ class StrataLinkServer:
                     _atomic_write_json(self._state_path, state)
                 if str(request.get("link_key") or "") == link_key:
                     self.outbox.ack(int(request.get("down_ack", 0) or 0))
-                if self.downlink_enabled():
+                if self.downlink_enabled() and not state.get("handoff"):
                     collect_subsurface_downlink(self.state_dir, self.outbox, state["memo"])
                     down = self.outbox.pending(MAX_BATCH)
             else:
@@ -487,6 +523,7 @@ class StrataLinkServer:
                         "role": "active" if active else "standby", "link_key": link_key,
                         "up_ack": up_ack, "down": down,
                         "downlink_enabled": self.downlink_enabled()}
+            response["surface_ready"] = active and not bool(state.get("handoff"))
             if refused:
                 response["error"] = refused
             if state_result is not None:
@@ -512,6 +549,19 @@ class StrataLinkServer:
         from aurora_internal.dual_strata import strata_state_transfer as st
         name = str(op.get("op") or "")
         try:
+            if name == "handoff_cancel":
+                pending = state.get("handoff")
+                if not pending or pending.get("from") != surface_id or not hmac.compare_digest(
+                        str(op.get("token") or ""), str(pending.get("token") or "")):
+                    return {"ok": False, "error": "source_and_checkpoint_token_required"}
+                state["owner"] = surface_id
+                state["epoch"] += 1
+                state["claimed_at"] = now
+                state["handoff"] = None
+                state["memo"] = {}
+                self.outbox.ack(10 ** 18)
+                self._drop_handoff()
+                return {"ok": True, "cancelled": True}
             if not active:
                 return {"ok": False, "error": "not_active_surface"}
             if name in ("offer", "chunk", "commit"):
@@ -552,6 +602,8 @@ class StrataLinkServer:
                     return {"ok": False, "error": "incomplete", "bad": bad[:20], "bad_count": len(bad)}
                 meta, manifest = transfer.meta(), transfer.raw_manifest()
                 if meta.get("purpose") == "seed":
+                    if not self.state_install_allowed:
+                        return {"ok": False, "error": "cold_seed_required; stop the resident before installing state"}
                     report = st.install_verified(transfer.files, manifest, self.state_dir,
                                                  link_dir(self.state_dir) / "backup" / tid)
                     seeded = {"at": now, "from": surface_id, "epoch": state["epoch"],
@@ -691,6 +743,11 @@ class StrataLinkServer:
                 "down_outbox": self.outbox.stats(),
                 "last_error": self.last_error, **self.counters}
 
+    def surface_ready(self, surface_id):
+        with self._lock:
+            state = self._load_state()
+            return state["owner"] == surface_id and not bool(state.get("handoff"))
+
 
 _SERVER: Optional[StrataLinkServer] = None
 
@@ -705,7 +762,7 @@ def start_strata_link_server_if_configured(state_dir: Any, *, host: str = "0.0.0
     if not _read_text(link_dir(state_dir) / "secret.txt"):
         return None
     chosen = int(port or os.environ.get("AURORA_STRATA_LINK_PORT") or DEFAULT_PORT)
-    server = StrataLinkServer(state_dir, host=host, port=chosen)
+    server = StrataLinkServer(state_dir, host=host, port=chosen, state_install_allowed=False)
     server.start()
     _SERVER = server
     return server
@@ -780,6 +837,7 @@ class StrataLinkClient:
         self._claim_path = link_dir(self.state_dir) / "claim_pending"
         self.online = False
         self.role = "unknown"
+        self.surface_ready = False
         self.epoch = 0
         self.rtt_ms = 0.0
         self.last_sync_at = 0.0
@@ -849,6 +907,7 @@ class StrataLinkClient:
         self.last_error = str(response.get("error") or "")
         self.counters["syncs"] += 1
         self.role = str(response.get("role") or "unknown")
+        self.surface_ready = bool(response.get("surface_ready", self.role == "active"))
         self.epoch = int(response.get("epoch", 0) or 0)
         if self.role == "active" and self._claim_path.exists():
             try:
@@ -908,6 +967,7 @@ class StrataLinkClient:
             raise TransferError("response not JSON")
         self.online = True
         self.role = str(response.get("role") or self.role)
+        self.surface_ready = bool(response.get("surface_ready", self.role == "active"))
         self.epoch = int(response.get("epoch", self.epoch) or 0)
         return response
 
@@ -952,12 +1012,17 @@ class StrataLinkClient:
         from aurora_internal.dual_strata import strata_state_transfer as st
         chunk = int(chunk_bytes or st.CHUNK_BYTES)
         try:
-            self.flush_outbox()
+            if not self.flush_outbox():
+                return {"ok": False, "error": "unacknowledged_continuity; state transfer must wait"}
             probe = self._call({})
             if probe.get("role") != "active":
                 return {"ok": False, "error": f"not the active Surface ({probe.get('error') or 'standby'})"}
             snap = link_dir(self.state_dir) / "snapshots" / "current"
-            manifest = st.snapshot_state(self.state_dir, snap)
+            if purpose == "handoff":
+                from aurora_internal.dual_strata.surface_working_state import FILENAME
+                manifest = st.snapshot_state(self.state_dir, snap, rel_paths=[FILENAME])
+            else:
+                manifest = st.snapshot_state(self.state_dir, snap)
             if not manifest:
                 return {"ok": False, "error": "nothing to transfer"}
             digest = st.manifest_digest(manifest)
@@ -988,6 +1053,9 @@ class StrataLinkClient:
                         if reply.get("complete") or not data:
                             break
             done = self._state_call({"op": "commit", "transfer_id": tid})
+            if purpose == "handoff":
+                (link_dir(self.state_dir) / "surface_frozen").write_text(str(time.time()), encoding="utf-8")
+                self.surface_ready = False
             shutil.rmtree(snap, ignore_errors=True)
             return {"ok": True, "purpose": purpose, "transfer_id": tid, "digest": digest,
                     "files": len(manifest), "skipped_already_there": len(have),
@@ -996,11 +1064,22 @@ class StrataLinkClient:
             self.last_error = f"push_state: {exc}"[:200]
             return {"ok": False, "error": str(exc)}
 
-    def pull_handoff(self, token: str, *, chunk_bytes: Optional[int] = None) -> Dict[str, Any]:
+    def cancel_handoff(self, token: str) -> Dict[str, Any]:
         with self._sync_lock:
-            return self._pull_handoff_locked(token, chunk_bytes=chunk_bytes)
+            try:
+                result = self._state_call({"op": "handoff_cancel", "token": str(token)})
+                (link_dir(self.state_dir) / "surface_frozen").unlink(missing_ok=True)
+                self.sync_once()
+                return result
+            except Exception as exc:
+                return {"ok": False, "error": str(exc)}
 
-    def _pull_handoff_locked(self, token: str, *, chunk_bytes: Optional[int]) -> Dict[str, Any]:
+    def pull_handoff(self, token: str, *, chunk_bytes: Optional[int] = None,
+                     restore_callback=None) -> Dict[str, Any]:
+        with self._sync_lock:
+            return self._pull_handoff_locked(token, chunk_bytes=chunk_bytes, restore_callback=restore_callback)
+
+    def _pull_handoff_locked(self, token: str, *, chunk_bytes: Optional[int], restore_callback=None) -> Dict[str, Any]:
         """Become the active Surface with the previous Surface's state.
 
         Claims the role with the checkpoint token, pulls every file, verifies
@@ -1054,14 +1133,21 @@ class StrataLinkClient:
                 return {"ok": False, "error": "verification failed", "bad": bad[:20]}
             report = st.install_verified(staging.files, manifest, self.state_dir,
                                          link_dir(self.state_dir) / "backup" / f"pull-{digest[:16]}")
+            if restore_callback is not None:
+                # The role remains fenced until the living destination has
+                # restored its present-frame state, not merely received bytes.
+                restore_callback()
             self._state_call({"op": "handoff_complete", "digest": digest})
             staging.discard()
             return {"ok": True, "digest": digest, "files": len(manifest),
                     "reused_local": reused, "bytes_pulled": pulled, "epoch": self.epoch,
-                    "restart_required": True, **report}
+                    "restart_required": restore_callback is None, **report}
         except st.TransferError as exc:
             self.last_error = f"pull_handoff: {exc}"[:200]
             return {"ok": False, "error": str(exc)}
+        except Exception as exc:
+            self.last_error = f"restore_handoff: {type(exc).__name__}: {exc}"[:200]
+            return {"ok": False, "error": self.last_error}
 
     def verify_sync(self) -> Dict[str, Any]:
         """How this device's state stands against the Subsurface device's,

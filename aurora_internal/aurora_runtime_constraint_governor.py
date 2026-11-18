@@ -750,6 +750,23 @@ class RuntimeConstraintGovernor:
         return max(60, int(retry))
 
     def _host_metrics(self) -> Dict[str, Any]:
+        if __import__("sys").platform == "win32":
+            try:
+                import psutil
+                import shutil
+                cpu = max(1, int(os.cpu_count() or 1))
+                ratio = psutil.cpu_percent(interval=None) / 100.0
+                mem = psutil.virtual_memory()
+                disk = shutil.disk_usage(self.state_dir or ".")
+                return {"cpu_count": cpu, "load_1m": ratio * cpu, "load_5m": ratio * cpu,
+                        "load_ratio": ratio, "mem_available_mb": mem.available / 1048576,
+                        "mem_pressure": mem.percent / 100, "disk_free_ratio": disk.free / disk.total,
+                        "process_rss_mb": psutil.Process().memory_info().rss / 1048576,
+                        "metrics_available": True}
+            except (ImportError, OSError):
+                return {"cpu_count": os.cpu_count() or 1, "load_1m": 0, "load_5m": 0,
+                        "load_ratio": 1, "mem_available_mb": 0, "mem_pressure": 1,
+                        "disk_free_ratio": 0, "process_rss_mb": 0, "metrics_available": False}
         cpu_count = max(1, int(os.cpu_count() or 1))
         load1 = 0.0
         load5 = 0.0

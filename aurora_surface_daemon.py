@@ -4,6 +4,7 @@ from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
+import os
 import signal
 import threading
 import time
@@ -23,7 +24,7 @@ from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
 
 
 _BASE_DIR = Path(__file__).parent
-_STATE_DIR = _BASE_DIR / "aurora_state"
+_STATE_DIR = Path(os.environ.get("AURORA_STATE_DIR") or _BASE_DIR / "aurora_state").resolve()
 _QUEUE_FILE = _STATE_DIR / "surface_turn_queue.json"
 _RESULT_FILE = _STATE_DIR / "surface_turn_result.json"
 _STATUS_FILE = _STATE_DIR / "surface_daemon_status.json"

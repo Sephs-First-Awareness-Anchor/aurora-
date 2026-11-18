@@ -1,6 +1,8 @@
 # Aurora Whole-System Embodiment: Pre-implementation Audit and Corrections
 
-Status: **architecture / evidence audit, not deployment approval**. Target: HP Windows laptop; Linux laptop as optional ACM experimentation host.
+Historical pre-implementation audit. The implemented corrections and current evidence are now recorded in [DESKTOP_EMBODIMENT_AUDIT.md](DESKTOP_EMBODIMENT_AUDIT.md), [DESKTOP_EMBODIMENT_VALIDATION.md](DESKTOP_EMBODIMENT_VALIDATION.md), and [HP_WINDOWS_DEPLOYMENT.md](HP_WINDOWS_DEPLOYMENT.md).
+
+Original status: **architecture / evidence audit, not deployment approval**. Target: HP Windows laptop; Linux laptop as optional ACM experimentation host.
 
 ## Governing requirement
 

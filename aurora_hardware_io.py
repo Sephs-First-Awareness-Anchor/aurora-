@@ -88,7 +88,7 @@ except Exception as _aurora_boundary_exc:
 
 _PLATFORM_OVERRIDE = os.environ.get("AURORA_PLATFORM", "").strip().lower()
 
-_STATE_DIR = Path(__file__).resolve().parent / "aurora_state"
+_STATE_DIR = Path(os.environ.get("AURORA_STATE_DIR") or Path(__file__).resolve().parent / "aurora_state").resolve()
 _VOICE_TRIGGER_FILE = _STATE_DIR / "voice_trigger.json"
 
 # Termux-API command availability cache
@@ -105,9 +105,11 @@ def _termux_cmd(name: str) -> bool:
 
 
 def detect_platform() -> str:
-    """Return 'termux', 'linux', or 'headless'."""
-    if _PLATFORM_OVERRIDE in ("termux", "linux", "headless"):
+    """Return the actual host; adapter imports are not proof of device access."""
+    if _PLATFORM_OVERRIDE in ("termux", "linux", "windows", "headless"):
         return _PLATFORM_OVERRIDE
+    if __import__("sys").platform == "win32":
+        return "windows"
     prefix = os.environ.get("PREFIX", "")
     if ("com.termux" in prefix.lower() or
             os.environ.get("TERMUX_VERSION") is not None or
@@ -176,10 +178,13 @@ def speak(text: str, block: bool = False) -> None:
     """Speak text on whichever TTS backend is available. Never raises."""
     if not text:
         return
+    from aurora_internal.aurora_state_context import resolve_state_dir
+    if (resolve_state_dir() / "quiet_mode").exists():
+        return
     safe = text.strip()
     if PLATFORM == "termux":
         _speak_termux(safe, block)
-    elif PLATFORM == "linux":
+    elif PLATFORM in {"linux", "windows"}:
         _speak_linux(safe, block)
     # headless: print only
     else:
@@ -278,7 +283,7 @@ def listen_once(timeout: float = 10.0, prompt: bool = False) -> Optional[str]:
         speak("Listening.")
     if PLATFORM == "termux":
         return _listen_termux(timeout)
-    elif PLATFORM == "linux":
+    elif PLATFORM in {"linux", "windows"}:
         return _listen_linux(timeout)
     return None
 
@@ -427,7 +432,7 @@ def capture_frame(save_path: Optional[str] = None) -> Optional[str]:
 
     if PLATFORM == "termux":
         return _camera_termux(out)
-    elif PLATFORM == "linux":
+    elif PLATFORM in {"linux", "windows"}:
         return _camera_linux(out)
     return None
 
