@@ -17,11 +17,16 @@ branch's method headers and the other's bodies.  On main it left:
 - provisional_resolution without the demand edge its docstring describes;
 - build_perspective_projections without either branch's duplicate-view rule.
 
-Each piece is restored as its own branch wrote it.  Two progressive-branch
-pieces are left for Sir because they change when she inquires: routing scores
-without a candidate evaluation to record_pressure_observation (so raw Habitat
-pressure stops staging inquiry), and the cached frontier (one structural scan
-per inadequacy episode).  Tests that need them still fail.
+Each piece is restored as its own branch wrote it.  Sir then chose the two
+progressive pieces that change when she inquires (Nov 18): scores without a
+candidate evaluation go to record_pressure_observation, so raw Habitat
+pressure no longer stages an inquiry and her own provisional read does; and
+the frontier is cached, one structural scan per inadequacy episode.
+
+With no real mirror, the lawful-domain bootstrap keeps Build 714's per-pass
+bound.  Offered at full capacity, it lets a finer field (sub_law_d) be staged
+before the field it refines, where the provisional view changes nothing
+downstream, so the inquiry is never evaluated and never released.
 """
 from __future__ import annotations
 
@@ -94,3 +99,49 @@ def test_duplicate_projected_views_keep_one_cheapest_lens():
     keys = [v["projection_view_key"] for v in views]
     assert len(keys) == len(set(keys))
     assert views == sorted(views, key=rr._projection_priority)
+
+
+def test_no_mirror_bootstrap_walks_one_field_at_a_time(tmp_path):
+    _g, engine = _fresh(tmp_path)
+    ref = RepresentationalRef.for_c1("N", "OPERATOR", "A")
+    assert engine._native_structural_finders_available()
+    frontier = {"projections": [], "structural_candidates": [], "refresh_used": False}
+    candidates = engine._field_candidates_after_frontier(ref, frontier)
+    assert candidates
+    assert len(candidates) <= rr.MAX_CANDIDATE_FIELDS_PER_PASS
+    assert {c["field"] for c in candidates} == {ref.unresolved_fields()[0]}
+    assert all(c["origin"] == "domain_hypothesis" for c in candidates)
+
+
+def test_observation_leaves_a_consumers_pending_projection_and_reads(tmp_path):
+    _g, engine = _fresh(tmp_path)
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    pending = {"mode": "perspective_projection", "stage": None,
+               "candidate": {"projection_id": "rproj_y", "projected_ref": ref.encode()},
+               "consumer": "habitat_motivation", "context_scope": None}
+    engine._active_stage_for_ref[ref.encode()] = pending
+    engine._provisional_reads[ref.encode()] = 3
+    engine.record_pressure_observation(
+        ref, pressure_before={a: 1.0 for a in AXES},
+        pressure_after={a: 0.5 for a in AXES}, source="test")
+    assert engine._active_stage_for_ref[ref.encode()] is pending
+    assert engine._provisional_reads[ref.encode()] == 3
+
+
+def test_score_bridge_routes_observation_and_consumption_apart(tmp_path, monkeypatch):
+    calls = []
+
+    class _Engine:
+        def record_pressure_observation(self, *a, **k):
+            calls.append("observation")
+
+        def record_participation(self, *a, **k):
+            calls.append("participation")
+
+    monkeypatch.setattr(rr, "get_or_create_engine", lambda systems: _Engine())
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B").encode()
+    rr.record_ref_participation_from_scores({"x": 1}, ref, {"s": 0.4}, source="habitat")
+    rr.record_ref_participation_from_scores(
+        {"x": 1}, ref, {"s": 0.4}, source="habitat",
+        candidate_evaluation={"baseline_error": 0.5, "candidate_conditioned_error": 0.1})
+    assert calls == ["observation", "participation"]

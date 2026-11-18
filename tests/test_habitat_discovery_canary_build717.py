@@ -17,7 +17,12 @@ not merely that samples were recorded. The required 12-step chain:
      non-empty) as a DIRECT effect of steps 2-4 -- no manual call to
      stage_field_inquiry() anywhere in this file.
   6. An inquiry becomes autonomously staged (engine._active_stage_for_ref
-     non-empty) -- Section 12's closed loop, observed, not driven.
+     non-empty) -- Section 12's closed loop, observed, not driven.  Raw
+     Habitat traffic is observation: its scores carry no candidate
+     evaluation, so they build pressure and never stage anything.  The
+     inquiry opens when her own production motivation consumer reads the
+     pressured ref provisionally (resolved_context_for_axis()), which is the
+     demand edge.
   7. The staged candidate is investigable but the ref stays unresolved
      (candidate is not knowledge -- Section 14).
   8. A further real Habitat action supplies the co-activation evidence
@@ -113,7 +118,8 @@ def _fresh(tmp_path, name):
 
 
 def test_habitat_discovery_canary_phase_a_bootstrap_evaluation(tmp_path):
-    """Steps 1-9, 12 -- 100% driven by habitat.act(). Zero siblings exist
+    """Steps 1-9, 12 -- driven by habitat.act() and her own motivation
+    consumer, never a direct engine call. Zero siblings exist
     for this fresh family, so the autonomously-staged candidate is a
     domain_hypothesis. Ordinary, mild real traffic's own avg_score signal
     rarely clears the retention bar (see module docstring) -- a rejected
@@ -138,8 +144,8 @@ def test_habitat_discovery_canary_phase_a_bootstrap_evaluation(tmp_path):
         )
         eids.append(c.affected_entities[0])
 
-    staged_at = None
-    staged_ref_encoded = None
+    pressured_at = None
+    pressured_axis = None
     for tick in range(60):
         eid = eids[tick % len(eids)]
         actor = "aurora" if tick % 3 != 0 else "human"
@@ -147,12 +153,23 @@ def test_habitat_discovery_canary_phase_a_bootstrap_evaluation(tmp_path):
             actor=actor, territory="space", operation="move",
             target_ids=[eid], parameters={"x": (tick % 10) / 10.0, "y": (tick % 7) / 7.0},
         )
-        # ── Step 6: autonomous staging observed, never driven ──────────
-        if engine._active_stage_for_ref and staged_at is None:
-            staged_at = tick
-            staged_ref_encoded = next(iter(engine._active_stage_for_ref))
+        # Traffic is observation: pressure, never a staged inquiry.
+        assert engine._active_stage_for_ref == {}, "raw traffic must not stage an inquiry"
+        pressured = [
+            axis for axis in AXES
+            if engine.inadequacy_pressure(RepresentationalRef.for_c1(axis, "OPERATOR", "A")) > 0.0
+        ]
+        if pressured:
+            pressured_at = tick
+            pressured_axis = pressured[0]
             break
-    assert staged_at is not None, "real Habitat traffic must autonomously produce a staged inquiry"
+    assert pressured_at is not None, "real Habitat traffic must build inadequacy pressure"
+
+    # ── Step 6: her own provisional read opens the inquiry ─────────────
+    mot.resolved_context_for_axis(systems, pressured_axis)
+    assert engine._active_stage_for_ref, "her provisional read of a pressured ref must stage an inquiry"
+    staged_at = pressured_at
+    staged_ref_encoded = next(iter(engine._active_stage_for_ref))
     staged_ref = RepresentationalRef.decode(staged_ref_encoded)
     assert engine.inadequacy_pressure(staged_ref) > 0.0
 
