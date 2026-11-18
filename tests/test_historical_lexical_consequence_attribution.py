@@ -21,6 +21,7 @@ while implementing PR 2, not assumed):
     pick the auxiliary "does" as the relation) -- test sentences below were
     chosen empirically to keep both parsers pointed at the same word.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 

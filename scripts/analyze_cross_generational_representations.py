@@ -6,6 +6,7 @@ collision families contain distinctions grounded in stored operational effects,
 local semantic identity, and intact genealogy structure.  It never calls
 observe(), PairStats.update(), promotion, or any persistence writer.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import argparse

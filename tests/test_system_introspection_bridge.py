@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from pathlib import Path
 
 from aurora_expression_perception import LexicalMemory, SentenceComposer, VoiceGenome

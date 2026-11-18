@@ -18,6 +18,7 @@ are combined:
     aurora_daemon.py's own outer loop -- reused here rather than
     inventing a new interval.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import inspect

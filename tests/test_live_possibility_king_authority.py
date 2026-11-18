@@ -1,4 +1,5 @@
 """King Quasicrystal authority canaries for live possibility actualization."""
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 

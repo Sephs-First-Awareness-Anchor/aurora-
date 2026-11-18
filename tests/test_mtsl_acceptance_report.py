@@ -8,6 +8,7 @@ stays an observer." Also serves as an integration test across the
 full MTSL stack: Phase 3's coordinator, Phase 4's CERS extension, and
 Phase 5's intention bridge all writing to the SAME shared log.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import time
 
 from aurora_dimensional_systems import CrystalProcessingSystem, EvolutionTracker

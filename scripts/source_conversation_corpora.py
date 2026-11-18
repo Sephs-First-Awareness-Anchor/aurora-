@@ -5,6 +5,7 @@ Download and convert public conversation corpora for Aurora.
 Outputs JSONL files with {"prompt": ..., "completion": ..., "source": ...},
 which aurora_internal.aurora_corpus_lifecycle.universal_corpus_iterator can read.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Aurora, not Scout, interprets raw response-fit specimens."""
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import ast, os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import aurora
