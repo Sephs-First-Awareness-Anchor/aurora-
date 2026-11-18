@@ -1,7 +1,7 @@
 # What the knowledge graph covers, and what it does not
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `bf87856e82e6`, generator 2.0.0.
+Source commit `311eb097b936`, generator 2.0.0.
 
 Nothing here is hidden by a summary: every unresolved call site is in `unresolved_calls.jsonl`, every file's status in `files.jsonl`, every claim check in `claims.json`, and every statically reachable function that no recorded run entered in `unobserved.json`.
 
@@ -9,7 +9,7 @@ Nothing here is hidden by a summary: every unresolved call site is in `unresolve
 
 | status | files | meaning |
 |---|---:|---|
-| not_analysed | 3368 | data, config, images and other files: listed, not read |
+| not_analysed | 3369 | data, config, images and other files: listed, not read |
 | parsed_ast | 914 | Python, parsed with ast: calls, state, flow |
 | scanned_references | 106 | Markdown: the code, stores and organs it names |
 | parsed_regex | 47 | Rust, Dart, Kotlin, Java: read with patterns, calls matched by name |
@@ -37,7 +37,7 @@ Every edge says how it is known. implemented: read from code. declared: stated i
 
 | basis | edges |
 |---|---:|
-| implemented | 137883 |
+| implemented | 137877 |
 | declared | 12845 |
 | observed | 4858 |
 | implemented+observed | 3721 |

@@ -1,6 +1,6 @@
 {
  "base": "b649850b28ff7e94f4da2447bb23c3804ea68450",
- "head": "bf87856e82e66807aa23760c13a48ade5d7754e0",
+ "head": "311eb097b936e4e7865ed7159ba23bd502a52ff0",
  "lineage": {
   "moved": [
    [
@@ -1301,7 +1301,6 @@
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine.provisional_resolution",
    "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation",
    "fn:aurora_representational_resolution.build_perspective_projections",
-   "fn:aurora_representational_resolution.record_ref_participation_from_scores",
    "fn:aurora_response_teacher.DuckDuckGoCollector.collect",
    "fn:aurora_response_teacher.HackerNewsCollector.collect",
    "fn:aurora_response_teacher.HumanResponseTeacher._log_session",
@@ -34986,11 +34985,6 @@
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
-    "source": "field:aurora_representational_address.RepresentationalRef.nc_law_c",
-    "type": "FEEDS",
-    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
-   },
-   {
     "source": "field:aurora_simulation_engine.ConsciousLearner._by_concept",
     "type": "FEEDS",
     "target": "fn:aurora_internal.aurora_shared_helpers.clamp"
@@ -43221,11 +43215,6 @@
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
-    "source": "fn:aurora_representational_address.RepresentationalRef.decode",
-    "type": "FEEDS",
-    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
-   },
-   {
     "source": "fn:aurora_representational_address.RepresentationalRef.encode",
     "type": "FEEDS",
     "target": "field:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontiers"
@@ -43456,29 +43445,14 @@
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
-    "source": "fn:aurora_representational_resolution.get_or_create_engine",
-    "type": "FEEDS",
-    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
-   },
-   {
     "source": "fn:aurora_representational_resolution.record_ref_participation_from_scores",
     "type": "CALLS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
    },
    {
     "source": "fn:aurora_representational_resolution.record_ref_participation_from_scores",
-    "type": "CALLS",
-    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
-   },
-   {
-    "source": "fn:aurora_representational_resolution.record_ref_participation_from_scores",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
-   },
-   {
-    "source": "fn:aurora_representational_resolution.record_ref_participation_from_scores",
-    "type": "FEEDS",
-    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
    },
    {
     "source": "fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation",
@@ -43489,11 +43463,6 @@
     "source": "fn:aurora_representational_resolution_base._clip01",
     "type": "FEEDS",
     "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_participation"
-   },
-   {
-    "source": "fn:aurora_representational_resolution_base._clip01",
-    "type": "FEEDS",
-    "target": "fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation"
    },
    {
     "source": "fn:aurora_response_teacher.DuckDuckGoCollector.collect",

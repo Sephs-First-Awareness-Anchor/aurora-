@@ -1,11 +1,11 @@
 # Architectural comparison
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Base `b649850b28ff` (claude/knowledge-graph), head `bf87856e82e6` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and 14a388c1de12.
+Base `b649850b28ff` (claude/knowledge-graph), head `311eb097b936` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and a2b190674a85.
 
 ## 1. Function lineage
 
-17556 functions in base, 17591 in head. 1415 kept their identity with a changed body; 11 changed identity (moved or renamed); 25 were removed; 70 are new.
+17556 functions in base, 17591 in head. 1414 kept their identity with a changed body; 11 changed identity (moved or renamed); 25 were removed; 70 are new.
 
 A changed identity breaks any record keyed by the old id (lineage, provenance, fault and test references).
 
@@ -118,7 +118,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 ## 2. Relationships: consolidated against lost
 
-2264 relationships of base are not in head (structure and documentation edges left out). 1424 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 3 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 73 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 214 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 98 went with code that was removed. 139 are lost: the source still exists and no longer reaches the target by any of those routes. 2609 relationships are new.
+2264 relationships of base are not in head (structure and documentation edges left out). 1424 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 3 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 73 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 214 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 98 went with code that was removed. 139 are lost: the source still exists and no longer reaches the target by any of those routes. 2603 relationships are new.
 
 ### Retargeted: 313
 
@@ -129,77 +129,77 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 ### Delegated through a module binding: 3
 
+- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `projection_event` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `investigate_if_pressured` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
-- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 
 ### Folded into a shared function: 73
 
 - 28 FEEDS to `to_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 2 READS to `created_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `date` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `projected_accuracy` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `prev_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `child_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `topic` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `axis_signature` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `certainty_band` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `B` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `observation_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `inquiries_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `to_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `speakups_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `from_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `status` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `source_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `committed_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `affect` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `dreams_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `resolution_note` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `contradiction_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `intent_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `source_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `transition_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `message_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `edge_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `speakups_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `last_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `outcome_negative` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `date` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `T` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `source_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `certainty_band` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `outcome_positive` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `inquiries_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `child_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `from_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `contradiction_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `topic` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 
 ### Seen only in the base run: 214
 
 - 5 CALLS to `to_dict` now through ``
 - 3 CALLS to `get_stats` now through ``
 - 3 CALLS to `strengthen` now through ``
-- 2 CALLS to `load` now through ``
-- 2 CALLS to `activation` now through ``
-- 2 CALLS to `looks_like_correction` now through ``
-- 2 CALLS to `is_identity_question` now through ``
 - 2 CALLS to `warp_params` now through ``
 - 2 CALLS to `representation_discrepancy` now through ``
 - 2 CALLS to `semantic_coherence` now through ``
-- 2 CALLS to `coherence_index` now through ``
-- 2 CALLS to `constraint_axes` now through ``
 - 2 CALLS to `attach_live_response_simulation_bridge` now through ``
-- 1 CALLS to `run_live_response_turn` now through ``
-- 1 CALLS to `init__` now through ``
-- 1 CALLS to `check_and_extend` now through ``
+- 2 CALLS to `coherence_index` now through ``
+- 2 CALLS to `looks_like_correction` now through ``
+- 2 CALLS to `activation` now through ``
+- 2 CALLS to `constraint_axes` now through ``
+- 2 CALLS to `load` now through ``
+- 2 CALLS to `is_identity_question` now through ``
+- 1 CALLS to `summary` now through ``
 - 1 CALLS to `inject_into_oets` now through ``
-- 1 CALLS to `should_prefer_live_perspective` now through ``
-- 1 CALLS to `record` now through ``
-- 1 CALLS to `perspective_retention` now through ``
-- 1 CALLS to `coarse_pos` now through ``
-- 1 CALLS to `should_suppress_surface_meta_answer` now through ``
-- 1 CALLS to `active_axis_count` now through ``
-- 1 CALLS to `chain_up1_information` now through ``
+- 1 CALLS to `grounding_gap_strategy` now through ``
+- 1 CALLS to `reason_through_dominant` now through ``
+- 1 CALLS to `variance` now through ``
+- 1 CALLS to `recall_semantic` now through ``
+- 1 CALLS to `grounding_index` now through ``
+- 1 CALLS to `derive_self_application` now through ``
+- 1 CALLS to `trajectory` now through ``
+- 1 CALLS to `add_term` now through ``
+- 1 CALLS to `semantic_translation_text` now through ``
+- 1 CALLS to `add_example` now through ``
+- 1 CALLS to `emit_trace_warp_signals` now through ``
+- 1 CALLS to `evolve_generation` now through ``
 - 1 CALLS to `surface_recent_context_horizon` now through ``
-- 1 CALLS to `apply_relief_tolerance` now through ``
-- 1 CALLS to `descriptions_overlap` now through ``
-- 1 CALLS to `update_coupling_roots` now through ``
-- 1 CALLS to `generic_response_penalty` now through ``
-- 1 CALLS to `h_seek` now through ``
+- 1 CALLS to `check_repetition` now through ``
+- 1 CALLS to `build_sensory_native_meaning` now through ``
 
-### Lost (review each): IMPORTS 127, FEEDS 9, MEMBER_OF 1, PART_OF 1, READS 1
+### Lost (review each): IMPORTS 127, FEEDS 9, PART_OF 1, READS 1, MEMBER_OF 1
 
 - `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context` [base aurora_braid_wiring.py:255]
 - `fn:aurora_representational_address.RepresentationalRef.for_c1` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base tests/test_habitat_discovery_canary_build717.py:286]
@@ -681,7 +681,7 @@ Logging calls: 431 in base, 431 in head.
 
 ### Interaction handling
 
-1 seed node(s); 69516 relationships around them in base, 70317 in head; 136 lost (not consolidated), 2579 new.
+1 seed node(s); 69516 relationships around them in base, 70306 in head; 136 lost (not consolidated), 2568 new.
 - lost: `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context`
 - lost: `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output`
 - lost: `fn:aurora_representational_address.RepresentationalRef.for_c1` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`

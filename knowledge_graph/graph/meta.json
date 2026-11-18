@@ -1,6 +1,6 @@
 {
  "authors": "Sunni (Sir) Morningstar & Cael Devo",
- "content_hash": "d99e7fa5f6611d750fe6d8648ac1d7d93f3ce3ffa1aec83bdec27d6e662c5c36",
+ "content_hash": "7ba6e0dcf46c84df930dd3dad14a3da2e7bcbe69f41404ae0f1e42341112a580",
  "coverage": {
   "claim_checks": {
    "conflict": 1,
@@ -9,14 +9,14 @@
   },
   "edge_basis": {
    "declared": 12845,
-   "implemented": 137883,
+   "implemented": 137877,
    "implemented+inferred": 2,
    "implemented+observed": 3721,
    "inferred": 1555,
    "observed": 4858
   },
   "files": {
-   "not_analysed": 3368,
+   "not_analysed": 3369,
    "parsed_ast": 914,
    "parsed_regex": 47,
    "scanned_launches": 31,
@@ -36,16 +36,16 @@
    "untyped_parameter": 1227
   }
  },
- "edge_count": 160864,
+ "edge_count": 160858,
  "edge_types": {
-  "CALLS": 28410,
+  "CALLS": 28409,
   "CITES": 345,
   "COMPOSED_OF": 300,
   "CONTAINS": 29964,
   "DOCUMENTS": 9620,
   "EMITS": 10,
   "EXPRESSES": 5119,
-  "FEEDS": 33194,
+  "FEEDS": 33189,
   "GOVERNS": 716,
   "HANDLES": 47,
   "IMPLEMENTED_BY": 151,
@@ -72,7 +72,7 @@
   "USES_ORGAN": 1432,
   "WRITES": 9248
  },
- "generated_at": "2026-11-18T19:25:04Z",
+ "generated_at": "2026-11-18T19:29:26Z",
  "generator": "scripts/aurora_knowledge_graph.py",
  "generator_version": "2.0.0",
  "node_count": 34532,
@@ -142,8 +142,8 @@
  ],
  "schema_version": "2.0.0",
  "source_branch": "claude/aurora-integration-20261118",
- "source_commit": "bf87856e82e66807aa23760c13a48ade5d7754e0",
- "static_content_hash": "14a388c1de1254d36b86fceb52282603695d88e8c12b4b08c288fb37abba3c21",
+ "source_commit": "311eb097b936e4e7865ed7159ba23bd502a52ff0",
+ "static_content_hash": "a2b190674a853c8b7d166b6af8b724a74aaa60850e9b4a686d5d2df4b67b8563",
  "title": "Aurora codebase knowledge graph",
  "warnings": []
 }
