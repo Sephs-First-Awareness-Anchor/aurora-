@@ -5185,6 +5185,8 @@
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._set_sensory_attention"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._setup_paths"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._silence_pressure"}
+{"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption"}
+{"builtin_value": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb"}
 {"builtin_value": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_curiosity_engine"}
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_scout_worker"}
 {"builtin_value": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._store_curiosity_report"}
@@ -5198,6 +5200,7 @@
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_concept_crystal_state"}
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_development_state"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_face_state"}
+{"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_gauntlet_status"}
 {"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_historical_experience_status"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_live_turn_diagnostics"}
@@ -7085,6 +7088,10 @@
 {"builtin_value": 1, "owner": "fn:tests.test_pf3_4a_motif_thinning_guard.test_retries_away_from_a_strictly_thinner_draw_when_a_richer_one_exists"}
 {"external": 2, "owner": "fn:tests.test_pf3_5_motif_watch_readout._write_characterization"}
 {"external": 2, "owner": "fn:tests.test_pf3_5_motif_watch_readout._write_motifs"}
+{"external": 1, "owner": "fn:tests.test_phone_field_not_held_at_boot.bridge"}
+{"builtin_value": 1, "external": 1, "owner": "fn:tests.test_phone_field_not_held_at_boot.test_boot_no_longer_absorbs_under_one_field_hold"}
+{"builtin_value": 2, "external": 3, "owner": "fn:tests.test_phone_field_not_held_at_boot.test_clone_harvest_absorbs_in_chunks_off_the_field"}
+{"external": 4, "owner": "fn:tests.test_phone_field_not_held_at_boot.test_field_status_names_the_holder"}
 {"external": 1, "owner": "fn:tests.test_phone_load_pacing.test_a_waiting_message_outranks_other_background_work"}
 {"builtin_value": 1, "external": 3, "owner": "fn:tests.test_phone_load_pacing.test_field_lock_is_still_a_lock"}
 {"external": 2, "owner": "fn:tests.test_phone_load_pacing.test_shared_idle_predicate_includes_breathing_room"}
@@ -7861,7 +7868,7 @@
 {"external": 3, "owner": "mod:conftest"}
 {"external": 1, "owner": "mod:constraint_evolutionary_sim"}
 {"external": 1, "owner": "mod:crystalzip"}
-{"external": 38, "owner": "mod:flutter_app.android.app.src.main.python.aurora_bridge"}
+{"external": 39, "owner": "mod:flutter_app.android.app.src.main.python.aurora_bridge"}
 {"builtin_value": 1, "external": 1, "owner": "mod:reply_aurora"}
 {"external": 6, "owner": "mod:run_chain"}
 {"external": 4, "owner": "mod:run_corpus"}
@@ -8132,6 +8139,7 @@
 {"external": 4, "owner": "mod:tests.test_pf3_3_descriptor_neighborhood"}
 {"external": 4, "owner": "mod:tests.test_pf3_3_frame_absence"}
 {"external": 4, "owner": "mod:tests.test_pf3_5_motif_watch_readout"}
+{"external": 4, "owner": "mod:tests.test_phone_field_not_held_at_boot"}
 {"builtin_value": 1, "external": 3, "owner": "mod:tests.test_phone_load_pacing"}
 {"external": 2, "owner": "mod:tests.test_pipeline2"}
 {"external": 4, "owner": "mod:tests.test_positive_dream_material"}

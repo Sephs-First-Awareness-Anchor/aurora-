@@ -134,17 +134,17 @@
     [
      "mod:tests.test_strata_migration",
      "SHARES",
-     "store:lexicon.json"
+     "store:surface_working_state.json"
     ],
     [
      "mod:tests.test_home_growth",
      "SHARES",
-     "store:lexicon.json"
+     "store:surface_working_state.json"
     ],
     [
      "mod:tests.test_strata_migration",
      "SHARES",
-     "store:surface_working_state.json"
+     "store:lexicon.json"
     ],
     [
      "mod:tests.test_strata_migration",
@@ -157,12 +157,12 @@
      "store:surface_working_state.json"
     ],
     [
-     "mod:tests.test_strata_moves",
+     "mod:tests.test_home_growth",
      "SHARES",
      "store:surface_working_state.json"
     ],
     [
-     "mod:tests.test_home_growth",
+     "mod:tests.test_strata_moves",
      "SHARES",
      "store:surface_working_state.json"
     ]
@@ -312,7 +312,7 @@
      "fn:aurora_desktop_agent.get_agent"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.data",
+     "field:aurora_internal.tool_registry.ToolResult.note",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
@@ -322,7 +322,7 @@
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.note",
+     "field:aurora_internal.tool_registry.ToolResult.data",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ]
@@ -538,12 +538,12 @@
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior.aspects",
+     "fn:aurora_internal.crystal_interior._profile",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior._profile",
+     "fn:aurora_internal.crystal_interior.aspects",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ]
@@ -927,7 +927,7 @@
      "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
     ],
     [
-     "field:aurora_ivm.RecursionLevel.CORE",
+     "field:aurora_ivm.RecursionLevel.SURFACE",
      "FEEDS",
      "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
     ],
@@ -1240,12 +1240,12 @@
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator.assimilate",
+     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._detect_changes",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
+     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
@@ -1434,7 +1434,7 @@
      "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder._aurora_fault"
     ]
    ],
-   "external_binding": 3370,
+   "external_binding": 3371,
    "higher_order": "subsys:category:governance",
    "id": "subsys:composite:governance:16699d84",
    "members": [
@@ -2101,7 +2101,7 @@
      "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
     ],
     [
-     "fn:aurora_expression_perception.build_layer5_associative_modules",
+     "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
      "FEEDS",
      "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
     ],
@@ -2136,17 +2136,17 @@
      "fn:aurora_expression_perception.infer_word_role"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.candidate_pressure",
-     "FEEDS",
-     "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
-    ],
-    [
-     "field:aurora_articulation.ArticulationDecision.original_pressure",
+     "field:aurora_articulation.ArticulationDecision.pressure_relief",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
     [
      "field:aurora_articulation.ArticulationDecision.selected",
+     "FEEDS",
+     "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
+    ],
+    [
+     "field:aurora_articulation.ArticulationDecision.candidate_pressure",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ]
@@ -2281,7 +2281,7 @@
    "binding": {
     "CALLS": 45
    },
-   "cohesion": 0.441,
+   "cohesion": 0.433,
    "evidence": [
     [
      "fn:flutter_app.lib.screens.home_screen._HomeScreenState.initState",
@@ -2299,7 +2299,7 @@
      "fn:flutter_app.lib.screens.hub_screen._HubScreenState.Duration"
     ]
    ],
-   "external_binding": 57,
+   "external_binding": 59,
    "higher_order": "subsys:category:phone_ui",
    "id": "subsys:composite:phone_ui:e24ca393",
    "members": [
@@ -2733,7 +2733,7 @@
     [
      "mod:aurora",
      "SHARES",
-     "organ:aurora"
+     "organ:identity_field"
     ]
    ],
    "external_binding": 4247,
@@ -2837,7 +2837,7 @@
      "fn:aurora_internal.dual_strata.prediction_field.build_prediction_signal"
     ],
     [
-     "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.confidence",
+     "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.source",
      "FEEDS",
      "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.persist_cers_detail"
     ],
@@ -3367,7 +3367,7 @@
     "flutter_app/android/app/src/main/python/aurora_bridge.py"
    ],
    "kinds": {
-    "CALLS": 78,
+    "CALLS": 79,
     "IMPORTS": 1
    }
   },
@@ -4227,6 +4227,37 @@
     [
      "mod:flutter_app.android.app.src.main.python.aurora_bridge",
      "IMPORTS",
+     "mod:aurora_internal.aurora_clone_harvest"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb",
+     "CALLS",
+     "fn:aurora_internal.aurora_clone_harvest.absorb_harvest"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_cognitive_stats",
+     "CALLS",
+     "fn:aurora_internal.aurora_clone_harvest.harvest_status"
+    ]
+   ],
+   "files": [
+    "aurora_internal/aurora_clone_harvest.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "CALLS": 2,
+    "IMPORTS": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
      "mod:aurora_internal.dual_strata.strata_migration"
     ],
     [
@@ -4273,37 +4304,6 @@
    ],
    "files": [
     "aurora_internal/aurora_store_ownership.py",
-    "flutter_app/android/app/src/main/python/aurora_bridge.py"
-   ],
-   "kinds": {
-    "CALLS": 2,
-    "IMPORTS": 1
-   }
-  },
-  {
-   "domains": [
-    "desktop",
-    "phone"
-   ],
-   "evidence": [
-    [
-     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
-     "IMPORTS",
-     "mod:aurora_internal.aurora_clone_harvest"
-    ],
-    [
-     "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
-     "CALLS",
-     "fn:aurora_internal.aurora_clone_harvest.absorb_harvest"
-    ],
-    [
-     "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_cognitive_stats",
-     "CALLS",
-     "fn:aurora_internal.aurora_clone_harvest.harvest_status"
-    ]
-   ],
-   "files": [
-    "aurora_internal/aurora_clone_harvest.py",
     "flutter_app/android/app/src/main/python/aurora_bridge.py"
    ],
    "kinds": {
@@ -5611,17 +5611,17 @@
      },
      "evidence": [
       [
+       "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
+       "FEEDS",
+       "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
+      ],
+      [
        "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
       [
        "field:aurora_internal.scouting.contracts.ScoutRequest.inquiry",
-       "FEEDS",
-       "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
-      ],
-      [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ]
@@ -5688,17 +5688,17 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
+       "field:aurora_internal.scouting.contracts.ScoutReport.evidence_items"
+      ],
+      [
+       "mod:aurora_internal.scouting.contracts",
+       "SHARES",
        "field:aurora_internal.scouting.contracts.ScoutReport.contradictions"
       ],
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
        "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
-      ],
-      [
-       "mod:aurora_internal.scouting.contracts",
-       "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.fit_rationales"
       ]
      ],
      "link": [
@@ -6124,12 +6124,12 @@
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior.aspects",
+       "fn:aurora_internal.crystal_interior._profile",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior._profile",
+       "fn:aurora_internal.crystal_interior.aspects",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ]
@@ -7315,12 +7315,12 @@
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.X",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.B",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.B",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.X",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ]
@@ -7512,7 +7512,7 @@
        "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
       ],
       [
-       "field:aurora_ivm.RecursionLevel.CORE",
+       "field:aurora_ivm.RecursionLevel.SURFACE",
        "FEEDS",
        "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
       ]
@@ -8064,12 +8064,12 @@
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator.assimilate",
+       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._detect_changes",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
+       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ]
@@ -10191,7 +10191,7 @@
        "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
       ],
       [
-       "fn:aurora_expression_perception.build_layer5_associative_modules",
+       "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
        "FEEDS",
        "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
       ]
@@ -10703,7 +10703,7 @@
   {
    "best_evidence_composite": "subsys:composite:phone_ui:e24ca393",
    "candidate": false,
-   "cohesion": 0.407,
+   "cohesion": 0.4,
    "declared_links": 3,
    "domain": "phone",
    "hub": "flutter_app/lib/main.dart",
@@ -11929,7 +11929,7 @@
        "fn:aurora_internal.dual_strata.prediction_field.build_prediction_signal"
       ],
       [
-       "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.confidence",
+       "field:aurora_internal.dual_strata.prediction_field.PredictionSignal.source",
        "FEEDS",
        "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.persist_cers_detail"
       ]
@@ -12758,12 +12758,12 @@
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
+       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.context_families",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.context_families",
+       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ]
@@ -12818,7 +12818,7 @@
        "fn:aurora_internal.dual_strata.topology_tracker.TopologyFingerprint.from_signature"
       ],
       [
-       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.regime",
+       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.sources",
        "FEEDS",
        "fn:aurora_internal.dual_strata.semantic_variant_registry.TopologyProfile.from_signature"
       ]

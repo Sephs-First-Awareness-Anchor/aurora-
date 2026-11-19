@@ -10,7 +10,7 @@
 {"basis": ["inferred"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["path"], "source": "subsys:area:phone_native", "target": "subsys:quasi:phone", "type": "PART_OF", "weight": 2}
 {"basis": ["inferred"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["path"], "source": "subsys:area:phone_ui", "target": "subsys:quasi:phone", "type": "PART_OF", "weight": 3}
 {"basis": ["inferred"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["path"], "source": "subsys:area:scripts", "target": "subsys:quasi:desktop", "type": "PART_OF", "weight": 4}
-{"basis": ["inferred"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["path"], "source": "subsys:area:tests", "target": "subsys:quasi:desktop", "type": "PART_OF", "weight": 17}
+{"basis": ["inferred"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["path"], "source": "subsys:area:tests", "target": "subsys:quasi:desktop", "type": "PART_OF", "weight": 18}
 {"basis": ["inferred"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["path"], "source": "subsys:area:workflows", "target": "subsys:quasi:desktop", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:category:acm_boot", "target": "subsys:quasi:acm", "type": "PART_OF", "weight": 1}
 {"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["claim"], "source": "subsys:category:acm_bridge", "target": "subsys:quasi:acm", "type": "PART_OF", "weight": 1}

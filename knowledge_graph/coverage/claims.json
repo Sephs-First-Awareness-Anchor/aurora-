@@ -2181,7 +2181,7 @@
   "mod:run_gauntlet": {
    "claim_basis": "reviewed",
    "notes": [
-    "writes state that production code outside investigative work reads: store:daemon.log (read by aurora_hub)"
+    "writes state that production code outside investigative work reads: store:daemon.log (read by aurora_metabolic_distiller)"
    ],
    "observations": [],
    "status": "conflict"
@@ -6614,7 +6614,7 @@
   "path": "docs/module_ownership.json",
   "schema": "aurora.module_ownership/2",
   "scope": "Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.",
-  "sha256": "61a1bc112ba09e9f",
+  "sha256": "5da7460de7a4e267",
   "version": 2
  }
 }

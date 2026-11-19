@@ -1,11 +1,11 @@
 # Architectural comparison
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Base `b649850b28ff` (claude/knowledge-graph), head `00867e8bb347` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and 9aed5d61a578.
+Base `b649850b28ff` (claude/knowledge-graph), head `7d4373c73526` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and ef86d2ed7e40.
 
 ## 1. Function lineage
 
-17556 functions in base, 18184 in head. 1508 kept their identity with a changed body; 18 changed identity (moved or renamed); 52 were removed; 691 are new.
+17556 functions in base, 18195 in head. 1509 kept their identity with a changed body; 18 changed identity (moved or renamed); 58 were removed; 708 are new.
 
 A changed identity breaks any record keyed by the old id (lineage, provenance, fault and test references).
 
@@ -20,13 +20,13 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - moved: `fn:aurora_language_field.LSAEntry.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
 - moved: `fn:aurora_vision_clustering.VisualCluster.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
 - moved: `fn:aurora_vision_clustering.VisualFeatureVector.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
-- moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@574` -> `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@614` (same name and signature)
+- moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@574` -> `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@620` (same name and signature)
 - moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.onDraw` -> `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.onDraw` (same name and signature)
 - moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.run` -> `fn:flutter_app.test.face_motion_test.run` (same name and signature)
 - moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.run@39` -> `fn:flutter_app.test.face_motion_test.run` (same name and signature)
 - moved: `fn:flutter_app.lib.screens.home_screen._HomeScreenState.delayed@292` -> `fn:flutter_app.lib.screens.home_screen._HomeScreenState.delayed@310` (same name and signature)
-- moved: `fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1442` -> `fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1450` (same name and signature)
-- moved: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@843` -> `fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@851` (same name and signature)
+- moved: `fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1442` -> `fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1495` (same name and signature)
+- moved: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@843` -> `fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@856` (same name and signature)
 - removed: `fn:aurora_behavioral_identity._clamp`; still-present callers in base: `fn:aurora_behavioral_identity.BehavioralIdentityEngine._apply_identity_homeostasis`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._constraint_axes`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._identity_floor_ratio`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._pressure_axes`; ran in desktop_boot,desktop_turns
 - removed: `fn:aurora_checkpoint.CorpusCursor.from_dict`; still-present callers in base: `fn:aurora_checkpoint.CheckpointManager.restore`; ran in desktop_boot
 - removed: `fn:aurora_checkpoint.RollingStats.from_dict`; still-present callers in base: `fn:aurora_checkpoint.CheckpointManager.restore`; ran in desktop_boot
@@ -61,6 +61,12 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.withAlpha`
 - removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.addAurora`; still-present callers in base: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.onCreate`
 - removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.refreshAxisState`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@651`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@654`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@657`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@166`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@605`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@606`
 - removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@675`
 - removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@676`
 - removed: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawMouthLens`
@@ -162,7 +168,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 ## 2. Relationships: consolidated against lost
 
-2397 relationships of base are not in head (structure and documentation edges left out). 1452 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 6 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 77 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 216 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 130 went with code that was removed. 203 are lost: the source still exists and no longer reaches the target by any of those routes. 7300 relationships are new.
+2407 relationships of base are not in head (structure and documentation edges left out). 1452 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 7 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 77 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 216 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 136 went with code that was removed. 206 are lost: the source still exists and no longer reaches the target by any of those routes. 7355 relationships are new.
 
 ### Retargeted: 313
 
@@ -171,82 +177,83 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - 6 CALLS to `from_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`
 - 5 FEEDS to `from_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`
 
-### Delegated through a module binding: 6
+### Delegated through a module binding: 7
 
+- 1 CALLS to `absorb_harvest` now through `fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption`
+- 1 CALLS to `investigate_if_pressured` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `projection_event` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `structural_projection_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `unresolved_field_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `ref_from_ability_id` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
-- 1 CALLS to `structural_projection_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
-- 1 CALLS to `investigate_if_pressured` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
-- 1 CALLS to `projection_event` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
-- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 
 ### Folded into a shared function: 77
 
 - 28 FEEDS to `to_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 2 READS to `created_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `child_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `message_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `speakups_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `B` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `intent_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `edge_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `inquiries_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `projected_accuracy` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `last_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `contradiction_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `axis_signature` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `topic` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `study_cycles_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `prev_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `child_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `B` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `speakups_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `date` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `status` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `dreams_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `observation_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `X` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `certainty_band` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 CALLS to `withAlpha` now through `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.onDraw`
+- 1 READS to `study_cycles_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 CALLS to `lerpColor` now through `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.onDraw`
-- 1 READS to `from_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `axis_signature` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `prev_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `source_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `from_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `T` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 CALLS to `tick` now through `fn:flutter_app.test.face_motion_test.run`
+- 1 READS to `contradiction_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `parent_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `N` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `observations_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `outcome_positive` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 CALLS to `refreshAxisState` now through `fn:flutter_app.test.face_motion_test.run`
 
 ### Seen only in the base run: 216
 
 - 5 CALLS to `to_dict` now through ``
-- 3 CALLS to `strengthen` now through ``
 - 3 CALLS to `get_stats` now through ``
+- 3 CALLS to `strengthen` now through ``
 - 2 CALLS to `constraint_axes` now through ``
-- 2 CALLS to `warp_params` now through ``
-- 2 CALLS to `representation_discrepancy` now through ``
-- 2 CALLS to `attach_live_response_simulation_bridge` now through ``
 - 2 CALLS to `load` now through ``
-- 2 CALLS to `activation` now through ``
-- 2 CALLS to `semantic_coherence` now through ``
 - 2 CALLS to `looks_like_correction` now through ``
+- 2 CALLS to `attach_live_response_simulation_bridge` now through ``
+- 2 CALLS to `activation` now through ``
+- 2 CALLS to `representation_discrepancy` now through ``
+- 2 CALLS to `warp_params` now through ``
 - 2 CALLS to `is_identity_question` now through ``
 - 2 CALLS to `coherence_index` now through ``
-- 1 CALLS to `profile_str` now through ``
-- 1 CALLS to `normalize_identity_followup_text` now through ``
-- 1 CALLS to `update` now through ``
-- 1 CALLS to `update_from_axis_activation` now through ``
-- 1 CALLS to `resolve_lookup_request` now through ``
-- 1 CALLS to `extract_live_question_relations` now through ``
-- 1 CALLS to `stats` now through ``
-- 1 CALLS to `dce_recall` now through ``
+- 2 CALLS to `semantic_coherence` now through ``
+- 1 CALLS to `pressure_axes` now through ``
+- 1 CALLS to `compute_alignment` now through ``
+- 1 CALLS to `chain_up3_purpose` now through ``
+- 1 CALLS to `generic_response_penalty` now through ``
+- 1 CALLS to `recall_confidence_boost` now through ``
+- 1 CALLS to `resolve_call` now through ``
+- 1 CALLS to `repair_markers` now through ``
+- 1 CALLS to `status` now through ``
+- 1 CALLS to `ingest` now through ``
+- 1 CALLS to `flow_energy` now through ``
+- 1 CALLS to `recall_about` now through ``
+- 1 CALLS to `response_is_grounded` now through ``
+- 1 CALLS to `record_activity` now through ``
+- 1 CALLS to `derive_policy_state` now through ``
+- 1 CALLS to `hedging_score` now through ``
+- 1 CALLS to `crystal_word_facets` now through ``
 - 1 CALLS to `from_dict` now through ``
-- 1 CALLS to `get_recent_fragments` now through ``
-- 1 CALLS to `should_suppress_surface_meta_answer` now through ``
-- 1 CALLS to `h_seek` now through ``
-- 1 CALLS to `behavior_adjustment` now through ``
-- 1 CALLS to `init__` now through ``
-- 1 CALLS to `grounding_index` now through ``
-- 1 CALLS to `looks_like_question` now through ``
-- 1 CALLS to `inject_into_oets` now through ``
 
-### Lost (review each): IMPORTS 127, FEEDS 47, CALLS 16, REFERENCES 4, READS 4, WRITES 3, USES_ORGAN 1, MEMBER_OF 1
+### Lost (review each): IMPORTS 127, FEEDS 49, CALLS 16, WRITES 4, REFERENCES 4, READS 4, MEMBER_OF 1, USES_ORGAN 1
 
 - `fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink` CALLS `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames` [base aurora_internal/dual_strata/strata_link.py:327]
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:356]
@@ -284,6 +291,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:424]
 - `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` FEEDS `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:457]
 - `fn:aurora_internal.aurora_clone_harvest._organ` FEEDS `fn:aurora_internal.aurora_clone_harvest._add_result` [base aurora_internal/aurora_clone_harvest.py:754]
+- `fn:aurora_internal.aurora_clone_harvest.absorb_harvest` FEEDS `bus:_clone_harvest_absorb` [base flutter_app/android/app/src/main/python/aurora_bridge.py:2818]
 - `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames` FEEDS `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.append` [base aurora_internal/dual_strata/strata_link.py:329]
 - `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.pending` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch` [base aurora_internal/dual_strata/strata_link.py:852]
 - `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.pending` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role` [base aurora_internal/dual_strata/strata_link.py:851]
@@ -305,6 +313,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:386]
 - `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_late_surface_response` FEEDS `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:445]
 - `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_relational_claim` FEEDS `store:relational_claims.jsonl` [base flutter_app/android/app/src/main/python/aurora_bridge.py:8120]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` FEEDS `fn:aurora_internal.aurora_clone_harvest.absorb_harvest` [base flutter_app/android/app/src/main/python/aurora_bridge.py:2817]
 - `fn:tests.test_habitat_motivation_build717._drive_real_pressure` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base tests/test_habitat_motivation_build717.py:381]
 - `fn:tests.test_pf3_1_cooccurrence_hub_leak._build_fake_engine` FEEDS `fn:aurora_expression_perception.ExpressionPerceptionEngine._build_expression` [base tests/test_pf3_1_cooccurrence_hub_leak.py:100]
 - `organ:identity_field` FEEDS `field:flutter_app.android.app.src.main.python.aurora_bridge._last_axis_state` [base flutter_app/android/app/src/main/python/aurora_bridge.py:8716]
@@ -451,14 +460,21 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `fn:aurora_internal.dual_strata.predictive_stager._save_queue` WRITES `store:predictive_frame_queue.json` [base aurora_internal/dual_strata/predictive_stager.py:306]
 - `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_late_surface_response` WRITES `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:445]
 - `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` WRITES `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:456]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` WRITES `bus:_clone_harvest_absorb` [base flutter_app/android/app/src/main/python/aurora_bridge.py:2818]
 
-### Removed with deleted code: FEEDS 105, CALLS 18, WRITES 3, READS 2, INSTANTIATES 1, INVOKES 1
+### Removed with deleted code: FEEDS 105, CALLS 24, WRITES 3, READS 2, INSTANTIATES 1, INVOKES 1
 
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event` [base aurora_representational_resolution.py:423]
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier` [base aurora_representational_resolution.py:403]
 - `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.addAurora` CALLS `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.setDismissMode` [base flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt:102]
 - `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.addAurora` CALLS `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.bringAppToForeground` [base flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt:140]
 - `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.refreshAxisState` CALLS `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.updateAxisState` [base flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt:60]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@651` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:653]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@654` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:656]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@657` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:659]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@166` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:168]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@605` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:605]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@606` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:608]
 - `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@675` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:675]
 - `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@676` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:678]
 - `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawRestingMouth` CALLS `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawMouthLens` [base flutter_app/lib/widgets/aurora_orb.dart:813]
@@ -528,12 +544,6 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `fn:aurora_internal.aurora_language_state._clamp` FEEDS `field:aurora_internal.aurora_language_state.LanguageStateVector._dims` [base aurora_internal/aurora_language_state.py:231]
 - `fn:aurora_internal.aurora_language_state._clamp` FEEDS `field:aurora_internal.aurora_language_state.PhrasePrint.confidence` [base aurora_internal/aurora_language_state.py:2077]
 - `fn:aurora_internal.aurora_language_state._clamp` FEEDS `fn:aurora_internal.aurora_language_state.LanguageStateVector._compute_growth` [base aurora_internal/aurora_language_state.py:281]
-- `fn:aurora_internal.aurora_language_state._clamp` FEEDS `fn:aurora_internal.aurora_language_state.TemplateEvolutionEngine._response_score` [base aurora_internal/aurora_language_state.py:1830]
-- `fn:aurora_internal.aurora_ontological_scaffolding._clamp` FEEDS `field:aurora_internal.aurora_ontological_scaffolding.SemanticNode.comprehension_confidence` [base aurora_internal/aurora_ontological_scaffolding.py:648]
-- `fn:aurora_internal.aurora_ontological_scaffolding._clamp` FEEDS `field:aurora_internal.aurora_ontological_scaffolding.SemanticNode.ontological_depth` [base aurora_internal/aurora_ontological_scaffolding.py:626]
-- `fn:aurora_internal.aurora_ontological_scaffolding._clamp` FEEDS `field:aurora_internal.aurora_ontological_scaffolding.SemanticNode.research_priority` [base aurora_internal/aurora_ontological_scaffolding.py:680]
-- `fn:aurora_internal.aurora_ontological_scaffolding._clamp` FEEDS `fn:aurora_internal.aurora_ontological_scaffolding.ClusterEngine._compute_coherence` [base aurora_internal/aurora_ontological_scaffolding.py:1890]
-- `fn:aurora_internal.aurora_ontological_scaffolding._clamp` FEEDS `fn:aurora_internal.aurora_ontological_scaffolding.OntologicalScaffoldingEngine._topic_tracking_score` [base aurora_internal/aurora_ontological_scaffolding.py:2809]
 
 ### Consolidated: CALLS 1423, FEEDS 15, WRITES 7, READS 5, REFERENCES 1, USES_ORGAN 1
 
@@ -830,14 +840,14 @@ Fault and error handling nodes: 385 in base, 419 in head; gone: none; new: `cls:
 
 ## 7. Diagnostic evidence
 
-Logging calls: 431 in base, 438 in head.
-- `mod:flutter_app.android.app.src.main.python.aurora_bridge`: 157 -> 164
+Logging calls: 431 in base, 437 in head.
+- `mod:flutter_app.android.app.src.main.python.aurora_bridge`: 157 -> 163
 
 ## 8. Focus areas
 
 ### Interaction handling
 
-1 seed node(s); 69516 relationships around them in base, 76744 in head; 161 lost (not consolidated), 9050 new.
+1 seed node(s); 69516 relationships around them in base, 76780 in head; 164 lost (not consolidated), 9090 new.
 - lost: `bus:_last_voice_gate` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke`
 - lost: `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context`
 - lost: `bus:_subsurface_projection` FEEDS `fn:aurora._build_live_subsurface_projection`
@@ -848,6 +858,7 @@ Logging calls: 431 in base, 438 in head.
 - lost: `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output`
 - lost: `fn:aurora_acm_bridge.run` READS `field:aurora_acm_bridge.StatusReceiver.last_status`
 - lost: `fn:aurora_internal.aurora_clone_harvest._organ` FEEDS `fn:aurora_internal.aurora_clone_harvest._add_result`
+- lost: `fn:aurora_internal.aurora_clone_harvest.absorb_harvest` FEEDS `bus:_clone_harvest_absorb`
 - lost: `fn:aurora_internal.dual_strata.predictive_stager._load_queue` READS `store:predictive_frame_queue.json`
 - lost: `fn:aurora_internal.dual_strata.predictive_stager._save_queue` WRITES `store:predictive_frame_queue.json`
 - lost: `fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink` CALLS `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames`
@@ -866,6 +877,8 @@ Logging calls: 431 in base, 438 in head.
 - lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_relational_claim` FEEDS `store:relational_claims.jsonl`
 - lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` READS `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response`
 - lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` WRITES `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` FEEDS `fn:aurora_internal.aurora_clone_harvest.absorb_harvest`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` WRITES `bus:_clone_harvest_absorb`
 - lost: `fn:tests.test_habitat_motivation_build717._drive_real_pressure` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`
 - lost: `fn:tests.test_pf3_1_cooccurrence_hub_leak._build_fake_engine` FEEDS `fn:aurora_expression_perception.ExpressionPerceptionEngine._build_expression`
 - lost: `fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device` REFERENCES `store:genealogy/abilities.json`
@@ -875,9 +888,6 @@ Logging calls: 431 in base, 438 in head.
 - lost: `mod:aurora_behavioral_identity` IMPORTS `ext:collections`
 - lost: `mod:aurora_braid_wiring` IMPORTS `ext:time`
 - lost: `mod:aurora_checkpoint` IMPORTS `ext:pathlib`
-- lost: `mod:aurora_closure_basis` IMPORTS `ext:math`
-- lost: `mod:aurora_concept_derivation` IMPORTS `ext:hashlib`
-- lost: `mod:aurora_concept_derivation` IMPORTS `ext:time`
 
 ### Praxis
 
@@ -920,9 +930,11 @@ Logging calls: 431 in base, 438 in head.
 
 ### State hand-offs (bus slots and pipeline signals)
 
-574 seed node(s); 2467 relationships around them in base, 2493 in head; 4 lost (not consolidated), 30 new.
+574 seed node(s); 2467 relationships around them in base, 2492 in head; 6 lost (not consolidated), 31 new.
 - lost: `bus:_last_voice_gate` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke`
 - lost: `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context`
 - lost: `bus:_subsurface_projection` FEEDS `fn:aurora._build_live_subsurface_projection`
 - lost: `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output`
+- lost: `fn:aurora_internal.aurora_clone_harvest.absorb_harvest` FEEDS `bus:_clone_harvest_absorb`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` WRITES `bus:_clone_harvest_absorb`
 

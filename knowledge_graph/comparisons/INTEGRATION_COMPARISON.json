@@ -1,6 +1,6 @@
 {
  "base": "b649850b28ff7e94f4da2447bb23c3804ea68450",
- "head": "00867e8bb3472291fac2350fc6dd42dbe5088aa8",
+ "head": "7d4373c735269e319ca0e39c08f4cdab20adb315",
  "lineage": {
   "moved": [
    [
@@ -60,7 +60,7 @@
    ],
    [
     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@574",
-    "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@614",
+    "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@620",
     "same name and signature"
    ],
    [
@@ -85,12 +85,12 @@
    ],
    [
     "fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1442",
-    "fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1450",
+    "fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1495",
     "same name and signature"
    ],
    [
     "fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@843",
-    "fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@851",
+    "fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@856",
     "same name and signature"
    ]
   ],
@@ -129,6 +129,12 @@
    "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.withAlpha",
    "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.addAurora",
    "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.refreshAxisState",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@651",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@654",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@657",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@166",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@605",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@606",
    "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@675",
    "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@676",
    "fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawMouthLens",
@@ -522,6 +528,7 @@
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._PresentClaim.__exit__",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._ask_home",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._capture_present_for_move",
+   "fn:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_live_idle",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._defer_to_home",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._face_journal_path",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._hub_message_loop",
@@ -529,6 +536,9 @@
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._present_is_waiting",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._restore_present_for_move",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._send_first_pairing",
+   "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption",
+   "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb",
+   "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge.is_surface_only",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge.record_face_expression",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge.strata_link_transfer.install_surface",
@@ -538,15 +548,22 @@
    "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.springs",
    "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.voiceBytes",
    "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.withoutAWaveformHerWordsStillMoveTheLine",
+   "fn:flutter_app.lib.aurora_bridge.AuroraBridge.getFieldStatus",
    "fn:flutter_app.lib.aurora_bridge.AuroraBridge.recordFaceExpression",
    "fn:flutter_app.lib.overlay_entry._PresenceLinePreviewPainter.paint",
    "fn:flutter_app.lib.overlay_entry._PresenceLinePreviewPainter.shouldRepaint",
    "fn:flutter_app.lib.screens.home_screen._HomeScreenState._onExpressionSettled",
    "fn:flutter_app.lib.screens.home_screen._HomeScreenState.recordFaceExpression",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@656",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@659",
    "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@662",
-   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@665",
-   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@683",
-   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@684",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@667",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@670",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@171",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@610",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@611",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@688",
+   "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@689",
    "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._faceStateFromWidget",
    "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._onTick",
    "fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawMouth",
@@ -729,6 +746,12 @@
    "fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart._Engine.record_participation",
    "fn:tests.test_perspective_merge_repair.test_score_bridge_routes_observation_and_consumption_apart._Engine.record_pressure_observation",
    "fn:tests.test_pf3_1_cooccurrence_hub_leak._run",
+   "fn:tests.test_phone_field_not_held_at_boot.bridge",
+   "fn:tests.test_phone_field_not_held_at_boot.test_boot_no_longer_absorbs_under_one_field_hold",
+   "fn:tests.test_phone_field_not_held_at_boot.test_clone_harvest_absorbs_in_chunks_off_the_field",
+   "fn:tests.test_phone_field_not_held_at_boot.test_clone_harvest_absorbs_in_chunks_off_the_field.fake_absorb",
+   "fn:tests.test_phone_field_not_held_at_boot.test_field_status_names_the_holder",
+   "fn:tests.test_phone_field_not_held_at_boot.test_harvest_takes_the_field_only_when_no_turn_waits",
    "fn:tests.test_praxis_shared_state_and_discovery._FakeGateway.__init__",
    "fn:tests.test_praxis_shared_state_and_discovery._FakeGateway.receive",
    "fn:tests.test_praxis_shared_state_and_discovery._organism",
@@ -2289,6 +2312,7 @@
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._FieldLock.acquire",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._FieldLock.release",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._background_breathing_room",
+   "fn:flutter_app.android.app.src.main.python.aurora_bridge._historical_experience_live_idle",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._refresh_axis_state_from_systems",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._register_capability_gap",
    "fn:flutter_app.android.app.src.main.python.aurora_bridge._self_monitor_loop",
@@ -2651,6 +2675,19 @@
      [
       "aurora_internal/aurora_clone_harvest.py",
       754
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:aurora_internal.aurora_clone_harvest.absorb_harvest",
+    "type": "FEEDS",
+    "target": "bus:_clone_harvest_absorb",
+    "evidence": [
+     [
+      "flutter_app/android/app/src/main/python/aurora_bridge.py",
+      2818
      ]
     ],
     "observed": false,
@@ -3094,6 +3131,32 @@
      [
       "flutter_app/android/app/src/main/python/aurora_bridge.py",
       456
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+    "type": "FEEDS",
+    "target": "fn:aurora_internal.aurora_clone_harvest.absorb_harvest",
+    "evidence": [
+     [
+      "flutter_app/android/app/src/main/python/aurora_bridge.py",
+      2817
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+    "type": "WRITES",
+    "target": "bus:_clone_harvest_absorb",
+    "evidence": [
+     [
+      "flutter_app/android/app/src/main/python/aurora_bridge.py",
+      2818
      ]
     ],
     "observed": false,
@@ -10223,6 +10286,19 @@
     ],
     "observed": false,
     "via": "cls:aurora_representational_resolution.RepresentationalResolutionEngine"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+    "type": "CALLS",
+    "target": "fn:aurora_internal.aurora_clone_harvest.absorb_harvest",
+    "evidence": [
+     [
+      "flutter_app/android/app/src/main/python/aurora_bridge.py",
+      2817
+     ]
+    ],
+    "observed": false,
+    "via": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption"
    }
   ],
   "folded_into_shared": [
@@ -36794,6 +36870,84 @@
     "via": null
    },
    {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@651",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text",
+    "evidence": [
+     [
+      "flutter_app/lib/screens/hub_screen.dart",
+      653
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@654",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text",
+    "evidence": [
+     [
+      "flutter_app/lib/screens/hub_screen.dart",
+      656
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@657",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text",
+    "evidence": [
+     [
+      "flutter_app/lib/screens/hub_screen.dart",
+      659
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@166",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text",
+    "evidence": [
+     [
+      "flutter_app/lib/screens/hub_screen.dart",
+      168
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@605",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text",
+    "evidence": [
+     [
+      "flutter_app/lib/screens/hub_screen.dart",
+      605
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@606",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text",
+    "evidence": [
+     [
+      "flutter_app/lib/screens/hub_screen.dart",
+      608
+     ]
+    ],
+    "observed": false,
+    "via": null
+   },
+   {
     "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@675",
     "type": "CALLS",
     "target": "fn:flutter_app.lib.screens.home_screen._Header.Text",
@@ -37139,6 +37293,11 @@
     "target": "ext:unittest"
    },
    {
+    "source": "endpoint:chaquopy:aurora_bridge#get_field_status",
+    "type": "ROUTES_TO",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status"
+   },
+   {
     "source": "endpoint:chaquopy:aurora_bridge#record_face_expression",
     "type": "ROUTES_TO",
     "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge.record_face_expression"
@@ -37217,6 +37376,21 @@
     "source": "endpoint:http:/api/web",
     "type": "ROUTES_TO",
     "target": "fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET"
+   },
+   {
+    "source": "endpoint:methodchannel:org.aurora.app/bridge#getFieldStatus",
+    "type": "FEEDS",
+    "target": "endpoint:chaquopy:aurora_bridge#get_field_status"
+   },
+   {
+    "source": "endpoint:methodchannel:org.aurora.app/bridge#getFieldStatus",
+    "type": "ROUTES_TO",
+    "target": "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.AuroraService.AuroraService.callPythonString"
+   },
+   {
+    "source": "endpoint:methodchannel:org.aurora.app/bridge#getFieldStatus",
+    "type": "ROUTES_TO",
+    "target": "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine"
    },
    {
     "source": "endpoint:methodchannel:org.aurora.app/bridge#recordFaceExpression",
@@ -39494,6 +39668,11 @@
     "target": "fn:aurora_internal.aurora_store_ownership.store_write_allowed"
    },
    {
+    "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._boot_state",
+    "type": "FEEDS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status"
+   },
+   {
     "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._deferred_to_home",
     "type": "FEEDS",
     "target": "bus:_deferred_to_home"
@@ -39517,6 +39696,11 @@
     "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._present_waiting",
     "type": "FEEDS",
     "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._present_is_waiting"
+   },
+   {
+    "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._present_waiting",
+    "type": "FEEDS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status"
    },
    {
     "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._strata_state_dir",
@@ -39576,6 +39760,11 @@
    {
     "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._surface_only",
     "type": "FEEDS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status"
+   },
+   {
+    "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._surface_only",
+    "type": "FEEDS",
     "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_mobile_developmental_health"
    },
    {
@@ -39596,7 +39785,17 @@
    {
     "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._systems",
     "type": "FEEDS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_live_idle"
+   },
+   {
+    "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._systems",
+    "type": "FEEDS",
     "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._face_journal_path"
+   },
+   {
+    "source": "field:flutter_app.android.app.src.main.python.aurora_bridge._systems",
+    "type": "FEEDS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status"
    },
    {
     "source": "field:tests.test_dream_entanglement_evidence_boundary.FakeGenealogy.recent_promotions",
@@ -61936,7 +62135,17 @@
    {
     "source": "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine",
     "type": "HANDLES",
+    "target": "endpoint:methodchannel:org.aurora.app/bridge#getFieldStatus"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine",
+    "type": "HANDLES",
     "target": "endpoint:methodchannel:org.aurora.app/bridge#recordFaceExpression"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine",
+    "type": "INVOKES",
+    "target": "endpoint:chaquopy:aurora_bridge#get_field_status"
    },
    {
     "source": "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine",
@@ -62179,6 +62388,11 @@
     "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._present_is_waiting"
    },
    {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._background_breathing_room",
+    "type": "FEEDS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_live_idle"
+   },
+   {
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._capture_present_for_move",
     "type": "CALLS",
     "target": "fn:aurora_internal.dual_strata.surface_working_state.capture"
@@ -62195,6 +62409,21 @@
    },
    {
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._capture_present_for_move",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._systems"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_live_idle",
+    "type": "CALLS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._background_breathing_room"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_live_idle",
+    "type": "CALLS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._present_is_waiting"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_live_idle",
     "type": "READS",
     "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._systems"
    },
@@ -62239,6 +62468,11 @@
     "target": "store:face_expression_journal.jsonl"
    },
    {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._historical_experience_live_idle",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_running"
+   },
+   {
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._hub_message_loop",
     "type": "CALLS",
     "target": "fn:aurora_internal.dual_strata.hub_route.answer_pending"
@@ -62272,6 +62506,11 @@
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._parse_curiosity_cmd",
     "type": "FEEDS",
     "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._ask_home"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._present_is_waiting",
+    "type": "FEEDS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_live_idle"
    },
    {
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._present_is_waiting",
@@ -62317,6 +62556,46 @@
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._self_monitor_loop",
     "type": "CALLS",
     "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._present_is_waiting"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_running"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption",
+    "type": "SPAWNS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb",
+    "type": "CALLS",
+    "target": "fn:aurora_internal.aurora_clone_harvest.absorb_harvest"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb",
+    "type": "CALLS",
+    "target": "fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_running"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._systems"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb",
+    "type": "WRITES",
+    "target": "bus:_clone_harvest_absorb"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption._absorb",
+    "type": "WRITES",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_running"
    },
    {
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge._store_late_surface_response",
@@ -62382,6 +62661,26 @@
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_axis_state",
     "type": "WRITES",
     "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._axis_live_read_at"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._boot_state"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._present_waiting"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._surface_only"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_field_status",
+    "type": "READS",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._systems"
    },
    {
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response",
@@ -62452,6 +62751,16 @@
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
     "type": "CALLS",
     "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._defer_to_home"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+    "type": "CALLS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption"
+   },
+   {
+    "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+    "type": "FEEDS",
+    "target": "fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption"
    },
    {
     "source": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
@@ -62679,6 +62988,11 @@
     "target": "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.shape"
    },
    {
+    "source": "fn:flutter_app.lib.aurora_bridge.AuroraBridge.getFieldStatus",
+    "type": "INVOKES",
+    "target": "endpoint:methodchannel:org.aurora.app/bridge#getFieldStatus"
+   },
+   {
     "source": "fn:flutter_app.lib.aurora_bridge.AuroraBridge.recordFaceExpression",
     "type": "INVOKES",
     "target": "endpoint:methodchannel:org.aurora.app/bridge#recordFaceExpression"
@@ -62714,24 +63028,64 @@
     "target": "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
    },
    {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@656",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@659",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
+   },
+   {
     "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@662",
     "type": "CALLS",
     "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
    },
    {
-    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@665",
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@667",
     "type": "CALLS",
     "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
    },
    {
-    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@683",
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@670",
     "type": "CALLS",
     "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
    },
    {
-    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@684",
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@171",
     "type": "CALLS",
     "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@610",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@611",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@688",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@689",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.screens.home_screen._Header.Text"
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState._refresh",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.aurora_bridge.AuroraBridge.getFieldStatus"
+   },
+   {
+    "source": "fn:flutter_app.lib.screens.hub_screen._HubScreenState._refresh",
+    "type": "CALLS",
+    "target": "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
    },
    {
     "source": "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._onTick",
@@ -65937,6 +66291,16 @@
     "source": "fn:tests.test_pf3_1_cooccurrence_hub_leak.test_non_cooccurrence_relations_still_enrich_context",
     "type": "CALLS",
     "target": "fn:tests.test_pf3_1_cooccurrence_hub_leak._run"
+   },
+   {
+    "source": "fn:tests.test_phone_field_not_held_at_boot.test_clone_harvest_absorbs_in_chunks_off_the_field",
+    "type": "PASSES_CALLBACK",
+    "target": "fn:tests.test_phone_field_not_held_at_boot.test_clone_harvest_absorbs_in_chunks_off_the_field.fake_absorb"
+   },
+   {
+    "source": "fn:tests.test_phone_field_not_held_at_boot.test_harvest_takes_the_field_only_when_no_turn_waits",
+    "type": "PASSES_CALLBACK",
+    "target": "fn:tests.test_phone_field_not_held_at_boot.bridge"
    },
    {
     "source": "fn:tests.test_praxis_shared_state_and_discovery._FakeGateway.__init__",
@@ -71451,6 +71815,11 @@
    {
     "source": "mod:flutter_app.android.app.src.main.python.aurora_bridge",
     "type": "WRITES",
+    "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._clone_absorption_running"
+   },
+   {
+    "source": "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+    "type": "WRITES",
     "target": "field:flutter_app.android.app.src.main.python.aurora_bridge._deferred_to_home"
    },
    {
@@ -72524,6 +72893,61 @@
     "target": "rule:FIX-A048"
    },
    {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "IMPORTS",
+    "target": "ext:__future__"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "IMPORTS",
+    "target": "ext:aurora_bridge"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "IMPORTS",
+    "target": "ext:json"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "IMPORTS",
+    "target": "ext:os"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "IMPORTS",
+    "target": "ext:pytest"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "IMPORTS",
+    "target": "ext:sys"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "IMPORTS",
+    "target": "ext:threading"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "IMPORTS",
+    "target": "mod:aurora_internal.aurora_clone_harvest"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "MEMBER_OF",
+    "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "MEMBER_OF",
+    "target": "subsys:quasi:desktop"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "TESTS",
+    "target": "mod:aurora_internal.aurora_clone_harvest"
+   },
+   {
     "source": "mod:tests.test_praxis_shared_state_and_discovery",
     "type": "IMPORTS",
     "target": "ext:__future__"
@@ -73230,6 +73654,11 @@
    },
    {
     "source": "src:flutter_app/lib/screens/home_screen.dart",
+    "type": "IMPORTS",
+    "target": "src:flutter_app/lib/widgets/ui_diagnostics.dart"
+   },
+   {
+    "source": "src:flutter_app/lib/screens/hub_screen.dart",
     "type": "IMPORTS",
     "target": "src:flutter_app/lib/widgets/ui_diagnostics.dart"
    },

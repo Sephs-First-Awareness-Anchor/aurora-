@@ -1,7 +1,7 @@
 # Aurora's crystal ladder: declared responsibility against implemented and observed behaviour
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `00867e8bb347`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
+Source commit `7d4373c73526`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
 
 The repository is the king quasi. Each domain is a quasi, each declared subsystem a higher-order unit, and every file a base unit. Domains and subsystems are claims from the ownership mapping. A composite is promoted only when the graph shows its files bound by calls, instantiation, inheritance, spawns, callbacks, value flow or shared state; the mapping's own composites (built from imports) are listed beside them with how much of that binding their links carry. A conflict means the evidence points beyond the declared subsystem; it is a question to review, not a correction.
 
@@ -106,7 +106,7 @@ Declared: The instruction set, virtual machine and JIT.
 | `aurora-acm/kernel/src/xaurora/mod.rs` | location | - | - | - | 0 | - |
 | `aurora-acm/kernel/src/xaurora/vm.rs` | location | - | - | - | 0 | - |
 
-### Quasi: Desktop Aurora (`subsys:quasi:desktop`), 978 base file(s)
+### Quasi: Desktop Aurora (`subsys:quasi:desktop`), 979 base file(s)
 
 Declared: Her Python runtime and everything that runs, tests or maintains it on a computer.
 
@@ -382,7 +382,7 @@ Declared: Observers, canaries, probes, shadows, audits, reports and test setup. 
 | `aurora_same_input_history_canary.py` | name_and_docstring | - | - | - | 0 | unverified |
 | `conftest.py` | reviewed | - | - | - | 0 | unverified |
 | `run_full_competency_gauntlet.py` | reviewed | - | - | - | 1 | unverified |
-| `run_gauntlet.py` | reviewed | - | - | - | 2 | conflict: writes state that production code outside investigative work reads: store:daemon.log (read by aurora_hub) |
+| `run_gauntlet.py` | reviewed | - | - | - | 2 | conflict: writes state that production code outside investigative work reads: store:daemon.log (read by aurora_metabolic_distiller) |
 | `run_probe_battery.py` | reviewed | - | - | - | 3 | unverified |
 | `scripts/reset_quasiarch_observer_state.sh` | location | - | - | - | 0 | - |
 | `test_constraint_reasoner.py` | name_and_docstring | - | - | - | 0 | unverified |
@@ -1276,7 +1276,7 @@ Declared: Maintenance, audit, migration and analysis scripts, and the HTML and J
 
 `scripts/analyze_cross_generational_representations.py`, `scripts/analyze_native_representation_inquiries.py`, `scripts/append_to_doc.py`, `scripts/apply_vocabulary_seed.py`, `scripts/audit_actual_runtime_turn.py`, `scripts/audit_genealogy.py`, `scripts/audit_unified_response_regression.py`, `scripts/aurora_ci_segment.py`, `scripts/aurora_cold_archive.py`, `scripts/aurora_fault_instrumentation_injector.py`, `scripts/aurora_home_setup.py`, `scripts/aurora_kg_observe.py`, `scripts/aurora_knowledge_graph.py`, `scripts/aurora_stack_exporter.py`, `scripts/aurora_state_compress.py`, `scripts/backfill_noncomp_and_relations.py`, `scripts/baseline_genealogy.py`, `scripts/bridge_ledger_to_noncomps.py`, `scripts/bridge_tensor_occupancy_to_warp.py`, `scripts/chain_dossier_codec.py`, `scripts/characterize_pf16_residue.py`, `scripts/chat_daemon.py`, `scripts/chatscriber.py`, `scripts/clean_corpus.py`, `scripts/compare_architectures.py`, `scripts/compare_genealogy_equivalence.py`, `scripts/compile_universal_function_lineage.py`, `scripts/generate_nc_lineage_docs.py`, `scripts/greeting_exposure_experiment.py`, `scripts/inject_math_forms_v2.py`, `scripts/m1_1a_tier1_backfill.py`, `scripts/m1_2_provenance_hygiene.py`, `scripts/m1_3_v0_rerun.py`, `scripts/map_turn_information_flow.py`, `scripts/measure_crystal_associations.py`, `scripts/measure_crystal_convergence.py`, `scripts/measure_crystal_facets.py`, `scripts/measure_crystal_grammar.py`, `scripts/measure_crystal_maturity.py`, `scripts/measure_crystal_promotion.py`, `scripts/measure_crystal_substitutability.py`, `scripts/measure_crystal_weave.py`, `scripts/measure_dream_ancestry.py`, `scripts/measure_evidence_journal.py`, `scripts/measure_input_attribution.py`, `scripts/measure_input_impact.py`, `scripts/measure_quasiarch_inquiry.py`, `scripts/measure_stream_provenance.py`, `scripts/measure_turn_baseline.py`, `scripts/noncomp_actuation_shadow_audit.py`, `scripts/pf1_0_attribution_run.py`, `scripts/pf1_5_instrument_revalidation.py`, `scripts/pf1_6_acceptance.py`, `scripts/pf3_1_carryover_trace.py`, `scripts/pf3_1_context_keywords_trace.py`, `scripts/pf3_1_frame_staleness_trace.py`, `scripts/pf3_3_descriptor_trace.py`, `scripts/pf3_3_frame_absence_trace.py`, `scripts/pf3_5_motif_watch_readout.py`, `scripts/populate_fgae_semantics.py` ...
 
-#### Higher order: Test suite (`subsys:area:tests`), 486 member(s) (grouped by path, inferred)
+#### Higher order: Test suite (`subsys:area:tests`), 487 member(s) (grouped by path, inferred)
 
 - Evidence composite `subsys:composite:tests:f60e925c`: 5 files, cohesion 0.079, binding {'INSTANTIATES': 4, 'CALLS': 2, 'FEEDS': 6, 'SHARED_STATE': 11}. Files: `tests/test_home_growth.py`, `tests/test_hub_route.py`, `tests/test_strata_fencing.py`, `tests/test_strata_migration.py`, `tests/test_strata_moves.py`
 
@@ -1348,7 +1348,7 @@ Declared: Python that Chaquopy runs on the phone: the entry bridge, the cv2 shim
 
 Declared: The Flutter entry point, home and hub screens, overlay entry and the orb widget.
 
-- Evidence composite `subsys:composite:phone_ui:e24ca393`: 2 files, cohesion 0.441, binding {'CALLS': 45}. Files: `flutter_app/lib/screens/home_screen.dart`, `flutter_app/lib/screens/hub_screen.dart`
+- Evidence composite `subsys:composite:phone_ui:e24ca393`: 2 files, cohesion 0.433, binding {'CALLS': 45}. Files: `flutter_app/lib/screens/home_screen.dart`, `flutter_app/lib/screens/hub_screen.dart`
 - Declared composite `phone_ui.1` (hub `flutter_app/lib/main.dart`): 4 files, 1 of 3 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:phone_ui:e24ca393` (overlap 0.5).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
@@ -1403,7 +1403,7 @@ The record lists these as candidates, not composites, and their files stay base 
 
 | file | file | domains | joined by |
 |---|---|---|---|
-| `aurora_internal/aurora_runtime_faults.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 78, IMPORTS 1 |
+| `aurora_internal/aurora_runtime_faults.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 79, IMPORTS 1 |
 | `concept_crystal.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 23, IMPORTS 1, INSTANTIATES 1 |
 | `aurora_internal/dual_strata/strata_link.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 17, IMPORTS 1 |
 | `aurora_habitat.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 12, IMPORTS 1, INSTANTIATES 1 |
@@ -1424,9 +1424,9 @@ The record lists these as candidates, not composites, and their files stay base 
 | `aurora_internal/aurora_communication_emergence.py` | `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | desktop / phone | CALLS 4 |
 | `aurora_curiosity_engine.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 1, IMPORTS 1, INSTANTIATES 1 |
 | `aurora_self_grounding.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 1, IMPORTS 1, INSTANTIATES 1 |
+| `aurora_internal/aurora_clone_harvest.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 2, IMPORTS 1 |
 | `aurora_internal/dual_strata/strata_migration.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 2, IMPORTS 1 |
 | `aurora_internal/aurora_store_ownership.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 2, IMPORTS 1 |
-| `aurora_internal/aurora_clone_harvest.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 2, IMPORTS 1 |
 | `aurora_learning_probe.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 1, IMPORTS 1, INSTANTIATES 1 |
 | `aurora_internal/aurora_sensory_crystal.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 2, IMPORTS 1 |
 | `aurora_internal/aurora_turn_persistence.py` | `flutter_app/android/app/src/main/python/aurora_bridge.py` | desktop / phone | CALLS 2, IMPORTS 1 |
