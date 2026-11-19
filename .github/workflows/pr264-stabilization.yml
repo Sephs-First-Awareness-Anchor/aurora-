@@ -51,5 +51,6 @@ jobs:
             tests/test_praxis_shared_state_and_discovery.py \
             tests/test_praxis_same_device_loop.py \
             tests/test_desktop_embodiment.py \
+            tests/test_desktop_praxis_home_boot.py \
             tests/test_strata_fencing.py \
             tests/test_strata_state_transfer.py
