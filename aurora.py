@@ -16312,6 +16312,14 @@ def _build_live_subsurface_projection(
     if not projection:
         return {}
 
+    # Home's last word counts in proportion to how fresh it is (3b): its
+    # numeric influence fades smoothly with the age of generated_at.
+    try:
+        from aurora_internal.dual_strata.home_link_presence import weigh_projection
+        projection = weigh_projection(projection)
+    except Exception as _aurora_boundary_exc:
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_live_subsurface_projection', 13490)
+
     # Annotate with turn context in memory for the bridge call, 
     # but DO NOT write back to disk to avoid race conditions with Subsurface.
     projection["turn_context"] = {
@@ -31479,6 +31487,14 @@ def _run_live_response_turn(
         dual_strata_runtime = _read_live_dual_strata_runtime(systems)
         conscious_frame = dict(dual_strata_runtime.get("conscious_frame") or {})
         conscious_crest = dict(dual_strata_runtime.get("conscious_crest") or {})
+        # Her distance from home, felt as quantities, never as a script (3b).
+        try:
+            from aurora_internal.dual_strata.home_link_presence import home_link_quantities
+            _home_link = home_link_quantities(_dual_strata_state_dir(systems))
+            if _home_link:
+                conscious_frame["home_link"] = _home_link
+        except Exception as _aurora_boundary_exc:
+            _aurora_fault(locals(), _aurora_boundary_exc, '_run_live_response_turn', 23488)
         # Stamp into systems so the parser can use it as context
         systems["_live_conscious_frame"] = conscious_frame
         systems["_live_conscious_crest"] = conscious_crest
