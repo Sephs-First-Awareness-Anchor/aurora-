@@ -1,0 +1,69 @@
+name: PR264 final knowledge-graph regeneration
+
+on:
+  push:
+    branches: [claude/aurora-integration-20261118]
+    paths: [docs/PR264_GRAPH_REBUILD_TRIGGER.md]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pr264-graph-finalize
+  cancel-in-progress: false
+
+jobs:
+  graph:
+    name: Rebuild, diff, audit and commit final architecture
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Rebuild canonical knowledge graph at this branch head
+        run: |
+          python scripts/aurora_knowledge_graph.py build --quiet
+          python scripts/aurora_knowledge_graph.py check
+      - name: Recompute real comparison against frozen KG branch base
+        shell: bash
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/pr264-kg-base" b649850b28ff7e94f4da2447bb23c3804ea68450
+          python scripts/aurora_knowledge_graph.py build \
+            --root "$RUNNER_TEMP/pr264-kg-base" \
+            --out "$RUNNER_TEMP/pr264-base-graph" --quiet
+          python scripts/aurora_knowledge_graph.py diff \
+            "$RUNNER_TEMP/pr264-base-graph" knowledge_graph \
+            --out knowledge_graph/comparisons/PR264_FINAL_COMPARISON.md
+          python - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          path = Path('knowledge_graph/comparisons/PR264_FINAL_COMPARISON.json')
+          report = json.loads(path.read_text(encoding='utf-8'))
+          lost = report['relationships']['lost']
+          kinds = dict(Counter(row['type'] for row in lost))
+          observed = sum(bool(row.get('observed')) for row in lost)
+          print('Final unresolved relationships:',len(lost), 'by kind:',kinds)
+          print('Previously runtime-observed among unresolved:', observed)
+          if observed:
+              raise SystemExit('Observed runtime relationship loss requires investigation')
+          PY
+      - name: Publish committed architecture snapshot on this integration branch
+        run: |
+          git add -A knowledge_graph
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo "No graph changes to commit"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Regenerate PR264 architecture graph and final baseline comparison"
+            git push origin HEAD:refs/heads/claude/aurora-integration-20261118
+          fi
+          python scripts/aurora_knowledge_graph.py check
