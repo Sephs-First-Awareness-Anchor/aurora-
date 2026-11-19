@@ -248,6 +248,11 @@ class DesktopRuntime:
                 if obj:
                     self._workers.append(obj)
             self._start_component(name, attach)
+        # The phone already starts the weekly LearningProbe as part of
+        # experiential background; home must carry that same organ, sharing
+        # the canonical systems, field lock and idle admission, not a second
+        # cognition runtime. The probe's first run remains delayed an hour.
+        self._start_component("learning_probe", self._attach_learning_probe)
         archive = self.state_dir / "experiential_baseline_v1.zip"
         if archive.exists():
             def history():
@@ -264,6 +269,18 @@ class DesktopRuntime:
             self.acm = HostedACMBridge(lambda: dict(self._axes), self._accept_kernel,
                                       port=int(os.environ.get("AURORA_ACM_PORT", "4567")))
             self.acm.start()
+
+    def _attach_learning_probe(self):
+        """Start exactly one existing developmental learning probe at home."""
+        if self.systems.get("learning_probe") is not None:
+            return self.systems["learning_probe"]
+        from aurora_learning_probe import LearningProbe
+        probe = LearningProbe(self.systems, state_dir=str(self.state_dir),
+                              field_lock=self.field_lock, live_idle=self.live_idle)
+        probe.start()
+        self.systems["learning_probe"] = probe
+        self._workers.append(probe)
+        return probe
 
     def _start_scout(self):
         # Reuse the same worker entry used by the app; it claims the existing
@@ -628,13 +645,23 @@ class DesktopRuntime:
 
     def _update_diagnostics(self):
         snapshot = {}
-        for name in ("praxis_bridge", "praxis_messenger", "historical_experience", "cpm", "runtime_governor"):
+        for name in ("praxis_bridge", "praxis_messenger", "historical_experience",
+                     "learning_probe", "cpm", "runtime_governor"):
             obj = self.systems.get(name)
             if obj is not None:
                 try:
-                    snapshot[name] = obj.status() if hasattr(obj, "status") else obj.snapshot()
+                    snapshot[name] = (obj.status() if hasattr(obj, "status")
+                                      else obj.summary() if hasattr(obj, "summary")
+                                      else obj.snapshot())
                 except Exception as exc:
                     snapshot[name] = {"error": str(exc)}
+        if self.systems.get("historical_experience") is None and not (
+                self.state_dir / "experiential_baseline_v1.zip").exists():
+            snapshot["historical_experience"] = {
+                "status": "baseline_not_present",
+                "archive": "experiential_baseline_v1.zip",
+                "effect": "history replay not started; live cognition/Praxis unaffected",
+            }
         self._diagnostics = snapshot
 
     def _first_pairing_status(self):
