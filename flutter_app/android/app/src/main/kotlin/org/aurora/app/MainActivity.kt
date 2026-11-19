@@ -352,6 +352,12 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    // Who holds her field and for how long (phone fix, Build 980).
+                    "getFieldStatus" -> {
+                        AuroraService.callPythonString("get_field_status") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     // Praxis (Stage 6): status and manual pause/resume only.
                     // Flutter renders and switches; it never owns developmental
                     // meaning, so there is no other Praxis method on this channel.

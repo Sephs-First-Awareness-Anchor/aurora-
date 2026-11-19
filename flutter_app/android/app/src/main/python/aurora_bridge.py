@@ -2378,6 +2378,66 @@ def _messenger_live_idle() -> bool:
     return _historical_experience_live_idle(yield_to_messenger=False)
 
 
+_clone_absorption_running = threading.Event()
+
+
+def _clone_absorption_live_idle() -> bool:
+    """The clone harvest takes the field only when no live turn is waiting
+    and the background has its breathing room."""
+    return _systems is not None and not _present_is_waiting() and _background_breathing_room()
+
+
+def _start_clone_absorption(state_dir: str) -> None:
+    """Absorb the bundled clone harvest in the background, in chunks, never
+    holding the field across a live turn."""
+    if _clone_absorption_running.is_set():
+        return
+    _clone_absorption_running.set()
+
+    def _absorb() -> None:
+        try:
+            from aurora_internal.aurora_clone_harvest import absorb_harvest
+            if _systems is not None:
+                _systems["_clone_harvest_absorb"] = {"status": "absorbing_idle_batches"}
+            result = absorb_harvest(_systems, state_dir=state_dir,
+                                    field_lock=_lock, live_idle=_clone_absorption_live_idle)
+        except Exception as exc:
+            result = {"status": "error", "error": f"{type(exc).__name__}: {exc}"[:300]}
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:_start_clone_absorption",
+                exc=exc,
+                context={"function": "_start_clone_absorption",
+                         "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+        finally:
+            _clone_absorption_running.clear()
+        if _systems is not None:
+            _systems["_clone_harvest_absorb"] = result
+        log.info("Clone harvest: %s", {k: result.get(k) for k in ("status", "harvest_id", "clones", "episodes", "error")})
+
+    threading.Thread(target=_absorb, daemon=True, name="clone_harvest_absorption").start()
+
+
+def get_field_status() -> str:
+    """Who holds her field right now and for how long, whether a live turn
+    is waiting for it, and where boot is.  Shown on the Hub so a turn that
+    sits at surface_queued says what it is waiting behind."""
+    import json as _json_fs
+    held_since = float(getattr(_lock, "held_since", 0.0) or 0.0)
+    absorb = (_systems or {}).get("_clone_harvest_absorb") if _systems is not None else None
+    return _json_fs.dumps({
+        "held": bool(_lock.locked()),
+        "holder": str(getattr(_lock, "holder", "") or ""),
+        "held_s": round(time.time() - held_since, 1) if held_since else 0.0,
+        "present_waiting": int(_present_waiting),
+        "boot_stage": str(_boot_state.get("stage", "")),
+        "boot_finished": bool(_boot_state.get("finished", False)),
+        "clone_harvest": (absorb or {}).get("status", "") if isinstance(absorb, dict) else "",
+        "surface_only": bool(_surface_only),
+    }, default=str)
+
+
 def _historical_experience_live_idle(yield_to_messenger: bool = True) -> bool:
     """True only when the live app path is not currently claiming the field.
 
@@ -2386,6 +2446,10 @@ def _historical_experience_live_idle(yield_to_messenger: bool = True) -> bool:
     worker from repeatedly getting in front of an actively conversing user.
     """
     if _systems is None:
+        return False
+    if _clone_absorption_running.is_set():
+        # Her history stream follows the clone harvest, so it already knows
+        # which conversations her clones lived.
         return False
     if _curiosity_session_active.is_set() or _go_play_active.is_set():
         return False
@@ -3060,14 +3124,15 @@ def initialize(state_dir: str = "") -> str:
         if _surface_only:
             _defer_to_home("clone_harvest")
         else:
-            try:
-                from aurora_internal.aurora_clone_harvest import absorb_harvest
-                with _lock:
-                    _clone_absorb = absorb_harvest(_systems, state_dir=(state_dir if state_dir else "aurora_state"))
-                _systems["_clone_harvest_absorb"] = _clone_absorb
-                log.info("Clone harvest: %s", {k: _clone_absorb.get(k) for k in ("status", "harvest_id", "clones", "episodes")})
-            except Exception as _clone_exc:
-                log.warning("Clone harvest absorption failed: %s", _clone_exc)
+            # Phone fix (Sir, 2026-11-19, Build 980): this used to run the
+            # whole absorption under the field lock inside boot.  A harvest
+            # not yet absorbed held the field for many minutes, so her first
+            # turns sat at surface_queued and nothing reached her face.  It
+            # now absorbs in its own thread in small chunks, taking the field
+            # only when no live turn waits and the background has breathing
+            # room -- the same path her desktop home uses.  Her history
+            # stream still waits for it (see _historical_experience_live_idle).
+            _start_clone_absorption(state_dir if state_dir else "aurora_state")
 
         _mark_boot_stage("starting historical experience environment")
         if _surface_only:

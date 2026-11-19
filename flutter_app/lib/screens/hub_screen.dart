@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../aurora_bridge.dart';
 import '../habitat/habitat_bridge.dart';
 import '../praxis/praxis_bridge.dart';
+import '../widgets/ui_diagnostics.dart';
 
 // ── Palette (matches app dark theme) ──────────────────────────────────────────
 const _bg        = Color(0xFF0D0D0F);
@@ -73,6 +74,7 @@ class _HubScreenState extends State<HubScreen> {
   // late_completion), so a hung or silent turn is diagnosable from the
   // phone itself without a computer/adb.
   List<dynamic> _turnDiagnostics = [];
+  Map<String, dynamic> _fieldStatus = {};
 
   // Habitat diagnostics (Aurora Build 712) -- raw counts only, see
   // aurora_habitat.py's HabitatRuntime.integrity_report(): "for us", per
@@ -108,6 +110,7 @@ class _HubScreenState extends State<HubScreen> {
       final room = jsonDecode(roomJson) as Map<String, dynamic>;
       final habitatReport = await HabitatBridge.integrityReport();
       final turnDiagnostics = await AuroraBridge.getLiveTurnDiagnostics();
+      final fieldStatus = await AuroraBridge.getFieldStatus();
       if (mounted) {
         setState(() {
           _stats    = stats;
@@ -117,10 +120,12 @@ class _HubScreenState extends State<HubScreen> {
           _activity = (room['activity'] as List<dynamic>?) ?? [];
           _habitatReport = habitatReport;
           _turnDiagnostics = turnDiagnostics;
+          _fieldStatus = fieldStatus;
           _loading  = false;
         });
       }
-    } catch (_) {
+    } catch (e, st) {
+      UiDiagnostics.report('hub refresh', e, st);
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -1043,9 +1048,33 @@ class _HubScreenState extends State<HubScreen> {
     )..sort((a, b) => (b['last_ts'] as num? ?? 0).compareTo(a['last_ts'] as num? ?? 0));
     final recent = entries.take(6).toList();
 
+    // Who holds her field now (phone fix, Build 980): a turn at
+    // surface_queued is waiting for exactly this.
+    final fieldHeld = _fieldStatus['held'] == true;
+    final fieldHolder = (_fieldStatus['holder'] as String? ?? '');
+    final fieldHeldS = (_fieldStatus['held_s'] as num?)?.toDouble() ?? 0.0;
+    final waiting = (_fieldStatus['present_waiting'] as num?)?.toInt() ?? 0;
+    final bootFinished = _fieldStatus['boot_finished'] == true;
+    final bootStage = (_fieldStatus['boot_stage'] as String? ?? '');
+    final harvest = (_fieldStatus['clone_harvest'] as String? ?? '');
+    final fieldLine = _fieldStatus.isEmpty
+        ? 'Field: no reading yet'
+        : fieldHeld
+            ? 'Field: held by ${fieldHolder.isEmpty ? "?" : fieldHolder} for ${fieldHeldS.toStringAsFixed(0)} s'
+                '${waiting > 0 ? " · $waiting turn${waiting == 1 ? "" : "s"} waiting" : ""}'
+            : 'Field: free';
+    final Color fieldColor = fieldHeld && (waiting > 0 || fieldHeldS > 30) ? Colors.orangeAccent : _textDim;
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _sectionTitle('LIVE TURN DIAGNOSTICS', color: _cyan),
       _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SelectableText(fieldLine,
+            style: TextStyle(color: fieldColor, fontSize: 11, fontWeight: FontWeight.w600)),
+        if (!bootFinished && bootStage.isNotEmpty)
+          Text('Boot: $bootStage', style: const TextStyle(color: _textDim, fontSize: 10)),
+        if (harvest.isNotEmpty && harvest != 'already_absorbed')
+          Text('Clone harvest: $harvest', style: const TextStyle(color: _textDim, fontSize: 10)),
+        const Divider(color: _border, height: 16),
         if (recent.isEmpty)
           const Text(
             'No live turns recorded yet this session -- send Aurora a '
@@ -1081,6 +1110,17 @@ class _HubScreenState extends State<HubScreen> {
               // (pre_sanitize_content also empty) from "she said something
               // and Android's cleanup discarded it" (pre_sanitize_content
               // non-empty), which are very different bugs to chase.
+              // What a queued or timed-out turn waited behind.
+              String? waitedBehind;
+              for (final s in states.reversed) {
+                final m = Map<String, dynamic>.from(s as Map);
+                final h = (m['field_holder'] as String? ?? '');
+                if (h.isNotEmpty) {
+                  final held = (m['field_held_s'] as num?)?.toDouble();
+                  waitedBehind = 'waited behind $h${held != null ? " (held ${held.toStringAsFixed(0)} s)" : ""}';
+                  break;
+                }
+              }
               String? preSanitizePreview;
               if (lastState == 'suppressed_by_aurora') {
                 for (final s in states.reversed) {
@@ -1110,6 +1150,11 @@ class _HubScreenState extends State<HubScreen> {
                 const SizedBox(height: 3),
                 Text(sequence.isEmpty ? '—' : sequence,
                     style: const TextStyle(color: _text, fontSize: 10, height: 1.4)),
+                if (waitedBehind != null) ...[
+                  const SizedBox(height: 4),
+                  SelectableText(waitedBehind,
+                      style: const TextStyle(color: Colors.orangeAccent, fontSize: 10, height: 1.4)),
+                ],
                 if (preSanitizePreview != null) ...[
                   const SizedBox(height: 4),
                   Text(preSanitizePreview,

@@ -265,6 +265,17 @@ class AuroraBridge {
     return [];
   }
 
+  /// Who holds her field right now and for how long, whether a live turn
+  /// waits for it, and where boot is (get_field_status in aurora_bridge.py).
+  static Future<Map<String, dynamic>> getFieldStatus() async {
+    final json = await _channel.invokeMethod<String>('getFieldStatus') ?? '{}';
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return {};
+  }
+
   // Build 773 (Canonical Hub Telemetry): real JSON parsing, not regex --
   // precedented by uploadContent()'s own jsonDecode() use above in this
   // same file. The old regex parser had two real bugs beyond the
