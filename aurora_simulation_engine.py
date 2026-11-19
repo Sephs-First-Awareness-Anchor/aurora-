@@ -201,6 +201,8 @@ class UnderstandingShard:
     semantic_topic: str = ""
     topic_resolution_status: str = "unresolved"
     outcome_axis: str = ""
+    evidence_kind: str = "response_outcome"
+    evidence: Dict[str, Any] = field(default_factory=dict)
 
     def strengthen(self):
         self.observation_count += 1
@@ -396,6 +398,20 @@ def _extract_semantic_topic(prompt: str) -> Tuple[str, str]:
     return ("/".join(words[:2]), "resolved")
 
 
+_LEGACY_OUTCOME_META_PHRASES: Tuple[str, ...] = (
+    "built connection when approached with",
+    "opened depth when approached with",
+    "held attention when approached with",
+    "creates friction when approached with",
+    "caused withdrawal when approached with",
+    "still shallow in my web",
+)
+
+def _is_legacy_outcome_meta(value: Any) -> bool:
+    text = str(value or "").strip().lower()
+    return bool(text) and any(p in text for p in _LEGACY_OUTCOME_META_PHRASES)
+
+
 class ConsciousLearner:
     """
     Aurora's conscious learning system.
@@ -413,8 +429,22 @@ class ConsciousLearner:
         self._quarantined_shards: Dict[str, Dict[str, Any]] = {}
 
     def set_dps(self, dps) -> None:
-        """Wire DPS so understanding text flows into the crystal for that topic."""
+        """Attach DPS while quarantining legacy outcome prose from semantic use."""
         self._dps = dps
+        if dps is None:
+            return
+        try:
+            for crystal in getattr(dps, "crystals", {}).values():
+                facets = getattr(crystal, "facets", None)
+                if not isinstance(facets, dict):
+                    continue
+                for facet_id, facet in list(facets.items()):
+                    if str(getattr(facet, "role", "") or "") != "understanding":
+                        continue
+                    if _is_legacy_outcome_meta(getattr(facet, "content", "")):
+                        facets.pop(facet_id, None)
+        except Exception:
+            pass
 
     def generate_pool(self, context: Dict[str, Any]) -> List[ConceptualResponse]:
         """Generate response pool for Aurora to choose from."""
@@ -465,93 +495,69 @@ class ConsciousLearner:
                         context_type: str,
                         oets_web=None,
                         topic_word: str = "",
-                        episode_source: str = "ordinary") -> Optional[UnderstandingShard]:
-        """
-        Observe the outcome of a response and potentially create or
-        strengthen understanding.
+                        episode_source: str = "ordinary",
+                        semantic_topic: str = "",
+                        topic_resolution_status: str = "unresolved") -> Optional[UnderstandingShard]:
+        """Record response consequences as structured, non-semantic evidence.
 
-        topic_word should already be transport-marker-free semantic
-        content (see _topic_from_seed_prompt / _strip_internal_transport_
-        marker) -- this method derives the shard's semantic topic from it
-        but does not itself strip internal markers, since by the time an
-        episode reaches here that stripping has already happened once, at
-        the single normalization point.
+        A simulation outcome may strengthen future strategy selection, but it may
+        not manufacture a semantic topic from wording or turn its own bookkeeping
+        sentence into world knowledge.
         """
         self.total_observations += 1
-
-        # Did something meaningful happen?
         meaningful = (observation.avatar_engaged or observation.conversation_deepened
                       or observation.connection_felt_stronger)
-
         if not meaningful and not observation.tension_arose:
-            return None  # Nothing to learn from neutral outcomes
-
-        verb, axis = self._outcome_axis(observation)
+            return None
+        outcome_label, axis = self._outcome_axis(observation)
         if not axis:
             return None
-
-        semantic_topic, topic_resolution_status = _extract_semantic_topic(topic_word)
-        primary_topic = semantic_topic.split("/")[0] if semantic_topic else ""
-        episode_source = str(episode_source or "ordinary")
-
-        understanding_text = self._derive_understanding(
-            selected, verb, axis, primary_topic, oets_web=oets_web,
+        semantic_topic = str(semantic_topic or "").strip()
+        topic_resolution_status = (
+            "resolved" if semantic_topic and str(topic_resolution_status) == "resolved"
+            else "unresolved"
         )
-        if not understanding_text:
-            return None
-
-        # Shard identity (Build 616 Repair C): concept + context_type alone
-        # used to let unrelated observations collapse onto one shard just
-        # because they shared a response concept and a broad context
-        # bucket (e.g. every "practical" afterthought episode). Identity
-        # now also requires the same resolved semantic topic, the same
-        # outcome axis, and the same episode provenance class, so an
-        # existing shard only strengthens when the new observation is
-        # genuinely about the same thing.
+        episode_source = str(episode_source or "ordinary")
+        evidence = {
+            "outcome": outcome_label,
+            "outcome_axis": axis,
+            "response_concept": selected.primary_concept.value,
+            "semantic_topic": semantic_topic,
+            "episode_source": episode_source,
+        }
         existing = self._find_similar(
-            selected.primary_concept, context_type,
-            semantic_topic, axis, episode_source,
+            selected.primary_concept, context_type, semantic_topic, axis, episode_source,
         )
         if existing:
             existing.strengthen()
-            if self.check_admission(existing)[0]:
-                self._stamp_crystal(primary_topic, understanding_text, strengthen=True)
+            existing.evidence_kind = "response_outcome"
+            existing.evidence.update(evidence)
+            existing.understanding = ""
             return existing
-
         shard = UnderstandingShard(
             shard_id=_generate_id("understand"),
             response_concept=selected.primary_concept,
             observation_summary=observation.describe(),
-            understanding=understanding_text,
+            understanding="",
             context_type=context_type,
             episode_source=episode_source,
             semantic_topic=semantic_topic,
             topic_resolution_status=topic_resolution_status,
             outcome_axis=axis,
+            evidence_kind="response_outcome",
+            evidence=evidence,
         )
         self.shards[shard.shard_id] = shard
         self._by_concept[selected.primary_concept].append(shard.shard_id)
-        if self.check_admission(shard)[0]:
-            self._stamp_crystal(primary_topic, understanding_text)
         return shard
 
     def _outcome_axis(self, obs: ConversationObservation) -> Tuple[str, str]:
-        """
-        Map an observation outcome to IVM-axis language. Shared by
-        _derive_understanding (for the composed sentence) and
-        observe_outcome (for shard identity / contradiction detection)
-        so the two never drift apart.
-        """
-        if obs.tension_arose:
-            return "creates friction", "B-axis"
-        if obs.avatar_pulled_back:
-            return "caused withdrawal", "X-axis contraction"
-        if obs.connection_felt_stronger:
-            return "built connection", "A-axis relief"
-        if obs.conversation_deepened:
-            return "opened depth", "T-axis expansion"
-        if obs.avatar_engaged:
-            return "held attention", "N-axis resonance"
+        """Return structural consequence labels, not generated semantic prose."""
+        if obs.tension_arose: return "friction", "B-axis"
+        if obs.avatar_pulled_back: return "withdrawal", "X-axis contraction"
+        if obs.connection_felt_stronger: return "connection_stronger", "A-axis relief"
+        if obs.conversation_deepened: return "conversation_deepened", "T-axis expansion"
+        if obs.avatar_engaged: return "attention_held", "N-axis resonance"
         return "", ""
 
     _POSITIVE_OUTCOME_AXES: Set[str] = {
@@ -589,21 +595,9 @@ class ConsciousLearner:
         return False
 
     def check_admission(self, shard: UnderstandingShard) -> Tuple[bool, str]:
-        """
-        Guard for persistent-memory admission (Build 616 Repair D).
-
-        Before an understanding shard may enter OETS, a DPS crystal facet,
-        DreamTrainer retention, or conversation memory (what_have_i_
-        learned), it must carry a resolved, non-internal semantic topic;
-        nonempty understanding text; sufficient evidence; and no
-        unresolved contradiction against another shard on the same topic.
-
-        Returns (admissible, reason). The primary decision is driven by
-        provenance (topic_resolution_status, episode_source) and topic
-        identity -- the internal-mechanism-label check below is a
-        defense-in-depth backstop, not the sole mechanism, per Repair D's
-        explicit requirement.
-        """
+        """Only explicitly semantic evidence may enter persistent semantic memory."""
+        if str(getattr(shard, "evidence_kind", "") or "") != "semantic_claim":
+            return False, "nonsemantic_outcome_evidence"
         if shard.topic_resolution_status != "resolved" or not shard.semantic_topic:
             return False, "unresolved_topic"
         primary = shard.semantic_topic.split("/")[0].strip().lower()
@@ -611,6 +605,8 @@ class ConsciousLearner:
             return False, "internal_mechanism_label_as_subject"
         if not (shard.understanding or "").strip():
             return False, "empty_understanding"
+        if _is_legacy_outcome_meta(shard.understanding):
+            return False, "legacy_outcome_meta"
         if shard.observation_count < 1 or shard.confidence < 0.55:
             return False, "insufficient_evidence"
         if self._has_unresolved_contradiction(shard):
@@ -650,7 +646,7 @@ class ConsciousLearner:
             _aurora_fault(locals(), _aurora_boundary_exc, '_stamp_crystal', 304)
             pass
 
-    def propose_shard(
+    def propose_shard(self, content: Any, source: str = "sedimemory_a_axis_compression",
         self,
         content: Any,
         source: str = "sedimemory_a_axis_compression",
@@ -735,6 +731,8 @@ class ConsciousLearner:
         ]
         confident.sort(key=lambda s: s.confidence, reverse=True)
         return [s.understanding for s in confident[:10]]
+
+    def purge_legacy_semantic_contamination(self, oets: Any) -> int:
 
     def inject_into_oets(self, oets: Any) -> int:
         """
@@ -831,6 +829,8 @@ class ConsciousLearner:
                 "semantic_topic": str(shard.semantic_topic),
                 "topic_resolution_status": str(shard.topic_resolution_status),
                 "outcome_axis": str(shard.outcome_axis),
+                "evidence_kind": str(shard.evidence_kind),
+                "evidence": dict(shard.evidence),
             })
         return {
             "total_observations": int(self.total_observations),
@@ -905,6 +905,10 @@ class ConsciousLearner:
             episode_source = str(row.get("episode_source", "") or "ordinary")
             semantic_topic = str(row.get("semantic_topic", "") or "")
             outcome_axis = str(row.get("outcome_axis", "") or "")
+            evidence_kind = str(row.get("evidence_kind", "") or "")
+            evidence = dict(row.get("evidence", {}) or {})
+            if not evidence_kind:
+                evidence_kind = "response_outcome" if _is_legacy_outcome_meta(row.get("understanding", "")) else "legacy_untyped"
 
             shard = UnderstandingShard(
                 shard_id=shard_id,
@@ -919,6 +923,8 @@ class ConsciousLearner:
                 semantic_topic=semantic_topic,
                 topic_resolution_status=topic_resolution_status,
                 outcome_axis=outcome_axis,
+                evidence_kind=evidence_kind,
+                evidence=evidence,
             )
             self.shards[shard_id] = shard
             self._by_concept[concept].append(shard_id)
@@ -2354,7 +2360,14 @@ class SimulationSession:
 
         stripped_prompt, episode_source = _strip_internal_transport_marker(raw_prompt)
         stripped_prompt = stripped_prompt.strip() or raw_prompt
-        semantic_topic, topic_resolution_status = _extract_semantic_topic(stripped_prompt)
+        # Semantic identity is supplied only by Aurora's native meaning layer.
+        # Raw wording is preserved as episode content, never reduced by a regex
+        # parser into a semantic subject.
+        semantic_topic = str(topic.get("semantic_topic", "") or "").strip()
+        topic_resolution_status = (
+            "resolved" if semantic_topic and topic.get("topic_resolution_status") == "resolved"
+            else "unresolved"
+        )
 
         low = stripped_prompt.lower()
         category = str(topic.get("category", "") or "")
@@ -2506,8 +2519,10 @@ class SimulationSession:
                                                  turn_topic['category'],
                                                  oets_web=_oets_web,
                                                  topic_word=turn_topic.get('topic', ''),
-                                                 episode_source=turn_topic.get('episode_source', 'ordinary'))
-            if shard:
+                                                 episode_source=turn_topic.get('episode_source', 'ordinary'),
+                                                 semantic_topic=turn_topic.get('semantic_topic', ''),
+                                                 topic_resolution_status=turn_topic.get('topic_resolution_status', 'unresolved'))
+            if shard and shard.evidence_kind == "semantic_claim" and shard.understanding:
                 understanding_texts.append(shard.understanding)
 
             # Record generated interaction for downstream dream rubric scoring.
