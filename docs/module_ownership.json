@@ -378,13 +378,21 @@
   "runtime.1": {
    "domain": "desktop",
    "subsystem": "runtime",
-   "hub": "aurora.py",
+   "hub": "aurora_internal/desktop/runtime.py",
    "members": [
     "aurora.py",
     "aurora_daemon.py",
-    "aurora_hub.py",
     "aurora_internal/__init__.py",
     "aurora_internal/aurora_turn_chain.py",
+    "aurora_internal/desktop/__main__.py",
+    "aurora_internal/desktop/blueprints.py",
+    "aurora_internal/desktop/common.py",
+    "aurora_internal/desktop/demonstrations.py",
+    "aurora_internal/desktop/page.py",
+    "aurora_internal/desktop/policy.py",
+    "aurora_internal/desktop/runtime.py",
+    "aurora_internal/desktop/server.py",
+    "aurora_internal/desktop/services.py",
     "aurora_runtime.py",
     "corpus_runner.py",
     "run_corpus.py"
@@ -404,15 +412,75 @@
     ],
     [
      "aurora.py",
+     "aurora_internal/desktop/runtime.py"
+    ],
+    [
+     "aurora.py",
      "aurora_runtime.py"
+    ],
+    [
+     "aurora_daemon.py",
+     "aurora_internal/desktop/runtime.py"
     ],
     [
      "aurora_daemon.py",
      "corpus_runner.py"
     ],
     [
-     "aurora_hub.py",
-     "aurora_internal/__init__.py"
+     "aurora_internal/desktop/__main__.py",
+     "aurora_internal/desktop/common.py"
+    ],
+    [
+     "aurora_internal/desktop/__main__.py",
+     "aurora_internal/desktop/runtime.py"
+    ],
+    [
+     "aurora_internal/desktop/__main__.py",
+     "aurora_internal/desktop/server.py"
+    ],
+    [
+     "aurora_internal/desktop/blueprints.py",
+     "aurora_internal/desktop/common.py"
+    ],
+    [
+     "aurora_internal/desktop/blueprints.py",
+     "aurora_internal/desktop/runtime.py"
+    ],
+    [
+     "aurora_internal/desktop/common.py",
+     "aurora_internal/desktop/demonstrations.py"
+    ],
+    [
+     "aurora_internal/desktop/common.py",
+     "aurora_internal/desktop/runtime.py"
+    ],
+    [
+     "aurora_internal/desktop/common.py",
+     "aurora_internal/desktop/server.py"
+    ],
+    [
+     "aurora_internal/desktop/common.py",
+     "aurora_internal/desktop/services.py"
+    ],
+    [
+     "aurora_internal/desktop/demonstrations.py",
+     "aurora_internal/desktop/runtime.py"
+    ],
+    [
+     "aurora_internal/desktop/page.py",
+     "aurora_internal/desktop/server.py"
+    ],
+    [
+     "aurora_internal/desktop/policy.py",
+     "aurora_internal/desktop/runtime.py"
+    ],
+    [
+     "aurora_internal/desktop/policy.py",
+     "aurora_internal/desktop/services.py"
+    ],
+    [
+     "aurora_internal/desktop/runtime.py",
+     "aurora_internal/desktop/services.py"
     ],
     [
      "aurora_runtime.py",
@@ -1535,6 +1603,7 @@
    "subsystem": "strata",
    "hub": "aurora_internal/dual_strata/__init__.py",
    "members": [
+    "aurora_internal/aurora_store_ownership.py",
     "aurora_internal/dual_strata/__init__.py",
     "aurora_internal/dual_strata/activation_field.py",
     "aurora_internal/dual_strata/cers_bridge.py",
@@ -1547,6 +1616,9 @@
     "aurora_internal/dual_strata/crest.py",
     "aurora_internal/dual_strata/dce_bridge.py",
     "aurora_internal/dual_strata/downward_traversal.py",
+    "aurora_internal/dual_strata/home_growth.py",
+    "aurora_internal/dual_strata/hub_route.py",
+    "aurora_internal/dual_strata/inquiry_tiers.py",
     "aurora_internal/dual_strata/lifecycle_catalog.py",
     "aurora_internal/dual_strata/micro_reasoning.py",
     "aurora_internal/dual_strata/perturbation_probe.py",
@@ -1560,6 +1632,7 @@
     "aurora_internal/dual_strata/sensory_snapshot_channel.py",
     "aurora_internal/dual_strata/sleep_cycle.py",
     "aurora_internal/dual_strata/strata_link.py",
+    "aurora_internal/dual_strata/strata_migration.py",
     "aurora_internal/dual_strata/strata_state_transfer.py",
     "aurora_internal/dual_strata/subsurface_presence.py",
     "aurora_internal/dual_strata/subsurface_presence_runtime.py",
@@ -1567,6 +1640,7 @@
     "aurora_internal/dual_strata/subsystem_waveforms.py",
     "aurora_internal/dual_strata/surface_continuity_feed.py",
     "aurora_internal/dual_strata/surface_sensory_proxy.py",
+    "aurora_internal/dual_strata/surface_working_state.py",
     "aurora_internal/dual_strata/topological_semantic_coordinator.py",
     "aurora_internal/dual_strata/topology_frame.py",
     "aurora_internal/dual_strata/topology_tracker.py",
@@ -1574,6 +1648,26 @@
     "aurora_surface_daemon.py"
    ],
    "links": [
+    [
+     "aurora_internal/aurora_store_ownership.py",
+     "aurora_internal/dual_strata/cers_deprecation.py"
+    ],
+    [
+     "aurora_internal/aurora_store_ownership.py",
+     "aurora_internal/dual_strata/home_growth.py"
+    ],
+    [
+     "aurora_internal/aurora_store_ownership.py",
+     "aurora_internal/dual_strata/strata_link.py"
+    ],
+    [
+     "aurora_internal/aurora_store_ownership.py",
+     "aurora_internal/dual_strata/strata_migration.py"
+    ],
+    [
+     "aurora_internal/aurora_store_ownership.py",
+     "aurora_internal/dual_strata/topology_tracker.py"
+    ],
     [
      "aurora_internal/dual_strata/__init__.py",
      "aurora_internal/dual_strata/activation_field.py"
@@ -1616,6 +1710,10 @@
     ],
     [
      "aurora_internal/dual_strata/__init__.py",
+     "aurora_internal/dual_strata/home_growth.py"
+    ],
+    [
+     "aurora_internal/dual_strata/__init__.py",
      "aurora_internal/dual_strata/lifecycle_catalog.py"
     ],
     [
@@ -1641,6 +1739,10 @@
     [
      "aurora_internal/dual_strata/__init__.py",
      "aurora_internal/dual_strata/strata_link.py"
+    ],
+    [
+     "aurora_internal/dual_strata/__init__.py",
+     "aurora_internal/dual_strata/strata_migration.py"
     ],
     [
      "aurora_internal/dual_strata/__init__.py",
@@ -1783,6 +1885,22 @@
      "aurora_internal/dual_strata/subsystem_waveforms.py"
     ],
     [
+     "aurora_internal/dual_strata/home_growth.py",
+     "aurora_internal/dual_strata/strata_link.py"
+    ],
+    [
+     "aurora_internal/dual_strata/home_growth.py",
+     "aurora_internal/dual_strata/strata_state_transfer.py"
+    ],
+    [
+     "aurora_internal/dual_strata/hub_route.py",
+     "aurora_internal/dual_strata/strata_link.py"
+    ],
+    [
+     "aurora_internal/dual_strata/inquiry_tiers.py",
+     "aurora_internal/dual_strata/strata_link.py"
+    ],
+    [
      "aurora_internal/dual_strata/micro_reasoning.py",
      "aurora_internal/dual_strata/subsurface_state.py"
     ],
@@ -1864,11 +1982,23 @@
     ],
     [
      "aurora_internal/dual_strata/strata_link.py",
+     "aurora_internal/dual_strata/strata_migration.py"
+    ],
+    [
+     "aurora_internal/dual_strata/strata_link.py",
      "aurora_internal/dual_strata/strata_state_transfer.py"
     ],
     [
      "aurora_internal/dual_strata/strata_link.py",
      "aurora_internal/dual_strata/surface_continuity_feed.py"
+    ],
+    [
+     "aurora_internal/dual_strata/strata_link.py",
+     "aurora_internal/dual_strata/surface_working_state.py"
+    ],
+    [
+     "aurora_internal/dual_strata/strata_migration.py",
+     "aurora_internal/dual_strata/strata_state_transfer.py"
     ],
     [
      "aurora_internal/dual_strata/subsurface_presence.py",
@@ -2073,6 +2203,37 @@
   "tests.1": {
    "domain": "desktop",
    "subsystem": "tests",
+   "hub": "tests/test_strata_fencing.py",
+   "members": [
+    "tests/test_home_growth.py",
+    "tests/test_hub_route.py",
+    "tests/test_strata_fencing.py",
+    "tests/test_strata_migration.py",
+    "tests/test_strata_moves.py"
+   ],
+   "links": [
+    [
+     "tests/test_home_growth.py",
+     "tests/test_strata_fencing.py"
+    ],
+    [
+     "tests/test_hub_route.py",
+     "tests/test_strata_fencing.py"
+    ],
+    [
+     "tests/test_strata_fencing.py",
+     "tests/test_strata_migration.py"
+    ],
+    [
+     "tests/test_strata_fencing.py",
+     "tests/test_strata_moves.py"
+    ]
+   ],
+   "support": "supported"
+  },
+  "tests.2": {
+   "domain": "desktop",
+   "subsystem": "tests",
    "hub": "tests/test_communication_bar.py",
    "members": [
     "tests/test_communication_bar.py",
@@ -2086,7 +2247,7 @@
    ],
    "support": "supported"
   },
-  "tests.2": {
+  "tests.3": {
    "domain": "desktop",
    "subsystem": "tests",
    "hub": "tests/test_confluence.py",
@@ -2102,15 +2263,49 @@
    ],
    "support": "supported"
   },
+  "tooling.1": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "hub": "aurora_internal/crystal_web_server.py",
+   "members": [
+    "aurora_internal/crystal_web.py",
+    "aurora_internal/crystal_web_page.py",
+    "aurora_internal/crystal_web_server.py",
+    "aurora_internal/hub_panels.py",
+    "scripts/aurora_home_setup.py"
+   ],
+   "links": [
+    [
+     "aurora_internal/crystal_web.py",
+     "aurora_internal/crystal_web_server.py"
+    ],
+    [
+     "aurora_internal/crystal_web_page.py",
+     "aurora_internal/crystal_web_server.py"
+    ],
+    [
+     "aurora_internal/crystal_web_server.py",
+     "aurora_internal/hub_panels.py"
+    ],
+    [
+     "aurora_internal/hub_panels.py",
+     "scripts/aurora_home_setup.py"
+    ]
+   ],
+   "support": "partly_supported"
+  },
   "phone_ui.1": {
    "domain": "phone",
    "subsystem": "phone_ui",
-   "hub": "flutter_app/lib/main.dart",
+   "hub": "flutter_app/lib/widgets/ui_diagnostics.dart",
    "members": [
     "flutter_app/lib/main.dart",
     "flutter_app/lib/screens/home_screen.dart",
     "flutter_app/lib/screens/hub_screen.dart",
-    "flutter_app/lib/widgets/aurora_orb.dart"
+    "flutter_app/lib/widgets/aurora_orb.dart",
+    "flutter_app/lib/widgets/face_motion.dart",
+    "flutter_app/lib/widgets/ui_diagnostics.dart",
+    "flutter_app/test/face_motion_test.dart"
    ],
    "links": [
     [
@@ -2122,8 +2317,32 @@
      "flutter_app/lib/screens/hub_screen.dart"
     ],
     [
+     "flutter_app/lib/main.dart",
+     "flutter_app/lib/widgets/ui_diagnostics.dart"
+    ],
+    [
      "flutter_app/lib/screens/home_screen.dart",
      "flutter_app/lib/widgets/aurora_orb.dart"
+    ],
+    [
+     "flutter_app/lib/screens/home_screen.dart",
+     "flutter_app/lib/widgets/ui_diagnostics.dart"
+    ],
+    [
+     "flutter_app/lib/screens/hub_screen.dart",
+     "flutter_app/lib/widgets/ui_diagnostics.dart"
+    ],
+    [
+     "flutter_app/lib/widgets/aurora_orb.dart",
+     "flutter_app/lib/widgets/face_motion.dart"
+    ],
+    [
+     "flutter_app/lib/widgets/aurora_orb.dart",
+     "flutter_app/lib/widgets/ui_diagnostics.dart"
+    ],
+    [
+     "flutter_app/lib/widgets/face_motion.dart",
+     "flutter_app/test/face_motion_test.dart"
     ]
    ],
    "support": "partly_supported"
@@ -2197,6 +2416,7 @@
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/BootCompletedReceiver.kt",
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt",
+    "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
    ],
    "links": [
@@ -2223,6 +2443,10 @@
     [
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
+    ],
+    [
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt",
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt"
     ]
    ],
    "support": "partly_supported"
@@ -2396,6 +2620,17 @@
    "duties": null
   },
   ".github/workflows/build-apk.yml": {
+   "domain": "repo",
+   "subsystem": "ci",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "yaml",
+   "basis": "location",
+   "duties": null
+  },
+  ".github/workflows/desktop-embodiment.yml": {
    "domain": "repo",
    "subsystem": "ci",
    "also": [],
@@ -3477,7 +3712,7 @@
    "domain": "desktop",
    "subsystem": "runtime",
    "also": [],
-   "composite": "runtime.1",
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -4803,6 +5038,17 @@
    "basis": "name_and_docstring",
    "duties": null
   },
+  "aurora_internal/aurora_store_ownership.py": {
+   "domain": "desktop",
+   "subsystem": "strata",
+   "also": [],
+   "composite": "strata.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
   "aurora_internal/aurora_strategic_horizon.py": {
    "domain": "desktop",
    "subsystem": "reasoning",
@@ -5148,6 +5394,149 @@
    "basis": "name_and_docstring",
    "duties": null
   },
+  "aurora_internal/crystal_web.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": "tooling.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/crystal_web_page.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": "tooling.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/crystal_web_server.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": "tooling.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/__init__.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/__main__.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/blueprints.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/common.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/demonstrations.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/page.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/policy.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/runtime.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/server.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/desktop/services.py": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": "runtime.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
   "aurora_internal/dual_strata/__init__.py": {
    "domain": "desktop",
    "subsystem": "strata",
@@ -5270,6 +5659,50 @@
    "duties": null
   },
   "aurora_internal/dual_strata/downward_traversal.py": {
+   "domain": "desktop",
+   "subsystem": "strata",
+   "also": [],
+   "composite": "strata.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/dual_strata/home_growth.py": {
+   "domain": "desktop",
+   "subsystem": "strata",
+   "also": [],
+   "composite": "strata.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/dual_strata/home_link_presence.py": {
+   "domain": "desktop",
+   "subsystem": "strata",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/dual_strata/hub_route.py": {
+   "domain": "desktop",
+   "subsystem": "strata",
+   "also": [],
+   "composite": "strata.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/dual_strata/inquiry_tiers.py": {
    "domain": "desktop",
    "subsystem": "strata",
    "also": [],
@@ -5436,6 +5869,17 @@
    "basis": "name_and_docstring",
    "duties": null
   },
+  "aurora_internal/dual_strata/strata_migration.py": {
+   "domain": "desktop",
+   "subsystem": "strata",
+   "also": [],
+   "composite": "strata.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
   "aurora_internal/dual_strata/strata_state_transfer.py": {
    "domain": "desktop",
    "subsystem": "strata",
@@ -5535,6 +5979,17 @@
    "basis": "name_and_docstring",
    "duties": null
   },
+  "aurora_internal/dual_strata/surface_working_state.py": {
+   "domain": "desktop",
+   "subsystem": "strata",
+   "also": [],
+   "composite": "strata.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
   "aurora_internal/dual_strata/topological_semantic_coordinator.py": {
    "domain": "desktop",
    "subsystem": "strata",
@@ -5601,6 +6056,17 @@
    "basis": "name_and_docstring",
    "duties": null
   },
+  "aurora_internal/hub_panels.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": "tooling.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
   "aurora_internal/lesson_replay.py": {
    "domain": "desktop",
    "subsystem": "learning",
@@ -5617,6 +6083,17 @@
    "subsystem": "genealogy",
    "also": [],
    "composite": "genealogy.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "aurora_internal/process_lock.py": {
+   "domain": "desktop",
+   "subsystem": "foundation",
+   "also": [],
+   "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -6665,6 +7142,17 @@
    "basis": "location",
    "duties": null
   },
+  "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt": {
+   "domain": "phone",
+   "subsystem": "phone_android",
+   "also": [],
+   "composite": "phone_android.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "kotlin",
+   "basis": "location",
+   "duties": null
+  },
   "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt": {
    "domain": "phone",
    "subsystem": "phone_android",
@@ -6708,6 +7196,17 @@
    "language": "python",
    "basis": "reviewed",
    "duties": "Android stand-in for opencv: numpy and Pillow versions of the cv2 calls her stack uses, with camera frames fed in from the Kotlin CameraX bridge."
+  },
+  "flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt": {
+   "domain": "phone",
+   "subsystem": "phone_android",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "kotlin",
+   "basis": "location",
+   "duties": null
   },
   "flutter_app/lib/aurora_bridge.dart": {
    "domain": "phone",
@@ -6842,6 +7341,39 @@
    "duties": null
   },
   "flutter_app/lib/widgets/aurora_orb.dart": {
+   "domain": "phone",
+   "subsystem": "phone_ui",
+   "also": [],
+   "composite": "phone_ui.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "dart",
+   "basis": "location",
+   "duties": null
+  },
+  "flutter_app/lib/widgets/face_motion.dart": {
+   "domain": "phone",
+   "subsystem": "phone_ui",
+   "also": [],
+   "composite": "phone_ui.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "dart",
+   "basis": "location",
+   "duties": null
+  },
+  "flutter_app/lib/widgets/ui_diagnostics.dart": {
+   "domain": "phone",
+   "subsystem": "phone_ui",
+   "also": [],
+   "composite": "phone_ui.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "dart",
+   "basis": "location",
+   "duties": null
+  },
+  "flutter_app/test/face_motion_test.dart": {
    "domain": "phone",
    "subsystem": "phone_ui",
    "also": [],
@@ -7112,6 +7644,17 @@
    "subsystem": "tooling",
    "also": [],
    "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null
+  },
+  "scripts/aurora_home_setup.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": "tooling.1",
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -8053,7 +8596,40 @@
    "basis": "location",
    "duties": null
   },
+  "scripts/windows/desktop.ps1": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "powershell",
+   "basis": "location",
+   "duties": null
+  },
+  "scripts/windows/install_desktop.ps1": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "powershell",
+   "basis": "location",
+   "duties": null
+  },
   "scripts/windows/install_subsurface_task.ps1": {
+   "domain": "desktop",
+   "subsystem": "runtime",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "powershell",
+   "basis": "location",
+   "duties": null
+  },
+  "scripts/windows/run_acm.ps1": {
    "domain": "desktop",
    "subsystem": "runtime",
    "also": [],
@@ -9314,7 +9890,7 @@
    "domain": "desktop",
    "subsystem": "tests",
    "also": [],
-   "composite": "tests.1",
+   "composite": "tests.2",
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -9349,7 +9925,7 @@
    "domain": "desktop",
    "subsystem": "tests",
    "also": [],
-   "composite": "tests.1",
+   "composite": "tests.2",
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -9441,7 +10017,7 @@
    "domain": "desktop",
    "subsystem": "tests",
    "also": [],
-   "composite": "tests.2",
+   "composite": "tests.3",
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -9912,6 +10488,22 @@
     "aurora_internal/evidence_qualification.py"
    ]
   },
+  "tests/test_crystal_web.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/__init__.py",
+    "aurora_internal/crystal_web.py",
+    "aurora_internal/crystal_web_server.py"
+   ]
+  },
   "tests/test_d1_device_path_attribution.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -10054,6 +10646,34 @@
    "duties": null,
    "exercises": [
     "aurora_dimensional_systems.py"
+   ]
+  },
+  "tests/test_desktop_embodiment.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_dream_trainer.py",
+    "aurora_internal/desktop/blueprints.py",
+    "aurora_internal/desktop/common.py",
+    "aurora_internal/desktop/demonstrations.py",
+    "aurora_internal/desktop/policy.py",
+    "aurora_internal/desktop/runtime.py",
+    "aurora_internal/desktop/server.py",
+    "aurora_internal/desktop/services.py",
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/predictive_stager.py",
+    "aurora_internal/dual_strata/strata_link.py",
+    "aurora_internal/dual_strata/surface_working_state.py",
+    "aurora_internal/process_lock.py",
+    "aurora_perception_primitives.py",
+    "aurora_working_memory.py"
    ]
   },
   "tests/test_desktop_stack_includes_scout_worker.py": {
@@ -10255,6 +10875,20 @@
     "aurora_internal/aurora_structural_pressure_steering.py",
     "aurora_simulation_engine.py",
     "foundational_contract.py"
+   ]
+  },
+  "tests/test_dream_entanglement_evidence_boundary.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_quantum_dream_substrate.py"
    ]
   },
   "tests/test_dream_evolution_boundary.py": {
@@ -10606,6 +11240,21 @@
    "exercises": [
     "aurora_expression_perception.py",
     "aurora_internal/aurora_ontological_scaffolding.py"
+   ]
+  },
+  "tests/test_face_expression_journal.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/aurora_store_ownership.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
    ]
   },
   "tests/test_fail_recurrence_novelty.py": {
@@ -11245,6 +11894,86 @@
     "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
    ]
   },
+  "tests/test_home_growth.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": "tests.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/home_growth.py",
+    "aurora_internal/dual_strata/strata_link.py"
+   ]
+  },
+  "tests/test_home_link_presence.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/home_link_presence.py",
+    "aurora_internal/dual_strata/strata_link.py"
+   ]
+  },
+  "tests/test_hosted_acm.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_acm_bridge.py"
+   ]
+  },
+  "tests/test_hub_panels.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_dimensional_systems.py",
+    "aurora_internal/__init__.py",
+    "aurora_internal/crystal_runtime.py",
+    "aurora_internal/crystal_web_server.py",
+    "aurora_internal/hub_panels.py"
+   ]
+  },
+  "tests/test_hub_route.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": "tests.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/hub_route.py",
+    "aurora_internal/dual_strata/strata_link.py"
+   ]
+  },
   "tests/test_hypothesis_crystals.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -11410,6 +12139,26 @@
     "aurora_internal/aurora_input_identity.py",
     "aurora_internal/constraint_genealogy.py",
     "aurora_internal/evidence_qualification.py"
+   ]
+  },
+  "tests/test_inquiry_tiers.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/__init__.py",
+    "aurora_internal/aurora_store_ownership.py",
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/inquiry_tiers.py",
+    "aurora_internal/dual_strata/strata_link.py",
+    "aurora_representational_address.py",
+    "aurora_representational_resolution.py"
    ]
   },
   "tests/test_interaction_event_action_handoff.py": {
@@ -12864,6 +13613,21 @@
     "scripts/pf3_5_motif_watch_readout.py"
    ]
   },
+  "tests/test_phone_field_not_held_at_boot.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/aurora_clone_harvest.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ]
+  },
   "tests/test_phone_load_pacing.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -13009,6 +13773,20 @@
     "aurora_internal/dual_strata/prediction_field.py"
    ]
   },
+  "tests/test_predictive_stager_state_dir.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/dual_strata/predictive_stager.py"
+   ]
+  },
   "tests/test_preoutcome_pressure_capture.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -13151,7 +13929,7 @@
    "domain": "desktop",
    "subsystem": "tests",
    "also": [],
-   "composite": "tests.2",
+   "composite": "tests.3",
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -14676,6 +15454,23 @@
     "aurora_internal/aurora_input_pressure.py"
    ]
   },
+  "tests/test_strata_fencing.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": "tests.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/predictive_stager.py",
+    "aurora_internal/dual_strata/strata_link.py",
+    "aurora_internal/dual_strata/surface_continuity_feed.py"
+   ]
+  },
   "tests/test_strata_link.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -14691,6 +15486,40 @@
     "aurora_internal/dual_strata/predictive_stager.py",
     "aurora_internal/dual_strata/strata_link.py",
     "aurora_internal/dual_strata/surface_continuity_feed.py"
+   ]
+  },
+  "tests/test_strata_migration.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": "tests.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/strata_link.py",
+    "aurora_internal/dual_strata/strata_migration.py",
+    "aurora_internal/dual_strata/surface_continuity_feed.py"
+   ]
+  },
+  "tests/test_strata_moves.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": "tests.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/__init__.py",
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/strata_link.py",
+    "aurora_internal/tool_registry.py"
    ]
   },
   "tests/test_strata_state_transfer.py": {
@@ -14880,6 +15709,18 @@
     "aurora_daemon.py"
    ]
   },
+  "tests/test_surface_face_live_read.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": []
+  },
   "tests/test_surface_poedex_dispatch.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -14896,6 +15737,23 @@
     "aurora_internal/scouting/broker.py"
    ]
   },
+  "tests/test_surface_profile_bridge.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/strata_link.py",
+    "aurora_internal/dual_strata/strata_migration.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ]
+  },
   "tests/test_surface_scout_evidence_harvest.py": {
    "domain": "desktop",
    "subsystem": "tests",
@@ -14909,6 +15767,26 @@
    "exercises": [
     "aurora.py",
     "aurora_internal/scouting/subsurface_scout_bridge.py"
+   ]
+  },
+  "tests/test_surface_store_gate.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_interaction_memory.py",
+    "aurora_internal/__init__.py",
+    "aurora_internal/aurora_pressure_ledger.py",
+    "aurora_internal/aurora_runtime_faults.py",
+    "aurora_internal/aurora_store_ownership.py",
+    "aurora_persistence_utils.py",
+    "aurora_understanding_sediment.py"
    ]
   },
   "tests/test_system_introspection_bridge.py": {
@@ -15870,6 +16748,7 @@
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/BootCompletedReceiver.kt",
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt",
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
     ],
     "status": "partly_supported"
@@ -15897,7 +16776,10 @@
      "flutter_app/lib/main.dart",
      "flutter_app/lib/screens/home_screen.dart",
      "flutter_app/lib/screens/hub_screen.dart",
-     "flutter_app/lib/widgets/aurora_orb.dart"
+     "flutter_app/lib/widgets/aurora_orb.dart",
+     "flutter_app/lib/widgets/face_motion.dart",
+     "flutter_app/lib/widgets/ui_diagnostics.dart",
+     "flutter_app/test/face_motion_test.dart"
     ],
     "status": "partly_supported"
    },
@@ -15951,9 +16833,17 @@
     "members": [
      "aurora.py",
      "aurora_daemon.py",
-     "aurora_hub.py",
      "aurora_internal/__init__.py",
      "aurora_internal/aurora_turn_chain.py",
+     "aurora_internal/desktop/__main__.py",
+     "aurora_internal/desktop/blueprints.py",
+     "aurora_internal/desktop/common.py",
+     "aurora_internal/desktop/demonstrations.py",
+     "aurora_internal/desktop/page.py",
+     "aurora_internal/desktop/policy.py",
+     "aurora_internal/desktop/runtime.py",
+     "aurora_internal/desktop/server.py",
+     "aurora_internal/desktop/services.py",
      "aurora_runtime.py",
      "corpus_runner.py",
      "run_corpus.py"
@@ -15962,6 +16852,7 @@
    },
    {
     "members": [
+     "aurora_internal/aurora_store_ownership.py",
      "aurora_internal/dual_strata/__init__.py",
      "aurora_internal/dual_strata/activation_field.py",
      "aurora_internal/dual_strata/cers_bridge.py",
@@ -15974,6 +16865,9 @@
      "aurora_internal/dual_strata/crest.py",
      "aurora_internal/dual_strata/dce_bridge.py",
      "aurora_internal/dual_strata/downward_traversal.py",
+     "aurora_internal/dual_strata/home_growth.py",
+     "aurora_internal/dual_strata/hub_route.py",
+     "aurora_internal/dual_strata/inquiry_tiers.py",
      "aurora_internal/dual_strata/lifecycle_catalog.py",
      "aurora_internal/dual_strata/micro_reasoning.py",
      "aurora_internal/dual_strata/perturbation_probe.py",
@@ -15987,6 +16881,7 @@
      "aurora_internal/dual_strata/sensory_snapshot_channel.py",
      "aurora_internal/dual_strata/sleep_cycle.py",
      "aurora_internal/dual_strata/strata_link.py",
+     "aurora_internal/dual_strata/strata_migration.py",
      "aurora_internal/dual_strata/strata_state_transfer.py",
      "aurora_internal/dual_strata/subsurface_presence.py",
      "aurora_internal/dual_strata/subsurface_presence_runtime.py",
@@ -15994,6 +16889,7 @@
      "aurora_internal/dual_strata/subsystem_waveforms.py",
      "aurora_internal/dual_strata/surface_continuity_feed.py",
      "aurora_internal/dual_strata/surface_sensory_proxy.py",
+     "aurora_internal/dual_strata/surface_working_state.py",
      "aurora_internal/dual_strata/topological_semantic_coordinator.py",
      "aurora_internal/dual_strata/topology_frame.py",
      "aurora_internal/dual_strata/topology_tracker.py",
@@ -16029,6 +16925,26 @@
      "tests/test_pf1_5_instruments.py"
     ],
     "status": "import_only"
+   },
+   {
+    "members": [
+     "tests/test_home_growth.py",
+     "tests/test_hub_route.py",
+     "tests/test_strata_fencing.py",
+     "tests/test_strata_migration.py",
+     "tests/test_strata_moves.py"
+    ],
+    "status": "supported"
+   },
+   {
+    "members": [
+     "aurora_internal/crystal_web.py",
+     "aurora_internal/crystal_web_page.py",
+     "aurora_internal/crystal_web_server.py",
+     "aurora_internal/hub_panels.py",
+     "scripts/aurora_home_setup.py"
+    ],
+    "status": "partly_supported"
    }
   ],
   "cross_domain_links": [
@@ -16555,7 +17471,7 @@
   ]
  },
  "composite_candidates": {
-  "tests.3": {
+  "tests.4": {
    "domain": "desktop",
    "subsystem": "tests",
    "hub": "tests/test_generation_collapse_regression.py",

@@ -2,185 +2,6 @@
  "composites": [
   {
    "binding": {
-    "CALLS": 7
-   },
-   "cohesion": 0.583,
-   "evidence": [
-    [
-     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
-     "CALLS",
-     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.shape"
-    ],
-    [
-     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
-     "CALLS",
-     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.fromUnsigned8"
-    ],
-    [
-     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
-     "CALLS",
-     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.setVoice"
-    ]
-   ],
-   "external_binding": 5,
-   "higher_order": "subsys:area:phone_native",
-   "id": "subsys:composite:phone_native:1128caeb",
-   "members": [
-    "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
-    "flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt"
-   ],
-   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
-  },
-  {
-   "binding": {
-    "CALLS": 12
-   },
-   "cohesion": 0.8,
-   "evidence": [
-    [
-     "fn:flutter_app.test.face_motion_test.test",
-     "CALLS",
-     "fn:flutter_app.lib.widgets.face_motion.FaceRig.FaceRig"
-    ],
-    [
-     "fn:flutter_app.test.face_motion_test.test",
-     "CALLS",
-     "fn:flutter_app.lib.widgets.face_motion.FaceRig.snapshot"
-    ],
-    [
-     "fn:flutter_app.test.face_motion_test.test",
-     "CALLS",
-     "fn:flutter_app.lib.widgets.face_motion.FaceRig.setSpeech"
-    ]
-   ],
-   "external_binding": 3,
-   "higher_order": "subsys:area:phone_ui",
-   "id": "subsys:composite:phone_ui:860d72ae",
-   "members": [
-    "flutter_app/lib/widgets/face_motion.dart",
-    "flutter_app/test/face_motion_test.dart"
-   ],
-   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
-  },
-  {
-   "binding": {
-    "CALLS": 2,
-    "FEEDS": 6,
-    "INSTANTIATES": 4,
-    "SHARED_STATE": 11
-   },
-   "cohesion": 0.079,
-   "evidence": [
-    [
-     "fn:tests.test_home_growth.rig",
-     "INSTANTIATES",
-     "cls:tests.test_strata_fencing.Wire"
-    ],
-    [
-     "fn:tests.test_home_growth.rig",
-     "CALLS",
-     "fn:tests.test_strata_fencing.Wire.transport_for"
-    ],
-    [
-     "fn:tests.test_home_growth.rig",
-     "FEEDS",
-     "fn:tests.test_strata_fencing.Wire.__init__"
-    ],
-    [
-     "fn:tests.test_hub_route.rig",
-     "INSTANTIATES",
-     "cls:tests.test_strata_fencing.Wire"
-    ],
-    [
-     "fn:tests.test_hub_route.rig",
-     "CALLS",
-     "fn:tests.test_strata_fencing.Wire.transport_for"
-    ],
-    [
-     "fn:tests.test_hub_route.rig",
-     "FEEDS",
-     "fn:tests.test_strata_fencing.Wire.__init__"
-    ],
-    [
-     "fn:tests.test_strata_migration.rig",
-     "INSTANTIATES",
-     "cls:tests.test_strata_fencing.Wire"
-    ],
-    [
-     "fn:tests.test_strata_migration.rig",
-     "FEEDS",
-     "fn:tests.test_strata_fencing.Wire.__init__"
-    ],
-    [
-     "mod:tests.test_strata_fencing",
-     "SHARES",
-     "store:surface_working_state.json"
-    ],
-    [
-     "fn:tests.test_strata_moves.rig",
-     "INSTANTIATES",
-     "cls:tests.test_strata_fencing.Wire"
-    ],
-    [
-     "fn:tests.test_strata_moves.rig",
-     "FEEDS",
-     "fn:tests.test_strata_fencing.Wire.__init__"
-    ],
-    [
-     "mod:tests.test_strata_fencing",
-     "SHARES",
-     "store:surface_working_state.json"
-    ],
-    [
-     "mod:tests.test_strata_migration",
-     "SHARES",
-     "store:surface_working_state.json"
-    ],
-    [
-     "mod:tests.test_home_growth",
-     "SHARES",
-     "store:surface_working_state.json"
-    ],
-    [
-     "mod:tests.test_strata_migration",
-     "SHARES",
-     "store:lexicon.json"
-    ],
-    [
-     "mod:tests.test_strata_migration",
-     "SHARES",
-     "store:surface_working_state.json"
-    ],
-    [
-     "mod:tests.test_strata_moves",
-     "SHARES",
-     "store:surface_working_state.json"
-    ],
-    [
-     "mod:tests.test_home_growth",
-     "SHARES",
-     "store:surface_working_state.json"
-    ],
-    [
-     "mod:tests.test_strata_moves",
-     "SHARES",
-     "store:surface_working_state.json"
-    ]
-   ],
-   "external_binding": 268,
-   "higher_order": "subsys:area:tests",
-   "id": "subsys:composite:tests:f60e925c",
-   "members": [
-    "tests/test_home_growth.py",
-    "tests/test_hub_route.py",
-    "tests/test_strata_fencing.py",
-    "tests/test_strata_migration.py",
-    "tests/test_strata_moves.py"
-   ],
-   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
-  },
-  {
-   "binding": {
     "CALLS": 3
    },
    "cohesion": 0.75,
@@ -312,12 +133,12 @@
      "fn:aurora_desktop_agent.get_agent"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.note",
+     "field:aurora_internal.tool_registry.ToolResult.success",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.success",
+     "field:aurora_internal.tool_registry.ToolResult.note",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
@@ -927,7 +748,7 @@
      "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
     ],
     [
-     "field:aurora_ivm.RecursionLevel.SURFACE",
+     "field:aurora_ivm.RecursionLevel.CORE",
      "FEEDS",
      "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
     ],
@@ -1245,7 +1066,7 @@
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
+     "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
@@ -2136,17 +1957,17 @@
      "fn:aurora_expression_perception.infer_word_role"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.pressure_relief",
-     "FEEDS",
-     "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
-    ],
-    [
      "field:aurora_articulation.ArticulationDecision.selected",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
     [
      "field:aurora_articulation.ArticulationDecision.candidate_pressure",
+     "FEEDS",
+     "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
+    ],
+    [
+     "field:aurora_articulation.ArticulationDecision.pressure_relief",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ]
@@ -2167,10 +1988,10 @@
   },
   {
    "binding": {
-    "CALLS": 16,
+    "CALLS": 28,
     "SPAWNS": 2
    },
-   "cohesion": 0.621,
+   "cohesion": 0.833,
    "evidence": [
     [
      "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine",
@@ -2201,15 +2022,47 @@
      "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.startAmbientAudioCapture",
      "CALLS",
      "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.hear"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.pushWaveform",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.fromUnsigned8"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.frame",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.setVoice"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.frame",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.levelOf"
+    ],
+    [
+     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.shape"
+    ],
+    [
+     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.fromUnsigned8"
+    ],
+    [
+     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.setVoice"
     ]
    ],
-   "external_binding": 11,
+   "external_binding": 6,
    "higher_order": "subsys:category:phone_android",
-   "id": "subsys:composite:phone_android:3c827534",
+   "id": "subsys:composite:phone_android:3c9f1bf9",
    "members": [
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
-    "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt"
+    "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt",
+    "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
+    "flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -2279,9 +2132,9 @@
   },
   {
    "binding": {
-    "CALLS": 45
+    "CALLS": 70
    },
-   "cohesion": 0.433,
+   "cohesion": 0.551,
    "evidence": [
     [
      "fn:flutter_app.lib.screens.home_screen._HomeScreenState.initState",
@@ -2297,14 +2150,88 @@
      "fn:flutter_app.lib.screens.home_screen._HomeScreenState._handleSttEvent",
      "CALLS",
      "fn:flutter_app.lib.screens.hub_screen._HubScreenState.Duration"
+    ],
+    [
+     "fn:flutter_app.lib.screens.home_screen._HomeScreenState._listenBridgeEvents",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+    ],
+    [
+     "fn:flutter_app.lib.screens.home_screen._HomeScreenState._onExpressionSettled",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+    ],
+    [
+     "fn:flutter_app.lib.screens.home_screen._HomeScreenState.recordFaceExpression",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+    ],
+    [
+     "fn:flutter_app.lib.screens.hub_screen._HubScreenState._refresh",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+    ],
+    [
+     "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.initState",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.FaceRig"
+    ],
+    [
+     "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._onTick",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.setSpeech"
+    ],
+    [
+     "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._onTick",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.snapshot"
+    ],
+    [
+     "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.didUpdateWidget",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+    ],
+    [
+     "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._onTick",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+    ],
+    [
+     "fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+    ],
+    [
+     "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.build",
+     "CALLS",
+     "fn:flutter_app.lib.screens.home_screen._InputBar.GestureDetector"
+    ],
+    [
+     "fn:flutter_app.test.face_motion_test.test",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.FaceRig"
+    ],
+    [
+     "fn:flutter_app.test.face_motion_test.test",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.snapshot"
+    ],
+    [
+     "fn:flutter_app.test.face_motion_test.test",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.setSpeech"
     ]
    ],
-   "external_binding": 59,
+   "external_binding": 57,
    "higher_order": "subsys:category:phone_ui",
-   "id": "subsys:composite:phone_ui:e24ca393",
+   "id": "subsys:composite:phone_ui:98c133ef",
    "members": [
     "flutter_app/lib/screens/home_screen.dart",
-    "flutter_app/lib/screens/hub_screen.dart"
+    "flutter_app/lib/screens/hub_screen.dart",
+    "flutter_app/lib/widgets/aurora_orb.dart",
+    "flutter_app/lib/widgets/face_motion.dart",
+    "flutter_app/lib/widgets/ui_diagnostics.dart",
+    "flutter_app/test/face_motion_test.dart"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -2638,12 +2565,12 @@
   },
   {
    "binding": {
-    "CALLS": 9,
-    "FEEDS": 53,
-    "INSTANTIATES": 4,
-    "SHARED_STATE": 60
+    "CALLS": 53,
+    "FEEDS": 117,
+    "INSTANTIATES": 9,
+    "SHARED_STATE": 84
    },
-   "cohesion": 0.029,
+   "cohesion": 0.055,
    "evidence": [
     [
      "fn:aurora._run_reasoning_pipeline",
@@ -2706,45 +2633,234 @@
      "fn:aurora.save_sensory_skill_state"
     ],
     [
-     "fn:aurora_runtime.mode_corpus",
+     "fn:aurora_internal.desktop.__main__.main",
      "CALLS",
-     "fn:corpus_runner.boot_aurora"
+     "fn:aurora_internal.desktop.server.owner_token"
     ],
     [
-     "fn:aurora_runtime.mode_corpus",
-     "INSTANTIATES",
-     "cls:corpus_runner.LearningCadence"
-    ],
-    [
-     "fn:aurora_runtime.mode_corpus",
+     "fn:aurora_internal.desktop.__main__.main",
      "CALLS",
-     "fn:corpus_runner.run_corpus_ingestion"
+     "fn:aurora_internal.desktop.server.make_server"
     ],
     [
-     "fn:aurora.boot_aurora",
+     "fn:aurora_internal.desktop.__main__.main",
      "FEEDS",
-     "fn:corpus_runner.simulation_burst"
+     "fn:aurora_internal.desktop.server.owner_token"
     ],
     [
-     "mod:aurora",
-     "SHARES",
-     "organ:understanding_contract"
+     "fn:aurora_internal.desktop.__main__.main",
+     "CALLS",
+     "fn:aurora_internal.desktop.common.read_json"
     ],
     [
-     "mod:aurora",
-     "SHARES",
-     "organ:identity_field"
+     "fn:aurora_internal.desktop.__main__.main",
+     "INSTANTIATES",
+     "cls:aurora_internal.desktop.runtime.DesktopRuntime"
+    ],
+    [
+     "fn:aurora_internal.desktop.__main__.main",
+     "CALLS",
+     "fn:aurora_internal.desktop.runtime.DesktopRuntime.start"
+    ],
+    [
+     "fn:aurora_internal.desktop.__main__.main",
+     "CALLS",
+     "fn:aurora_internal.desktop.runtime.DesktopRuntime.stop"
+    ],
+    [
+     "fn:aurora_internal.desktop.blueprints.BlueprintSpace.__init__",
+     "CALLS",
+     "fn:aurora_internal.desktop.common.read_json"
+    ],
+    [
+     "fn:aurora_internal.desktop.blueprints.BlueprintSpace._save",
+     "CALLS",
+     "fn:aurora_internal.desktop.common.write_json"
+    ],
+    [
+     "fn:aurora_internal.desktop.blueprints.BlueprintSpace.register",
+     "CALLS",
+     "fn:aurora_internal.desktop.common.digest"
+    ],
+    [
+     "fn:aurora_internal.desktop.demonstrations.Demonstrations.__init__",
+     "CALLS",
+     "fn:aurora_internal.desktop.common.read_json"
+    ],
+    [
+     "fn:aurora_internal.desktop.demonstrations.Demonstrations._save",
+     "CALLS",
+     "fn:aurora_internal.desktop.common.write_json"
     ]
    ],
-   "external_binding": 4247,
+   "external_binding": 4562,
    "higher_order": "subsys:category:runtime",
-   "id": "subsys:composite:runtime:0414c162",
+   "id": "subsys:composite:runtime:556d4dba",
    "members": [
     "aurora.py",
     "aurora_daemon.py",
     "aurora_internal/aurora_turn_chain.py",
+    "aurora_internal/desktop/__main__.py",
+    "aurora_internal/desktop/blueprints.py",
+    "aurora_internal/desktop/common.py",
+    "aurora_internal/desktop/demonstrations.py",
+    "aurora_internal/desktop/policy.py",
+    "aurora_internal/desktop/runtime.py",
+    "aurora_internal/desktop/server.py",
+    "aurora_internal/desktop/services.py",
     "aurora_runtime.py",
     "corpus_runner.py"
+   ],
+   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
+  },
+  {
+   "binding": {
+    "CALLS": 98,
+    "FEEDS": 173,
+    "INSTANTIATES": 9,
+    "SHARED_STATE": 3
+   },
+   "cohesion": 0.222,
+   "evidence": [
+    [
+     "fn:aurora_internal.dual_strata.home_growth._growth_root",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.link_dir"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._growth_op",
+     "INSTANTIATES",
+     "cls:aurora_internal.dual_strata.home_growth.HashCache"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._growth_op",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.home_growth.home_growth_manifest"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.home_growth.HashCache.sha",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_state_transfer.file_sha256"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.home_growth.home_owned_paths",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_state_transfer.list_transferable"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.home_growth.is_growth_path",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_state_transfer.is_transferable"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.home_growth.home_owned_paths",
+     "CALLS",
+     "fn:aurora_internal.aurora_store_ownership.classify"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.home_growth.is_growth_path",
+     "CALLS",
+     "fn:aurora_internal.aurora_store_ownership.classify"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.home_growth.is_growth_path",
+     "FEEDS",
+     "fn:aurora_internal.aurora_store_ownership.classify"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.inquiry_tiers._link_dir",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.link_dir"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.inquiry_tiers.SurfaceInquiryTier.pass_up",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.request_home"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.inquiry_tiers.SurfaceInquiryTier.send_evidence",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.request_home"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.sensory_observation.run_sensory_observation_cycle",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.sensory_observation._resolve_state_dir",
+     "FEEDS",
+     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot",
+     "FEEDS",
+     "fn:aurora_internal.dual_strata.sensory_observation.build_sensory_observation_packet"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.collect_surface_uplink",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.surface_continuity_feed.peek_continuity_packets"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.collect_surface_uplink",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.surface_continuity_feed.read_and_clear_continuity_packets"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.surface_continuity_feed.deposit_continuity_packet"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link._collect_sensory_snapshot",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.snapshot_path"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.snapshot_path"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_guidance_queue"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.hub_route.record_reply"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.apply_downlink_record",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.hub_route.receive_message"
+    ],
+    [
+     "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record",
+     "FEEDS",
+     "fn:aurora_internal.dual_strata.hub_route.record_reply"
+    ]
+   ],
+   "external_binding": 994,
+   "higher_order": "subsys:category:strata",
+   "id": "subsys:composite:strata:b8d56ae3",
+   "members": [
+    "aurora_internal/aurora_store_ownership.py",
+    "aurora_internal/dual_strata/home_growth.py",
+    "aurora_internal/dual_strata/hub_route.py",
+    "aurora_internal/dual_strata/inquiry_tiers.py",
+    "aurora_internal/dual_strata/predictive_stager.py",
+    "aurora_internal/dual_strata/sensory_control_channel.py",
+    "aurora_internal/dual_strata/sensory_observation.py",
+    "aurora_internal/dual_strata/sensory_snapshot_channel.py",
+    "aurora_internal/dual_strata/strata_link.py",
+    "aurora_internal/dual_strata/strata_migration.py",
+    "aurora_internal/dual_strata/strata_state_transfer.py",
+    "aurora_internal/dual_strata/surface_continuity_feed.py",
+    "aurora_internal/dual_strata/surface_sensory_proxy.py",
+    "aurora_surface_daemon.py"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -2899,152 +3015,6 @@
     "aurora_internal/dual_strata/topological_semantic_coordinator.py",
     "aurora_internal/dual_strata/topology_frame.py",
     "aurora_internal/dual_strata/topology_tracker.py"
-   ],
-   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
-  },
-  {
-   "binding": {
-    "CALLS": 57,
-    "FEEDS": 82,
-    "INSTANTIATES": 4,
-    "SHARED_STATE": 2
-   },
-   "cohesion": 0.137,
-   "evidence": [
-    [
-     "fn:aurora_internal.dual_strata.sensory_observation.run_sensory_observation_cycle",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.sensory_observation._resolve_state_dir",
-     "FEEDS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot",
-     "FEEDS",
-     "fn:aurora_internal.dual_strata.sensory_observation.build_sensory_observation_packet"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.collect_surface_uplink",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.surface_continuity_feed.peek_continuity_packets"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.collect_surface_uplink",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.surface_continuity_feed.read_and_clear_continuity_packets"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.surface_continuity_feed.deposit_continuity_packet"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link._collect_sensory_snapshot",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.snapshot_path"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.snapshot_path"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_guidance_queue"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.relay_to"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.apply_downlink_record",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.push_staged_frame"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink",
-     "FEEDS",
-     "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.relay_to"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._state_op",
-     "INSTANTIATES",
-     "cls:aurora_internal.dual_strata.strata_state_transfer.IncomingTransfer"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._state_op",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.strata_state_transfer.validate_manifest"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._state_op",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.strata_state_transfer.manifest_digest"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.surface_sensory_proxy.TransientSensorySnapshotProxy._read_snapshot",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot"
-    ],
-    [
-     "field:aurora_internal.dual_strata.surface_sensory_proxy.TransientSensorySnapshotProxy.state_dir",
-     "FEEDS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot"
-    ],
-    [
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot",
-     "FEEDS",
-     "fn:aurora_internal.dual_strata.surface_sensory_proxy.TransientSensorySnapshotProxy._read_snapshot"
-    ],
-    [
-     "fn:aurora_surface_daemon._surface_camera_live",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_control_channel.camera_enabled"
-    ],
-    [
-     "fn:aurora_surface_daemon._surface_sensory_vectors",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_control_channel.camera_enabled"
-    ],
-    [
-     "fn:aurora_surface_daemon.run._camera_capture_loop",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_control_channel.camera_enabled"
-    ],
-    [
-     "fn:aurora_surface_daemon._surface_present_sensory_details",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot"
-    ],
-    [
-     "fn:aurora_surface_daemon._write_surface_snapshot",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.read_surface_snapshot"
-    ],
-    [
-     "fn:aurora_surface_daemon._write_surface_snapshot",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.sensory_snapshot_channel.write_surface_snapshot"
-    ]
-   ],
-   "external_binding": 917,
-   "higher_order": "subsys:category:strata",
-   "id": "subsys:composite:strata:ef2079cf",
-   "members": [
-    "aurora_internal/dual_strata/predictive_stager.py",
-    "aurora_internal/dual_strata/sensory_control_channel.py",
-    "aurora_internal/dual_strata/sensory_observation.py",
-    "aurora_internal/dual_strata/sensory_snapshot_channel.py",
-    "aurora_internal/dual_strata/strata_link.py",
-    "aurora_internal/dual_strata/strata_state_transfer.py",
-    "aurora_internal/dual_strata/surface_continuity_feed.py",
-    "aurora_internal/dual_strata/surface_sensory_proxy.py",
-    "aurora_surface_daemon.py"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -3228,6 +3198,123 @@
   {
    "binding": {
     "CALLS": 2,
+    "FEEDS": 6,
+    "INSTANTIATES": 4,
+    "SHARED_STATE": 11
+   },
+   "cohesion": 0.079,
+   "evidence": [
+    [
+     "fn:tests.test_home_growth.rig",
+     "INSTANTIATES",
+     "cls:tests.test_strata_fencing.Wire"
+    ],
+    [
+     "fn:tests.test_home_growth.rig",
+     "CALLS",
+     "fn:tests.test_strata_fencing.Wire.transport_for"
+    ],
+    [
+     "fn:tests.test_home_growth.rig",
+     "FEEDS",
+     "fn:tests.test_strata_fencing.Wire.__init__"
+    ],
+    [
+     "fn:tests.test_hub_route.rig",
+     "INSTANTIATES",
+     "cls:tests.test_strata_fencing.Wire"
+    ],
+    [
+     "fn:tests.test_hub_route.rig",
+     "CALLS",
+     "fn:tests.test_strata_fencing.Wire.transport_for"
+    ],
+    [
+     "fn:tests.test_hub_route.rig",
+     "FEEDS",
+     "fn:tests.test_strata_fencing.Wire.__init__"
+    ],
+    [
+     "fn:tests.test_strata_migration.rig",
+     "INSTANTIATES",
+     "cls:tests.test_strata_fencing.Wire"
+    ],
+    [
+     "fn:tests.test_strata_migration.rig",
+     "FEEDS",
+     "fn:tests.test_strata_fencing.Wire.__init__"
+    ],
+    [
+     "mod:tests.test_strata_fencing",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "fn:tests.test_strata_moves.rig",
+     "INSTANTIATES",
+     "cls:tests.test_strata_fencing.Wire"
+    ],
+    [
+     "fn:tests.test_strata_moves.rig",
+     "FEEDS",
+     "fn:tests.test_strata_fencing.Wire.__init__"
+    ],
+    [
+     "mod:tests.test_strata_fencing",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_home_growth",
+     "SHARES",
+     "store:lexicon.json"
+    ],
+    [
+     "mod:tests.test_strata_migration",
+     "SHARES",
+     "store:lexicon.json"
+    ],
+    [
+     "mod:tests.test_strata_migration",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_strata_migration",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_strata_moves",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_strata_moves",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_home_growth",
+     "SHARES",
+     "store:surface_working_state.json"
+    ]
+   ],
+   "external_binding": 268,
+   "higher_order": "subsys:category:tests",
+   "id": "subsys:composite:tests:f60e925c",
+   "members": [
+    "tests/test_home_growth.py",
+    "tests/test_hub_route.py",
+    "tests/test_strata_fencing.py",
+    "tests/test_strata_migration.py",
+    "tests/test_strata_moves.py"
+   ],
+   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
+  },
+  {
+   "binding": {
+    "CALLS": 2,
     "FEEDS": 2
    },
    "cohesion": 0.095,
@@ -3254,6 +3341,71 @@
    "members": [
     "tests/test_representation_exchange.py",
     "tests/test_resolution_ledger.py"
+   ],
+   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
+  },
+  {
+   "binding": {
+    "CALLS": 5,
+    "FEEDS": 8,
+    "INSTANTIATES": 1
+   },
+   "cohesion": 0.159,
+   "evidence": [
+    [
+     "fn:aurora_internal.crystal_web_server.WebSource.__init__",
+     "INSTANTIATES",
+     "cls:aurora_internal.crystal_web.ConceptWeb"
+    ],
+    [
+     "fn:aurora_internal.crystal_web_server.WebSource.get",
+     "CALLS",
+     "fn:aurora_internal.crystal_web.ConceptWeb.from_file"
+    ],
+    [
+     "field:aurora_internal.crystal_web_server.WebSource.path",
+     "FEEDS",
+     "fn:aurora_internal.crystal_web.ConceptWeb.from_file"
+    ],
+    [
+     "fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET",
+     "CALLS",
+     "fn:aurora_internal.hub_panels.ledger_panel"
+    ],
+    [
+     "fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET",
+     "CALLS",
+     "fn:aurora_internal.hub_panels.strata_panel"
+    ],
+    [
+     "fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET",
+     "CALLS",
+     "fn:aurora_internal.hub_panels.pass_panel"
+    ],
+    [
+     "fn:scripts.aurora_home_setup.cmd_status",
+     "CALLS",
+     "fn:aurora_internal.hub_panels.strata_panel"
+    ],
+    [
+     "fn:scripts.aurora_home_setup.cmd_status",
+     "FEEDS",
+     "fn:aurora_internal.hub_panels.strata_panel"
+    ],
+    [
+     "fn:aurora_internal.hub_panels.strata_panel",
+     "FEEDS",
+     "fn:scripts.aurora_home_setup._print"
+    ]
+   ],
+   "external_binding": 74,
+   "higher_order": "subsys:category:tooling",
+   "id": "subsys:composite:tooling:c66cf642",
+   "members": [
+    "aurora_internal/crystal_web.py",
+    "aurora_internal/crystal_web_server.py",
+    "aurora_internal/hub_panels.py",
+    "scripts/aurora_home_setup.py"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -5611,12 +5763,12 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
+       "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
       [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
+       "field:aurora_internal.scouting.contracts.ScoutRequest.interpreted_input",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
@@ -5688,7 +5840,7 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.evidence_items"
+       "field:aurora_internal.scouting.contracts.ScoutReport.fit_rationales"
       ],
       [
        "mod:aurora_internal.scouting.contracts",
@@ -5698,7 +5850,7 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
+       "field:aurora_internal.scouting.contracts.ScoutReport.evidence_items"
       ]
      ],
      "link": [
@@ -7310,17 +7462,17 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.A",
-       "FEEDS",
-       "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
-      ],
-      [
        "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.B",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.X",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.T",
+       "FEEDS",
+       "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
+      ],
+      [
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.N",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ]
@@ -7512,7 +7664,7 @@
        "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
       ],
       [
-       "field:aurora_ivm.RecursionLevel.SURFACE",
+       "field:aurora_ivm.RecursionLevel.CORE",
        "FEEDS",
        "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
       ]
@@ -8069,7 +8221,7 @@
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
+       "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ]
@@ -10355,18 +10507,18 @@
    "subsystem": "perception"
   },
   {
-   "best_evidence_composite": "subsys:composite:phone_android:3c827534",
+   "best_evidence_composite": "subsys:composite:phone_android:3c9f1bf9",
    "candidate": false,
-   "cohesion": 0.793,
-   "declared_links": 6,
+   "cohesion": 0.778,
+   "declared_links": 7,
    "domain": "phone",
    "hub": "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
    "id": "phone_android.1",
    "internal_binding": {
-    "CALLS": 20,
+    "CALLS": 25,
     "SPAWNS": 3
    },
-   "jaccard": 0.6,
+   "jaccard": 0.571,
    "links": [
     {
      "binding": {
@@ -10487,14 +10639,41 @@
       "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
       "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
      ]
+    },
+    {
+     "binding": {
+      "CALLS": 5
+     },
+     "evidence": [
+      [
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.pushWaveform",
+       "CALLS",
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.fromUnsigned8"
+      ],
+      [
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.frame",
+       "CALLS",
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.setVoice"
+      ],
+      [
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.frame",
+       "CALLS",
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.levelOf"
+      ]
+     ],
+     "link": [
+      "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt",
+      "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt"
+     ]
     }
    ],
-   "links_with_binding": 5,
+   "links_with_binding": 6,
    "members": [
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/BootCompletedReceiver.kt",
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt",
+    "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
    ],
    "missing_from_graph": [],
@@ -10701,17 +10880,17 @@
    "subsystem": "phone_python"
   },
   {
-   "best_evidence_composite": "subsys:composite:phone_ui:e24ca393",
+   "best_evidence_composite": "subsys:composite:phone_ui:98c133ef",
    "candidate": false,
-   "cohesion": 0.4,
-   "declared_links": 3,
+   "cohesion": 0.555,
+   "declared_links": 9,
    "domain": "phone",
-   "hub": "flutter_app/lib/main.dart",
+   "hub": "flutter_app/lib/widgets/ui_diagnostics.dart",
    "id": "phone_ui.1",
    "internal_binding": {
-    "CALLS": 46
+    "CALLS": 71
    },
-   "jaccard": 0.5,
+   "jaccard": 0.857,
    "links": [
     {
      "binding": {},
@@ -10735,6 +10914,22 @@
      },
      "evidence": [
       [
+       "fn:flutter_app.lib.main.main",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.install"
+      ]
+     ],
+     "link": [
+      "flutter_app/lib/main.dart",
+      "flutter_app/lib/widgets/ui_diagnostics.dart"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1
+     },
+     "evidence": [
+      [
        "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.build",
        "CALLS",
        "fn:flutter_app.lib.screens.home_screen._InputBar.GestureDetector"
@@ -10744,14 +10939,137 @@
       "flutter_app/lib/screens/home_screen.dart",
       "flutter_app/lib/widgets/aurora_orb.dart"
      ]
+    },
+    {
+     "binding": {
+      "CALLS": 5
+     },
+     "evidence": [
+      [
+       "fn:flutter_app.lib.screens.home_screen._HomeScreenState._listenBridgeEvents",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+      ],
+      [
+       "fn:flutter_app.lib.screens.home_screen._HomeScreenState._onExpressionSettled",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+      ],
+      [
+       "fn:flutter_app.lib.screens.home_screen._HomeScreenState.recordFaceExpression",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+      ]
+     ],
+     "link": [
+      "flutter_app/lib/screens/home_screen.dart",
+      "flutter_app/lib/widgets/ui_diagnostics.dart"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1
+     },
+     "evidence": [
+      [
+       "fn:flutter_app.lib.screens.hub_screen._HubScreenState._refresh",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+      ]
+     ],
+     "link": [
+      "flutter_app/lib/screens/hub_screen.dart",
+      "flutter_app/lib/widgets/ui_diagnostics.dart"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 3
+     },
+     "evidence": [
+      [
+       "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.initState",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.face_motion.FaceRig.FaceRig"
+      ],
+      [
+       "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._onTick",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.face_motion.FaceRig.setSpeech"
+      ],
+      [
+       "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._onTick",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.face_motion.FaceRig.snapshot"
+      ]
+     ],
+     "link": [
+      "flutter_app/lib/widgets/aurora_orb.dart",
+      "flutter_app/lib/widgets/face_motion.dart"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 3
+     },
+     "evidence": [
+      [
+       "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.didUpdateWidget",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+      ],
+      [
+       "fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState._onTick",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+      ],
+      [
+       "fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report"
+      ]
+     ],
+     "link": [
+      "flutter_app/lib/widgets/aurora_orb.dart",
+      "flutter_app/lib/widgets/ui_diagnostics.dart"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 12
+     },
+     "evidence": [
+      [
+       "fn:flutter_app.test.face_motion_test.test",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.face_motion.FaceRig.FaceRig"
+      ],
+      [
+       "fn:flutter_app.test.face_motion_test.test",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.face_motion.FaceRig.snapshot"
+      ],
+      [
+       "fn:flutter_app.test.face_motion_test.test",
+       "CALLS",
+       "fn:flutter_app.lib.widgets.face_motion.FaceRig.setSpeech"
+      ]
+     ],
+     "link": [
+      "flutter_app/lib/widgets/face_motion.dart",
+      "flutter_app/test/face_motion_test.dart"
+     ]
     }
    ],
-   "links_with_binding": 1,
+   "links_with_binding": 7,
    "members": [
     "flutter_app/lib/main.dart",
     "flutter_app/lib/screens/home_screen.dart",
     "flutter_app/lib/screens/hub_screen.dart",
-    "flutter_app/lib/widgets/aurora_orb.dart"
+    "flutter_app/lib/widgets/aurora_orb.dart",
+    "flutter_app/lib/widgets/face_motion.dart",
+    "flutter_app/lib/widgets/ui_diagnostics.dart",
+    "flutter_app/test/face_motion_test.dart"
    ],
    "missing_from_graph": [],
    "status": "partly_supported",
@@ -11329,20 +11647,20 @@
    "subsystem": "reasoning"
   },
   {
-   "best_evidence_composite": "subsys:composite:runtime:0414c162",
+   "best_evidence_composite": "subsys:composite:runtime:556d4dba",
    "candidate": false,
-   "cohesion": 0.031,
-   "declared_links": 8,
+   "cohesion": 0.055,
+   "declared_links": 23,
    "domain": "desktop",
-   "hub": "aurora.py",
+   "hub": "aurora_internal/desktop/runtime.py",
    "id": "runtime.1",
    "internal_binding": {
-    "CALLS": 10,
-    "FEEDS": 53,
-    "INSTANTIATES": 4,
-    "SHARED_STATE": 73
+    "CALLS": 54,
+    "FEEDS": 117,
+    "INSTANTIATES": 9,
+    "SHARED_STATE": 84
    },
-   "jaccard": 0.625,
+   "jaccard": 0.812,
    "links": [
     {
      "binding": {
@@ -11409,6 +11727,34 @@
     },
     {
      "binding": {
+      "CALLS": 4,
+      "FEEDS": 3,
+      "SHARED_STATE": 11
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._attach_existing_engines",
+       "CALLS",
+       "fn:aurora._full_save"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._attach_existing_engines",
+       "CALLS",
+       "fn:aurora._get_or_create_curiosity_engine"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._perform",
+       "CALLS",
+       "fn:aurora._full_save"
+      ]
+     ],
+     "link": [
+      "aurora.py",
+      "aurora_internal/desktop/runtime.py"
+     ]
+    },
+    {
+     "binding": {
       "CALLS": 2,
       "FEEDS": 1,
       "INSTANTIATES": 1
@@ -11433,6 +11779,32 @@
      "link": [
       "aurora.py",
       "aurora_runtime.py"
+     ]
+    },
+    {
+     "binding": {
+      "SHARED_STATE": 3
+     },
+     "evidence": [
+      [
+       "mod:aurora_internal.desktop.runtime",
+       "SHARES",
+       "organ:cpm"
+      ],
+      [
+       "mod:aurora_internal.desktop.runtime",
+       "SHARES",
+       "bus:_predictive_stager_offset"
+      ],
+      [
+       "mod:aurora_daemon",
+       "SHARES",
+       "bus:_predictive_stager_offset"
+      ]
+     ],
+     "link": [
+      "aurora_daemon.py",
+      "aurora_internal/desktop/runtime.py"
      ]
     },
     {
@@ -11463,11 +11835,337 @@
      ]
     },
     {
+     "binding": {
+      "CALLS": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.__main__.main",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.read_json"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/__main__.py",
+      "aurora_internal/desktop/common.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 2,
+      "FEEDS": 1,
+      "INSTANTIATES": 1,
+      "SHARED_STATE": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.__main__.main",
+       "INSTANTIATES",
+       "cls:aurora_internal.desktop.runtime.DesktopRuntime"
+      ],
+      [
+       "fn:aurora_internal.desktop.__main__.main",
+       "CALLS",
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime.start"
+      ],
+      [
+       "fn:aurora_internal.desktop.__main__.main",
+       "CALLS",
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime.stop"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/__main__.py",
+      "aurora_internal/desktop/runtime.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 2,
+      "FEEDS": 2
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.__main__.main",
+       "CALLS",
+       "fn:aurora_internal.desktop.server.owner_token"
+      ],
+      [
+       "fn:aurora_internal.desktop.__main__.main",
+       "CALLS",
+       "fn:aurora_internal.desktop.server.make_server"
+      ],
+      [
+       "fn:aurora_internal.desktop.__main__.main",
+       "FEEDS",
+       "fn:aurora_internal.desktop.server.owner_token"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/__main__.py",
+      "aurora_internal/desktop/server.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 6,
+      "FEEDS": 12
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.blueprints.BlueprintSpace.__init__",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.read_json"
+      ],
+      [
+       "fn:aurora_internal.desktop.blueprints.BlueprintSpace._save",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.write_json"
+      ],
+      [
+       "fn:aurora_internal.desktop.blueprints.BlueprintSpace.register",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.digest"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/blueprints.py",
+      "aurora_internal/desktop/common.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 4,
+      "FEEDS": 7,
+      "INSTANTIATES": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime.__init__",
+       "INSTANTIATES",
+       "cls:aurora_internal.desktop.blueprints.BlueprintSpace"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._boot_once",
+       "CALLS",
+       "fn:aurora_internal.desktop.blueprints.BlueprintSpace.import_real"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._schedule_once",
+       "CALLS",
+       "fn:aurora_internal.desktop.blueprints.BlueprintSpace.import_real"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/blueprints.py",
+      "aurora_internal/desktop/runtime.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 3,
+      "FEEDS": 2
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.demonstrations.Demonstrations.__init__",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.read_json"
+      ],
+      [
+       "fn:aurora_internal.desktop.demonstrations.Demonstrations._save",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.write_json"
+      ],
+      [
+       "fn:aurora_internal.desktop.demonstrations.Demonstrations.verify",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.digest"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/common.py",
+      "aurora_internal/desktop/demonstrations.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 3,
+      "FEEDS": 2
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime.__init__",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.read_json"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._persist_jobs",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.write_json"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._schedule_once",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.read_json"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/common.py",
+      "aurora_internal/desktop/runtime.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.server.make_server.Handler.do_GET",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.read_json"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/common.py",
+      "aurora_internal/desktop/server.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 5,
+      "FEEDS": 5
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.services.HostServices.__init__",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.read_json"
+      ],
+      [
+       "fn:aurora_internal.desktop.services.HostServices.sensor_control",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.write_json"
+      ],
+      [
+       "fn:aurora_internal.desktop.services.HostServices.dependency_version",
+       "CALLS",
+       "fn:aurora_internal.desktop.common.digest"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/common.py",
+      "aurora_internal/desktop/services.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 4,
+      "FEEDS": 13,
+      "INSTANTIATES": 1,
+      "SHARED_STATE": 2
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime.__init__",
+       "INSTANTIATES",
+       "cls:aurora_internal.desktop.demonstrations.Demonstrations"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._observe",
+       "CALLS",
+       "fn:aurora_internal.desktop.demonstrations.Demonstrations.observe"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._perform",
+       "CALLS",
+       "fn:aurora_internal.desktop.demonstrations.Demonstrations.begin"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/demonstrations.py",
+      "aurora_internal/desktop/runtime.py"
+     ]
+    },
+    {
      "binding": {},
      "evidence": [],
      "link": [
-      "aurora_hub.py",
-      "aurora_internal/__init__.py"
+      "aurora_internal/desktop/page.py",
+      "aurora_internal/desktop/server.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._run",
+       "CALLS",
+       "fn:aurora_internal.desktop.policy.owner_action"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/policy.py",
+      "aurora_internal/desktop/runtime.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 4,
+      "INSTANTIATES": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.services.HostServices.__init__",
+       "INSTANTIATES",
+       "cls:aurora_internal.desktop.policy.HostPolicy"
+      ],
+      [
+       "fn:aurora_internal.desktop.services.HostServices.execute",
+       "CALLS",
+       "fn:aurora_internal.desktop.policy.HostPolicy.check"
+      ],
+      [
+       "fn:aurora_internal.desktop.services.HostServices.__init__",
+       "FEEDS",
+       "fn:aurora_internal.desktop.policy.HostPolicy.__init__"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/policy.py",
+      "aurora_internal/desktop/services.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 7,
+      "FEEDS": 13,
+      "INSTANTIATES": 1,
+      "SHARED_STATE": 3
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime.__init__",
+       "INSTANTIATES",
+       "cls:aurora_internal.desktop.services.HostServices"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._boot_once",
+       "CALLS",
+       "fn:aurora_internal.desktop.services.HostServices.refresh"
+      ],
+      [
+       "fn:aurora_internal.desktop.runtime.DesktopRuntime._sensing_tick",
+       "CALLS",
+       "fn:aurora_internal.desktop.services.HostServices.execute"
+      ]
+     ],
+     "link": [
+      "aurora_internal/desktop/runtime.py",
+      "aurora_internal/desktop/services.py"
      ]
     },
     {
@@ -11515,13 +12213,21 @@
      ]
     }
    ],
-   "links_with_binding": 6,
+   "links_with_binding": 21,
    "members": [
     "aurora.py",
     "aurora_daemon.py",
-    "aurora_hub.py",
     "aurora_internal/__init__.py",
     "aurora_internal/aurora_turn_chain.py",
+    "aurora_internal/desktop/__main__.py",
+    "aurora_internal/desktop/blueprints.py",
+    "aurora_internal/desktop/common.py",
+    "aurora_internal/desktop/demonstrations.py",
+    "aurora_internal/desktop/page.py",
+    "aurora_internal/desktop/policy.py",
+    "aurora_internal/desktop/runtime.py",
+    "aurora_internal/desktop/server.py",
+    "aurora_internal/desktop/services.py",
     "aurora_runtime.py",
     "corpus_runner.py",
     "run_corpus.py"
@@ -11533,19 +12239,134 @@
   {
    "best_evidence_composite": "subsys:composite:strata:a8913e4f",
    "candidate": false,
-   "cohesion": 0.18,
-   "declared_links": 80,
+   "cohesion": 0.211,
+   "declared_links": 94,
    "domain": "desktop",
    "hub": "aurora_internal/dual_strata/__init__.py",
    "id": "strata.1",
    "internal_binding": {
-    "CALLS": 177,
-    "FEEDS": 291,
-    "INSTANTIATES": 32,
-    "SHARED_STATE": 5
+    "CALLS": 220,
+    "FEEDS": 384,
+    "INSTANTIATES": 37,
+    "SHARED_STATE": 6
    },
-   "jaccard": 0.486,
+   "jaccard": 0.419,
    "links": [
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.cers_deprecation.SubsystemDeprecationLedger._save",
+       "CALLS",
+       "fn:aurora_internal.aurora_store_ownership.store_write_allowed"
+      ],
+      [
+       "field:aurora_internal.dual_strata.cers_deprecation.SubsystemDeprecationLedger._path",
+       "FEEDS",
+       "fn:aurora_internal.aurora_store_ownership.store_write_allowed"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_store_ownership.py",
+      "aurora_internal/dual_strata/cers_deprecation.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 2,
+      "FEEDS": 2
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.home_growth.home_owned_paths",
+       "CALLS",
+       "fn:aurora_internal.aurora_store_ownership.classify"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.home_growth.is_growth_path",
+       "CALLS",
+       "fn:aurora_internal.aurora_store_ownership.classify"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.home_growth.is_growth_path",
+       "FEEDS",
+       "fn:aurora_internal.aurora_store_ownership.classify"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_store_ownership.py",
+      "aurora_internal/dual_strata/home_growth.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._push_state_locked",
+       "CALLS",
+       "fn:aurora_internal.aurora_store_ownership.moves_with_her"
+      ],
+      [
+       "field:aurora_internal.dual_strata.strata_link.StrataLinkClient.state_dir",
+       "FEEDS",
+       "fn:aurora_internal.aurora_store_ownership.moves_with_her"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_store_ownership.py",
+      "aurora_internal/dual_strata/strata_link.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.strata_migration.migration_class",
+       "CALLS",
+       "fn:aurora_internal.aurora_store_ownership.classify"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_migration.migration_class",
+       "FEEDS",
+       "fn:aurora_internal.aurora_store_ownership.classify"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_store_ownership.py",
+      "aurora_internal/dual_strata/strata_migration.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.topology_tracker.TopologyTracker.save",
+       "CALLS",
+       "fn:aurora_internal.aurora_store_ownership.store_write_allowed"
+      ],
+      [
+       "field:aurora_internal.dual_strata.topology_tracker.TopologyTracker._path",
+       "FEEDS",
+       "fn:aurora_internal.aurora_store_ownership.store_write_allowed"
+      ]
+     ],
+     "link": [
+      "aurora_internal/aurora_store_ownership.py",
+      "aurora_internal/dual_strata/topology_tracker.py"
+     ]
+    },
     {
      "binding": {},
      "evidence": [],
@@ -11631,6 +12452,14 @@
      "evidence": [],
      "link": [
       "aurora_internal/dual_strata/__init__.py",
+      "aurora_internal/dual_strata/home_growth.py"
+     ]
+    },
+    {
+     "binding": {},
+     "evidence": [],
+     "link": [
+      "aurora_internal/dual_strata/__init__.py",
       "aurora_internal/dual_strata/lifecycle_catalog.py"
      ]
     },
@@ -11680,6 +12509,14 @@
      "link": [
       "aurora_internal/dual_strata/__init__.py",
       "aurora_internal/dual_strata/strata_link.py"
+     ]
+    },
+    {
+     "binding": {},
+     "evidence": [],
+     "link": [
+      "aurora_internal/dual_strata/__init__.py",
+      "aurora_internal/dual_strata/strata_migration.py"
      ]
     },
     {
@@ -12464,6 +13301,117 @@
     },
     {
      "binding": {
+      "CALLS": 4,
+      "FEEDS": 10,
+      "INSTANTIATES": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.home_growth._growth_root",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_link.link_dir"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._growth_op",
+       "INSTANTIATES",
+       "cls:aurora_internal.dual_strata.home_growth.HashCache"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._growth_op",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.home_growth.home_growth_manifest"
+      ]
+     ],
+     "link": [
+      "aurora_internal/dual_strata/home_growth.py",
+      "aurora_internal/dual_strata/strata_link.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 12,
+      "FEEDS": 19,
+      "INSTANTIATES": 2
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.home_growth.HashCache.sha",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_state_transfer.file_sha256"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.home_growth.home_owned_paths",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_state_transfer.list_transferable"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.home_growth.is_growth_path",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_state_transfer.is_transferable"
+      ]
+     ],
+     "link": [
+      "aurora_internal/dual_strata/home_growth.py",
+      "aurora_internal/dual_strata/strata_state_transfer.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 2,
+      "FEEDS": 5,
+      "SHARED_STATE": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.hub_route.record_reply"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_link.apply_downlink_record",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.hub_route.receive_message"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record",
+       "FEEDS",
+       "fn:aurora_internal.dual_strata.hub_route.record_reply"
+      ]
+     ],
+     "link": [
+      "aurora_internal/dual_strata/hub_route.py",
+      "aurora_internal/dual_strata/strata_link.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 6,
+      "FEEDS": 13
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.inquiry_tiers._link_dir",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_link.link_dir"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.inquiry_tiers.SurfaceInquiryTier.pass_up",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_link.request_home"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.inquiry_tiers.SurfaceInquiryTier.send_evidence",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_link.request_home"
+      ]
+     ],
+     "link": [
+      "aurora_internal/dual_strata/inquiry_tiers.py",
+      "aurora_internal/dual_strata/strata_link.py"
+     ]
+    },
+    {
+     "binding": {
       "CALLS": 2,
       "FEEDS": 3
      },
@@ -12763,7 +13711,7 @@
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
+       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.observation_count",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ]
@@ -12818,7 +13766,7 @@
        "fn:aurora_internal.dual_strata.topology_tracker.TopologyFingerprint.from_signature"
       ],
       [
-       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.sources",
+       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.sinks",
        "FEEDS",
        "fn:aurora_internal.dual_strata.semantic_variant_registry.TopologyProfile.from_signature"
       ]
@@ -12981,6 +13929,33 @@
     },
     {
      "binding": {
+      "CALLS": 7,
+      "FEEDS": 17
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._state_op",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_migration.status_for"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._state_op",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_migration.stage_received"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.check_migration",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_migration.accept_receipt"
+      ]
+     ],
+     "link": [
+      "aurora_internal/dual_strata/strata_link.py",
+      "aurora_internal/dual_strata/strata_migration.py"
+     ]
+    },
+    {
+     "binding": {
       "CALLS": 32,
       "FEEDS": 46,
       "INSTANTIATES": 4,
@@ -13033,6 +14008,42 @@
      "link": [
       "aurora_internal/dual_strata/strata_link.py",
       "aurora_internal/dual_strata/surface_continuity_feed.py"
+     ]
+    },
+    {
+     "binding": {},
+     "evidence": [],
+     "link": [
+      "aurora_internal/dual_strata/strata_link.py",
+      "aurora_internal/dual_strata/surface_working_state.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 6,
+      "FEEDS": 22,
+      "INSTANTIATES": 2
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.dual_strata.strata_migration._measure",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_state_transfer.file_sha256"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_migration.apply_pending_migration",
+       "INSTANTIATES",
+       "cls:aurora_internal.dual_strata.strata_state_transfer.IncomingTransfer"
+      ],
+      [
+       "fn:aurora_internal.dual_strata.strata_migration.apply_pending_migration",
+       "CALLS",
+       "fn:aurora_internal.dual_strata.strata_state_transfer.IncomingTransfer.verify_all"
+      ]
+     ],
+     "link": [
+      "aurora_internal/dual_strata/strata_migration.py",
+      "aurora_internal/dual_strata/strata_state_transfer.py"
      ]
     },
     {
@@ -13188,8 +14199,9 @@
      ]
     }
    ],
-   "links_with_binding": 58,
+   "links_with_binding": 69,
    "members": [
+    "aurora_internal/aurora_store_ownership.py",
     "aurora_internal/dual_strata/__init__.py",
     "aurora_internal/dual_strata/activation_field.py",
     "aurora_internal/dual_strata/cers_bridge.py",
@@ -13202,6 +14214,9 @@
     "aurora_internal/dual_strata/crest.py",
     "aurora_internal/dual_strata/dce_bridge.py",
     "aurora_internal/dual_strata/downward_traversal.py",
+    "aurora_internal/dual_strata/home_growth.py",
+    "aurora_internal/dual_strata/hub_route.py",
+    "aurora_internal/dual_strata/inquiry_tiers.py",
     "aurora_internal/dual_strata/lifecycle_catalog.py",
     "aurora_internal/dual_strata/micro_reasoning.py",
     "aurora_internal/dual_strata/perturbation_probe.py",
@@ -13215,6 +14230,7 @@
     "aurora_internal/dual_strata/sensory_snapshot_channel.py",
     "aurora_internal/dual_strata/sleep_cycle.py",
     "aurora_internal/dual_strata/strata_link.py",
+    "aurora_internal/dual_strata/strata_migration.py",
     "aurora_internal/dual_strata/strata_state_transfer.py",
     "aurora_internal/dual_strata/subsurface_presence.py",
     "aurora_internal/dual_strata/subsurface_presence_runtime.py",
@@ -13222,6 +14238,7 @@
     "aurora_internal/dual_strata/subsystem_waveforms.py",
     "aurora_internal/dual_strata/surface_continuity_feed.py",
     "aurora_internal/dual_strata/surface_sensory_proxy.py",
+    "aurora_internal/dual_strata/surface_working_state.py",
     "aurora_internal/dual_strata/topological_semantic_coordinator.py",
     "aurora_internal/dual_strata/topology_frame.py",
     "aurora_internal/dual_strata/topology_tracker.py",
@@ -13272,13 +14289,155 @@
    "subsystem": "strata"
   },
   {
+   "best_evidence_composite": "subsys:composite:tests:f60e925c",
+   "candidate": false,
+   "cohesion": 0.079,
+   "declared_links": 4,
+   "domain": "desktop",
+   "hub": "tests/test_strata_fencing.py",
+   "id": "tests.1",
+   "internal_binding": {
+    "CALLS": 2,
+    "FEEDS": 6,
+    "INSTANTIATES": 4,
+    "SHARED_STATE": 11
+   },
+   "jaccard": 1.0,
+   "links": [
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 2,
+      "INSTANTIATES": 1,
+      "SHARED_STATE": 1
+     },
+     "evidence": [
+      [
+       "fn:tests.test_home_growth.rig",
+       "INSTANTIATES",
+       "cls:tests.test_strata_fencing.Wire"
+      ],
+      [
+       "fn:tests.test_home_growth.rig",
+       "CALLS",
+       "fn:tests.test_strata_fencing.Wire.transport_for"
+      ],
+      [
+       "fn:tests.test_home_growth.rig",
+       "FEEDS",
+       "fn:tests.test_strata_fencing.Wire.__init__"
+      ]
+     ],
+     "link": [
+      "tests/test_home_growth.py",
+      "tests/test_strata_fencing.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 2,
+      "INSTANTIATES": 1
+     },
+     "evidence": [
+      [
+       "fn:tests.test_hub_route.rig",
+       "INSTANTIATES",
+       "cls:tests.test_strata_fencing.Wire"
+      ],
+      [
+       "fn:tests.test_hub_route.rig",
+       "CALLS",
+       "fn:tests.test_strata_fencing.Wire.transport_for"
+      ],
+      [
+       "fn:tests.test_hub_route.rig",
+       "FEEDS",
+       "fn:tests.test_strata_fencing.Wire.__init__"
+      ]
+     ],
+     "link": [
+      "tests/test_hub_route.py",
+      "tests/test_strata_fencing.py"
+     ]
+    },
+    {
+     "binding": {
+      "FEEDS": 1,
+      "INSTANTIATES": 1,
+      "SHARED_STATE": 1
+     },
+     "evidence": [
+      [
+       "fn:tests.test_strata_migration.rig",
+       "INSTANTIATES",
+       "cls:tests.test_strata_fencing.Wire"
+      ],
+      [
+       "fn:tests.test_strata_migration.rig",
+       "FEEDS",
+       "fn:tests.test_strata_fencing.Wire.__init__"
+      ],
+      [
+       "mod:tests.test_strata_fencing",
+       "SHARES",
+       "store:surface_working_state.json"
+      ]
+     ],
+     "link": [
+      "tests/test_strata_fencing.py",
+      "tests/test_strata_migration.py"
+     ]
+    },
+    {
+     "binding": {
+      "FEEDS": 1,
+      "INSTANTIATES": 1,
+      "SHARED_STATE": 1
+     },
+     "evidence": [
+      [
+       "fn:tests.test_strata_moves.rig",
+       "INSTANTIATES",
+       "cls:tests.test_strata_fencing.Wire"
+      ],
+      [
+       "fn:tests.test_strata_moves.rig",
+       "FEEDS",
+       "fn:tests.test_strata_fencing.Wire.__init__"
+      ],
+      [
+       "mod:tests.test_strata_fencing",
+       "SHARES",
+       "store:surface_working_state.json"
+      ]
+     ],
+     "link": [
+      "tests/test_strata_fencing.py",
+      "tests/test_strata_moves.py"
+     ]
+    }
+   ],
+   "links_with_binding": 4,
+   "members": [
+    "tests/test_home_growth.py",
+    "tests/test_hub_route.py",
+    "tests/test_strata_fencing.py",
+    "tests/test_strata_migration.py",
+    "tests/test_strata_moves.py"
+   ],
+   "missing_from_graph": [],
+   "status": "supported",
+   "subsystem": "tests"
+  },
+  {
    "best_evidence_composite": "subsys:composite:tests:40dfbc82",
    "candidate": false,
    "cohesion": 0.446,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "tests/test_communication_bar.py",
-   "id": "tests.1",
+   "id": "tests.2",
    "internal_binding": {
     "CALLS": 15,
     "FEEDS": 10
@@ -13329,7 +14488,7 @@
    "declared_links": 1,
    "domain": "desktop",
    "hub": "tests/test_confluence.py",
-   "id": "tests.2",
+   "id": "tests.3",
    "internal_binding": {
     "CALLS": 3,
     "FEEDS": 1,
@@ -13374,6 +14533,124 @@
    "missing_from_graph": [],
    "status": "supported",
    "subsystem": "tests"
+  },
+  {
+   "best_evidence_composite": "subsys:composite:tooling:c66cf642",
+   "candidate": false,
+   "cohesion": 0.159,
+   "declared_links": 4,
+   "domain": "desktop",
+   "hub": "aurora_internal/crystal_web_server.py",
+   "id": "tooling.1",
+   "internal_binding": {
+    "CALLS": 5,
+    "FEEDS": 8,
+    "INSTANTIATES": 1
+   },
+   "jaccard": 0.8,
+   "links": [
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 2,
+      "INSTANTIATES": 1
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.crystal_web_server.WebSource.__init__",
+       "INSTANTIATES",
+       "cls:aurora_internal.crystal_web.ConceptWeb"
+      ],
+      [
+       "fn:aurora_internal.crystal_web_server.WebSource.get",
+       "CALLS",
+       "fn:aurora_internal.crystal_web.ConceptWeb.from_file"
+      ],
+      [
+       "field:aurora_internal.crystal_web_server.WebSource.path",
+       "FEEDS",
+       "fn:aurora_internal.crystal_web.ConceptWeb.from_file"
+      ]
+     ],
+     "link": [
+      "aurora_internal/crystal_web.py",
+      "aurora_internal/crystal_web_server.py"
+     ]
+    },
+    {
+     "binding": {},
+     "evidence": [],
+     "link": [
+      "aurora_internal/crystal_web_page.py",
+      "aurora_internal/crystal_web_server.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 3,
+      "FEEDS": 4
+     },
+     "evidence": [
+      [
+       "fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET",
+       "CALLS",
+       "fn:aurora_internal.hub_panels.ledger_panel"
+      ],
+      [
+       "fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET",
+       "CALLS",
+       "fn:aurora_internal.hub_panels.strata_panel"
+      ],
+      [
+       "fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET",
+       "CALLS",
+       "fn:aurora_internal.hub_panels.pass_panel"
+      ]
+     ],
+     "link": [
+      "aurora_internal/crystal_web_server.py",
+      "aurora_internal/hub_panels.py"
+     ]
+    },
+    {
+     "binding": {
+      "CALLS": 1,
+      "FEEDS": 2
+     },
+     "evidence": [
+      [
+       "fn:scripts.aurora_home_setup.cmd_status",
+       "CALLS",
+       "fn:aurora_internal.hub_panels.strata_panel"
+      ],
+      [
+       "fn:scripts.aurora_home_setup.cmd_status",
+       "FEEDS",
+       "fn:aurora_internal.hub_panels.strata_panel"
+      ],
+      [
+       "fn:aurora_internal.hub_panels.strata_panel",
+       "FEEDS",
+       "fn:scripts.aurora_home_setup._print"
+      ]
+     ],
+     "link": [
+      "aurora_internal/hub_panels.py",
+      "scripts/aurora_home_setup.py"
+     ]
+    }
+   ],
+   "links_with_binding": 3,
+   "members": [
+    "aurora_internal/crystal_web.py",
+    "aurora_internal/crystal_web_page.py",
+    "aurora_internal/crystal_web_server.py",
+    "aurora_internal/hub_panels.py",
+    "scripts/aurora_home_setup.py"
+   ],
+   "missing_from_graph": [],
+   "status": "partly_supported",
+   "subsystem": "tooling"
   },
   {
    "best_evidence_composite": null,
@@ -13537,7 +14814,7 @@
    "declared_links": 1,
    "domain": "desktop",
    "hub": "tests/test_generation_collapse_regression.py",
-   "id": "tests.3",
+   "id": "tests.4",
    "internal_binding": {},
    "jaccard": 0.0,
    "links": [

@@ -1140,6 +1140,12 @@
    "observations": [],
    "status": "consistent"
   },
+  "mod:aurora_internal.aurora_store_ownership": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
   "mod:aurora_internal.aurora_strategic_horizon": {
    "claim_basis": "name_and_docstring",
    "notes": [],
@@ -1326,6 +1332,105 @@
    "observations": [],
    "status": "consistent"
   },
+  "mod:aurora_internal.crystal_web": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
+  "mod:aurora_internal.crystal_web_page": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
+  "mod:aurora_internal.crystal_web_server": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:aurora_internal.desktop": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "declared runtime but not reachable from any recorded entry point",
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "conflict"
+  },
+  "mod:aurora_internal.desktop.__main__": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:aurora_internal.desktop.blueprints": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "declared runtime but not reachable from any recorded entry point"
+   ],
+   "observations": [],
+   "status": "conflict"
+  },
+  "mod:aurora_internal.desktop.common": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
+  "mod:aurora_internal.desktop.demonstrations": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "declared runtime but not reachable from any recorded entry point"
+   ],
+   "observations": [],
+   "status": "conflict"
+  },
+  "mod:aurora_internal.desktop.page": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "declared runtime but not reachable from any recorded entry point"
+   ],
+   "observations": [],
+   "status": "conflict"
+  },
+  "mod:aurora_internal.desktop.policy": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "declared runtime but not reachable from any recorded entry point"
+   ],
+   "observations": [],
+   "status": "conflict"
+  },
+  "mod:aurora_internal.desktop.runtime": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "declared runtime but not reachable from any recorded entry point"
+   ],
+   "observations": [],
+   "status": "conflict"
+  },
+  "mod:aurora_internal.desktop.server": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "declared runtime but not reachable from any recorded entry point"
+   ],
+   "observations": [],
+   "status": "conflict"
+  },
+  "mod:aurora_internal.desktop.services": {
+   "claim_basis": "name_and_docstring",
+   "notes": [
+    "declared runtime but not reachable from any recorded entry point"
+   ],
+   "observations": [],
+   "status": "conflict"
+  },
   "mod:aurora_internal.dual_strata": {
    "claim_basis": "name_and_docstring",
    "notes": [],
@@ -1393,6 +1498,30 @@
    "status": "consistent"
   },
   "mod:aurora_internal.dual_strata.downward_traversal": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
+  "mod:aurora_internal.dual_strata.home_growth": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
+  "mod:aurora_internal.dual_strata.home_link_presence": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
+  "mod:aurora_internal.dual_strata.hub_route": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
+  "mod:aurora_internal.dual_strata.inquiry_tiers": {
    "claim_basis": "name_and_docstring",
    "notes": [],
    "observations": [],
@@ -1482,6 +1611,12 @@
    "observations": [],
    "status": "consistent"
   },
+  "mod:aurora_internal.dual_strata.strata_migration": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
   "mod:aurora_internal.dual_strata.strata_state_transfer": {
    "claim_basis": "name_and_docstring",
    "notes": [],
@@ -1536,6 +1671,12 @@
    "observations": [],
    "status": "consistent"
   },
+  "mod:aurora_internal.dual_strata.surface_working_state": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
   "mod:aurora_internal.dual_strata.topological_semantic_coordinator": {
    "claim_basis": "name_and_docstring",
    "notes": [],
@@ -1574,6 +1715,12 @@
    "observations": [],
    "status": "consistent"
   },
+  "mod:aurora_internal.hub_panels": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
   "mod:aurora_internal.lesson_replay": {
    "claim_basis": "name_and_docstring",
    "notes": [],
@@ -1581,6 +1728,12 @@
    "status": "consistent"
   },
   "mod:aurora_internal.lineage_canonical": {
+   "claim_basis": "name_and_docstring",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
+  "mod:aurora_internal.process_lock": {
    "claim_basis": "name_and_docstring",
    "notes": [],
    "observations": [],
@@ -2276,6 +2429,14 @@
    "status": "unverified"
   },
   "mod:scripts.aurora_fault_instrumentation_injector": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:scripts.aurora_home_setup": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -3759,6 +3920,14 @@
    "observations": [],
    "status": "unverified"
   },
+  "mod:tests.test_crystal_web": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
   "mod:tests.test_d1_device_path_attribution": {
    "claim_basis": "location",
    "notes": [
@@ -3830,6 +3999,14 @@
    "status": "unverified"
   },
   "mod:tests.test_der_geometric_time": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_desktop_embodiment": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -3934,6 +4111,14 @@
    "status": "unverified"
   },
   "mod:tests.test_dream_developmental_writeback": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_dream_entanglement_evidence_boundary": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -4110,6 +4295,14 @@
    "status": "unverified"
   },
   "mod:tests.test_f5_register_exploration_plumbing": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_face_expression_journal": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -4449,6 +4642,46 @@
    "observations": [],
    "status": "consistent"
   },
+  "mod:tests.test_home_growth": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_home_link_presence": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_hosted_acm": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_hub_panels": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_hub_route": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
   "mod:tests.test_hypothesis_crystals": {
    "claim_basis": "location",
    "notes": [
@@ -4522,6 +4755,14 @@
    "status": "unverified"
   },
   "mod:tests.test_input_identity": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_inquiry_tiers": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -5259,6 +5500,14 @@
    "observations": [],
    "status": "unverified"
   },
+  "mod:tests.test_phone_field_not_held_at_boot": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
   "mod:tests.test_phone_load_pacing": {
    "claim_basis": "location",
    "notes": [
@@ -5328,6 +5577,14 @@
    "status": "unverified"
   },
   "mod:tests.test_prediction_field_manifold": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_predictive_stager_state_dir": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -6169,7 +6426,31 @@
    "observations": [],
    "status": "unverified"
   },
+  "mod:tests.test_strata_fencing": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
   "mod:tests.test_strata_link": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_strata_migration": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_strata_moves": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -6265,6 +6546,12 @@
    "observations": [],
    "status": "unverified"
   },
+  "mod:tests.test_surface_face_live_read": {
+   "claim_basis": "location",
+   "notes": [],
+   "observations": [],
+   "status": "consistent"
+  },
   "mod:tests.test_surface_poedex_dispatch": {
    "claim_basis": "location",
    "notes": [
@@ -6273,7 +6560,23 @@
    "observations": [],
    "status": "unverified"
   },
+  "mod:tests.test_surface_profile_bridge": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
   "mod:tests.test_surface_scout_evidence_harvest": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_surface_store_gate": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -6588,7 +6891,7 @@
  "disagreements": [],
  "ownership": {
   "covers": "every source file in the repository",
-  "declared_files": 993,
+  "declared_files": 1043,
   "not_covered": [
    {
     "path": "aurora_state/, aurora_state_test/, aurora_logs/, vector_data/, lessons/, aurora_genealogy/",
@@ -6614,7 +6917,7 @@
   "path": "docs/module_ownership.json",
   "schema": "aurora.module_ownership/2",
   "scope": "Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.",
-  "sha256": "5da7460de7a4e267",
+  "sha256": "0969b8b59565d491",
   "version": 2
  }
 }

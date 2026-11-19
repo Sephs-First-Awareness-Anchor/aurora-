@@ -1,7 +1,7 @@
 # Aurora's crystal ladder: declared responsibility against implemented and observed behaviour
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Source commit `7d4373c73526`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
+Source commit `0d0794ec21a4`.  Ownership mapping: `docs/module_ownership.json` (schema `aurora.module_ownership/2`).
 
 The repository is the king quasi. Each domain is a quasi, each declared subsystem a higher-order unit, and every file a base unit. Domains and subsystems are claims from the ownership mapping. A composite is promoted only when the graph shows its files bound by calls, instantiation, inheritance, spawns, callbacks, value flow or shared state; the mapping's own composites (built from imports) are listed beside them with how much of that binding their links carry. A conflict means the evidence points beyond the declared subsystem; it is a question to review, not a correction.
 
@@ -106,7 +106,7 @@ Declared: The instruction set, virtual machine and JIT.
 | `aurora-acm/kernel/src/xaurora/mod.rs` | location | - | - | - | 0 | - |
 | `aurora-acm/kernel/src/xaurora/vm.rs` | location | - | - | - | 0 | - |
 
-### Quasi: Desktop Aurora (`subsys:quasi:desktop`), 979 base file(s)
+### Quasi: Desktop Aurora (`subsys:quasi:desktop`), 978 base file(s)
 
 Declared: Her Python runtime and everything that runs, tests or maintains it on a computer.
 
@@ -198,7 +198,7 @@ Declared: I-State beings, dimensional systems, consciousness assembly and simula
 | `aurora_istate_operations.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_simulation_engine.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | simulation, time_dilation_governor | 0 | consistent |
 
-#### Higher order: Foundation and constraint layers (`subsys:category:foundation`), 38 member(s)
+#### Higher order: Foundation and constraint layers (`subsys:category:foundation`), 39 member(s)
 
 Declared: Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonComp, pressure and leverage.
 
@@ -242,6 +242,7 @@ Declared: Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonC
 | `aurora_internal/aurora_shared_helpers.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_internal/aurora_structural_pressure_steering.py` | name_and_docstring | desktop, phone | desktop_boot | - | 1 | consistent |
 | `aurora_internal/aurora_tensor_expressions.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | tensor_expressions | 0 | consistent |
+| `aurora_internal/process_lock.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_ivm.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | contradiction_ledger, lattice | 1 | consistent |
 | `aurora_manifold_directory/__init__.py` | name_and_docstring | - | desktop_boot | - | 0 | consistent |
 | `aurora_manifold_directory/noncomp_field.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | behavioral_identity, identity_field | 0 | consistent |
@@ -593,12 +594,12 @@ Declared: Representational resolution, propositions, the causal reasoning wavefo
 | `aurora_waveform_pressure.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | pressure_pump | 0 | consistent |
 | `reply_aurora.py` (also) | reviewed | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 
-#### Higher order: Entry and runtime (`subsys:category:runtime`), 29 member(s)
+#### Higher order: Entry and runtime (`subsys:category:runtime`), 42 member(s)
 
 Declared: Entry points, the turn loop, process orchestration, launchers and service units.
 
-- Evidence composite `subsys:composite:runtime:0414c162`: 5 files, cohesion 0.029, binding {'INSTANTIATES': 4, 'FEEDS': 53, 'CALLS': 9, 'SHARED_STATE': 60}. Files: `aurora.py`, `aurora_daemon.py`, `aurora_internal/aurora_turn_chain.py`, `aurora_runtime.py`, `corpus_runner.py`
-- Declared composite `runtime.1` (hub `aurora.py`): 8 files, 6 of 8 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:runtime:0414c162` (overlap 0.625).
+- Evidence composite `subsys:composite:runtime:556d4dba`: 13 files, cohesion 0.055, binding {'INSTANTIATES': 9, 'FEEDS': 117, 'CALLS': 53, 'SHARED_STATE': 84}. Files: `aurora.py`, `aurora_daemon.py`, `aurora_internal/aurora_turn_chain.py`, `aurora_internal/desktop/__main__.py`, `aurora_internal/desktop/blueprints.py`, `aurora_internal/desktop/common.py`, `aurora_internal/desktop/demonstrations.py`, `aurora_internal/desktop/policy.py`, `aurora_internal/desktop/runtime.py`, `aurora_internal/desktop/server.py`, `aurora_internal/desktop/services.py`, `aurora_runtime.py` ...
+- Declared composite `runtime.1` (hub `aurora_internal/desktop/runtime.py`): 16 files, 21 of 23 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:runtime:556d4dba` (overlap 0.812).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
@@ -609,6 +610,16 @@ Declared: Entry points, the turn loop, process orchestration, launchers and serv
 | `aurora_internal/aurora_quasiarch_observer.py` (also) | reviewed | desktop, phone | desktop_boot, desktop_turns | quasiarch_observer | 2 | consistent |
 | `aurora_internal/aurora_turn_chain.py` | name_and_docstring | desktop, phone | desktop_turns | - | 0 | consistent |
 | `aurora_internal/aurora_turn_compute_graph.py` | name_and_docstring | desktop, phone | desktop_turns | - | 0 | consistent |
+| `aurora_internal/desktop/__init__.py` | name_and_docstring | - | - | - | 0 | conflict: declared runtime but not reachable from any recorded entry point; no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `aurora_internal/desktop/__main__.py` | name_and_docstring | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `aurora_internal/desktop/blueprints.py` | name_and_docstring | - | - | - | 1 | conflict: declared runtime but not reachable from any recorded entry point |
+| `aurora_internal/desktop/common.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
+| `aurora_internal/desktop/demonstrations.py` | name_and_docstring | - | - | - | 1 | conflict: declared runtime but not reachable from any recorded entry point |
+| `aurora_internal/desktop/page.py` | name_and_docstring | - | - | - | 0 | conflict: declared runtime but not reachable from any recorded entry point |
+| `aurora_internal/desktop/policy.py` | name_and_docstring | - | - | - | 0 | conflict: declared runtime but not reachable from any recorded entry point |
+| `aurora_internal/desktop/runtime.py` | name_and_docstring | - | - | - | 1 | conflict: declared runtime but not reachable from any recorded entry point |
+| `aurora_internal/desktop/server.py` | name_and_docstring | - | - | - | 0 | conflict: declared runtime but not reachable from any recorded entry point |
+| `aurora_internal/desktop/services.py` | name_and_docstring | - | - | - | 3 | conflict: declared runtime but not reachable from any recorded entry point |
 | `aurora_runtime.py` | name_and_docstring | desktop, phone | desktop_boot | - | 1 | consistent |
 | `corpus_runner.py` | name_and_docstring | desktop, phone | desktop_turns | curriculum_tension | 0 | consistent |
 | `deploy/aurora-strata-hub.service` | location | - | - | - | 0 | - |
@@ -628,24 +639,28 @@ Declared: Entry points, the turn loop, process orchestration, launchers and serv
 | `scripts/run_scout_worker.sh` | location | - | - | - | 0 | - |
 | `scripts/run_subsurface_daemon.sh` | location | - | - | - | 0 | - |
 | `scripts/run_surface_daemon.sh` | location | - | - | - | 0 | - |
+| `scripts/windows/desktop.ps1` | location | - | - | - | 0 | - |
+| `scripts/windows/install_desktop.ps1` | location | - | - | - | 0 | - |
 | `scripts/windows/install_subsurface_task.ps1` | location | - | - | - | 0 | - |
+| `scripts/windows/run_acm.ps1` | location | - | - | - | 0 | - |
 | `scripts/windows/run_subsurface.bat` | location | - | - | - | 0 | - |
 | `start_vector.sh` | location | - | - | - | 0 | - |
 
-#### Higher order: Dual strata (surface and subsurface) (`subsys:category:strata`), 46 member(s)
+#### Higher order: Dual strata (surface and subsurface) (`subsys:category:strata`), 53 member(s)
 
 Declared: The dual-strata package and the surface/subsurface daemons and substrate.
 
 - Evidence composite `subsys:composite:strata:46b5e9ce`: 4 files, cohesion 0.048, binding {'CALLS': 12, 'FEEDS': 14, 'INSTANTIATES': 2}. Files: `aurora_internal/dual_strata/presence_metrics.py`, `aurora_internal/dual_strata/subsurface_presence.py`, `aurora_internal/dual_strata/subsurface_presence_runtime.py`, `aurora_scout_daemon.py`
 - Evidence composite `subsys:composite:strata:a8913e4f`: 18 files, cohesion 0.334, binding {'INSTANTIATES': 25, 'CALLS': 106, 'FEEDS': 191}. Files: `aurora_internal/dual_strata/cers_bridge.py`, `aurora_internal/dual_strata/cers_deprecation.py`, `aurora_internal/dual_strata/cers_potential_trial.py`, `aurora_internal/dual_strata/cers_regulator.py`, `aurora_internal/dual_strata/cers_tensor_locator.py`, `aurora_internal/dual_strata/conscious_frame.py`, `aurora_internal/dual_strata/contextual_overlay.py`, `aurora_internal/dual_strata/crest.py`, `aurora_internal/dual_strata/dce_bridge.py`, `aurora_internal/dual_strata/micro_reasoning.py`, `aurora_internal/dual_strata/perturbation_probe.py`, `aurora_internal/dual_strata/prediction_field.py` ...
-- Evidence composite `subsys:composite:strata:ef2079cf`: 9 files, cohesion 0.137, binding {'CALLS': 57, 'FEEDS': 82, 'INSTANTIATES': 4, 'SHARED_STATE': 2}. Files: `aurora_internal/dual_strata/predictive_stager.py`, `aurora_internal/dual_strata/sensory_control_channel.py`, `aurora_internal/dual_strata/sensory_observation.py`, `aurora_internal/dual_strata/sensory_snapshot_channel.py`, `aurora_internal/dual_strata/strata_link.py`, `aurora_internal/dual_strata/strata_state_transfer.py`, `aurora_internal/dual_strata/surface_continuity_feed.py`, `aurora_internal/dual_strata/surface_sensory_proxy.py`, `aurora_surface_daemon.py`
-- Declared composite `strata.1` (hub `aurora_internal/dual_strata/__init__.py`): 37 files, 58 of 80 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:strata:a8913e4f` (overlap 0.486).
+- Evidence composite `subsys:composite:strata:b8d56ae3`: 14 files, cohesion 0.222, binding {'CALLS': 98, 'INSTANTIATES': 9, 'FEEDS': 173, 'SHARED_STATE': 3}. Files: `aurora_internal/aurora_store_ownership.py`, `aurora_internal/dual_strata/home_growth.py`, `aurora_internal/dual_strata/hub_route.py`, `aurora_internal/dual_strata/inquiry_tiers.py`, `aurora_internal/dual_strata/predictive_stager.py`, `aurora_internal/dual_strata/sensory_control_channel.py`, `aurora_internal/dual_strata/sensory_observation.py`, `aurora_internal/dual_strata/sensory_snapshot_channel.py`, `aurora_internal/dual_strata/strata_link.py`, `aurora_internal/dual_strata/strata_migration.py`, `aurora_internal/dual_strata/strata_state_transfer.py`, `aurora_internal/dual_strata/surface_continuity_feed.py` ...
+- Declared composite `strata.1` (hub `aurora_internal/dual_strata/__init__.py`): 43 files, 69 of 94 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:strata:a8913e4f` (overlap 0.419).
 - Declared composite `strata.2` (hub `aurora_internal/aurora_surface_dispatcher.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite none.
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
 | `aurora_braid_wiring.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
 | `aurora_internal/aurora_braided_substrate.py` | name_and_docstring | desktop, phone | desktop_boot | - | 0 | consistent |
+| `aurora_internal/aurora_store_ownership.py` | name_and_docstring | desktop, phone | - | - | 1 | consistent |
 | `aurora_internal/aurora_surface_dispatcher.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
 | `aurora_internal/aurora_surface_doc.py` | reviewed | desktop, phone | desktop_boot | - | 0 | consistent |
 | `aurora_internal/dual_strata/__init__.py` | name_and_docstring | - | desktop_boot | - | 0 | consistent |
@@ -660,6 +675,10 @@ Declared: The dual-strata package and the surface/subsurface daemons and substra
 | `aurora_internal/dual_strata/crest.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
 | `aurora_internal/dual_strata/dce_bridge.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 2 | consistent |
 | `aurora_internal/dual_strata/downward_traversal.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
+| `aurora_internal/dual_strata/home_growth.py` | name_and_docstring | desktop, phone | - | - | 4 | consistent |
+| `aurora_internal/dual_strata/home_link_presence.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
+| `aurora_internal/dual_strata/hub_route.py` | name_and_docstring | desktop, phone | - | - | 4 | consistent |
+| `aurora_internal/dual_strata/inquiry_tiers.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_internal/dual_strata/lifecycle_catalog.py` | name_and_docstring | - | desktop_boot | - | 0 | consistent |
 | `aurora_internal/dual_strata/micro_reasoning.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
 | `aurora_internal/dual_strata/perturbation_probe.py` | reviewed | desktop, phone | - | - | 0 | consistent |
@@ -673,6 +692,7 @@ Declared: The dual-strata package and the surface/subsurface daemons and substra
 | `aurora_internal/dual_strata/sensory_snapshot_channel.py` | name_and_docstring | desktop, phone | desktop_turns | - | 0 | consistent |
 | `aurora_internal/dual_strata/sleep_cycle.py` | name_and_docstring | desktop | - | - | 0 | consistent |
 | `aurora_internal/dual_strata/strata_link.py` | name_and_docstring | desktop, phone | - | strata_link | 1 | consistent |
+| `aurora_internal/dual_strata/strata_migration.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
 | `aurora_internal/dual_strata/strata_state_transfer.py` | name_and_docstring | desktop, phone | - | - | 1 | consistent |
 | `aurora_internal/dual_strata/subsurface_presence.py` | name_and_docstring | desktop, phone | desktop_turns | - | 6 | consistent |
 | `aurora_internal/dual_strata/subsurface_presence_runtime.py` | name_and_docstring | desktop, phone | - | - | 0 | consistent |
@@ -682,6 +702,7 @@ Declared: The dual-strata package and the surface/subsurface daemons and substra
 | `aurora_internal/dual_strata/surface_channel.py` | name_and_docstring | desktop, phone | desktop_boot | - | 0 | consistent |
 | `aurora_internal/dual_strata/surface_continuity_feed.py` | name_and_docstring | desktop, phone | desktop_turns | - | 5 | consistent |
 | `aurora_internal/dual_strata/surface_sensory_proxy.py` | name_and_docstring | desktop, phone | - | sensory_crystal | 0 | consistent |
+| `aurora_internal/dual_strata/surface_working_state.py` | name_and_docstring | - | - | - | 1 | consistent |
 | `aurora_internal/dual_strata/topological_semantic_coordinator.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 1 | consistent |
 | `aurora_internal/dual_strata/topology_frame.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 0 | consistent |
 | `aurora_internal/dual_strata/topology_tracker.py` | name_and_docstring | desktop, phone | desktop_boot, desktop_turns | - | 1 | consistent |
@@ -691,7 +712,7 @@ Declared: The dual-strata package and the surface/subsurface daemons and substra
 | `aurora_surface_daemon.py` | name_and_docstring | - | - | - | 4 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/strata_stack.sh` | location | - | - | - | 0 | - |
 
-#### Higher order: Tests (`subsys:category:tests`), 469 member(s)
+#### Higher order: Tests (`subsys:category:tests`), 487 member(s)
 
 Declared: The pytest suite. Each test lists the files it exercises.
 
@@ -699,8 +720,10 @@ Declared: The pytest suite. Each test lists the files it exercises.
 - Evidence composite `subsys:composite:tests:3898fa35`: 2 files, cohesion 0.016, binding {'CALLS': 2, 'FEEDS': 1}. Files: `tests/test_core_understanding.py`, `tests/test_genealogy_is_event_generated.py`
 - Evidence composite `subsys:composite:tests:40dfbc82`: 2 files, cohesion 0.446, binding {'CALLS': 15, 'FEEDS': 10}. Files: `tests/test_communication_bar.py`, `tests/test_communication_emergence.py`
 - Evidence composite `subsys:composite:tests:b277a8d4`: 2 files, cohesion 0.095, binding {'CALLS': 2, 'FEEDS': 2}. Files: `tests/test_representation_exchange.py`, `tests/test_resolution_ledger.py`
-- Declared composite `tests.1` (hub `tests/test_communication_bar.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:tests:40dfbc82` (overlap 1.0).
-- Declared composite `tests.2` (hub `tests/test_confluence.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:tests:14c6dc66` (overlap 1.0).
+- Evidence composite `subsys:composite:tests:f60e925c`: 5 files, cohesion 0.079, binding {'INSTANTIATES': 4, 'CALLS': 2, 'FEEDS': 6, 'SHARED_STATE': 11}. Files: `tests/test_home_growth.py`, `tests/test_hub_route.py`, `tests/test_strata_fencing.py`, `tests/test_strata_migration.py`, `tests/test_strata_moves.py`
+- Declared composite `tests.1` (hub `tests/test_strata_fencing.py`): 5 files, 4 of 4 import links carry binding, status supported, closest evidence composite `subsys:composite:tests:f60e925c` (overlap 1.0).
+- Declared composite `tests.2` (hub `tests/test_communication_bar.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:tests:40dfbc82` (overlap 1.0).
+- Declared composite `tests.3` (hub `tests/test_confluence.py`): 2 files, 1 of 1 import links carry binding, status supported, closest evidence composite `subsys:composite:tests:14c6dc66` (overlap 1.0).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
@@ -814,6 +837,7 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_crystal_unification.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_crystal_waveform_match.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_crystal_weave.py` | location | - | - | - | 4 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_crystal_web.py` | location | - | - | - | 2 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_d1_device_path_attribution.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_d2_2_corpus_fragment_nesting.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_d2_2_live_turn_reentrancy_guard.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -824,6 +848,7 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_daemon_evidence_grounded_mutation.py` | location | desktop, phone | - | genealogy | 0 | consistent |
 | `tests/test_daemon_subsurface_and_ambient.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_der_geometric_time.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_desktop_embodiment.py` | location | - | - | - | 3 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_desktop_stack_includes_scout_worker.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_development_experiment.py` | location | - | - | - | 4 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_developmental_ecology_boundary.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -837,6 +862,7 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_dream_ancestry.py` | location | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_dream_as_new_experience.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_dream_developmental_writeback.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_dream_entanglement_evidence_boundary.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_dream_evolution_boundary.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_dream_salience_abstraction.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_dream_source_abstraction.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -859,6 +885,7 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_evolution_hook_override_none_handling.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_evolutionary_ancestry_acquisition.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_f5_register_exploration_plumbing.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_face_expression_journal.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_fail_recurrence_novelty.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_failure_shape_tracing.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_fault_instrumentation_injector.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -901,6 +928,11 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_historical_experience_environment.py` | location | desktop, phone | - | aurora, dimensional | 3 | consistent |
 | `tests/test_historical_lexical_consequence_attribution.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_historical_rehearsal.py` | location | desktop, phone | - | aurora_module, understanding_contract | 0 | consistent |
+| `tests/test_home_growth.py` | location | - | - | - | 4 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_home_link_presence.py` | location | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_hosted_acm.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_hub_panels.py` | location | - | - | - | 5 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_hub_route.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_hypothesis_crystals.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_i_state_channel_reweighting.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_i_state_occurrence_wavefront.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -911,6 +943,7 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_input_as_pressure.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_input_effect_shadow.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_input_identity.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_inquiry_tiers.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_interaction_event_action_handoff.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_internal_origin_exempt.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_interpreted_turn_packet.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -1004,6 +1037,7 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_pf3_3_frame_absence.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_pf3_4a_motif_thinning_guard.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_pf3_5_motif_watch_readout.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_phone_field_not_held_at_boot.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_phone_load_pacing.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_pipeline2.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_positive_dream_material.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -1014,6 +1048,7 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_praxis_same_device_loop.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_praxis_shared_state_and_discovery.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_prediction_field_manifold.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_predictive_stager_state_dir.py` | location | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_preoutcome_pressure_capture.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_presence_metrics.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_presence_runtime_occurrence_barrier.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -1120,7 +1155,10 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_social_corroboration.py` | location | desktop, phone | - | contradiction_ledger | 0 | consistent |
 | `tests/test_stale_scout_report_cannot_hijack_new_turn.py` | location | - | - | - | 2 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_stimulus_pressure_seams.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_strata_fencing.py` | location | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_strata_link.py` | location | - | - | - | 5 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_strata_migration.py` | location | - | - | - | 6 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_strata_moves.py` | location | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_strata_state_transfer.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_strategic_horizon.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_stratified_wellformedness.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -1132,8 +1170,11 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_supposed_stays_supposed.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_surface_boundary.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_surface_does_not_wait_for_scout.py` | location | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_surface_face_live_read.py` | location | desktop, phone | - | dimensional, identity_field | 0 | consistent |
 | `tests/test_surface_poedex_dispatch.py` | location | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_surface_profile_bridge.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_surface_scout_evidence_harvest.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `tests/test_surface_store_gate.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_system_introspection_bridge.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_tensor_downward_modulation.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `tests/test_thought_downward.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -1174,15 +1215,21 @@ Declared: The pytest suite. Each test lists the files it exercises.
 | `tests/test_zip_pipeline_learning_oets_promotion.py` | location | desktop, phone | - | conversation_memory | 0 | consistent |
 | `tests/test_zip_semantic_intention_reset.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 
-#### Higher order: Scripts, tooling and prototypes (`subsys:category:tooling`), 88 member(s)
+#### Higher order: Scripts, tooling and prototypes (`subsys:category:tooling`), 93 member(s)
 
 Declared: Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes.
 
 - Evidence composite `subsys:composite:tooling:1128286a`: 2 files, cohesion 0.088, binding {'CALLS': 3, 'FEEDS': 1, 'SHARED_STATE': 2}. Files: `scripts/seed_abstract_regions_s1.py`, `scripts/seed_oets_aurora_vocabulary.py`
+- Evidence composite `subsys:composite:tooling:c66cf642`: 4 files, cohesion 0.159, binding {'INSTANTIATES': 1, 'CALLS': 5, 'FEEDS': 8}. Files: `aurora_internal/crystal_web.py`, `aurora_internal/crystal_web_server.py`, `aurora_internal/hub_panels.py`, `scripts/aurora_home_setup.py`
 - Evidence composite `subsys:composite:tooling:f81153a5`: 2 files, cohesion 0.081, binding {'CALLS': 2, 'FEEDS': 6, 'SHARED_STATE': 2}. Files: `scripts/analyze_cross_generational_representations.py`, `scripts/analyze_native_representation_inquiries.py`
+- Declared composite `tooling.1` (hub `aurora_internal/crystal_web_server.py`): 5 files, 3 of 4 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:tooling:c66cf642` (overlap 0.8).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
+| `aurora_internal/crystal_web.py` | name_and_docstring | - | - | - | 0 | consistent |
+| `aurora_internal/crystal_web_page.py` | name_and_docstring | - | - | - | 0 | consistent |
+| `aurora_internal/crystal_web_server.py` | name_and_docstring | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `aurora_internal/hub_panels.py` | name_and_docstring | - | - | - | 0 | consistent |
 | `constraint_prototype.html` | location | - | - | - | 0 | - |
 | `constraint_prototype.jsx` | location | - | - | - | 0 | - |
 | `reply_aurora.py` | reviewed | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -1196,6 +1243,7 @@ Declared: Maintenance, audit, migration and analysis scripts, and the HTML and J
 | `scripts/aurora_ci_segment.py` | location | - | - | - | 4 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/aurora_cold_archive.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/aurora_fault_instrumentation_injector.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
+| `scripts/aurora_home_setup.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/aurora_kg_observe.py` | location | - | - | - | 1 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/aurora_knowledge_graph.py` | location | - | - | - | 6 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `scripts/aurora_stack_exporter.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
@@ -1272,30 +1320,16 @@ Declared: Maintenance, audit, migration and analysis scripts, and the HTML and J
 | `scripts/w1_thought_state_diagnostic.py` | location | - | - | - | 0 | unverified: no static production importer, organ or recorded run reaches it (dynamic loading would not show) |
 | `session_continuity_manager.html` | location | - | - | - | 0 | - |
 
-#### Higher order: Maintenance, audit and run scripts (`subsys:area:scripts`), 101 member(s) (grouped by path, inferred)
-
-`scripts/analyze_cross_generational_representations.py`, `scripts/analyze_native_representation_inquiries.py`, `scripts/append_to_doc.py`, `scripts/apply_vocabulary_seed.py`, `scripts/audit_actual_runtime_turn.py`, `scripts/audit_genealogy.py`, `scripts/audit_unified_response_regression.py`, `scripts/aurora_ci_segment.py`, `scripts/aurora_cold_archive.py`, `scripts/aurora_fault_instrumentation_injector.py`, `scripts/aurora_home_setup.py`, `scripts/aurora_kg_observe.py`, `scripts/aurora_knowledge_graph.py`, `scripts/aurora_stack_exporter.py`, `scripts/aurora_state_compress.py`, `scripts/backfill_noncomp_and_relations.py`, `scripts/baseline_genealogy.py`, `scripts/bridge_ledger_to_noncomps.py`, `scripts/bridge_tensor_occupancy_to_warp.py`, `scripts/chain_dossier_codec.py`, `scripts/characterize_pf16_residue.py`, `scripts/chat_daemon.py`, `scripts/chatscriber.py`, `scripts/clean_corpus.py`, `scripts/compare_architectures.py`, `scripts/compare_genealogy_equivalence.py`, `scripts/compile_universal_function_lineage.py`, `scripts/generate_nc_lineage_docs.py`, `scripts/greeting_exposure_experiment.py`, `scripts/inject_math_forms_v2.py`, `scripts/m1_1a_tier1_backfill.py`, `scripts/m1_2_provenance_hygiene.py`, `scripts/m1_3_v0_rerun.py`, `scripts/map_turn_information_flow.py`, `scripts/measure_crystal_associations.py`, `scripts/measure_crystal_convergence.py`, `scripts/measure_crystal_facets.py`, `scripts/measure_crystal_grammar.py`, `scripts/measure_crystal_maturity.py`, `scripts/measure_crystal_promotion.py`, `scripts/measure_crystal_substitutability.py`, `scripts/measure_crystal_weave.py`, `scripts/measure_dream_ancestry.py`, `scripts/measure_evidence_journal.py`, `scripts/measure_input_attribution.py`, `scripts/measure_input_impact.py`, `scripts/measure_quasiarch_inquiry.py`, `scripts/measure_stream_provenance.py`, `scripts/measure_turn_baseline.py`, `scripts/noncomp_actuation_shadow_audit.py`, `scripts/pf1_0_attribution_run.py`, `scripts/pf1_5_instrument_revalidation.py`, `scripts/pf1_6_acceptance.py`, `scripts/pf3_1_carryover_trace.py`, `scripts/pf3_1_context_keywords_trace.py`, `scripts/pf3_1_frame_staleness_trace.py`, `scripts/pf3_3_descriptor_trace.py`, `scripts/pf3_3_frame_absence_trace.py`, `scripts/pf3_5_motif_watch_readout.py`, `scripts/populate_fgae_semantics.py` ...
-
-#### Higher order: Test suite (`subsys:area:tests`), 487 member(s) (grouped by path, inferred)
-
-- Evidence composite `subsys:composite:tests:f60e925c`: 5 files, cohesion 0.079, binding {'INSTANTIATES': 4, 'CALLS': 2, 'FEEDS': 6, 'SHARED_STATE': 11}. Files: `tests/test_home_growth.py`, `tests/test_hub_route.py`, `tests/test_strata_fencing.py`, `tests/test_strata_migration.py`, `tests/test_strata_moves.py`
-
-`tests/_engine_integration_test.py`, `tests/_pipeline_test.py`, `tests/run_intelligence_test_surface.py`, `tests/run_interaction_test.py`, `tests/test_ability_ancestral_provenance.py`, `tests/test_ability_origin_commit_pull.py`, `tests/test_abstention_rescue_retry.py`, `tests/test_acquisition_observation_framing_and_synthesis_validity.py`, `tests/test_afterthought_topic_identity_and_shard_collision_live.py`, `tests/test_afterthought_topic_identity_and_shard_collision_repair.py`, `tests/test_alignment.py`, `tests/test_ambient_audio_feature_handoff.py`, `tests/test_ambient_audio_raw_pcm_features.py`, `tests/test_ambient_visual_richer_features.py`, `tests/test_android_surface_subsurface_reconnection.py`, `tests/test_app_bridge_praxis.py`, `tests/test_articulation_semantic_strategy.py`, `tests/test_asked_thing_and_manner.py`, `tests/test_aurora_evolution_hook_equivalence.py`, `tests/test_aurora_habitat.py`, `tests/test_autoevolver_syntax_gate.py`, `tests/test_b1_1_envelope_shadow.py`, `tests/test_baseline_communication_apprenticeship.py`, `tests/test_baseline_genealogy.py`, `tests/test_battery_relevance_metric.py`, `tests/test_boundary_hypothesis_and_vocative_stripping.py`, `tests/test_boundary_surface_and_study_trace_regressions.py`, `tests/test_bounded_same_turn_evidence_wait.py`, `tests/test_bracket_tokens_not_words.py`, `tests/test_build694_instrumentation.py`, `tests/test_build694_required_regression.py`, `tests/test_build711_no_external_models.py`, `tests/test_build714_resolution_canaries.py`, `tests/test_build725_native_semantic_externalization.py`, `tests/test_build922_permanent_recognition.py`, `tests/test_canonical_noncomp_dimension.py`, `tests/test_capability_binding.py`, `tests/test_categorical_condition_search_admissibility.py`, `tests/test_causal_generation_acceptance.py`, `tests/test_causal_generation_batch_order.py`, `tests/test_causal_generation_daemon_concurrency.py`, `tests/test_causal_generation_daemon_concurrency_part2.py`, `tests/test_causal_generation_duplicate_target_audit.py`, `tests/test_causal_generation_infrastructure.py`, `tests/test_cers_bridge_tensor_trace_integration.py`, `tests/test_cers_conflict_monitoring_veto.py`, `tests/test_cers_geometry_deviation.py`, `tests/test_cers_shadow_error_logging.py`, `tests/test_cers_surface_salience.py`, `tests/test_cers_tensor_locator.py`, `tests/test_cers_topology_context.py`, `tests/test_ci_segment_dev_index_rolling_cap.py`, `tests/test_cir_wh_object_slot_guard.py`, `tests/test_classroom_behavior_modes_wiring.py`, `tests/test_classroom_curriculum_seeding.py`, `tests/test_classroom_divergence_cold_start.py`, `tests/test_classroom_perspective_rotation_and_watchdog.py`, `tests/test_clock_restart_accounting.py`, `tests/test_clone_harvest.py`, `tests/test_code_evolution_restart_heredity.py` ...
-
-#### Higher order: CI workflows (`subsys:area:workflows`), 7 member(s) (grouped by path, inferred)
-
-`.github/workflows/aurora-autonomous-run.yml`, `.github/workflows/aurora-clones.yml`, `.github/workflows/aurora-development-experiment.yml`, `.github/workflows/build-apk.yml`, `.github/workflows/desktop-embodiment.yml`, `.github/workflows/flutter-android.yml`, `.github/workflows/python-ci.yml`
-
 ### Quasi: Phone app (`subsys:quasi:phone`), 27 base file(s)
 
 Declared: The Flutter app with its Android services and on-device Python.
 
-#### Higher order: Android services (`subsys:category:phone_android`), 6 member(s)
+#### Higher order: Android services (`subsys:category:phone_android`), 8 member(s)
 
 Declared: Kotlin and Java Android components: the main activity, Aurora and overlay services, screen observer and boot receiver.
 
-- Evidence composite `subsys:composite:phone_android:3c827534`: 3 files, cohesion 0.621, binding {'CALLS': 16, 'SPAWNS': 2}. Files: `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt`
-- Declared composite `phone_android.1` (hub `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt`): 5 files, 5 of 6 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:phone_android:3c827534` (overlap 0.6).
+- Evidence composite `subsys:composite:phone_android:3c9f1bf9`: 5 files, cohesion 0.833, binding {'CALLS': 28, 'SPAWNS': 2}. Files: `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt`, `flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt`
+- Declared composite `phone_android.1` (hub `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt`): 6 files, 6 of 7 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:phone_android:3c9f1bf9` (overlap 0.571).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
@@ -1303,7 +1337,9 @@ Declared: Kotlin and Java Android components: the main activity, Aurora and over
 | `flutter_app/android/app/src/main/kotlin/org/aurora/app/BootCompletedReceiver.kt` | location | - | - | - | 0 | - |
 | `flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt` | location | - | - | - | 0 | - |
 | `flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt` | location | - | - | - | 0 | - |
+| `flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt` | location | - | - | - | 0 | - |
 | `flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt` | location | - | - | - | 0 | - |
+| `flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt` | location | - | - | - | 0 | - |
 | `src/android/java/org/aurora/OverlayService.java` | location | - | - | - | 0 | - |
 
 #### Higher order: Dart bridges (`subsys:category:phone_bridges`), 2 member(s)
@@ -1344,12 +1380,12 @@ Declared: Python that Chaquopy runs on the phone: the entry bridge, the cv2 shim
 | `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | reviewed | phone | - | historical_experience | 1 | consistent |
 | `flutter_app/android/app/src/main/python/cv2.py` | reviewed | - | - | - | 0 | consistent |
 
-#### Higher order: App shell and screens (`subsys:category:phone_ui`), 5 member(s)
+#### Higher order: App shell and screens (`subsys:category:phone_ui`), 8 member(s)
 
 Declared: The Flutter entry point, home and hub screens, overlay entry and the orb widget.
 
-- Evidence composite `subsys:composite:phone_ui:e24ca393`: 2 files, cohesion 0.433, binding {'CALLS': 45}. Files: `flutter_app/lib/screens/home_screen.dart`, `flutter_app/lib/screens/hub_screen.dart`
-- Declared composite `phone_ui.1` (hub `flutter_app/lib/main.dart`): 4 files, 1 of 3 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:phone_ui:e24ca393` (overlap 0.5).
+- Evidence composite `subsys:composite:phone_ui:98c133ef`: 6 files, cohesion 0.551, binding {'CALLS': 70}. Files: `flutter_app/lib/screens/home_screen.dart`, `flutter_app/lib/screens/hub_screen.dart`, `flutter_app/lib/widgets/aurora_orb.dart`, `flutter_app/lib/widgets/face_motion.dart`, `flutter_app/lib/widgets/ui_diagnostics.dart`, `flutter_app/test/face_motion_test.dart`
+- Declared composite `phone_ui.1` (hub `flutter_app/lib/widgets/ui_diagnostics.dart`): 7 files, 7 of 9 import links carry binding, status partly_supported, closest evidence composite `subsys:composite:phone_ui:98c133ef` (overlap 0.857).
 
 | base file | claim basis | reached from | ran in | organs | store writes | check |
 |---|---|---|---|---|---:|---|
@@ -1358,24 +1394,15 @@ Declared: The Flutter entry point, home and hub screens, overlay entry and the o
 | `flutter_app/lib/screens/home_screen.dart` | location | - | - | - | 0 | - |
 | `flutter_app/lib/screens/hub_screen.dart` | location | - | - | - | 0 | - |
 | `flutter_app/lib/widgets/aurora_orb.dart` | location | - | - | - | 0 | - |
+| `flutter_app/lib/widgets/face_motion.dart` | location | - | - | - | 0 | - |
+| `flutter_app/lib/widgets/ui_diagnostics.dart` | location | - | - | - | 0 | - |
+| `flutter_app/test/face_motion_test.dart` | location | - | - | - | 0 | - |
 
-#### Higher order: Phone native layer (Kotlin) (`subsys:area:phone_native`), 7 member(s) (grouped by path, inferred)
-
-- Evidence composite `subsys:composite:phone_native:1128caeb`: 2 files, cohesion 0.583, binding {'CALLS': 7}. Files: `flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt`, `flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt`
-
-`flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/BootCompletedReceiver.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt`, `flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt`
-
-#### Higher order: Phone app (Flutter, Dart) (`subsys:area:phone_ui`), 16 member(s) (grouped by path, inferred)
-
-- Evidence composite `subsys:composite:phone_ui:860d72ae`: 2 files, cohesion 0.8, binding {'CALLS': 12}. Files: `flutter_app/lib/widgets/face_motion.dart`, `flutter_app/test/face_motion_test.dart`
-
-`flutter_app/lib/aurora_bridge.dart`, `flutter_app/lib/habitat/habitat_bridge.dart`, `flutter_app/lib/habitat/habitat_gesture_layer.dart`, `flutter_app/lib/habitat/habitat_model.dart`, `flutter_app/lib/habitat/habitat_renderer.dart`, `flutter_app/lib/main.dart`, `flutter_app/lib/overlay_entry.dart`, `flutter_app/lib/praxis/praxis_bridge.dart`, `flutter_app/lib/screens/habitat_self_screen.dart`, `flutter_app/lib/screens/habitat_space_screen.dart`, `flutter_app/lib/screens/home_screen.dart`, `flutter_app/lib/screens/hub_screen.dart`, `flutter_app/lib/widgets/aurora_orb.dart`, `flutter_app/lib/widgets/face_motion.dart`, `flutter_app/lib/widgets/ui_diagnostics.dart`, `flutter_app/test/face_motion_test.dart`
-
-### Quasi: Repository and CI (`subsys:quasi:repo`), 6 base file(s)
+### Quasi: Repository and CI (`subsys:quasi:repo`), 7 base file(s)
 
 Declared: Workflows that build, test and run the other domains.
 
-#### Higher order: CI workflows (`subsys:category:ci`), 6 member(s)
+#### Higher order: CI workflows (`subsys:category:ci`), 7 member(s)
 
 Declared: GitHub Actions workflows for runs, clones, experiments, the APK and Python CI.
 
@@ -1385,6 +1412,7 @@ Declared: GitHub Actions workflows for runs, clones, experiments, the APK and Py
 | `.github/workflows/aurora-clones.yml` | location | - | - | - | 0 | - |
 | `.github/workflows/aurora-development-experiment.yml` | location | - | - | - | 0 | - |
 | `.github/workflows/build-apk.yml` | location | - | - | - | 0 | - |
+| `.github/workflows/desktop-embodiment.yml` | location | - | - | - | 0 | - |
 | `.github/workflows/flutter-android.yml` | location | - | - | - | 0 | - |
 | `.github/workflows/python-ci.yml` | location | - | - | - | 0 | - |
 
@@ -1395,7 +1423,7 @@ The record lists these as candidates, not composites, and their files stay base 
 - `acm_bridge.1` (acm, acm_bridge): 2 files, 0 of 1 import links carry binding, status import_only.
 - `acm_core.1` (acm, acm_core): 5 files, 0 of 7 import links carry binding, status import_only.
 - `acm_cpm.1` (acm, acm_cpm): 3 files, 0 of 3 import links carry binding, status import_only.
-- `tests.3` (desktop, tests): 2 files, 0 of 1 import links carry binding, status import_only.
+- `tests.4` (desktop, tests): 2 files, 0 of 1 import links carry binding, status import_only.
 
 ## Links across domains
 

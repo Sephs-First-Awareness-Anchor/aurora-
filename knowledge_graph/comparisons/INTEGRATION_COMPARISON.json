@@ -1,6 +1,6 @@
 {
  "base": "b649850b28ff7e94f4da2447bb23c3804ea68450",
- "head": "7d4373c735269e319ca0e39c08f4cdab20adb315",
+ "head": "0d0794ec21a4c85385c80c86694b787fd0b2024d",
  "lineage": {
   "moved": [
    [
@@ -2359,6 +2359,7 @@
    "fn:tensor_occupancy_warp_bridge.TensorOccupancyWarpBridge._integrate_warp",
    "fn:tensor_occupancy_warp_bridge.TensorOccupancyWarpBridge.load_state",
    "fn:tensor_occupancy_warp_bridge.TensorOccupancyWarpBridge.save_state",
+   "fn:tests.test_crystal_maturity.test_it_imports_nothing_from_aurora_and_nothing_running_imports_it",
    "fn:tests.test_fault_instrumentation_injector.test_already_visible_handler_is_left_alone",
    "fn:tests.test_fault_instrumentation_injector.test_existing_as_clause_is_reused_not_duplicated",
    "fn:tests.test_fault_instrumentation_injector.test_intentional_marker_comment_is_respected",
@@ -4588,6 +4589,22 @@
     "via": null
    },
    {
+    "source": "mod:tests.test_communication_bar",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.1",
+    "evidence": [],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "mod:tests.test_communication_emergence",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.1",
+    "evidence": [],
+    "observed": false,
+    "via": null
+   },
+   {
     "source": "mod:tests.test_composer_relevance_selection",
     "type": "IMPORTS",
     "target": "ext:math",
@@ -4597,6 +4614,14 @@
       10
      ]
     ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "mod:tests.test_confluence",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.2",
+    "evidence": [],
     "observed": false,
     "via": null
    },
@@ -4874,6 +4899,14 @@
     "via": null
    },
    {
+    "source": "mod:tests.test_propositional_understanding",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.2",
+    "evidence": [],
+    "observed": false,
+    "via": null
+   },
+   {
     "source": "mod:tests.test_recommendation_hub_incremental",
     "type": "IMPORTS",
     "target": "ext:os",
@@ -5117,6 +5150,14 @@
       290
      ]
     ],
+    "observed": false,
+    "via": null
+   },
+   {
+    "source": "subsys:area:scripts",
+    "type": "PART_OF",
+    "target": "subsys:quasi:desktop",
+    "evidence": [],
     "observed": false,
     "via": null
    }
@@ -37568,6 +37609,11 @@
     "target": "fn:aurora_internal.aurora_shared_helpers.clamp"
    },
    {
+    "source": "field:aurora_dream_trainer.FailPointLedger.state_dir",
+    "type": "FEEDS",
+    "target": "fn:aurora_internal.aurora_store_ownership.store_write_allowed"
+   },
+   {
     "source": "field:aurora_expression_perception.CreativitySignature.creativity_score",
     "type": "FEEDS",
     "target": "fn:aurora_internal.aurora_shared_helpers.clamp"
@@ -69188,11 +69234,6 @@
     "target": "mod:aurora_internal.hub_panels"
    },
    {
-    "source": "mod:aurora_hub",
-    "type": "MEMBER_OF",
-    "target": "subsys:declared:runtime.1"
-   },
-   {
     "source": "mod:aurora_i_state_beings",
     "type": "CALLS",
     "target": "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder"
@@ -69750,6 +69791,16 @@
    {
     "source": "mod:aurora_internal.aurora_store_ownership",
     "type": "MEMBER_OF",
+    "target": "subsys:category:strata"
+   },
+   {
+    "source": "mod:aurora_internal.aurora_store_ownership",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:strata.1"
+   },
+   {
+    "source": "mod:aurora_internal.aurora_store_ownership",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -69995,7 +70046,27 @@
    {
     "source": "mod:aurora_internal.crystal_web",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tooling"
+   },
+   {
+    "source": "mod:aurora_internal.crystal_web",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tooling.1"
+   },
+   {
+    "source": "mod:aurora_internal.crystal_web",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
+   },
+   {
+    "source": "mod:aurora_internal.crystal_web_page",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tooling"
+   },
+   {
+    "source": "mod:aurora_internal.crystal_web_page",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tooling.1"
    },
    {
     "source": "mod:aurora_internal.crystal_web_page",
@@ -70070,12 +70141,27 @@
    {
     "source": "mod:aurora_internal.crystal_web_server",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tooling"
+   },
+   {
+    "source": "mod:aurora_internal.crystal_web_server",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tooling.1"
+   },
+   {
+    "source": "mod:aurora_internal.crystal_web_server",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
     "source": "mod:aurora_internal.crystal_web_server",
     "type": "REFERENCES",
     "target": "store:dps_crystals.json"
+   },
+   {
+    "source": "mod:aurora_internal.desktop",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
    },
    {
     "source": "mod:aurora_internal.desktop",
@@ -70160,6 +70246,16 @@
    {
     "source": "mod:aurora_internal.desktop.__main__",
     "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.__main__",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.__main__",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -70200,6 +70296,16 @@
    {
     "source": "mod:aurora_internal.desktop.blueprints",
     "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.blueprints",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.blueprints",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -70226,6 +70332,16 @@
     "source": "mod:aurora_internal.desktop.common",
     "type": "IMPORTS",
     "target": "mod:aurora_persistence_utils"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.common",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.common",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
    },
    {
     "source": "mod:aurora_internal.desktop.common",
@@ -70265,7 +70381,27 @@
    {
     "source": "mod:aurora_internal.desktop.demonstrations",
     "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.demonstrations",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.demonstrations",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.page",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.page",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
    },
    {
     "source": "mod:aurora_internal.desktop.page",
@@ -70291,6 +70427,16 @@
     "source": "mod:aurora_internal.desktop.policy",
     "type": "IMPORTS",
     "target": "ext:urllib"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.policy",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.policy",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
    },
    {
     "source": "mod:aurora_internal.desktop.policy",
@@ -70495,6 +70641,16 @@
    {
     "source": "mod:aurora_internal.desktop.runtime",
     "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.runtime",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.runtime",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -70566,6 +70722,16 @@
     "source": "mod:aurora_internal.desktop.server",
     "type": "IMPORTS",
     "target": "mod:aurora_internal.hub_panels"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.server",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.server",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
    },
    {
     "source": "mod:aurora_internal.desktop.server",
@@ -70675,6 +70841,16 @@
    {
     "source": "mod:aurora_internal.desktop.services",
     "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.services",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:runtime.1"
+   },
+   {
+    "source": "mod:aurora_internal.desktop.services",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -70775,6 +70951,16 @@
    {
     "source": "mod:aurora_internal.dual_strata.home_growth",
     "type": "MEMBER_OF",
+    "target": "subsys:category:strata"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.home_growth",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:strata.1"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.home_growth",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -70825,6 +71011,11 @@
    {
     "source": "mod:aurora_internal.dual_strata.home_link_presence",
     "type": "MEMBER_OF",
+    "target": "subsys:category:strata"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.home_link_presence",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -70861,6 +71052,16 @@
     "source": "mod:aurora_internal.dual_strata.hub_route",
     "type": "IMPORTS",
     "target": "ext:uuid"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.hub_route",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:strata"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.hub_route",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:strata.1"
    },
    {
     "source": "mod:aurora_internal.dual_strata.hub_route",
@@ -70941,6 +71142,16 @@
     "source": "mod:aurora_internal.dual_strata.inquiry_tiers",
     "type": "IMPORTS",
     "target": "mod:aurora_representational_resolution"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.inquiry_tiers",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:strata"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.inquiry_tiers",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:strata.1"
    },
    {
     "source": "mod:aurora_internal.dual_strata.inquiry_tiers",
@@ -71160,6 +71371,16 @@
    {
     "source": "mod:aurora_internal.dual_strata.strata_migration",
     "type": "MEMBER_OF",
+    "target": "subsys:category:strata"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.strata_migration",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:strata.1"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.strata_migration",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -71300,6 +71521,16 @@
    {
     "source": "mod:aurora_internal.dual_strata.surface_working_state",
     "type": "MEMBER_OF",
+    "target": "subsys:category:strata"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.surface_working_state",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:strata.1"
+   },
+   {
+    "source": "mod:aurora_internal.dual_strata.surface_working_state",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -71360,6 +71591,16 @@
    {
     "source": "mod:aurora_internal.hub_panels",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tooling"
+   },
+   {
+    "source": "mod:aurora_internal.hub_panels",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tooling.1"
+   },
+   {
+    "source": "mod:aurora_internal.hub_panels",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -71396,6 +71637,11 @@
     "source": "mod:aurora_internal.process_lock",
     "type": "IMPORTS",
     "target": "ext:threading"
+   },
+   {
+    "source": "mod:aurora_internal.process_lock",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:foundation"
    },
    {
     "source": "mod:aurora_internal.process_lock",
@@ -71965,6 +72211,16 @@
    {
     "source": "mod:scripts.aurora_home_setup",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tooling"
+   },
+   {
+    "source": "mod:scripts.aurora_home_setup",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tooling.1"
+   },
+   {
+    "source": "mod:scripts.aurora_home_setup",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -72063,6 +72319,21 @@
     "target": "mod:aurora_curiosity_engine"
    },
    {
+    "source": "mod:tests.test_communication_bar",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.2"
+   },
+   {
+    "source": "mod:tests.test_communication_emergence",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.2"
+   },
+   {
+    "source": "mod:tests.test_confluence",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.3"
+   },
+   {
     "source": "mod:tests.test_crystal_web",
     "type": "IMPORTS",
     "target": "ext:ast"
@@ -72106,6 +72377,11 @@
     "source": "mod:tests.test_crystal_web",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_crystal_web",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_crystal_web",
@@ -72270,6 +72546,11 @@
    {
     "source": "mod:tests.test_desktop_embodiment",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_desktop_embodiment",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -72370,6 +72651,11 @@
    {
     "source": "mod:tests.test_dream_entanglement_evidence_boundary",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_dream_entanglement_evidence_boundary",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -72416,6 +72702,11 @@
     "source": "mod:tests.test_face_expression_journal",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_face_expression_journal",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_face_expression_journal",
@@ -72475,6 +72766,16 @@
    {
     "source": "mod:tests.test_home_growth",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_home_growth",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.1"
+   },
+   {
+    "source": "mod:tests.test_home_growth",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -72530,6 +72831,11 @@
    {
     "source": "mod:tests.test_home_link_presence",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_home_link_presence",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -72571,6 +72877,11 @@
     "source": "mod:tests.test_hosted_acm",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_hosted_acm",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_hosted_acm",
@@ -72636,6 +72947,11 @@
     "source": "mod:tests.test_hub_panels",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_hub_panels",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_hub_panels",
@@ -72711,6 +73027,16 @@
     "source": "mod:tests.test_hub_route",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_hub_route",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_hub_route",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.1"
    },
    {
     "source": "mod:tests.test_hub_route",
@@ -72791,6 +73117,11 @@
     "source": "mod:tests.test_inquiry_tiers",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_inquiry_tiers",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_inquiry_tiers",
@@ -72940,6 +73271,11 @@
    {
     "source": "mod:tests.test_phone_field_not_held_at_boot",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_phone_field_not_held_at_boot",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
@@ -73015,12 +73351,22 @@
    {
     "source": "mod:tests.test_predictive_stager_state_dir",
     "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_predictive_stager_state_dir",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
     "source": "mod:tests.test_predictive_stager_state_dir",
     "type": "TESTS",
     "target": "mod:aurora_internal.dual_strata.predictive_stager"
+   },
+   {
+    "source": "mod:tests.test_propositional_understanding",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.3"
    },
    {
     "source": "mod:tests.test_strata_fencing",
@@ -73066,6 +73412,16 @@
     "source": "mod:tests.test_strata_fencing",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_strata_fencing",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_strata_fencing",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.1"
    },
    {
     "source": "mod:tests.test_strata_fencing",
@@ -73141,6 +73497,16 @@
     "source": "mod:tests.test_strata_migration",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_strata_migration",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_strata_migration",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.1"
    },
    {
     "source": "mod:tests.test_strata_migration",
@@ -73216,6 +73582,16 @@
     "source": "mod:tests.test_strata_moves",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_strata_moves",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
+   },
+   {
+    "source": "mod:tests.test_strata_moves",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:tests.1"
    },
    {
     "source": "mod:tests.test_strata_moves",
@@ -73281,6 +73657,11 @@
     "source": "mod:tests.test_surface_face_live_read",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_surface_face_live_read",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_surface_face_live_read",
@@ -73356,6 +73737,11 @@
     "source": "mod:tests.test_surface_profile_bridge",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_surface_profile_bridge",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_surface_profile_bridge",
@@ -73441,6 +73827,11 @@
     "source": "mod:tests.test_surface_store_gate",
     "type": "MEMBER_OF",
     "target": "subsys:area:tests"
+   },
+   {
+    "source": "mod:tests.test_surface_store_gate",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:tests"
    },
    {
     "source": "mod:tests.test_surface_store_gate",
@@ -73625,12 +74016,27 @@
    {
     "source": "src:.github/workflows/desktop-embodiment.yml",
     "type": "MEMBER_OF",
-    "target": "subsys:quasi:desktop"
+    "target": "subsys:category:ci"
+   },
+   {
+    "source": "src:.github/workflows/desktop-embodiment.yml",
+    "type": "MEMBER_OF",
+    "target": "subsys:quasi:repo"
    },
    {
     "source": "src:flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
     "type": "MEMBER_OF",
     "target": "subsys:area:phone_native"
+   },
+   {
+    "source": "src:flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:phone_android"
+   },
+   {
+    "source": "src:flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:phone_android.1"
    },
    {
     "source": "src:flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
@@ -73641,6 +74047,11 @@
     "source": "src:flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt",
     "type": "MEMBER_OF",
     "target": "subsys:area:phone_native"
+   },
+   {
+    "source": "src:flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:phone_android"
    },
    {
     "source": "src:flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt",
@@ -73680,12 +74091,32 @@
    {
     "source": "src:flutter_app/lib/widgets/face_motion.dart",
     "type": "MEMBER_OF",
+    "target": "subsys:category:phone_ui"
+   },
+   {
+    "source": "src:flutter_app/lib/widgets/face_motion.dart",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:phone_ui.1"
+   },
+   {
+    "source": "src:flutter_app/lib/widgets/face_motion.dart",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:phone"
    },
    {
     "source": "src:flutter_app/lib/widgets/ui_diagnostics.dart",
     "type": "MEMBER_OF",
     "target": "subsys:area:phone_ui"
+   },
+   {
+    "source": "src:flutter_app/lib/widgets/ui_diagnostics.dart",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:phone_ui"
+   },
+   {
+    "source": "src:flutter_app/lib/widgets/ui_diagnostics.dart",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:phone_ui.1"
    },
    {
     "source": "src:flutter_app/lib/widgets/ui_diagnostics.dart",
@@ -73705,12 +74136,27 @@
    {
     "source": "src:flutter_app/test/face_motion_test.dart",
     "type": "MEMBER_OF",
+    "target": "subsys:category:phone_ui"
+   },
+   {
+    "source": "src:flutter_app/test/face_motion_test.dart",
+    "type": "MEMBER_OF",
+    "target": "subsys:declared:phone_ui.1"
+   },
+   {
+    "source": "src:flutter_app/test/face_motion_test.dart",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:phone"
    },
    {
     "source": "src:scripts/windows/desktop.ps1",
     "type": "MEMBER_OF",
     "target": "subsys:area:scripts"
+   },
+   {
+    "source": "src:scripts/windows/desktop.ps1",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
    },
    {
     "source": "src:scripts/windows/desktop.ps1",
@@ -73730,12 +74176,22 @@
    {
     "source": "src:scripts/windows/install_desktop.ps1",
     "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
+   },
+   {
+    "source": "src:scripts/windows/install_desktop.ps1",
+    "type": "MEMBER_OF",
     "target": "subsys:quasi:desktop"
    },
    {
     "source": "src:scripts/windows/run_acm.ps1",
     "type": "MEMBER_OF",
     "target": "subsys:area:scripts"
+   },
+   {
+    "source": "src:scripts/windows/run_acm.ps1",
+    "type": "MEMBER_OF",
+    "target": "subsys:category:runtime"
    },
    {
     "source": "src:scripts/windows/run_acm.ps1",
@@ -73913,24 +74369,14 @@
     "target": "fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict"
    },
    {
-    "source": "subsys:area:phone_native",
+    "source": "subsys:declared:tests.3",
     "type": "PART_OF",
-    "target": "subsys:quasi:phone"
+    "target": "subsys:category:tests"
    },
    {
-    "source": "subsys:area:phone_ui",
+    "source": "subsys:declared:tooling.1",
     "type": "PART_OF",
-    "target": "subsys:quasi:phone"
-   },
-   {
-    "source": "subsys:area:tests",
-    "type": "PART_OF",
-    "target": "subsys:quasi:desktop"
-   },
-   {
-    "source": "subsys:area:workflows",
-    "type": "PART_OF",
-    "target": "subsys:quasi:desktop"
+    "target": "subsys:category:tooling"
    }
   ]
  }

@@ -18,7 +18,7 @@ The record is `docs/module_ownership.json`. Change a domain, subsystem, layer or
 
 ## Coverage
 
-Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 993 files.
+Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 1043 files.
 
 Covered: files ending in `.py`, `.dart`, `.rs`, `.kt`, `.java`, `.sh`, `.bat`, `.ps1`, `.jsx`, `.html`, `.service`, and files under `.github/workflows/`, skipping folders named `.git`, `__pycache__`, `node_modules`, `build`, `.dart_tool`, `target`, `aurora_state`, `aurora_state_test`, `aurora_logs`, `vector_data`, `lessons`, `aurora_genealogy`.
 
@@ -36,17 +36,17 @@ Not covered:
 
 | Quasi (domain) | Holds | Subsystems | Composites | Files |
 |---|---|---|---|---|
-| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 43 | 935 |
-| Phone app | The Flutter app with its Android services and on-device Python. | 5 | 4 | 22 |
+| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 45 | 979 |
+| Phone app | The Flutter app with its Android services and on-device Python. | 5 | 4 | 27 |
 | ACM | The Rust kernel, its runner and the native Python ACM runtime. | 8 | 3 | 30 |
-| Repository and CI | Workflows that build, test and run the other domains. | 1 | 0 | 6 |
+| Repository and CI | Workflows that build, test and run the other domains. | 1 | 0 | 7 |
 
 ## Quasi: Desktop Aurora
 
 | Higher order (subsystem) | Holds | Composites | Files in composites | Base files |
 |---|---|---|---|---|
-| Entry and runtime | Entry points, the turn loop, process orchestration, launchers and service units. | 1 | 8 | 20 |
-| Foundation and constraint layers | Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonComp, pressure and leverage. | 4 | 24 | 14 |
+| Entry and runtime | Entry points, the turn loop, process orchestration, launchers and service units. | 1 | 16 | 25 |
+| Foundation and constraint layers | Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonComp, pressure and leverage. | 4 | 24 | 15 |
 | Beings and dimensional systems | I-State beings, dimensional systems, consciousness assembly and simulation (the L2 to L4 and L7 layer files). | 1 | 4 | 1 |
 | Crystal ops | The concept-crystal store, its evidence-based growth, ingestion and persistence, interaction crystals, and the crystal types QuasiArch shares with live processing. | 4 | 24 | 2 |
 | Memory | SediMemory, working and interaction memory, turn and resolution records. | 1 | 2 | 10 |
@@ -56,21 +56,21 @@ Not covered:
 | Perception and expression | Sensory and hardware IO, intake, utterance parsing, expression and the reply well-formedness gate. | 1 | 9 | 14 |
 | Identity and language | Behavioral identity, language state, lexicon, grammar and word use. | 3 | 7 | 8 |
 | Governance, persistence and health | Persistence, checkpoints, autonomy, runtime faults and health, metabolic clock, fail-closed guards. | 2 | 21 | 2 |
-| Dual strata (surface and subsurface) | The dual-strata package and the surface/subsurface daemons and substrate. | 2 | 39 | 7 |
+| Dual strata (surface and subsurface) | The dual-strata package and the surface/subsurface daemons and substrate. | 2 | 45 | 8 |
 | Bridges and external tools | Praxis, ACM, scouting, research dispatch and tool registries. | 3 | 9 | 8 |
 | Investigative and diagnostic | Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here. | 5 | 12 | 23 |
-| Tests | The pytest suite. Each test lists the files it exercises. | 2 | 4 | 465 |
-| Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 0 | 0 | 89 |
+| Tests | The pytest suite. Each test lists the files it exercises. | 3 | 9 | 478 |
+| Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 1 | 5 | 89 |
 
 ## Quasi: Phone app
 
 | Higher order (subsystem) | Holds | Composites | Files in composites | Base files |
 |---|---|---|---|---|
-| App shell and screens | The Flutter entry point, home and hub screens, overlay entry and the orb widget. | 1 | 4 | 1 |
+| App shell and screens | The Flutter entry point, home and hub screens, overlay entry and the orb widget. | 1 | 7 | 1 |
 | Habitat | The habitat model, renderer, gesture layer and bridge, and the habitat screens. | 1 | 6 | 0 |
 | Dart bridges | Dart bridges to her Python stack and to Praxis. | 0 | 0 | 2 |
 | On-device Python | Python that Chaquopy runs on the phone: the entry bridge, the cv2 shim and the historical experience environment. | 1 | 2 | 1 |
-| Android services | Kotlin and Java Android components: the main activity, Aurora and overlay services, screen observer and boot receiver. | 1 | 5 | 1 |
+| Android services | Kotlin and Java Android components: the main activity, Aurora and overlay services, screen observer and boot receiver. | 1 | 6 | 2 |
 
 ## Quasi: ACM
 
@@ -89,7 +89,7 @@ Not covered:
 
 | Higher order (subsystem) | Holds | Composites | Files in composites | Base files |
 |---|---|---|---|---|
-| CI workflows | GitHub Actions workflows for runs, clones, experiments, the APK and Python CI. | 0 | 0 | 6 |
+| CI workflows | GitHub Actions workflows for runs, clones, experiments, the APK and Python CI. | 0 | 0 | 7 |
 
 ## Desktop layers (L0 to L8)
 
@@ -212,7 +212,7 @@ Support is the knowledge graph's verdict: `supported` and `partly_supported` mea
 
 | Composite | Subsystem | Hub | Files | Support |
 |---|---|---|---|---|
-| `runtime.1` | Entry and runtime | `aurora.py` | 8 | partly_supported |
+| `runtime.1` | Entry and runtime | `aurora_internal/desktop/runtime.py` | 16 | partly_supported |
 | `foundation.1` | Foundation and constraint layers | `aurora_internal/aurora_noncomp_registry.py` | 18 | partly_supported |
 | `foundation.2` | Foundation and constraint layers | `aurora_computational_model.py` | 2 | supported |
 | `foundation.3` | Foundation and constraint layers | `aurora_internal/aurora_pressure_classifier.py` | 2 | supported |
@@ -243,7 +243,7 @@ Support is the knowledge graph's verdict: `supported` and `partly_supported` mea
 | `language.3` | Identity and language | `aurora_internal/aurora_communication_emergence.py` | 2 | supported |
 | `governance.1` | Governance, persistence and health | `aurora_internal/aurora_runtime_faults.py` | 19 | partly_supported |
 | `governance.2` | Governance, persistence and health | `aurora_internal/aurora_metabolic_steps.py` | 2 | supported |
-| `strata.1` | Dual strata (surface and subsurface) | `aurora_internal/dual_strata/__init__.py` | 37 | partly_supported |
+| `strata.1` | Dual strata (surface and subsurface) | `aurora_internal/dual_strata/__init__.py` | 43 | partly_supported |
 | `strata.2` | Dual strata (surface and subsurface) | `aurora_internal/aurora_surface_dispatcher.py` | 2 | supported |
 | `bridges.1` | Bridges and external tools | `aurora_internal/scouting/contracts.py` | 4 | supported |
 | `bridges.2` | Bridges and external tools | `aurora_praxis_messenger.py` | 3 | supported |
@@ -253,12 +253,14 @@ Support is the knowledge graph's verdict: `supported` and `partly_supported` mea
 | `investigative.3` | Investigative and diagnostic | `aurora_genealogy_difference_shadow.py` | 2 | supported |
 | `investigative.4` | Investigative and diagnostic | `aurora_internal/aurora_quasiarch_observer.py` | 2 | supported |
 | `investigative.5` | Investigative and diagnostic | `aurora_internal/quasiarch_observer/dimensional_memory.py` | 2 | supported |
-| `tests.1` | Tests | `tests/test_communication_bar.py` | 2 | supported |
-| `tests.2` | Tests | `tests/test_confluence.py` | 2 | supported |
-| `phone_ui.1` | App shell and screens | `flutter_app/lib/main.dart` | 4 | partly_supported |
+| `tests.1` | Tests | `tests/test_strata_fencing.py` | 5 | supported |
+| `tests.2` | Tests | `tests/test_communication_bar.py` | 2 | supported |
+| `tests.3` | Tests | `tests/test_confluence.py` | 2 | supported |
+| `tooling.1` | Scripts, tooling and prototypes | `aurora_internal/crystal_web_server.py` | 5 | partly_supported |
+| `phone_ui.1` | App shell and screens | `flutter_app/lib/widgets/ui_diagnostics.dart` | 7 | partly_supported |
 | `phone_habitat.1` | Habitat | `flutter_app/lib/habitat/habitat_gesture_layer.dart` | 6 | partly_supported |
 | `phone_python.1` | On-device Python | `flutter_app/android/app/src/main/python/aurora_bridge.py` | 2 | supported |
-| `phone_android.1` | Android services | `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt` | 5 | partly_supported |
+| `phone_android.1` | Android services | `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt` | 6 | partly_supported |
 | `acm_xaurora.1` | X-Aurora ISA, VM and JIT | `aurora-acm/kernel/src/xaurora/isa.rs` | 4 | partly_supported |
 | `acm_expression.1` | Expression | `aurora-acm/kernel/src/expression/mod.rs` | 4 | partly_supported |
 | `acm_hw.1` | Hardware drivers | `aurora-acm/kernel/src/hw/mod.rs` | 7 | partly_supported |
@@ -269,7 +271,7 @@ Imports join these files, but the knowledge graph found no call, flow, spawn or 
 
 | Candidate | Subsystem | Files |
 |---|---|---|
-| `tests.3` | Tests | `tests/test_generation_collapse_regression.py`, `tests/test_pf1_5_instruments.py` |
+| `tests.4` | Tests | `tests/test_generation_collapse_regression.py`, `tests/test_pf1_5_instruments.py` |
 | `acm_core.1` | ACM core | `aurora-acm/kernel/src/acm/axes.rs`, `aurora-acm/kernel/src/acm/crystal.rs`, `aurora-acm/kernel/src/acm/drift.rs`, `aurora-acm/kernel/src/acm/mod.rs`, `aurora-acm/kernel/src/acm/sedi.rs` |
 | `acm_cpm.1` | Constraint physics machine | `aurora-acm/kernel/src/cpm/mod.rs`, `aurora-acm/kernel/src/cpm/organ.rs`, `aurora-acm/kernel/src/cpm/scheduler.rs` |
 | `acm_bridge.1` | Bridge protocol | `aurora-acm/kernel/src/bridge/mod.rs`, `aurora-acm/kernel/src/bridge/protocol.rs` |
@@ -343,10 +345,20 @@ Composite is blank for a base file that no import joins to another file in its s
 |---|---|---|---|
 | `aurora.py` | runtime.1 | orchestrator | name_and_docstring |
 | `aurora_daemon.py` | runtime.1 |  | name_and_docstring |
-| `aurora_hub.py` | runtime.1 |  | name_and_docstring |
+| `aurora_hub.py` |  |  | name_and_docstring |
 | `aurora_internal/__init__.py` | runtime.1 |  | name_and_docstring |
 | `aurora_internal/aurora_turn_chain.py` | runtime.1 |  | name_and_docstring |
 | `aurora_internal/aurora_turn_compute_graph.py` |  |  | name_and_docstring |
+| `aurora_internal/desktop/__init__.py` |  |  | name_and_docstring |
+| `aurora_internal/desktop/__main__.py` | runtime.1 |  | name_and_docstring |
+| `aurora_internal/desktop/blueprints.py` | runtime.1 |  | name_and_docstring |
+| `aurora_internal/desktop/common.py` | runtime.1 |  | name_and_docstring |
+| `aurora_internal/desktop/demonstrations.py` | runtime.1 |  | name_and_docstring |
+| `aurora_internal/desktop/page.py` | runtime.1 |  | name_and_docstring |
+| `aurora_internal/desktop/policy.py` | runtime.1 |  | name_and_docstring |
+| `aurora_internal/desktop/runtime.py` | runtime.1 |  | name_and_docstring |
+| `aurora_internal/desktop/server.py` | runtime.1 |  | name_and_docstring |
+| `aurora_internal/desktop/services.py` | runtime.1 |  | name_and_docstring |
 | `aurora_runtime.py` | runtime.1 |  | name_and_docstring |
 | `corpus_runner.py` | runtime.1 |  | name_and_docstring |
 | `deploy/aurora-strata-hub.service` |  |  | location |
@@ -366,7 +378,10 @@ Composite is blank for a base file that no import joins to another file in its s
 | `scripts/run_scout_worker.sh` |  |  | location |
 | `scripts/run_subsurface_daemon.sh` |  |  | location |
 | `scripts/run_surface_daemon.sh` |  |  | location |
+| `scripts/windows/desktop.ps1` |  |  | location |
+| `scripts/windows/install_desktop.ps1` |  |  | location |
 | `scripts/windows/install_subsurface_task.ps1` |  |  | location |
+| `scripts/windows/run_acm.ps1` |  |  | location |
 | `scripts/windows/run_subsurface.bat` |  |  | location |
 | `start_vector.sh` |  |  | location |
 
@@ -403,6 +418,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `aurora_internal/aurora_shared_helpers.py` | foundation.1 |  | name_and_docstring |
 | `aurora_internal/aurora_structural_pressure_steering.py` | foundation.1 |  | name_and_docstring |
 | `aurora_internal/aurora_tensor_expressions.py` |  |  | name_and_docstring |
+| `aurora_internal/process_lock.py` |  |  | name_and_docstring |
 | `aurora_ivm.py` | foundation.1 | L1 | name_and_docstring |
 | `aurora_manifold_directory/__init__.py` |  |  | name_and_docstring |
 | `aurora_manifold_directory/noncomp_field.py` |  |  | name_and_docstring |
@@ -677,6 +693,7 @@ Composite is blank for a base file that no import joins to another file in its s
 |---|---|---|---|
 | `aurora_braid_wiring.py` |  |  | name_and_docstring |
 | `aurora_internal/aurora_braided_substrate.py` |  | L8 | name_and_docstring |
+| `aurora_internal/aurora_store_ownership.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/aurora_surface_dispatcher.py` | strata.2 |  | name_and_docstring |
 | `aurora_internal/aurora_surface_doc.py` | strata.2 |  | reviewed |
 | `aurora_internal/dual_strata/__init__.py` | strata.1 |  | name_and_docstring |
@@ -691,6 +708,10 @@ Composite is blank for a base file that no import joins to another file in its s
 | `aurora_internal/dual_strata/crest.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/dce_bridge.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/downward_traversal.py` | strata.1 |  | name_and_docstring |
+| `aurora_internal/dual_strata/home_growth.py` | strata.1 |  | name_and_docstring |
+| `aurora_internal/dual_strata/home_link_presence.py` |  |  | name_and_docstring |
+| `aurora_internal/dual_strata/hub_route.py` | strata.1 |  | name_and_docstring |
+| `aurora_internal/dual_strata/inquiry_tiers.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/lifecycle_catalog.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/micro_reasoning.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/perturbation_probe.py` | strata.1 |  | reviewed |
@@ -704,6 +725,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `aurora_internal/dual_strata/sensory_snapshot_channel.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/sleep_cycle.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/strata_link.py` | strata.1 |  | name_and_docstring |
+| `aurora_internal/dual_strata/strata_migration.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/strata_state_transfer.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/subsurface_presence.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/subsurface_presence_runtime.py` | strata.1 |  | name_and_docstring |
@@ -713,6 +735,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `aurora_internal/dual_strata/surface_channel.py` |  |  | name_and_docstring |
 | `aurora_internal/dual_strata/surface_continuity_feed.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/surface_sensory_proxy.py` | strata.1 |  | name_and_docstring |
+| `aurora_internal/dual_strata/surface_working_state.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/topological_semantic_coordinator.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/topology_frame.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/topology_tracker.py` | strata.1 |  | name_and_docstring |
@@ -862,15 +885,15 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_comm_credit_phase_g_live_wiring.py` |  |  | location |
 | `tests/test_comm_credit_phase_h_corpus_bridge.py` |  |  | location |
 | `tests/test_communication_architecture_repair_directive.py` |  |  | location |
-| `tests/test_communication_bar.py` | tests.1 |  | location |
+| `tests/test_communication_bar.py` | tests.2 |  | location |
 | `tests/test_communication_credit_unification.py` |  |  | location |
-| `tests/test_communication_emergence.py` | tests.1 |  | location |
+| `tests/test_communication_emergence.py` | tests.2 |  | location |
 | `tests/test_communication_integrity_repair.py` |  |  | location |
 | `tests/test_composer_relevance_selection.py` |  |  | location |
 | `tests/test_compressed_genealogy_state.py` |  |  | location |
 | `tests/test_concept_image_ingestion_import.py` |  |  | location |
 | `tests/test_concept_imager_cycle.py` |  |  | location |
-| `tests/test_confluence.py` | tests.2 |  | location |
+| `tests/test_confluence.py` | tests.3 |  | location |
 | `tests/test_consequence_profile_does_not_govern_perception.py` |  |  | location |
 | `tests/test_constraint_continuity_across_mutation.py` |  |  | location |
 | `tests/test_constraint_field_constitutive_behavior.py` |  |  | location |
@@ -898,6 +921,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_crystal_unification.py` |  |  | location |
 | `tests/test_crystal_waveform_match.py` |  |  | location |
 | `tests/test_crystal_weave.py` |  |  | location |
+| `tests/test_crystal_web.py` |  |  | location |
 | `tests/test_d1_device_path_attribution.py` |  |  | location |
 | `tests/test_d2_2_corpus_fragment_nesting.py` |  |  | location |
 | `tests/test_d2_2_live_turn_reentrancy_guard.py` |  |  | location |
@@ -908,6 +932,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_daemon_evidence_grounded_mutation.py` |  |  | location |
 | `tests/test_daemon_subsurface_and_ambient.py` |  |  | location |
 | `tests/test_der_geometric_time.py` |  |  | location |
+| `tests/test_desktop_embodiment.py` |  |  | location |
 | `tests/test_desktop_stack_includes_scout_worker.py` |  |  | location |
 | `tests/test_development_experiment.py` |  |  | location |
 | `tests/test_developmental_ecology_boundary.py` |  |  | location |
@@ -921,6 +946,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_dream_ancestry.py` |  |  | location |
 | `tests/test_dream_as_new_experience.py` |  |  | location |
 | `tests/test_dream_developmental_writeback.py` |  |  | location |
+| `tests/test_dream_entanglement_evidence_boundary.py` |  |  | location |
 | `tests/test_dream_evolution_boundary.py` |  |  | location |
 | `tests/test_dream_salience_abstraction.py` |  |  | location |
 | `tests/test_dream_source_abstraction.py` |  |  | location |
@@ -943,6 +969,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_evolution_hook_override_none_handling.py` |  |  | location |
 | `tests/test_evolutionary_ancestry_acquisition.py` |  |  | location |
 | `tests/test_f5_register_exploration_plumbing.py` |  |  | location |
+| `tests/test_face_expression_journal.py` |  |  | location |
 | `tests/test_fail_recurrence_novelty.py` |  |  | location |
 | `tests/test_failure_shape_tracing.py` |  |  | location |
 | `tests/test_fault_instrumentation_injector.py` |  |  | location |
@@ -985,6 +1012,11 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_historical_experience_environment.py` |  |  | location |
 | `tests/test_historical_lexical_consequence_attribution.py` |  |  | location |
 | `tests/test_historical_rehearsal.py` |  |  | location |
+| `tests/test_home_growth.py` | tests.1 |  | location |
+| `tests/test_home_link_presence.py` |  |  | location |
+| `tests/test_hosted_acm.py` |  |  | location |
+| `tests/test_hub_panels.py` |  |  | location |
+| `tests/test_hub_route.py` | tests.1 |  | location |
 | `tests/test_hypothesis_crystals.py` |  |  | location |
 | `tests/test_i_state_channel_reweighting.py` |  |  | location |
 | `tests/test_i_state_occurrence_wavefront.py` |  |  | location |
@@ -995,6 +1027,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_input_as_pressure.py` |  |  | location |
 | `tests/test_input_effect_shadow.py` |  |  | location |
 | `tests/test_input_identity.py` |  |  | location |
+| `tests/test_inquiry_tiers.py` |  |  | location |
 | `tests/test_interaction_event_action_handoff.py` |  |  | location |
 | `tests/test_internal_origin_exempt.py` |  |  | location |
 | `tests/test_interpreted_turn_packet.py` |  |  | location |
@@ -1088,6 +1121,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_pf3_3_frame_absence.py` |  |  | location |
 | `tests/test_pf3_4a_motif_thinning_guard.py` |  |  | location |
 | `tests/test_pf3_5_motif_watch_readout.py` |  |  | location |
+| `tests/test_phone_field_not_held_at_boot.py` |  |  | location |
 | `tests/test_phone_load_pacing.py` |  |  | location |
 | `tests/test_pipeline2.py` |  |  | location |
 | `tests/test_positive_dream_material.py` |  |  | location |
@@ -1098,6 +1132,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_praxis_same_device_loop.py` |  |  | location |
 | `tests/test_praxis_shared_state_and_discovery.py` |  |  | location |
 | `tests/test_prediction_field_manifold.py` |  |  | location |
+| `tests/test_predictive_stager_state_dir.py` |  |  | location |
 | `tests/test_preoutcome_pressure_capture.py` |  |  | location |
 | `tests/test_presence_metrics.py` |  |  | location |
 | `tests/test_presence_runtime_occurrence_barrier.py` |  |  | location |
@@ -1107,7 +1142,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_progressive_perspective_consumption.py` |  |  | location |
 | `tests/test_projection_frontier_consumption.py` |  |  | location |
 | `tests/test_promotion_lookup_scaling.py` |  |  | location |
-| `tests/test_propositional_understanding.py` | tests.2 |  | location |
+| `tests/test_propositional_understanding.py` | tests.3 |  | location |
 | `tests/test_provenance_integrity.py` |  |  | location |
 | `tests/test_prune_recall_marker_nodes.py` |  |  | location |
 | `tests/test_ps1_2_persistence_arbitration.py` |  |  | location |
@@ -1204,7 +1239,10 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_social_corroboration.py` |  |  | location |
 | `tests/test_stale_scout_report_cannot_hijack_new_turn.py` |  |  | location |
 | `tests/test_stimulus_pressure_seams.py` |  |  | location |
+| `tests/test_strata_fencing.py` | tests.1 |  | location |
 | `tests/test_strata_link.py` |  |  | location |
+| `tests/test_strata_migration.py` | tests.1 |  | location |
+| `tests/test_strata_moves.py` | tests.1 |  | location |
 | `tests/test_strata_state_transfer.py` |  |  | location |
 | `tests/test_strategic_horizon.py` |  |  | location |
 | `tests/test_stratified_wellformedness.py` |  |  | location |
@@ -1216,8 +1254,11 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_supposed_stays_supposed.py` |  |  | location |
 | `tests/test_surface_boundary.py` |  |  | location |
 | `tests/test_surface_does_not_wait_for_scout.py` |  |  | location |
+| `tests/test_surface_face_live_read.py` |  |  | location |
 | `tests/test_surface_poedex_dispatch.py` |  |  | location |
+| `tests/test_surface_profile_bridge.py` |  |  | location |
 | `tests/test_surface_scout_evidence_harvest.py` |  |  | location |
+| `tests/test_surface_store_gate.py` |  |  | location |
 | `tests/test_system_introspection_bridge.py` |  |  | location |
 | `tests/test_tensor_downward_modulation.py` |  |  | location |
 | `tests/test_thought_downward.py` |  |  | location |
@@ -1262,6 +1303,10 @@ Composite is blank for a base file that no import joins to another file in its s
 
 | File | Composite | Layer | Basis |
 |---|---|---|---|
+| `aurora_internal/crystal_web.py` | tooling.1 |  | name_and_docstring |
+| `aurora_internal/crystal_web_page.py` | tooling.1 |  | name_and_docstring |
+| `aurora_internal/crystal_web_server.py` | tooling.1 |  | name_and_docstring |
+| `aurora_internal/hub_panels.py` | tooling.1 |  | name_and_docstring |
 | `constraint_prototype.html` |  |  | location |
 | `constraint_prototype.jsx` |  |  | location |
 | `knowledge_graph/index.html` |  |  | location |
@@ -1276,6 +1321,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `scripts/aurora_ci_segment.py` |  |  | location |
 | `scripts/aurora_cold_archive.py` |  |  | location |
 | `scripts/aurora_fault_instrumentation_injector.py` |  |  | location |
+| `scripts/aurora_home_setup.py` | tooling.1 |  | location |
 | `scripts/aurora_kg_observe.py` |  |  | location |
 | `scripts/aurora_knowledge_graph.py` |  |  | location |
 | `scripts/aurora_stack_exporter.py` |  |  | location |
@@ -1361,6 +1407,9 @@ Composite is blank for a base file that no import joins to another file in its s
 | `flutter_app/lib/screens/home_screen.dart` | phone_ui.1 |  | location |
 | `flutter_app/lib/screens/hub_screen.dart` | phone_ui.1 |  | location |
 | `flutter_app/lib/widgets/aurora_orb.dart` | phone_ui.1 |  | location |
+| `flutter_app/lib/widgets/face_motion.dart` | phone_ui.1 |  | location |
+| `flutter_app/lib/widgets/ui_diagnostics.dart` | phone_ui.1 |  | location |
+| `flutter_app/test/face_motion_test.dart` | phone_ui.1 |  | location |
 
 ### Phone app / Habitat
 
@@ -1396,7 +1445,9 @@ Composite is blank for a base file that no import joins to another file in its s
 | `flutter_app/android/app/src/main/kotlin/org/aurora/app/BootCompletedReceiver.kt` | phone_android.1 |  | location |
 | `flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt` | phone_android.1 |  | location |
 | `flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt` | phone_android.1 |  | location |
+| `flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt` | phone_android.1 |  | location |
 | `flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt` | phone_android.1 |  | location |
+| `flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt` |  |  | location |
 | `src/android/java/org/aurora/OverlayService.java` |  |  | location |
 
 ### ACM / ACM core
@@ -1477,5 +1528,6 @@ Composite is blank for a base file that no import joins to another file in its s
 | `.github/workflows/aurora-clones.yml` |  |  | location |
 | `.github/workflows/aurora-development-experiment.yml` |  |  | location |
 | `.github/workflows/build-apk.yml` |  |  | location |
+| `.github/workflows/desktop-embodiment.yml` |  |  | location |
 | `.github/workflows/flutter-android.yml` |  |  | location |
 | `.github/workflows/python-ci.yml` |  |  | location |

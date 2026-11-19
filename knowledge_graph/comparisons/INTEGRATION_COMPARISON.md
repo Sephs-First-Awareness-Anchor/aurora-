@@ -1,11 +1,11 @@
 # Architectural comparison
 
 Authors: Sunni (Sir) Morningstar & Cael Devo  
-Base `b649850b28ff` (claude/knowledge-graph), head `7d4373c73526` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and ef86d2ed7e40.
+Base `b649850b28ff` (claude/knowledge-graph), head `0d0794ec21a4` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and 7cfb953067e4.
 
 ## 1. Function lineage
 
-17556 functions in base, 18195 in head. 1509 kept their identity with a changed body; 18 changed identity (moved or renamed); 58 were removed; 708 are new.
+17556 functions in base, 18195 in head. 1510 kept their identity with a changed body; 18 changed identity (moved or renamed); 58 were removed; 708 are new.
 
 A changed identity breaks any record keyed by the old id (lineage, provenance, fault and test references).
 
@@ -168,7 +168,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 ## 2. Relationships: consolidated against lost
 
-2407 relationships of base are not in head (structure and documentation edges left out). 1452 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 7 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 77 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 216 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 136 went with code that was removed. 206 are lost: the source still exists and no longer reaches the target by any of those routes. 7355 relationships are new.
+2412 relationships of base are not in head (structure and documentation edges left out). 1452 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 7 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 77 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 216 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 136 went with code that was removed. 211 are lost: the source still exists and no longer reaches the target by any of those routes. 7436 relationships are new.
 
 ### Retargeted: 313
 
@@ -181,79 +181,79 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 - 1 CALLS to `absorb_harvest` now through `fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption`
 - 1 CALLS to `investigate_if_pressured` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
-- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `projection_event` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `structural_projection_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
-- 1 CALLS to `unresolved_field_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 - 1 CALLS to `ref_from_ability_id` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `unresolved_field_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
 
 ### Folded into a shared function: 77
 
 - 28 FEEDS to `to_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 2 READS to `created_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `edge_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `status` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 CALLS to `lerpColor` now through `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.onDraw`
+- 1 READS to `inquiries_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `prev_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `to_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `resolution_note` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `topic` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `affect` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `projected_accuracy` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `committed_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `observations_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 CALLS to `tick` now through `fn:flutter_app.test.face_motion_test.run`
+- 1 READS to `parent_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `last_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `child_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `B` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `speakups_count` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `date` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 CALLS to `withAlpha` now through `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.onDraw`
-- 1 READS to `study_cycles_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 CALLS to `lerpColor` now through `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.onDraw`
-- 1 READS to `axis_signature` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `prev_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `source_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `from_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `T` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 CALLS to `tick` now through `fn:flutter_app.test.face_motion_test.run`
+- 1 READS to `intent_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `message_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `contradiction_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `resolved_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `parent_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `N` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 READS to `observations_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 - 1 READS to `outcome_positive` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
-- 1 CALLS to `refreshAxisState` now through `fn:flutter_app.test.face_motion_test.run`
+- 1 READS to `N` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `edge_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
 
 ### Seen only in the base run: 216
 
 - 5 CALLS to `to_dict` now through ``
-- 3 CALLS to `get_stats` now through ``
 - 3 CALLS to `strengthen` now through ``
-- 2 CALLS to `constraint_axes` now through ``
+- 3 CALLS to `get_stats` now through ``
 - 2 CALLS to `load` now through ``
-- 2 CALLS to `looks_like_correction` now through ``
 - 2 CALLS to `attach_live_response_simulation_bridge` now through ``
 - 2 CALLS to `activation` now through ``
 - 2 CALLS to `representation_discrepancy` now through ``
-- 2 CALLS to `warp_params` now through ``
+- 2 CALLS to `looks_like_correction` now through ``
 - 2 CALLS to `is_identity_question` now through ``
+- 2 CALLS to `warp_params` now through ``
+- 2 CALLS to `constraint_axes` now through ``
 - 2 CALLS to `coherence_index` now through ``
 - 2 CALLS to `semantic_coherence` now through ``
-- 1 CALLS to `pressure_axes` now through ``
-- 1 CALLS to `compute_alignment` now through ``
-- 1 CALLS to `chain_up3_purpose` now through ``
-- 1 CALLS to `generic_response_penalty` now through ``
-- 1 CALLS to `recall_confidence_boost` now through ``
+- 1 CALLS to `normalize_claim_object` now through ``
+- 1 CALLS to `infer_comparison_type` now through ``
+- 1 CALLS to `memory_sweep_summary` now through ``
+- 1 CALLS to `normalized_vector_distance` now through ``
+- 1 CALLS to `normalize_identity_followup_text` now through ``
+- 1 CALLS to `user_context_anchor_needed` now through ``
+- 1 CALLS to `weighted_persistence_tax_factor` now through ``
 - 1 CALLS to `resolve_call` now through ``
-- 1 CALLS to `repair_markers` now through ``
-- 1 CALLS to `status` now through ``
-- 1 CALLS to `ingest` now through ``
-- 1 CALLS to `flow_energy` now through ``
-- 1 CALLS to `recall_about` now through ``
-- 1 CALLS to `response_is_grounded` now through ``
-- 1 CALLS to `record_activity` now through ``
-- 1 CALLS to `derive_policy_state` now through ``
-- 1 CALLS to `hedging_score` now through ``
-- 1 CALLS to `crystal_word_facets` now through ``
+- 1 CALLS to `native_turn_payload` now through ``
+- 1 CALLS to `contradiction_markers` now through ``
+- 1 CALLS to `check_and_extend` now through ``
+- 1 CALLS to `magnitude` now through ``
 - 1 CALLS to `from_dict` now through ``
+- 1 CALLS to `extract_live_question_relations` now through ``
+- 1 CALLS to `distance_to` now through ``
+- 1 CALLS to `record_validation_issues` now through ``
+- 1 CALLS to `crystal_waveform_match` now through ``
 
-### Lost (review each): IMPORTS 127, FEEDS 49, CALLS 16, WRITES 4, REFERENCES 4, READS 4, MEMBER_OF 1, USES_ORGAN 1
+### Lost (review each): IMPORTS 127, FEEDS 49, CALLS 16, MEMBER_OF 5, WRITES 4, READS 4, REFERENCES 4, PART_OF 1, USES_ORGAN 1
 
 - `fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink` CALLS `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames` [base aurora_internal/dual_strata/strata_link.py:327]
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:356]
@@ -448,6 +448,11 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `mod:tests.test_universal_function_lineage_freshness_fast_path` IMPORTS `ext:shutil` [base tests/test_universal_function_lineage_freshness_fast_path.py:26]
 - `mod:tests.test_universal_function_lineage_freshness_fast_path` IMPORTS `ext:tempfile` [base tests/test_universal_function_lineage_freshness_fast_path.py:28]
 - `mod:reply_aurora` MEMBER_OF `subsys:category:runtime` [base docs/module_ownership.json:0]
+- `mod:tests.test_communication_bar` MEMBER_OF `subsys:declared:tests.1` [base ?:0]
+- `mod:tests.test_communication_emergence` MEMBER_OF `subsys:declared:tests.1` [base ?:0]
+- `mod:tests.test_confluence` MEMBER_OF `subsys:declared:tests.2` [base ?:0]
+- `mod:tests.test_propositional_understanding` MEMBER_OF `subsys:declared:tests.2` [base ?:0]
+- `subsys:area:scripts` PART_OF `subsys:quasi:desktop` [base ?:0]
 - `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output` [base aurora.py:35899]
 - `fn:aurora_acm_bridge.run` READS `field:aurora_acm_bridge.StatusReceiver.last_status` [base aurora_acm_bridge.py:416]
 - `fn:aurora_internal.dual_strata.predictive_stager._load_queue` READS `store:predictive_frame_queue.json` [base aurora_internal/dual_strata/predictive_stager.py:289]
@@ -462,7 +467,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` WRITES `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:456]
 - `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` WRITES `bus:_clone_harvest_absorb` [base flutter_app/android/app/src/main/python/aurora_bridge.py:2818]
 
-### Removed with deleted code: FEEDS 105, CALLS 24, WRITES 3, READS 2, INSTANTIATES 1, INVOKES 1
+### Removed with deleted code: FEEDS 105, CALLS 24, WRITES 3, READS 2, INVOKES 1, INSTANTIATES 1
 
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event` [base aurora_representational_resolution.py:423]
 - `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier` [base aurora_representational_resolution.py:403]
@@ -545,7 +550,7 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 - `fn:aurora_internal.aurora_language_state._clamp` FEEDS `field:aurora_internal.aurora_language_state.PhrasePrint.confidence` [base aurora_internal/aurora_language_state.py:2077]
 - `fn:aurora_internal.aurora_language_state._clamp` FEEDS `fn:aurora_internal.aurora_language_state.LanguageStateVector._compute_growth` [base aurora_internal/aurora_language_state.py:281]
 
-### Consolidated: CALLS 1423, FEEDS 15, WRITES 7, READS 5, REFERENCES 1, USES_ORGAN 1
+### Consolidated: CALLS 1423, FEEDS 15, WRITES 7, READS 5, USES_ORGAN 1, REFERENCES 1
 
 - `fn:aurora.AxisProjector.project` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:3646]
 - `fn:aurora.ConstraintFieldBalancer._inject_to_genealogy` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:4347]
@@ -630,12 +635,15 @@ A changed identity breaks any record keyed by the old id (lineage, provenance, f
 
 ## 2b. Composites promoted on evidence
 
-52 in base, 54 in head. Each base composite is matched to the head composite sharing the most files; a composite that splits, loses files or disappears means the binding between those files changed.
+52 in base, 53 in head. Each base composite is matched to the head composite sharing the most files; a composite that splits, loses files or disappears means the binding between those files changed.
 
 - `subsys:composite:foundation:6f0cf83a` (9 files) -> `subsys:composite:foundation:5e482b6c` (overlap 0.64); joined: `aurora_internal/aurora_ontological_scaffolding.py`, `aurora_internal/aurora_pressure_ledger.py`, `aurora_internal/aurora_pressure_mathematics_tracker.py`, `aurora_internal/aurora_shared_helpers.py`, `aurora_internal/aurora_structural_pressure_steering.py`
 - `subsys:composite:foundation:d3ead140` (2 files) -> `subsys:composite:foundation:5e482b6c` (overlap 0.14); joined: `aurora_constraint_engine.py`, `aurora_constraint_manifold_compiler.py`, `aurora_constraint_unit_adapter.py`, `aurora_internal/aurora_constraint_manifold_patched.py`, `aurora_internal/aurora_leverage_scalar.py`, `aurora_internal/aurora_noncomp_registry.py`
 - `subsys:composite:governance:01effd21` (17 files) -> `subsys:composite:governance:16699d84` (overlap 0.94); joined: `aurora_internal/aurora_energy_layer_costs.py`
-- `subsys:composite:phone_android:95732a08` (2 files) -> `subsys:composite:phone_android:3c827534` (overlap 0.67); joined: `flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt`
+- `subsys:composite:phone_android:95732a08` (2 files) -> `subsys:composite:phone_android:3c9f1bf9` (overlap 0.40); joined: `flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt`, `flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt`
+- `subsys:composite:phone_ui:e24ca393` (2 files) -> `subsys:composite:phone_ui:98c133ef` (overlap 0.33); joined: `flutter_app/lib/widgets/aurora_orb.dart`, `flutter_app/lib/widgets/face_motion.dart`, `flutter_app/lib/widgets/ui_diagnostics.dart`, `flutter_app/test/face_motion_test.dart`
+- `subsys:composite:runtime:0414c162` (5 files) -> `subsys:composite:runtime:556d4dba` (overlap 0.38); joined: `aurora_internal/desktop/__main__.py`, `aurora_internal/desktop/blueprints.py`, `aurora_internal/desktop/common.py`, `aurora_internal/desktop/demonstrations.py`, `aurora_internal/desktop/policy.py`, `aurora_internal/desktop/runtime.py`
+- `subsys:composite:strata:ef2079cf` (9 files) -> `subsys:composite:strata:b8d56ae3` (overlap 0.64); joined: `aurora_internal/aurora_store_ownership.py`, `aurora_internal/dual_strata/home_growth.py`, `aurora_internal/dual_strata/hub_route.py`, `aurora_internal/dual_strata/inquiry_tiers.py`, `aurora_internal/dual_strata/strata_migration.py`
 
 ## 3. Stored state
 
@@ -847,7 +855,7 @@ Logging calls: 431 in base, 437 in head.
 
 ### Interaction handling
 
-1 seed node(s); 69516 relationships around them in base, 76780 in head; 164 lost (not consolidated), 9090 new.
+1 seed node(s); 69516 relationships around them in base, 76856 in head; 169 lost (not consolidated), 9187 new.
 - lost: `bus:_last_voice_gate` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke`
 - lost: `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context`
 - lost: `bus:_subsurface_projection` FEEDS `fn:aurora._build_live_subsurface_projection`
