@@ -30,6 +30,7 @@ jobs:
         run: |
           python scripts/aurora_pr264_finalize_manifest.py
           python scripts/render_module_ownership.py --update-derived
+          python scripts/render_module_ownership.py
           python scripts/render_module_ownership.py --check
       - name: Rebuild canonical knowledge graph at this branch head
         run: |
