@@ -129,6 +129,8 @@ def publish_raw_input(state_dir, text):
 # "inquiry" and "inquiry_evidence" carry one shared inquiry between her two
 # strata (inquiry_tiers): a question her surface's lenses could not settle,
 # and the lived consequence of an experiment home handed down.
+# How often a phone whose first pairing is waiting at home asks how it stands.
+MIGRATION_CHECK_INTERVAL_S = 60.0
 HOME_REQUEST_KINDS = ("curiosity_cycle", "evo_cycle", "embodiment_move",
                       "inquiry", "inquiry_evidence")
 _HOME_REQUESTS_FILENAME = "home_requests.jsonl"
@@ -513,6 +515,16 @@ def apply_uplink_record(state_dir: Any, record: Mapping[str, Any], *, late: bool
         path.parent.mkdir(parents=True, exist_ok=True)
         _atomic_write_json(path, record["payload"])
         return "applied"
+    if channel == "hub_reply" and isinstance(record.get("payload"), dict):
+        # Her answer, on the device that holds her, to a message typed at the
+        # desktop hub (hub_route).  Kept for the hub to read by message id.
+        from aurora_internal.dual_strata.hub_route import record_reply
+        payload = dict(record["payload"])
+        if not payload.get("message_id"):
+            return "unknown_channel"
+        record_reply(state_dir, str(payload["message_id"]),
+                     {k: payload.get(k) for k in ("text", "status", "error", "at") if k in payload})
+        return "applied"
     return "unknown_channel"
 
 
@@ -621,6 +633,9 @@ def apply_downlink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
     if channel == "home_inquiry" and isinstance(payload, dict):
         from aurora_internal.dual_strata.inquiry_tiers import receive_down
         return receive_down(state_dir, payload)
+    if channel == "hub_message" and isinstance(payload, dict):
+        from aurora_internal.dual_strata.hub_route import receive_message
+        return receive_message(state_dir, payload, surface_identity(state_dir))
     return "unknown_channel"
 
 
@@ -1252,6 +1267,13 @@ class StrataLinkServer:
         self._thread = threading.Thread(target=self._httpd.serve_forever,
                                         name="aurora-strata-link-server", daemon=True)
         self._thread.start()
+        # Where home is listening, for the hub and the setup script (no secret).
+        try:
+            _atomic_write_json(link_dir(self.state_dir) / "listen.json",
+                               {"host": self.host, "port": self.port, "at": time.time(),
+                                "reachable_from_network": self.host not in ("127.0.0.1", "localhost", "::1")})
+        except OSError:
+            pass
         return True
 
     def stop(self) -> None:
@@ -1343,6 +1365,15 @@ def surface_identity(state_dir: Any) -> str:
     return surface_id
 
 
+def listen_host(state_dir: Any) -> str:
+    """The address home's link listens on: AURORA_STRATA_LINK_HOST if set,
+    else what the home setup chose (strata_link/listen_host.txt), else this
+    machine only.  Every request is still signed with the pairing secret."""
+    return (os.environ.get("AURORA_STRATA_LINK_HOST", "").strip()
+            or _read_text(link_dir(state_dir) / "listen_host.txt")
+            or "127.0.0.1")
+
+
 def device_name(state_dir: Any) -> str:
     """The name this device goes by when she knows where she can go
     (strata_link/device_name.txt, written at setup); its id otherwise."""
@@ -1396,6 +1427,10 @@ class StrataLinkClient:
         # 3b: home's growth comes down to this surface's read-only copies.
         self.last_growth: Optional[Dict[str, Any]] = None
         self._next_growth_at = 0.0
+        # Easy setup: after a first pairing is sent, this device asks home how
+        # it stands by itself and keeps the receipt when home has applied it.
+        self.last_first_pairing: Optional[Dict[str, Any]] = None
+        self._next_migration_check_at = 0.0
 
     def _load_client_state(self) -> Dict[str, Any]:
         data = _read_json(self._state_path, {})
@@ -1593,12 +1628,15 @@ class StrataLinkClient:
         return not self.outbox.stats()["pending"]
 
     def push_state(self, purpose: str = "seed", *, chunk_bytes: Optional[int] = None,
-                   progress: Optional[Callable[[str, int, int], None]] = None) -> Dict[str, Any]:
+                   progress: Optional[Callable[[str, int, int], None]] = None,
+                   snapshot_guard: Optional[Callable[[], Any]] = None) -> Dict[str, Any]:
         with self._sync_lock:
-            return self._push_state_locked(purpose, chunk_bytes=chunk_bytes, progress=progress)
+            return self._push_state_locked(purpose, chunk_bytes=chunk_bytes, progress=progress,
+                                           snapshot_guard=snapshot_guard)
 
     def _push_state_locked(self, purpose: str, *, chunk_bytes: Optional[int],
-                           progress: Optional[Callable[[str, int, int], None]]) -> Dict[str, Any]:
+                           progress: Optional[Callable[[str, int, int], None]],
+                           snapshot_guard: Optional[Callable[[], Any]] = None) -> Dict[str, Any]:
         """Give the Subsurface device this device's continuity.
 
         purpose "seed"     the Subsurface installs it (backing up what it
@@ -1638,6 +1676,11 @@ class StrataLinkClient:
                 from aurora_internal.aurora_store_ownership import moves_with_her
                 rel_paths = sorted({FILENAME, *moves_with_her(self.state_dir)})
                 manifest = st.snapshot_state(self.state_dir, snap, rel_paths=rel_paths)
+            elif snapshot_guard is not None:
+                # Only the copy needs her held still (e.g. the app's field
+                # lock); the transfer of the copy that follows does not.
+                with snapshot_guard():
+                    manifest = st.snapshot_state(self.state_dir, snap)
             else:
                 manifest = st.snapshot_state(self.state_dir, snap)
             if not manifest:
@@ -1701,10 +1744,15 @@ class StrataLinkClient:
             self.last_error = f"push_state: {exc}"[:200]
             return {"ok": False, "error": str(exc)}
 
-    def migrate(self, *, progress: Optional[Callable[[str, int, int], None]] = None) -> Dict[str, Any]:
+    def migrate(self, *, progress: Optional[Callable[[str, int, int], None]] = None,
+                snapshot_guard: Optional[Callable[[], Any]] = None) -> Dict[str, Any]:
         """First pairing: send this whole mind home to be staged and compared.
         This device keeps running as it is until the receipt is accepted."""
-        return self.push_state("migrate", progress=progress)
+        self.last_first_pairing = {"at": time.time(), "status": "sending"}
+        result = self.push_state("migrate", progress=progress, snapshot_guard=snapshot_guard)
+        self.last_first_pairing = {"at": time.time(), "status": "sent" if result.get("ok") else "not_sent",
+                                   **{k: result.get(k) for k in ("error", "choices_needed") if k in result}}
+        return result
 
     def check_migration(self) -> Dict[str, Any]:
         """Ask home how the first pairing stands.  When home has applied it,
@@ -1882,6 +1930,16 @@ class StrataLinkClient:
         self.last_growth = {"at": time.time(), **result}
         return result
 
+    def _migration_check_due(self) -> bool:
+        if not self.online or time.time() < self._next_migration_check_at:
+            return False
+        mine = dict(self._load_client_state().get("migration") or {})
+        if not mine.get("id"):
+            return False
+        from aurora_internal.dual_strata.strata_migration import load_receipt
+        receipt = load_receipt(self.state_dir)
+        return not (receipt and receipt.get("migration_id") == mine["id"] and receipt.get("accepted_at"))
+
     def _growth_due(self) -> bool:
         """Only a surface-only device keeps read-only copies of home's stores;
         a whole-mind device learns for itself and is never overwritten."""
@@ -1906,6 +1964,13 @@ class StrataLinkClient:
                 except Exception as exc:
                     self.last_error = f"move: {type(exc).__name__}: {exc}"[:200]
                 moved = True
+            elif self._migration_check_due():
+                self._next_migration_check_at = time.time() + MIGRATION_CHECK_INTERVAL_S
+                try:
+                    checked = self.check_migration()
+                    self.last_first_pairing = {"at": time.time(), **checked}
+                except Exception as exc:
+                    self.last_error = f"first pairing: {type(exc).__name__}: {exc}"[:200]
             elif self._growth_due():
                 self._next_growth_at = time.time() + GROWTH_PULL_INTERVAL_S
                 try:
@@ -1950,7 +2015,7 @@ class StrataLinkClient:
                 "home_last_confirmed_at": self.last_confirmed_at,
                 "device_name": device_name(self.state_dir),
                 "move_order": self.move_order, "last_move": self.last_move_result,
-                "last_growth": self.last_growth,
+                "last_growth": self.last_growth, "first_pairing": self.last_first_pairing,
                 "up_outbox": self.outbox.stats(), "last_error": self.last_error,
                 **self.counters}
 

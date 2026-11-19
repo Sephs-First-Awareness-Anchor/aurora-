@@ -115,12 +115,53 @@ def strata_panel(state_dir: str, now: Optional[float] = None) -> Dict[str, Any]:
         "paired": os.path.exists(os.path.join(link, "secret.txt")),                      # whether, never what
         "down_outbox": _outbox(os.path.join(link, "down_outbox.json")), "up_outbox": _outbox(os.path.join(link, "up_outbox.json")),
         "processes": {n: _alive(os.path.join(str(state_dir), "strata_stack", "pids", f"{n}.pid")) for n in STACK_PIDS}}
+    out.update(_strata_extras(link, srv if isinstance(srv, dict) else {}, now))
     snap = _read(os.path.join(str(state_dir), "dual_strata_snapshot.json"))
     if isinstance(snap, dict):
         cf = snap.get("conscious_frame") or {}
         out["frame"] = {"saved_seconds_ago": (round(now - float(snap["saved_at"]), 1) if snap.get("saved_at") else None), "crest": (cf.get("conscious_crest") or {}).get("label"),
                         "action": cf.get("selected_action"), "mode": cf.get("processing_mode"), "readiness": _num(cf.get("readiness")), "coherence": _num(cf.get("coherence"))}
     return out
+
+
+def _text(path: str) -> str:
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return fh.read().strip()[:STR_FIELDS]
+    except OSError:
+        return ""
+
+
+def _strata_extras(link: str, srv: Mapping[str, Any], now: float) -> Dict[str, Any]:
+    """Who holds her, the devices home knows, a move under way, each phone's
+    first pairing, home's inquiry desk, and the gate on a surface.  Names,
+    stages and counts only."""
+    names = {str(k): str(v)[:64] for k, v in dict(srv.get("names") or {}).items()}
+    home_id = _text(os.path.join(link, "home_surface_id.txt"))
+    owner = str(srv.get("owner") or "")
+    seen = dict(srv.get("last_seen") or {})
+    devices = sorted({*names, *map(str, seen)} | ({home_id} if home_id else set()))
+    move = srv.get("move") if isinstance(srv.get("move"), dict) else None
+    desk = _read(os.path.join(link, "inquiry_desk.json"))
+    questions = dict((desk or {}).get("questions") or {}) if isinstance(desk, dict) else {}
+    gate = _read(os.path.join(link, "store_gate.json"))
+    growth = _read(os.path.join(link, "growth", "last_install.json"))
+    return {
+        "holder": {"surface_id": owner, "name": names.get(owner) or ("this desktop" if owner and owner == home_id else owner),
+                   "is_this_desktop": bool(owner and owner == home_id)},
+        "devices": [{"surface_id": d, "name": names.get(d) or ("this desktop" if d == home_id else d), "holds_her": d == owner,
+                     "this_desktop": d == home_id,
+                     "seen_seconds_ago": (round(now - float(seen[d]), 1) if seen.get(d) else None)} for d in devices],
+        "move": None if not move else {k: move.get(k) for k in ("from", "to", "stage", "requested_by", "at")}
+                | {"from_name": names.get(str(move.get("from"))) or move.get("from"), "to_name": names.get(str(move.get("to"))) or move.get("to")},
+        "recent_moves": [{k: m.get(k) for k in ("to", "outcome", "requested_by", "ended_at", "at")} | {"to_name": names.get(str(m.get("to"))) or m.get("to")}
+                         for m in (srv.get("moves") or [])[-5:] if isinstance(m, dict)],
+        "first_pairing": {names.get(str(k)) or str(k): {f: v.get(f) for f in ("status", "at", "tail_open")} for k, v in dict(srv.get("first_pairing") or {}).items() if isinstance(v, dict)},
+        "shared_inquiry": {"questions": len(questions), "handed_down": sum(1 for q in questions.values() if isinstance(q, dict) and q.get("handed_down"))},
+        "store_gate": None if not isinstance(gate, dict) else {k: gate.get(k) for k in ("at", "surface_only", "stores_declined", "writes_declined")},
+        "last_growth_install": growth if isinstance(growth, dict) else None,
+        "listening": ({k: listen.get(k) for k in ("host", "port", "reachable_from_network")} if isinstance(listen := _read(os.path.join(link, "listen.json")), dict) else None),
+    }
 
 
 # -- the crystal pass -------------------------------------------------------------------------------------------------------------------------------

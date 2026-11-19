@@ -212,6 +212,26 @@ def _restore_present_for_move() -> None:
             _late_surface_responses[:] = restored.get("late_responses", [])
 
 
+def _hub_message_loop() -> None:
+    """Sir typed to her at the desktop hub while this device holds her
+    (hub_route).  Each message is a turn she lives here, through the same
+    handle_message as any other; whatever she says goes home with it."""
+    import time as _t
+    from aurora_internal.dual_strata import strata_link as _sl_hub
+    from aurora_internal.dual_strata.hub_route import answer_pending
+    while True:
+        _t.sleep(3.0)
+        client = _sl_hub._CLIENT
+        if client is None or _systems is None:
+            continue
+        if client.role != "active" or not client.surface_ready:
+            continue
+        try:
+            answer_pending(_strata_state_dir, handle_message, client.outbox)
+        except Exception as _hub_exc:
+            log.warning("Message from the desk not delivered to her: %s", _hub_exc)
+
+
 def is_surface_only() -> bool:
     return bool(_surface_only)
 
@@ -2524,6 +2544,17 @@ def get_strata_link_status() -> str:
         return _json.dumps({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
 
 
+def _send_first_pairing(client) -> None:
+    """Her whole mind goes home for the first pairing.  Only the copy is
+    taken under the field lock; sending the copy does not hold up a turn."""
+    try:
+        result = client.migrate(snapshot_guard=lambda: _lock)
+        if not result.get("ok"):
+            log.warning("First pairing not sent yet: %s", result.get("error"))
+    except Exception as exc:
+        log.warning("First pairing not sent: %s", exc)
+
+
 def configure_strata_link(pairing: str) -> str:
     """Store the pairing line from the Subsurface device and (re)start the
     link.  Pairing is the explicit act that asks for active-Surface ownership."""
@@ -2533,13 +2564,23 @@ def configure_strata_link(pairing: str) -> str:
         _dir = _strata_state_dir or "aurora_state"
         result = _sl.configure_surface(_dir, pairing)
         if result.get("ok"):
+            name_path = _sl.link_dir(_dir) / "device_name.txt"
+            if not name_path.exists():
+                # What home and her own move tool call this device; Sir can
+                # rename it by editing this one line.
+                name_path.write_text("phone", encoding="utf-8")
             _sl.stop_strata_link_client()
-            _sl.start_strata_link_client_if_configured(_dir)
+            client = _sl.start_strata_link_client_if_configured(_dir)
             from aurora_internal.dual_strata.strata_migration import load_receipt
-            if not _surface_only and load_receipt(_dir) is None:
+            if not _surface_only and load_receipt(_dir) is None and client is not None:
                 # This phone has lived as the whole mind: its first pairing
-                # moves that home before it becomes her surface.
-                result["next_step"] = "first_pairing"
+                # sends that home now, in the background, to be staged and
+                # compared there.  Nothing at home or here changes until Sir
+                # applies it at home; the link then picks up the receipt by
+                # itself and this phone is her surface from its next start.
+                result["next_step"] = "first_pairing_started"
+                threading.Thread(target=_send_first_pairing, args=(client,), daemon=True,
+                                 name="aurora_first_pairing").start()
         return _json.dumps({**result, **_sl.strata_link_client_status()}, default=str)
     except Exception as exc:
         return _json.dumps({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"})
@@ -2563,6 +2604,11 @@ def strata_link_transfer(action: str, token: str = "") -> str:
         client = _sl.start_strata_link_client_if_configured(_dir)
         if client is None:
             return _json.dumps({"ok": False, "error": "not paired with a Subsurface device"})
+        if action == "first_pairing":
+            # Only the copy is taken under the field lock (as at pairing).
+            return _json.dumps(client.migrate(snapshot_guard=lambda: _lock), default=str)
+        if action == "first_pairing_status":
+            return _json.dumps(client.check_migration(), default=str)
         with _lock:
             if action == "seed":
                 result = client.push_state("seed")
@@ -2947,6 +2993,9 @@ def initialize(state_dir: str = "") -> str:
                 # checkpoint and claim do.
                 _strata_client.capture_for_move = _capture_present_for_move
                 _strata_client.restore_for_move = _restore_present_for_move
+                # Sir at the desktop hub reaches her here while she is here.
+                threading.Thread(target=_hub_message_loop, daemon=True,
+                                 name="aurora_hub_messages").start()
         except Exception as _sl_exc:
             log.warning("Strata link failed to start: %s", _sl_exc)
 

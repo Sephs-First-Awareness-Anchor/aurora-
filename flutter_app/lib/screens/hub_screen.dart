@@ -657,6 +657,14 @@ class _HubScreenState extends State<HubScreen> {
           SimpleDialogOption(
               onPressed: () => Navigator.pop(ctx, 'verify'),
               child: const Text('Verify state against Subsurface')),
+          // First pairing starts by itself when this phone is paired; these
+          // resend it or ask home how it stands.
+          SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, 'first_pairing'),
+              child: const Text('Send her history home (first pairing)')),
+          SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, 'first_pairing_status'),
+              child: const Text('First pairing: how it stands at home')),
         ],
       ),
     );

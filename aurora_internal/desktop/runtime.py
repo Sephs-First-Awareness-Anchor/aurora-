@@ -225,12 +225,15 @@ class DesktopRuntime:
         if presence:
             self._workers.append(presence)
         self._start_component("scout", self._start_scout)
-        from aurora_internal.dual_strata.strata_link import StrataLinkServer, surface_identity
+        from aurora_internal.dual_strata.strata_link import (StrataLinkServer, device_name, listen_host,
+                                                              surface_identity)
         self.surface_id = surface_identity(self.state_dir)
-        self.link = StrataLinkServer(self.state_dir, host=os.environ.get("AURORA_STRATA_LINK_HOST", "127.0.0.1"),
+        # Home listens where the home setup chose (scripts/aurora_home_setup.py
+        # pair), so a paired phone on the home network can reach her.
+        self.link = StrataLinkServer(self.state_dir, host=listen_host(self.state_dir),
                                     port=int(os.environ.get("AURORA_STRATA_LINK_PORT", "8791")), state_install_allowed=False)
         self.link.set_home_surface(self.surface_id)
-        self.link.handle_sync({"surface_id": self.surface_id})
+        self.link.handle_sync({"surface_id": self.surface_id, "name": device_name(self.state_dir)})
         self.link.start()
         self.systems["_strata_link_server"] = self.link
         self.systems["_desktop_surface_id"] = self.surface_id
@@ -322,6 +325,11 @@ class DesktopRuntime:
             elif kind in ("inquiry", "inquiry_evidence"):
                 self._inquiry_desk().take(req)
                 done[kind] = done.get(kind, 0) + 1
+            elif kind in ("hub_move", "hub_message") and req.get("from") == "hub":
+                # Sir at the desktop hub, on this machine (hub_route).  A phone
+                # cannot file these: its uplink carries only HOME_REQUEST_KINDS.
+                self._hub_request(kind, dict(req.get("payload") or {}))
+                done[kind] = done.get(kind, 0) + 1
             else:
                 done["not_runnable_here"] = done.get("not_runnable_here", 0) + 1
         if requests:
@@ -351,6 +359,21 @@ class DesktopRuntime:
         self.pending_moves.append({"request": dict(req), "result": result, "at": time.time()})
         del self.pending_moves[:-20]
         return result
+
+    def _hub_request(self, kind, payload):
+        if kind == "hub_move":
+            result = self.request_move_from_hub(str(payload.get("to") or ""))
+            self.pending_moves.append({"request": {"kind": kind, "payload": payload, "from": "hub"},
+                                       "result": result, "at": time.time()})
+            del self.pending_moves[:-20]
+            return result
+        from aurora_internal.dual_strata.hub_route import record_reply, send_to_holder
+        if self.link is None:
+            result = {"ok": False, "error": "strata server is unavailable", "status": "not_sent"}
+            if payload.get("message_id"):
+                record_reply(self.state_dir, str(payload["message_id"]), {"at": time.time(), **result})
+            return result
+        return send_to_holder(self.link, payload)
 
     def request_move_from_hub(self, to):
         """Sir's Move button: the same request, filed for the holder."""

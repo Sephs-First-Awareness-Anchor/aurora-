@@ -31,6 +31,7 @@ import threading
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
 
+from aurora_internal.dual_strata import hub_route as _hub_route
 from aurora_internal.dual_strata.sensory_control_channel import (
     camera_enabled as sensory_camera_enabled,
     set_camera_enabled,
@@ -1638,7 +1639,20 @@ def _build_ui():
         text = chat_entry.get().strip()
         if not text:
             return
-        if _surface_daemon_alive():
+        try:
+            _where = _hub_route.holder(_STATE_DIR)
+        except Exception as _aurora_boundary_exc:
+            _aurora_fault(locals(), _aurora_boundary_exc, '_send_chat', 1640)
+            _where = {"elsewhere": False}
+        if _where.get("elsewhere"):
+            # She is on another device: the message goes to her there, not to
+            # the desktop's own surface standing by (hub_route).
+            _sent = _hub_route.send_hub_message(_STATE_DIR, text)
+            _pending_chat["mode"] = "holder"
+            _pending_chat["id"] = str(_sent.get("message_id") or "")
+            _pending_chat["since"] = time.time()
+            chat_quiet_lbl.config(text=f"[she is on {_where.get('name') or 'another device'}]", fg=ACCENT2)
+        elif _surface_daemon_alive():
             try:
                 _pending_chat["mode"] = "surface"
                 _pending_chat["id"] = _queue_surface_turn(text)
@@ -1692,6 +1706,28 @@ def _build_ui():
 
     def _poll_chat_response():
         try:
+            if _pending_chat.get("mode") == "holder":
+                row = _hub_route.read_reply(_STATE_DIR, str(_pending_chat.get("id") or "")) or {}
+                status = str(row.get("status") or "")
+                waited = time.time() - float(_pending_chat.get("since", 0.0) or 0.0)
+                if status in ("answered", "error", "not_sent") or waited > 900:
+                    chat_response_box.configure(state=tk.NORMAL)
+                    if status == "answered" and str(row.get("text") or ""):
+                        chat_response_box.insert(tk.END, f"Aurora [{chat_quiet_lbl.cget('text')[1:-1]}]: "
+                                                          f"{row.get('text')}\n\n", "aurora")
+                    elif status == "answered":
+                        chat_response_box.insert(tk.END, "  (she lived it and said nothing)\n\n", "dim")
+                    elif status in ("error", "not_sent"):
+                        chat_response_box.insert(tk.END, f"  (not delivered: {row.get('error') or status})\n\n", "dim")
+                    else:
+                        chat_response_box.insert(tk.END, "  (no answer has come back yet; it may still arrive)\n\n", "dim")
+                    chat_response_box.see(tk.END)
+                    chat_response_box.configure(state=tk.DISABLED)
+                    _pending_chat["mode"] = ""
+                    _pending_chat["id"] = ""
+                    return
+                root.after(1500, _poll_chat_response)
+                return
             if _pending_chat.get("mode") == "surface" and _SURFACE_RESULT.exists():
                 data = _read_state_file(_SURFACE_RESULT, {})
                 ts = float(data.get("processed_at", 0.0) or 0.0)
@@ -6966,10 +7002,15 @@ def _build_ui():
         room_msg_box.delete("1.0", tk.END)
         if _msgs:
             for _m in _msgs[-15:]:
-                _ts   = _m.get("ts_str","?")[:16]
-                _from = _m.get("from","?")
+                if not isinstance(_m, dict):
+                    continue
+                # Two writers share this file: the hub writes from/content/ts_str,
+                # her own reactive messages (aurora_daemon._send_reactive_message)
+                # write role/text/timestamp.  Read either, so her words show as hers.
+                _ts   = str(_m.get("ts_str") or _m.get("timestamp") or "?").replace("T", " ")[:16]
+                _from = str(_m.get("from") or _m.get("role") or "?")
                 _mtyp = _m.get("type","message")
-                _body = _m.get("content","")[:120]
+                _body = str(_m.get("content") or _m.get("text") or "")[:120]
                 _tag  = "aurora" if _from == "aurora" else "sunni"
                 _name = "Aurora" if _from == "aurora" else "You"
                 _typ_s = f"[{_mtyp}] " if _mtyp not in ("message",) else ""
@@ -7097,6 +7138,135 @@ def _build_ui():
 
     root.after(900, _refresh_room)
 
+    # ══════════════════════════════════════════════════════════════════════════
+    # STRATA TAB — where she is, the devices home knows, moving her, the link
+    # (surface restructure 2 and 3c).  Read-only view (hub_panels.strata_panel)
+    # plus Sir's Move button, which files the same request her own tool does.
+    # ══════════════════════════════════════════════════════════════════════════
+    from aurora_internal.hub_panels import strata_panel as _strata_panel
+    from tkinter import ttk as _ttk_strata
+
+    tab_strata_outer = tk.Frame(notebook, bg=BG)
+    notebook.add(tab_strata_outer, text="  Strata  ")
+    strata_hdr = tk.Frame(tab_strata_outer, bg=BG, padx=12, pady=6)
+    strata_hdr.pack(fill=tk.X)
+    strata_where_lbl = tk.Label(strata_hdr, text="", bg=BG, fg=ACCENT2, font=("Courier New", 11, "bold"))
+    strata_where_lbl.pack(side=tk.LEFT)
+
+    strata_move_row = tk.Frame(tab_strata_outer, bg=BG_PANEL, padx=10, pady=6)
+    strata_move_row.pack(fill=tk.X, padx=8)
+    tk.Label(strata_move_row, text="Move her to:", bg=BG_PANEL, fg=TEXT,
+             font=("Courier New", 9)).pack(side=tk.LEFT)
+    strata_target = _ttk_strata.Combobox(strata_move_row, state="readonly", width=28)
+    strata_target.pack(side=tk.LEFT, padx=6)
+    strata_move_lbl = tk.Label(strata_move_row, text="", bg=BG_PANEL, fg=TEXT_DIM, font=("Courier New", 8))
+
+    def _strata_move():
+        name = strata_target.get().strip()
+        if not name:
+            strata_move_lbl.config(text="choose where first")
+            return
+        try:
+            filed = _hub_route.file_hub_request(_STATE_DIR, "hub_move", {"to": name})
+            strata_move_lbl.config(text=(f"asked home to move her to {name}" if filed.get("ok")
+                                         else f"not filed: {filed.get('error')}"))
+        except Exception as _aurora_boundary_exc:
+            _aurora_fault(locals(), _aurora_boundary_exc, '_strata_move', 7150)
+            strata_move_lbl.config(text=f"not filed: {_aurora_boundary_exc}")
+
+    tk.Button(strata_move_row, text="Move", command=_strata_move, bg=ACCENT, fg=TEXT,
+              font=("Courier New", 9, "bold"), relief=tk.FLAT, padx=10, pady=2,
+              activebackground=RADAR_LINE, cursor="hand2").pack(side=tk.LEFT)
+    strata_move_lbl.pack(side=tk.LEFT, padx=8)
+
+    strata_box = scrolledtext.ScrolledText(tab_strata_outer, bg=BG_LOG, fg=TEXT, font=("Courier New", 9),
+                                           relief=tk.FLAT, borderwidth=0, state=tk.DISABLED,
+                                           insertbackground=TEXT, wrap=tk.WORD)
+    strata_box.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+    strata_box.tag_config("head", foreground=ACCENT, font=("Courier New", 9, "bold"))
+    strata_box.tag_config("dim", foreground=TEXT_DIM)
+    strata_box.tag_config("warn", foreground="#f97316")
+
+    def _strata_lines(panel):
+        out = []
+        listening = panel.get("listening") or {}
+        out.append(("Link", "head"))
+        out.append((f"  paired: {bool(panel.get('paired'))}   downlink: {bool(panel.get('downlink_enabled'))}", ""))
+        if listening:
+            reach = "the home network" if listening.get("reachable_from_network") else "this machine only"
+            out.append((f"  listening on {listening.get('host')}:{listening.get('port')} ({reach})",
+                        "" if listening.get("reachable_from_network") else "warn"))
+        else:
+            out.append(("  not listening yet (start the stack)", "dim"))
+        srv = panel.get("server") or {}
+        if srv:
+            out.append((f"  epoch {srv.get('epoch')}   handoff waiting: {srv.get('handoff_pending')}"
+                        f"   moves so far: {srv.get('migrations')}", ""))
+        for key in ("down_outbox", "up_outbox"):
+            box = panel.get(key)
+            if box:
+                out.append((f"  {key.replace('_', ' ')}: {box.get('pending')} waiting", ""))
+        out.append(("", ""))
+        out.append(("Devices", "head"))
+        for dev in panel.get("devices") or []:
+            mark = "holds her" if dev.get("holds_her") else ""
+            ago = dev.get("seen_seconds_ago")
+            seen = "this desktop" if dev.get("this_desktop") else (f"seen {ago:.0f}s ago" if ago is not None else "not seen")
+            out.append((f"  {dev.get('name'):<24} {seen:<18} {mark}", ""))
+        if not panel.get("devices"):
+            out.append(("  none yet", "dim"))
+        move = panel.get("move")
+        out.append(("", ""))
+        out.append(("Moving her", "head"))
+        if move:
+            out.append((f"  {move.get('from_name')} -> {move.get('to_name')}: {move.get('stage')}"
+                        f" (asked by {move.get('requested_by')})", ""))
+        else:
+            out.append(("  no move under way", "dim"))
+        for m in panel.get("recent_moves") or []:
+            out.append((f"  ended: to {m.get('to_name') or m.get('to')}, {str(m.get('outcome') or '').replace('_', ' ')}"
+                        f" (asked by {m.get('requested_by')})", "dim"))
+        out.append(("", ""))
+        out.append(("First pairing", "head"))
+        pairing = panel.get("first_pairing") or {}
+        for name, rec in pairing.items():
+            out.append((f"  {name}: {rec.get('status')}", "warn" if rec.get("status") != "applied" else ""))
+        if not pairing:
+            out.append(("  none", "dim"))
+        if any((rec or {}).get("status") != "applied" for rec in pairing.values()):
+            out.append(("  waiting at home: scripts/aurora_home_setup.py first-pairing", "warn"))
+        inq = panel.get("shared_inquiry") or {}
+        out.append(("", ""))
+        out.append(("Shared inquiry", "head"))
+        out.append((f"  questions from her surface held here: {inq.get('questions', 0)}"
+                    f"   experiments handed down: {inq.get('handed_down', 0)}", ""))
+        gate = panel.get("store_gate")
+        if gate:
+            out.append((f"  store gate: {gate.get('writes_declined', 0)} writes left to home"
+                        f" across {gate.get('stores_declined', 0)} stores", ""))
+        return out
+
+    def refresh_strata():
+        try:
+            panel = _strata_panel(str(_STATE_DIR))
+            holder = panel.get("holder") or {}
+            strata_where_lbl.config(text=("She is here, on this desktop" if holder.get("is_this_desktop")
+                                          else f"She is on {holder.get('name')}" if holder.get("surface_id")
+                                          else "No device holds her yet"))
+            names = [d.get("name") for d in (panel.get("devices") or [])
+                     if not d.get("holds_her") and d.get("name")]
+            strata_target.configure(values=names)
+            if strata_target.get() not in names:
+                strata_target.set("")
+            strata_box.configure(state=tk.NORMAL)
+            strata_box.delete("1.0", tk.END)
+            for line, tag in _strata_lines(panel):
+                strata_box.insert(tk.END, line + "\n", tag)
+            strata_box.configure(state=tk.DISABLED)
+        except Exception as _aurora_boundary_exc:
+            _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_strata', 7230)
+        root.after(4000, refresh_strata)
+
     # ── Hub-side camera capture thread ────────────────────────────────────────
     # The surface daemon owns the camera device and writes frame_latest.png.
     # The hub reads that file — it must NOT open the camera device directly
@@ -7119,6 +7289,7 @@ def _build_ui():
     root.after(600, refresh_audio)
     root.after(700, refresh_manifold)
     root.after(800, refresh_lineage)
+    root.after(900, refresh_strata)
 
     root.mainloop()
 
