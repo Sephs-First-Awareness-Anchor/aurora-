@@ -120,7 +120,11 @@ def publish_raw_input(state_dir, text):
 
 # What the surface may ask home to do.  Growth work runs at home; a request
 # only brings the next scheduled pass forward, home's own pacing decides.
-HOME_REQUEST_KINDS = ("curiosity_cycle", "evo_cycle", "embodiment_move")
+# "inquiry" and "inquiry_evidence" carry one shared inquiry between her two
+# strata (inquiry_tiers): a question her surface's lenses could not settle,
+# and the lived consequence of an experiment home handed down.
+HOME_REQUEST_KINDS = ("curiosity_cycle", "evo_cycle", "embodiment_move",
+                      "inquiry", "inquiry_evidence")
 _HOME_REQUESTS_FILENAME = "home_requests.jsonl"
 
 
@@ -543,6 +547,11 @@ def collect_subsurface_downlink(state_dir: Any, outbox: DurableOutbox, memo: Dic
         queued += PredictiveStager.relay_to(outbox, state_dir)
     except Exception:
         pass
+    try:
+        from aurora_internal.dual_strata.inquiry_tiers import relay_down
+        queued += relay_down(state_dir, outbox, memo)
+    except Exception:
+        pass
     return queued
 
 
@@ -568,6 +577,9 @@ def apply_downlink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
             return "applied"  # already queued here; a resend changes nothing
         append_surface_guidance(state_dir, payload)
         return "applied"
+    if channel == "home_inquiry" and isinstance(payload, dict):
+        from aurora_internal.dual_strata.inquiry_tiers import receive_down
+        return receive_down(state_dir, payload)
     return "unknown_channel"
 
 

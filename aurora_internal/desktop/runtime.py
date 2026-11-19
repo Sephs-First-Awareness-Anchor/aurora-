@@ -66,6 +66,7 @@ class DesktopRuntime:
         self.first_pairing_applied = None
         self.home_requests_seen = {}
         self.pending_moves = []
+        self.inquiry_desk = None
 
     def _persist_jobs(self):
         with self._jobs_lock:
@@ -315,11 +316,25 @@ class DesktopRuntime:
             elif kind == "embodiment_move":
                 self._embodiment_move_requested(req)
                 done[kind] = done.get(kind, 0) + 1
+            elif kind in ("inquiry", "inquiry_evidence"):
+                self._inquiry_desk().take(req)
+                done[kind] = done.get(kind, 0) + 1
             else:
                 done["not_runnable_here"] = done.get("not_runnable_here", 0) + 1
         if requests:
             offset_path.write_text(str(offset), encoding="utf-8")
+        desk = self._inquiry_desk()
+        if desk.questions:
+            desk.tick()
         return {"requests": len(requests)}
+
+    def _inquiry_desk(self):
+        """Questions her surface raised, worked here in the order of home's
+        own felt pressure (inquiry_tiers)."""
+        if self.inquiry_desk is None:
+            from aurora_internal.dual_strata.inquiry_tiers import HomeInquiryDesk
+            self.inquiry_desk = HomeInquiryDesk(self.state_dir, self.systems)
+        return self.inquiry_desk
 
     def _embodiment_move_requested(self, req):
         """Her own request to move (3c) is carried out by home; filled in by
@@ -588,6 +603,7 @@ class DesktopRuntime:
                 "strata": self.link.status() if self.link else {"status": "not_started"},
                 "first_pairing": self._first_pairing_status(),
                 "home_requests": dict(self.home_requests_seen),
+                "shared_inquiry": self.inquiry_desk.status() if self.inquiry_desk is not None else None,
                 "acm": {**self.acm.status(), "coalesced_observations": self._coalesced_kernel} if self.acm else {"status": "not_configured"},
                 "surface": "local" if not self.link or self.link.surface_ready(self.surface_id) else "standby",
                 "owner_console": "available", "at": time.time()}

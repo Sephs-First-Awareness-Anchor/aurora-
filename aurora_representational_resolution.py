@@ -43,6 +43,22 @@ _DIMENSION_OWNER_AXIS = {
 }
 _AXIS_FIELDS = {"sub_law_c", "col_law_c"}
 _EPS = 1e-12
+_SURFACE_EVIDENCE_PER_REF = 16
+
+# On a device running as her surface, the shared inquiry's other end is home
+# (aurora_internal.dual_strata.inquiry_tiers.SurfaceInquiryTier).  A whole-mind
+# device and home itself never set it, so nothing changes for them.
+_HOME_TIER: Any = None
+
+
+def set_home_tier(tier: Any) -> None:
+    """Join this device's inquiry to home's; ``None`` makes it whole again."""
+    global _HOME_TIER
+    _HOME_TIER = tier
+
+
+def home_tier() -> Any:
+    return _HOME_TIER
 
 
 def perspective_owner_axis(value: Any) -> Optional[str]:
@@ -194,6 +210,19 @@ class RepresentationalResolutionEngine(_BaseEngine):
         # completed).
         if not hasattr(self, "_projection_frontiers"):
             self._projection_frontiers = {}
+        # The surface's end of a shared inquiry (only used while a home tier is
+        # set).  _passed_home marks what was carried up and with how much lived
+        # evidence; _surface_evidence keeps the recent lived consequences per
+        # ref so home can feel what she lived; _home_waiting holds an
+        # experiment home handed down while one of her own lenses was mid-test.
+        if not hasattr(self, "_passed_home"):
+            self._passed_home = {}
+        if not hasattr(self, "_surface_evidence"):
+            self._surface_evidence = {}
+        if not hasattr(self, "_surface_evidence_count"):
+            self._surface_evidence_count = {}
+        if not hasattr(self, "_home_waiting"):
+            self._home_waiting = {}
 
     def _projection_event(self, ref, pending, outcome, evaluation=None):
         self._projection_state()
@@ -586,10 +615,140 @@ class RepresentationalResolutionEngine(_BaseEngine):
             _base.MAX_CANDIDATE_FIELDS_PER_PASS,
         ) or [])
 
+    # ── The surface's end of a shared inquiry ──────────────────────────────
+
+    def _tier(self) -> Any:
+        """The home end of this engine's inquiry, or None when this engine is
+        the whole mind or is home itself."""
+        if getattr(self, "_is_home", False):
+            return None
+        return _HOME_TIER
+
+    def _note_surface_evidence(self, ref, *, pressure_before, pressure_after, source,
+                               context_tag="", consumer=""):
+        """Keep what she lived against this ref, so home can feel it too."""
+        if self._tier() is None:
+            return
+        from aurora_internal.dual_strata.inquiry_tiers import pressure_dict
+        self._projection_state()
+        key = ref.encode()
+        items = self._surface_evidence.setdefault(key, [])
+        items.append({
+            "pressure_before": pressure_dict(pressure_before),
+            "pressure_after": pressure_dict(pressure_after),
+            "source": str(source or ""), "context_tag": str(context_tag or ""),
+            "consumer": str(consumer or ""), "at": _base._now(),
+        })
+        del items[:-_SURFACE_EVIDENCE_PER_REF]
+        self._surface_evidence_count[key] = int(self._surface_evidence_count.get(key, 0)) + 1
+
+    def _adopt_home_stage(self, key, record):
+        self._active_stage_for_ref[key] = {
+            "mode": "home_inquiry",
+            "stage": None,
+            "candidate": dict(record.get("candidate") or {}),
+            "view": str(record.get("view") or ""),
+            "stage_mode": str(record.get("stage_mode") or ""),
+            "inquiry_id": str(record.get("inquiry_id") or ""),
+            "consumer": record.get("consumer"),
+            "context_scope": record.get("context_scope"),
+            "candidate_selection": "staged_at_home",
+        }
+        self._provisional_reads[key] = 0
+        self._candidate_downstream_effects.pop(key, None)
+        try:
+            self._projection_event(RepresentationalRef.decode(key),
+                                   self._active_stage_for_ref[key], "home_inquiry_adopted")
+        except Exception:
+            pass
+
+    def _take_home_inquiries(self) -> None:
+        """Adopt what home handed down; drop what home has closed."""
+        tier = self._tier()
+        if tier is None:
+            return
+        self._projection_state()
+        try:
+            records = list(tier.inbox() or [])
+        except Exception:
+            records = []
+        for record in records:
+            key = str(record.get("ref") or "")
+            kind = str(record.get("kind") or "")
+            if not key:
+                continue
+            pending = self._active_stage_for_ref.get(key)
+            if kind == "stage":
+                if pending is not None and pending.get("mode") == "perspective_projection":
+                    self._home_waiting[key] = dict(record)   # her own lens finishes first
+                else:
+                    self._adopt_home_stage(key, record)
+            elif kind == "closed":
+                inquiry_id = str(record.get("inquiry_id") or "")
+                if (pending is not None and pending.get("mode") == "home_inquiry"
+                        and (not inquiry_id or pending.get("inquiry_id") == inquiry_id)):
+                    self._active_stage_for_ref.pop(key, None)
+                    self._provisional_reads[key] = 0
+                    self._candidate_downstream_effects.pop(key, None)
+                waiting = self._home_waiting.get(key)
+                if waiting is not None and (not inquiry_id or waiting.get("inquiry_id") == inquiry_id):
+                    self._home_waiting.pop(key, None)
+                mark = self._passed_home.get(key)
+                if mark is not None:
+                    mark["home_outcome"] = str(record.get("outcome") or "closed")
+                try:
+                    self._projection_frontier_event(RepresentationalRef.decode(key),
+                                                    outcome="home_inquiry_closed",
+                                                    projection_count=0, attempted_count=0)
+                except Exception:
+                    pass
+        for key, record in list(self._home_waiting.items()):
+            if key not in self._active_stage_for_ref:
+                self._home_waiting.pop(key, None)
+                self._adopt_home_stage(key, record)
+
+    def _pass_inquiry_home(self, ref, frontier, consumer, context_scope):
+        """Her lenses here are spent and the pressure remains: what is left is
+        retained growth, which lives at home.  Carry the question up with what
+        she lived, once per new piece of lived evidence."""
+        key = ref.encode()
+        count = int(self._surface_evidence_count.get(key, 0))
+        mark = self._passed_home.get(key)
+        if mark is not None and count <= int(mark.get("evidence_count", -1)):
+            return None
+        projections = list((frontier or {}).get("projections") or [])
+        sent_before = int((mark or {}).get("evidence_count", 0))
+        evidence = list(self._surface_evidence.get(key) or [])
+        new = evidence[-max(0, count - sent_before):] if mark is not None else evidence
+        payload = {
+            "ref": key,
+            "pressure": float(self.inadequacy_pressure(ref)),
+            "frontier": {
+                "projection_count": len(projections),
+                "attempted_count": sum(1 for p in projections if self._projection_was_attempted(p)),
+            },
+            "consumer": str(consumer or ""),
+            "context_scope": context_scope,
+            "evidence": new,
+        }
+        try:
+            sent = bool(self._tier().pass_up(payload))
+        except Exception:
+            sent = False
+        if not sent:
+            return None
+        self._passed_home[key] = {"at": _base._now(), "evidence_count": count,
+                                  "consumer": consumer, "context_scope": context_scope}
+        self._projection_frontier_event(ref, outcome="passed_home",
+                                        projection_count=payload["frontier"]["projection_count"],
+                                        attempted_count=payload["frontier"]["attempted_count"])
+        return {"mode": "passed_home", "ref": key, "evidence_sent": len(new)}
+
     def investigate_if_pressured(self, ref, *, consumer="auto", context_scope=None):
         self._projection_state()
         if self._projection_resolution_hold:
             return None
+        self._take_home_inquiries()
         key = ref.encode()
         if key in self._active_stage_for_ref or self.inadequacy_pressure(ref) <= 0.0:
             return None
@@ -642,6 +801,8 @@ class RepresentationalResolutionEngine(_BaseEngine):
                 ),
             )
 
+        if self._tier() is not None:
+            return self._pass_inquiry_home(ref, frontier, consumer, context_scope)
         candidates = self._field_candidates_after_frontier(ref, frontier)
         if not candidates:
             return None
@@ -731,6 +892,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         returning the view. Existing one-argument callers remain compatible.
         """
         self._projection_state()
+        self._take_home_inquiries()
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
         if pending is None and self.inadequacy_pressure(ref) > 0.0:
@@ -740,6 +902,15 @@ class RepresentationalResolutionEngine(_BaseEngine):
                 context_scope=context_scope,
             )
             pending = self._active_stage_for_ref.get(key)
+        if pending is not None and pending.get("mode") == "home_inquiry":
+            # The experiment is home's; she reads its view here, where its
+            # consequence will arrive.
+            try:
+                view = RepresentationalRef.decode(str(pending.get("view") or ""))
+            except Exception:
+                return self.current_resolution(ref)
+            self._provisional_reads[key] = self._provisional_reads.get(key, 0) + 1
+            return view
         if pending is None or pending.get("mode") != "perspective_projection":
             return super().provisional_resolution(ref)
         try:
@@ -833,6 +1004,24 @@ class RepresentationalResolutionEngine(_BaseEngine):
         self._projection_state()
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
+        if pending is not None and pending.get("mode") == "home_inquiry":
+            # Kept to travel home with the consequence; home seals it against
+            # its own staged candidate.
+            if not self._has_material_downstream_difference(downstream_difference):
+                return None
+            record = {
+                "mode": "home_inquiry",
+                "inquiry_id": pending.get("inquiry_id"),
+                "downstream_difference_produced": downstream_difference,
+                "action_prediction_affected": action_or_prediction_affected,
+                "baseline_expectation": dict(baseline_expectation or {}),
+                "conditioned_expectation": dict(conditioned_expectation or {}),
+                "consumer": str(consumer or ""),
+                "metadata": dict(metadata or {}),
+                "recorded_at": _base._now(),
+            }
+            self._candidate_downstream_effects[key] = record
+            return dict(record)
         if pending is None or pending.get("mode") != "perspective_projection":
             return super().record_candidate_downstream_effect(
                 ref,
@@ -913,7 +1102,11 @@ class RepresentationalResolutionEngine(_BaseEngine):
     def _clear_frontier_if_pressure_resolved(self, ref: RepresentationalRef) -> None:
         self._projection_state()
         if self.inadequacy_pressure(ref) <= 0.0:
-            self._projection_frontiers.pop(ref.encode(), None)
+            key = ref.encode()
+            self._projection_frontiers.pop(key, None)
+            # This episode is over here; a new one passes up afresh.
+            self._passed_home.pop(key, None)
+            self._surface_evidence.pop(key, None)
 
     def complete_field_inquiry(self, ref, candidate, stage, **kwargs):
         """A completed real refinement experiment ends this optic episode."""
@@ -941,6 +1134,9 @@ class RepresentationalResolutionEngine(_BaseEngine):
         its provisional read count stay exactly as that consumer left them.
         """
         self._projection_state()
+        self._note_surface_evidence(ref, pressure_before=pressure_before,
+                                    pressure_after=pressure_after, source=source,
+                                    context_tag=context_tag, consumer=consumer)
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
         reads_before = int(self._provisional_reads.get(key, 0) or 0)
@@ -972,8 +1168,17 @@ class RepresentationalResolutionEngine(_BaseEngine):
                              consumer="auto", candidate_evaluation=None):
         """A real consumer's participation: closes a staged projection's test."""
         self._projection_state()
+        self._take_home_inquiries()
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
+        if pending is not None and pending.get("mode") == "home_inquiry":
+            return self._participate_in_home_inquiry(
+                ref, pending, pressure_before=pressure_before, pressure_after=pressure_after,
+                source=source, context_tag=context_tag, extra_trace=extra_trace, notes=notes,
+                consumer=consumer, candidate_evaluation=candidate_evaluation)
+        self._note_surface_evidence(ref, pressure_before=pressure_before,
+                                    pressure_after=pressure_after, source=source,
+                                    context_tag=context_tag, consumer=consumer)
         if pending is None or pending.get("mode") != "perspective_projection":
             result = super().record_participation(
                 ref,
@@ -1019,6 +1224,57 @@ class RepresentationalResolutionEngine(_BaseEngine):
                 consumer=str(pending.get("consumer") or consumer),
                 context_scope=pending.get("context_scope"),
             )
+        return result
+
+    def _participate_in_home_inquiry(self, ref, pending, *, pressure_before, pressure_after,
+                                     source, context_tag, extra_trace, notes, consumer,
+                                     candidate_evaluation):
+        """She lived a consequence of home's experiment here.  It is felt here
+        as observation and goes home as evidence; only home completes it."""
+        from aurora_internal.dual_strata.inquiry_tiers import pressure_dict
+        key = ref.encode()
+        self._active_stage_for_ref.pop(key, None)
+        previous_hold = self._projection_resolution_hold
+        self._projection_resolution_hold = True
+        try:
+            result = _BaseEngine.record_participation(
+                self,
+                ref,
+                pressure_before=pressure_before,
+                pressure_after=pressure_after,
+                source=source,
+                context_tag=context_tag,
+                extra_trace=extra_trace,
+                notes=notes,
+                consumer=consumer,
+                candidate_evaluation=None,
+            )
+        finally:
+            self._projection_resolution_hold = previous_hold
+            self._active_stage_for_ref[key] = pending
+        evidence = {
+            "ref": key,
+            "inquiry_id": pending.get("inquiry_id"),
+            "pressure_before": pressure_dict(pressure_before),
+            "pressure_after": pressure_dict(pressure_after),
+            "source": str(source or ""),
+            "context_tag": str(context_tag or ""),
+            "consumer": str(consumer or ""),
+            "provisional_reads": int(self._provisional_reads.get(key, 0) or 0),
+            "downstream_effect": self._candidate_downstream_effects.get(key),
+            "candidate_evaluation": dict(candidate_evaluation) if candidate_evaluation else None,
+        }
+        try:
+            tier = self._tier()
+            sent = bool(tier is not None and tier.send_evidence(evidence))
+        except Exception:
+            sent = False
+        if sent:
+            # Delivered reads and effects belong to home's ledger now.
+            self._provisional_reads[key] = 0
+            self._candidate_downstream_effects.pop(key, None)
+        self._projection_event(ref, pending, "evidence_sent_home" if sent else "evidence_waiting",
+                               {"consumer": consumer})
         return result
 
 

@@ -69,6 +69,7 @@ OWNERSHIP_TABLE: Tuple[Tuple[str, str], ...] = (
     ("device_log.json", SURFACE_PRESENT),
     ("face_expression_journal.jsonl", SURFACE_PRESENT),
     ("habitat/*", SURFACE_PRESENT),                         # Space and Self live on the surface
+    ("genealogy_surface/*", SURFACE_PRESENT),               # the surface's own session genealogy
     # journals
     ("runtime_faults.jsonl", JOURNAL),
     ("register_log.jsonl", JOURNAL),

@@ -1189,6 +1189,11 @@ class RepresentationalResolutionEngine:
     def _save(self) -> None:
         if self.root is None:
             return
+        # Her retained representational growth is home's to write; on a
+        # surface-only device these ledgers are read, never rewritten.
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self.root / "resolution_genealogy.json"):
+            return
         try:
             gpath = self._genealogy_path()
             if gpath is not None:

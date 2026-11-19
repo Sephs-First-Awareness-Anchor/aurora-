@@ -2666,6 +2666,21 @@ def initialize(state_dir: str = "") -> str:
         enable_surface_only(os.path.abspath(_strata_state_dir))
         _evo_sim = None
         _defer_to_home("evolutionary_sim")
+        # One inquiry across both strata: her lenses run here, offline too;
+        # what they cannot settle is carried home, and home's experiments come
+        # back here to be lived.
+        try:
+            import aurora_representational_resolution as _rr
+            from aurora_internal.dual_strata.inquiry_tiers import SurfaceInquiryTier
+            _rr.set_home_tier(SurfaceInquiryTier(os.path.abspath(_strata_state_dir)))
+        except Exception as _tier_exc:
+            log.warning("Shared inquiry not joined to home: %s", _tier_exc)
+    else:
+        try:
+            import aurora_representational_resolution as _rr
+            _rr.set_home_tier(None)
+        except Exception:
+            pass
     # Prevent _ensure_runtime_dependencies() from running subprocess pip-install,
     # which crashes Chaquopy's Android Python.
     os.environ["AURORA_SKIP_DEP_INSTALL"] = "1"
