@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 
 import '../aurora_bridge.dart';
 import '../widgets/aurora_orb.dart';
+import '../widgets/ui_diagnostics.dart';
 
 const _purple = Color(0xFFA020F0);
 const _bg     = Color(0xFF0D0D0F);
@@ -50,6 +51,11 @@ class _HomeScreenState extends State<HomeScreen>
   // state, mirrors _axisState's shape/update pattern exactly. detected=false
   // is a real, meaningful value ("checked, nobody in frame"), not just the
   // absence of an update.
+  // Her live pressure field and what she is attending to (surface
+  // restructure 4): the face reads both every second.
+  Map<String, double> _pressure = const {};
+  String _attention = '';
+
   bool   _faceDetected   = false;
   double _faceFraction   = 0.0;
   double _faceOffsetX    = 0.0;
@@ -129,6 +135,13 @@ class _HomeScreenState extends State<HomeScreen>
           if (type == 'observed' && mounted) {
             setState(() => _screenObserverReady = true);
           }
+        case 'native':
+          // A native part (the presence line, her voice reader) failed:
+          // shown on screen, where it can be screenshotted.
+          if (type == 'error') {
+            final detail = event['detail'] as String? ?? '';
+            UiDiagnostics.report(text.isEmpty ? 'native' : text, detail.isEmpty ? 'failed' : detail);
+          }
         default: // aurora service events
           // Diagnostic hardening (per Sunni: silent boot crashes) — present
           // only on the boot immediately after AuroraService.kt's
@@ -167,6 +180,10 @@ class _HomeScreenState extends State<HomeScreen>
                     'B': (event['B'] as double?) ?? _axisState['B']!,
                     'A': (event['A'] as double?) ?? _axisState['A']!,
                   };
+                  final p = event['pressure'];
+                  if (p is Map<String, double> && p.isNotEmpty) _pressure = p;
+                  final att = event['attention'];
+                  if (att is String) _attention = att;
                 });
               }
             case 'face_state':
@@ -226,6 +243,7 @@ class _HomeScreenState extends State<HomeScreen>
                 // Show the real error message so it's visible for diagnosis.
                 final short = text.length > 120 ? '${text.substring(0, 120)}…' : text;
                 setState(() { _aiReady = false; _statusTxt = 'Boot error: $short'; });
+                UiDiagnostics.report('boot', text);
               }
             default:
               break;
@@ -364,6 +382,18 @@ class _HomeScreenState extends State<HomeScreen>
     AuroraBridge.stopListening();
     setState(() { _speaking = true; _listening = false; });
     await AuroraBridge.speak(text);
+  }
+
+  // She feels her own face: each settled change of expression goes to her
+  // surface journal with the state it came from.  A failure is shown.
+  void _onExpressionSettled(Map<String, dynamic> settled) {
+    AuroraBridge.recordFaceExpression(settled).then((answer) {
+      if (answer['ok'] != true) {
+        UiDiagnostics.report('her face journal', answer['error'] ?? 'not recorded');
+      }
+    }).catchError((Object e, StackTrace st) {
+      UiDiagnostics.report('her face journal', e, st);
+    });
   }
 
   // Snap pulse to 1.0 on each spoken word, then decay — driven by TTS onRangeStart.
@@ -578,6 +608,9 @@ class _HomeScreenState extends State<HomeScreen>
                 pulse:     _pulseAnim,
                 axisState: _axisState,
                 size:      116,   // height ≈ 116 × 1.9 = 220 dp
+                pressure:  _pressure,
+                attention: _attention,
+                onExpressionSettled: _onExpressionSettled,
                 faceDetected: _faceDetected,
                 faceFraction: _faceFraction,
                 faceOffsetX:  _faceOffsetX,
@@ -620,6 +653,9 @@ class _HomeScreenState extends State<HomeScreen>
                             axisState: _axisState,
                             size:      h * 0.48,
                             height:    h,
+                            pressure:  _pressure,
+                            attention: _attention,
+                            onExpressionSettled: _onExpressionSettled,
                             faceDetected: _faceDetected,
                             faceFraction: _faceFraction,
                             faceOffsetX:  _faceOffsetX,

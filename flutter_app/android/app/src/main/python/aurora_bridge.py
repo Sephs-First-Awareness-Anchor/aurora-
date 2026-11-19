@@ -8806,7 +8806,14 @@ def get_axis_state() -> str:
         _axis_live_read_at = now
         _refresh_axis_state_from_systems()
     with _axis_state_lock:
-        return _json.dumps(_last_axis_state)
+        out = dict(_last_axis_state)
+    # What she is attending to (camera, audio, screen or none), so her
+    # eyes can follow it.  Read only; nothing here chooses it for her.
+    try:
+        out["attention"] = _current_attention_modality() or ""
+    except Exception:
+        out["attention"] = ""
+    return _json.dumps(out)
 
 
 def provide_hardware_sensors(json_str: str) -> None:
@@ -10840,6 +10847,79 @@ def get_face_state() -> str:
     import json as _json
     with _last_face_observation_lock:
         return _json.dumps(_last_face_observation)
+
+
+FACE_EXPRESSION_JOURNAL = "face_expression_journal.jsonl"
+_FACE_JOURNAL_KEEP = 2000
+_face_journal_lock = threading.Lock()
+
+
+def _face_journal_path() -> str:
+    state_dir = str((_systems or {}).get("state_dir") or _strata_state_dir or "aurora_state")
+    os.makedirs(state_dir, exist_ok=True)
+    return os.path.join(state_dir, FACE_EXPRESSION_JOURNAL)
+
+
+def record_face_expression(json_str: str) -> str:
+    """She feels her own face (surface restructure 4, Sir's adjustment).
+
+    The face is drawn every frame, but only a meaningful change of
+    expression comes here: one whose targets moved past the dead-band and
+    then settled.  It is kept with the state it came from in
+    face_expression_journal.jsonl (a surface-present store, so it travels
+    with her on a move), and offered to her concept crystal as a
+    self-observation at the axis coordinate it came from.  Frames never
+    come here, so her history is not filled with near-identical ones.
+
+    Returns JSON {"ok": true} or {"ok": false, "error": ...}; the face
+    shows any error on screen.
+    """
+    import json as _json
+    if _systems is None:
+        # Not booted yet: she isn't here to feel it, and there is no state
+        # directory to keep it in.  Nothing failed.
+        return _json.dumps({"ok": True, "skipped": "not_booted"})
+    try:
+        data = _json.loads(str(json_str or "{}"))
+        if not isinstance(data, dict):
+            return _json.dumps({"ok": False, "error": "expected a JSON object"})
+        axes = {k: float(data.get("axes", {}).get(k, 0.5)) for k in ("X", "T", "N", "B", "A")}
+        face = {str(k): round(float(v), 4) for k, v in dict(data.get("face") or {}).items()}
+        row = {
+            "at": round(time.time(), 3),
+            "axes": {k: round(v, 4) for k, v in axes.items()},
+            "pressure": {str(k): round(float(v), 4) for k, v in dict(data.get("pressure") or {}).items()},
+            "face": face,
+            "speaking": bool(data.get("speaking", False)),
+            "attention": str(data.get("attention") or "")[:24],
+        }
+        path = _face_journal_path()
+        with _face_journal_lock:
+            with open(path, "a", encoding="utf-8") as handle:
+                handle.write(_json.dumps(row, sort_keys=True) + "\n")
+            try:
+                if os.path.getsize(path) > 1_500_000:
+                    with open(path, "r", encoding="utf-8") as handle:
+                        lines = handle.readlines()[-_FACE_JOURNAL_KEEP:]
+                    tmp = path + ".tmp"
+                    with open(tmp, "w", encoding="utf-8") as handle:
+                        handle.writelines(lines)
+                    os.replace(tmp, path)
+            except OSError:
+                pass
+        if _concept_registry is not None and face:
+            ref = "face:" + ",".join(f"{k}{v:+.1f}" for k, v in sorted(face.items())[:6])
+            _concept_registry.observe_sensory(axes, "self_obs", ref, face)
+        return _json.dumps({"ok": True})
+    except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:record_face_expression",
+            exc=exc,
+            context={"function": "record_face_expression", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
+        return _json.dumps({"ok": False, "error": f"{type(exc).__name__}: {exc}"[:300]})
 
 
 def _estimate_pitch_autocorr(samples, sample_rate: int):

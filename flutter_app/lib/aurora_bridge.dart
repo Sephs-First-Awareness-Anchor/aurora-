@@ -44,7 +44,38 @@ class AuroraBridge {
     // the *next* boot's "ready"/"error" event under this key -- same
     // optional-field pattern as healthOverallMatch above.
     final previousCrashMatch = RegExp(r'"previous_crash"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    // Her live pressure field and what she is attending to ride on
+    // axis_state events as a nested object and a string (surface
+    // restructure 4).  The flat regexes above can't read a nested object,
+    // so this one event type is decoded properly.
+    Map<String, double> pressure = const {};
+    String attention = '';
+    String detail = '';
+    final type = typeMatch?.group(1) ?? 'unknown';
+    if (type == 'axis_state' || type == 'error') {
+      try {
+        final decoded = jsonDecode(json);
+        if (decoded is Map) {
+          final p = decoded['pressure'];
+          if (p is Map) {
+            pressure = {
+              for (final e in p.entries)
+                if (e.value is num) e.key.toString(): (e.value as num).toDouble(),
+            };
+          }
+          final a = decoded['attention'];
+          if (a is String) attention = a;
+          final d = decoded['detail'];
+          if (d is String) detail = d;
+        }
+      } catch (_) {
+        // A malformed event keeps the flat fields above; nothing else to do.
+      }
+    }
     return {
+      'pressure':  pressure,
+      'attention': attention,
+      'detail':    detail,
       'source':    sourceMatch?.group(1) ?? 'aurora',
       'type':      typeMatch?.group(1)   ?? 'unknown',
       'text':      textMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
@@ -79,6 +110,16 @@ class AuroraBridge {
     // optional doesn't change matching for values that never have one.
     final m = RegExp('"$key"\\s*:\\s*(-?[0-9]+\\.?[0-9]*)').firstMatch(json);
     return m != null ? double.tryParse(m.group(1)!) : null;
+  }
+
+  /// She feels her own face: a settled change of expression, with the
+  /// state it came from, kept in her surface journal.  Answers the
+  /// bridge's JSON ({"ok": true} or {"ok": false, "error": ...}).
+  static Future<Map<String, dynamic>> recordFaceExpression(Map<String, dynamic> settled) async {
+    final result = await _channel.invokeMethod<String>(
+        'recordFaceExpression', {'json': jsonEncode(settled)});
+    final decoded = jsonDecode(result ?? '{}');
+    return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{'ok': false, 'error': 'no answer'};
   }
 
   static Future<String> sendMessage(String text) async {
