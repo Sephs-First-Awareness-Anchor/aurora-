@@ -382,6 +382,7 @@
    "members": [
     "aurora.py",
     "aurora_daemon.py",
+    "aurora_hub.py",
     "aurora_internal/__init__.py",
     "aurora_internal/aurora_turn_chain.py",
     "aurora_runtime.py",
@@ -408,6 +409,10 @@
     [
      "aurora_daemon.py",
      "corpus_runner.py"
+    ],
+    [
+     "aurora_hub.py",
+     "aurora_internal/__init__.py"
     ],
     [
      "aurora_runtime.py",
@@ -2205,6 +2210,10 @@
     ],
     [
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt"
+    ],
+    [
+     "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
     ],
     [
@@ -2216,7 +2225,7 @@
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
     ]
    ],
-   "support": "supported"
+   "support": "partly_supported"
   },
   "acm_xaurora.1": {
    "domain": "acm",
@@ -3468,7 +3477,7 @@
    "domain": "desktop",
    "subsystem": "runtime",
    "also": [],
-   "composite": null,
+   "composite": "runtime.1",
    "layer": null,
    "layer_role": null,
    "language": "python",
@@ -15863,7 +15872,7 @@
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt",
      "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
     ],
-    "status": "supported"
+    "status": "partly_supported"
    },
    {
     "members": [
@@ -15942,6 +15951,7 @@
     "members": [
      "aurora.py",
      "aurora_daemon.py",
+     "aurora_hub.py",
      "aurora_internal/__init__.py",
      "aurora_internal/aurora_turn_chain.py",
      "aurora_runtime.py",

@@ -45,7 +45,7 @@ Not covered:
 
 | Higher order (subsystem) | Holds | Composites | Files in composites | Base files |
 |---|---|---|---|---|
-| Entry and runtime | Entry points, the turn loop, process orchestration, launchers and service units. | 1 | 7 | 21 |
+| Entry and runtime | Entry points, the turn loop, process orchestration, launchers and service units. | 1 | 8 | 20 |
 | Foundation and constraint layers | Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonComp, pressure and leverage. | 4 | 24 | 14 |
 | Beings and dimensional systems | I-State beings, dimensional systems, consciousness assembly and simulation (the L2 to L4 and L7 layer files). | 1 | 4 | 1 |
 | Crystal ops | The concept-crystal store, its evidence-based growth, ingestion and persistence, interaction crystals, and the crystal types QuasiArch shares with live processing. | 4 | 24 | 2 |
@@ -212,7 +212,7 @@ Support is the knowledge graph's verdict: `supported` and `partly_supported` mea
 
 | Composite | Subsystem | Hub | Files | Support |
 |---|---|---|---|---|
-| `runtime.1` | Entry and runtime | `aurora.py` | 7 | partly_supported |
+| `runtime.1` | Entry and runtime | `aurora.py` | 8 | partly_supported |
 | `foundation.1` | Foundation and constraint layers | `aurora_internal/aurora_noncomp_registry.py` | 18 | partly_supported |
 | `foundation.2` | Foundation and constraint layers | `aurora_computational_model.py` | 2 | supported |
 | `foundation.3` | Foundation and constraint layers | `aurora_internal/aurora_pressure_classifier.py` | 2 | supported |
@@ -258,7 +258,7 @@ Support is the knowledge graph's verdict: `supported` and `partly_supported` mea
 | `phone_ui.1` | App shell and screens | `flutter_app/lib/main.dart` | 4 | partly_supported |
 | `phone_habitat.1` | Habitat | `flutter_app/lib/habitat/habitat_gesture_layer.dart` | 6 | partly_supported |
 | `phone_python.1` | On-device Python | `flutter_app/android/app/src/main/python/aurora_bridge.py` | 2 | supported |
-| `phone_android.1` | Android services | `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt` | 5 | supported |
+| `phone_android.1` | Android services | `flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt` | 5 | partly_supported |
 | `acm_xaurora.1` | X-Aurora ISA, VM and JIT | `aurora-acm/kernel/src/xaurora/isa.rs` | 4 | partly_supported |
 | `acm_expression.1` | Expression | `aurora-acm/kernel/src/expression/mod.rs` | 4 | partly_supported |
 | `acm_hw.1` | Hardware drivers | `aurora-acm/kernel/src/hw/mod.rs` | 7 | partly_supported |
@@ -343,7 +343,7 @@ Composite is blank for a base file that no import joins to another file in its s
 |---|---|---|---|
 | `aurora.py` | runtime.1 | orchestrator | name_and_docstring |
 | `aurora_daemon.py` | runtime.1 |  | name_and_docstring |
-| `aurora_hub.py` |  |  | name_and_docstring |
+| `aurora_hub.py` | runtime.1 |  | name_and_docstring |
 | `aurora_internal/__init__.py` | runtime.1 |  | name_and_docstring |
 | `aurora_internal/aurora_turn_chain.py` | runtime.1 |  | name_and_docstring |
 | `aurora_internal/aurora_turn_compute_graph.py` |  |  | name_and_docstring |

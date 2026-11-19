@@ -374,7 +374,7 @@
 {"external": 1, "owner": "fn:aurora._write_dual_strata_json"}
 {"builtin_value": 1, "owner": "fn:aurora.aurora_go_play"}
 {"builtin_value": 1, "owner": "fn:aurora.aurora_trade_blows"}
-{"builtin_value": 88, "external": 34, "owner": "fn:aurora.boot_aurora"}
+{"builtin_value": 88, "external": 35, "owner": "fn:aurora.boot_aurora"}
 {"builtin_value": 1, "owner": "fn:aurora.boot_aurora._ccr_bucket_from_facets"}
 {"builtin_value": 3, "owner": "fn:aurora.boot_aurora._h_seek"}
 {"builtin_value": 70, "external": 41, "owner": "fn:aurora.chat"}
@@ -384,7 +384,7 @@
 {"builtin_value": 8, "external": 2, "owner": "fn:aurora.explore"}
 {"external": 4, "owner": "fn:aurora.fetch_and_feed"}
 {"external": 1, "owner": "fn:aurora.main"}
-{"builtin_value": 2, "owner": "fn:aurora.process_external_user_turn"}
+{"builtin_value": 3, "owner": "fn:aurora.process_external_user_turn"}
 {"builtin_value": 3, "external": 2, "owner": "fn:aurora.run_corpus_ingestion"}
 {"builtin_value": 2, "external": 2, "owner": "fn:aurora.run_corpus_ingestion._record_corpus_observation"}
 {"builtin_value": 3, "owner": "fn:aurora.run_corpus_ingestion._resolve_corpus_response_learning"}
@@ -407,7 +407,13 @@
 {"external": 5, "owner": "fn:aurora_625_pressure_map.Aurora625PressureMap.save"}
 {"builtin_value": 1, "owner": "fn:aurora_625_pressure_map._slot_axes"}
 {"external": 1, "owner": "fn:aurora_625_pressure_map.build_from_descriptors"}
+{"external": 2, "owner": "fn:aurora_acm_bridge.HostedACMBridge.__init__"}
+{"external": 3, "owner": "fn:aurora_acm_bridge.HostedACMBridge._run"}
+{"external": 1, "owner": "fn:aurora_acm_bridge.HostedACMBridge.feed"}
+{"external": 1, "owner": "fn:aurora_acm_bridge.HostedACMBridge.start"}
+{"external": 2, "owner": "fn:aurora_acm_bridge.HostedACMBridge.status"}
 {"external": 1, "owner": "fn:aurora_acm_bridge.StatusReceiver._decode"}
+{"builtin_value": 1, "owner": "fn:aurora_acm_bridge.StatusReceiver.feed"}
 {"external": 2, "owner": "fn:aurora_acm_bridge._boot_full_stack"}
 {"external": 1, "owner": "fn:aurora_acm_bridge._connect"}
 {"builtin_value": 1, "owner": "fn:aurora_acm_bridge._read_axes_from_collective"}
@@ -699,7 +705,7 @@
 {"builtin_value": 1, "external": 2, "owner": "fn:aurora_curiosity_engine.CuriosityEngine.run_curiosity_cycle"}
 {"builtin_value": 2, "owner": "fn:aurora_curiosity_engine._map_axis_to_curiosity_type"}
 {"builtin_value": 6, "owner": "fn:aurora_curiosity_engine._register_background_processes"}
-{"external": 1, "owner": "fn:aurora_curiosity_engine.start_curiosity_background"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_curiosity_engine.start_curiosity_background"}
 {"builtin_value": 16, "external": 3, "owner": "fn:aurora_daemon.ReactivityMonitor.scan"}
 {"builtin_value": 1, "external": 4, "owner": "fn:aurora_daemon._append_room_activity"}
 {"builtin_value": 1, "external": 4, "owner": "fn:aurora_daemon._append_room_note"}
@@ -807,15 +813,15 @@
 {"builtin_value": 1, "owner": "fn:aurora_desktop_agent.DesktopAgent.read_page"}
 {"external": 2, "owner": "fn:aurora_desktop_agent.DesktopAgent.screenshot"}
 {"external": 1, "owner": "fn:aurora_desktop_agent.DesktopAgent.search"}
-{"builtin_value": 4, "external": 4, "owner": "fn:aurora_desktop_agent._xdg_open"}
+{"builtin_value": 4, "external": 5, "owner": "fn:aurora_desktop_agent._xdg_open"}
 {"external": 7, "owner": "fn:aurora_desktop_agent.capture_system_audio"}
 {"external": 4, "owner": "fn:aurora_desktop_agent.clipboard_op"}
 {"external": 2, "owner": "fn:aurora_desktop_agent.file_manager_op"}
-{"builtin_value": 5, "external": 3, "owner": "fn:aurora_desktop_agent.launch_application"}
+{"builtin_value": 6, "external": 5, "owner": "fn:aurora_desktop_agent.launch_application"}
 {"external": 5, "owner": "fn:aurora_desktop_agent.macro_automation"}
 {"builtin_value": 3, "external": 3, "owner": "fn:aurora_desktop_agent.process_control"}
 {"external": 2, "owner": "fn:aurora_desktop_agent.shell_command"}
-{"external": 3, "owner": "fn:aurora_desktop_agent.system_operation"}
+{"external": 5, "owner": "fn:aurora_desktop_agent.system_operation"}
 {"builtin_value": 1, "owner": "fn:aurora_dev_telemetry.DevTelemetry.__init__"}
 {"builtin_value": 28, "owner": "fn:aurora_dev_telemetry.DevTelemetry.report"}
 {"external": 1, "owner": "fn:aurora_dev_telemetry.EpochSnapshot.__init__"}
@@ -1372,7 +1378,7 @@
 {"external": 1, "owner": "fn:aurora_hardware_io.inject_utterance"}
 {"builtin_value": 6, "owner": "fn:aurora_hardware_io.install_instructions"}
 {"external": 1, "owner": "fn:aurora_hardware_io.probe"}
-{"builtin_value": 1, "owner": "fn:aurora_hardware_io.speak"}
+{"builtin_value": 2, "owner": "fn:aurora_hardware_io.speak"}
 {"external": 2, "owner": "fn:aurora_hub.StateReader._count_dir"}
 {"builtin_value": 1, "owner": "fn:aurora_hub.StateReader._fail_trends"}
 {"external": 1, "owner": "fn:aurora_hub.StateReader._lex_size"}
@@ -1397,7 +1403,7 @@
 {"builtin_value": 1, "owner": "fn:aurora_hub.StateReader.trait_scores"}
 {"external": 2, "owner": "fn:aurora_hub._augment_import_paths"}
 {"external": 1, "owner": "fn:aurora_hub._auto_install"}
-{"builtin_value": 3, "external": 466, "owner": "fn:aurora_hub._build_ui"}
+{"builtin_value": 3, "external": 475, "owner": "fn:aurora_hub._build_ui"}
 {"builtin_value": 1, "external": 2, "owner": "fn:aurora_hub._build_ui._apply_zoom"}
 {"external": 1, "owner": "fn:aurora_hub._build_ui._apply_zoom._rescale"}
 {"external": 2, "owner": "fn:aurora_hub._build_ui._dg_deploy"}
@@ -1421,17 +1427,19 @@
 {"builtin_value": 6, "external": 5, "owner": "fn:aurora_hub._build_ui._gov_refresh"}
 {"external": 1, "owner": "fn:aurora_hub._build_ui._load_coach_history"}
 {"external": 3, "owner": "fn:aurora_hub._build_ui._make_panel"}
-{"external": 1, "owner": "fn:aurora_hub._build_ui._poll_chat_response"}
+{"external": 2, "owner": "fn:aurora_hub._build_ui._poll_chat_response"}
 {"external": 3, "owner": "fn:aurora_hub._build_ui._qao_gauge"}
 {"builtin_value": 2, "external": 4, "owner": "fn:aurora_hub._build_ui._queue_surface_turn"}
 {"external": 1, "owner": "fn:aurora_hub._build_ui._read_state_file"}
 {"external": 1, "owner": "fn:aurora_hub._build_ui._refresh_diag_live"}
-{"builtin_value": 49, "external": 11, "owner": "fn:aurora_hub._build_ui._refresh_room"}
+{"builtin_value": 50, "external": 11, "owner": "fn:aurora_hub._build_ui._refresh_room"}
 {"builtin_value": 1, "owner": "fn:aurora_hub._build_ui._room_view"}
 {"builtin_value": 11, "external": 3, "owner": "fn:aurora_hub._build_ui._run_live_checks"}
 {"external": 1, "owner": "fn:aurora_hub._build_ui._run_live_checks._read_json"}
+{"builtin_value": 2, "external": 1, "owner": "fn:aurora_hub._build_ui._send_chat"}
 {"builtin_value": 1, "external": 4, "owner": "fn:aurora_hub._build_ui._send_coaching"}
 {"builtin_value": 1, "external": 4, "owner": "fn:aurora_hub._build_ui._send_room_reply"}
+{"builtin_value": 25, "owner": "fn:aurora_hub._build_ui._strata_lines"}
 {"external": 1, "owner": "fn:aurora_hub._build_ui._surface_daemon_alive"}
 {"builtin_value": 1, "owner": "fn:aurora_hub._build_ui._tag_for_line"}
 {"builtin_value": 1, "owner": "fn:aurora_hub._build_ui._tag_for_surface_line"}
@@ -1621,6 +1629,7 @@
 {"builtin_value": 3, "external": 3, "owner": "fn:aurora_internal.aurora_clone_harvest.absorb_harvest"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.aurora_clone_harvest.absorb_harvest._close_segment"}
 {"builtin_value": 3, "external": 2, "owner": "fn:aurora_internal.aurora_clone_harvest.absorb_harvest._open_segment"}
+{"external": 1, "owner": "fn:aurora_internal.aurora_clone_harvest.absorb_harvest._with_field"}
 {"builtin_value": 6, "owner": "fn:aurora_internal.aurora_clone_harvest.concept_deltas"}
 {"external": 2, "owner": "fn:aurora_internal.aurora_clone_harvest.iter_harvest"}
 {"builtin_value": 9, "owner": "fn:aurora_internal.aurora_clone_harvest.listen_to"}
@@ -2894,7 +2903,7 @@
 {"builtin_value": 1, "owner": "fn:aurora_internal.aurora_rest_ledger.rest_rate"}
 {"builtin_value": 11, "owner": "fn:aurora_internal.aurora_rubric_influence_graph.RubricInfluenceGraph.analyze"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.aurora_runtime_constraint_governor.RuntimeConstraintGovernor._constraint_signature"}
-{"external": 4, "owner": "fn:aurora_internal.aurora_runtime_constraint_governor.RuntimeConstraintGovernor._host_metrics"}
+{"external": 10, "owner": "fn:aurora_internal.aurora_runtime_constraint_governor.RuntimeConstraintGovernor._host_metrics"}
 {"builtin_value": 1, "external": 3, "owner": "fn:aurora_internal.aurora_runtime_constraint_governor.RuntimeConstraintGovernor._load_energy_income"}
 {"builtin_value": 6, "external": 3, "owner": "fn:aurora_internal.aurora_runtime_constraint_governor.RuntimeConstraintGovernor._pressure_state"}
 {"builtin_value": 5, "owner": "fn:aurora_internal.aurora_runtime_constraint_governor.RuntimeConstraintGovernor._retry_interval"}
@@ -3015,6 +3024,13 @@
 {"builtin_value": 5, "owner": "fn:aurora_internal.aurora_stack_trace_instrumentation._trace_constraint_profile"}
 {"builtin_value": 3, "owner": "fn:aurora_internal.aurora_stack_trace_instrumentation._wrap_instance_methods"}
 {"builtin_value": 3, "external": 4, "owner": "fn:aurora_internal.aurora_stack_trace_instrumentation.instrument_stack"}
+{"external": 1, "owner": "fn:aurora_internal.aurora_state_context.resolve_state_dir"}
+{"external": 1, "owner": "fn:aurora_internal.aurora_store_ownership._relative"}
+{"external": 1, "owner": "fn:aurora_internal.aurora_store_ownership._write_status"}
+{"external": 1, "owner": "fn:aurora_internal.aurora_store_ownership.classify"}
+{"external": 1, "owner": "fn:aurora_internal.aurora_store_ownership.flush_status"}
+{"builtin_value": 1, "external": 5, "owner": "fn:aurora_internal.aurora_store_ownership.moves_with_her"}
+{"external": 1, "owner": "fn:aurora_internal.aurora_store_ownership.store_write_allowed"}
 {"external": 1, "owner": "fn:aurora_internal.aurora_strategic_horizon.StrategicHorizonLayer.__init__"}
 {"external": 3, "owner": "fn:aurora_internal.aurora_strategic_horizon.StrategicHorizonLayer._journal"}
 {"builtin_value": 10, "owner": "fn:aurora_internal.aurora_structural_pressure_steering.StructuralPressureDirective.from_dict"}
@@ -3416,6 +3432,7 @@
 {"builtin_value": 2, "owner": "fn:aurora_internal.crystal_promotion.promotion_candidates"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.crystal_promotion.unity"}
 {"external": 2, "owner": "fn:aurora_internal.crystal_runtime._read"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.crystal_runtime._write_report"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.crystal_runtime.enabled"}
 {"external": 2, "owner": "fn:aurora_internal.crystal_runtime.run_pass"}
 {"builtin_value": 2, "external": 2, "owner": "fn:aurora_internal.crystal_runtime.word_profiles"}
@@ -3451,6 +3468,69 @@
 {"builtin_value": 7, "owner": "fn:aurora_internal.crystal_weave.place_event"}
 {"builtin_value": 3, "owner": "fn:aurora_internal.crystal_weave.place_exercise"}
 {"builtin_value": 3, "owner": "fn:aurora_internal.crystal_weave.turn_concepts_of"}
+{"external": 1, "owner": "fn:aurora_internal.crystal_web.ConceptWeb.from_file"}
+{"external": 1, "owner": "fn:aurora_internal.crystal_web.ConceptWeb.from_state_dir"}
+{"builtin_value": 4, "owner": "fn:aurora_internal.crystal_web.ConceptWeb.lookup"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.crystal_web.ConceptWeb.neighborhood"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.crystal_web.ConceptWeb.overview"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.crystal_web.ConceptWeb.resolve"}
+{"builtin_value": 4, "owner": "fn:aurora_internal.crystal_web.ConceptWeb.search"}
+{"builtin_value": 5, "owner": "fn:aurora_internal.crystal_web._group_of"}
+{"external": 1, "owner": "fn:aurora_internal.crystal_web._short"}
+{"external": 2, "owner": "fn:aurora_internal.crystal_web_server.WebSource.__init__"}
+{"external": 1, "owner": "fn:aurora_internal.crystal_web_server.WebSource.get"}
+{"external": 2, "owner": "fn:aurora_internal.crystal_web_server.main"}
+{"external": 1, "owner": "fn:aurora_internal.crystal_web_server.make_handler.Handler._json"}
+{"external": 1, "owner": "fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET"}
+{"external": 4, "owner": "fn:aurora_internal.desktop.__main__.default_state_dir"}
+{"builtin_value": 1, "external": 8, "owner": "fn:aurora_internal.desktop.__main__.main"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.blueprints.BlueprintSpace.__init__"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.desktop.blueprints.BlueprintSpace._dependency_version"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.blueprints.BlueprintSpace.compose"}
+{"builtin_value": 5, "owner": "fn:aurora_internal.desktop.blueprints.BlueprintSpace.import_real"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.blueprints.BlueprintSpace.register"}
+{"builtin_value": 2, "external": 1, "owner": "fn:aurora_internal.desktop.blueprints.BlueprintSpace.resolve"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.blueprints.BlueprintSpace.view"}
+{"external": 2, "owner": "fn:aurora_internal.desktop.common.digest"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.common.read_json"}
+{"builtin_value": 1, "external": 2, "owner": "fn:aurora_internal.desktop.demonstrations.Demonstrations.begin"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.demonstrations.Demonstrations.observe"}
+{"external": 2, "owner": "fn:aurora_internal.desktop.demonstrations.Demonstrations.propose"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.desktop.demonstrations.Demonstrations.verify"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.desktop.policy.HostPolicy.check"}
+{"external": 6, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime.__init__"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._accept_kernel"}
+{"external": 4, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._attach_existing_engines"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._attach_existing_engines.history"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._boot_once"}
+{"external": 3, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._clock"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._embodiment_move_requested"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._home_requests_tick"}
+{"external": 2, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._hub_request"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._install_tools.register.invoke"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._observe"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._perform"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._perform.surface_ready"}
+{"external": 2, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._run"}
+{"external": 2, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._run.plain"}
+{"builtin_value": 2, "external": 2, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._schedule_once"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._start_clone_absorption"}
+{"external": 2, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._start_scout"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime.live_idle"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime.start"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime.status"}
+{"external": 3, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime.submit"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.server.make_server.Handler.authorized"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.desktop.server.make_server.Handler.do_POST"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.desktop.server.make_server.Handler.send"}
+{"external": 3, "owner": "fn:aurora_internal.desktop.server.owner_token"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.services.HostServices.__init__"}
+{"builtin_value": 1, "external": 5, "owner": "fn:aurora_internal.desktop.services.HostServices._existing_adapter"}
+{"builtin_value": 3, "owner": "fn:aurora_internal.desktop.services.HostServices.dependency_version"}
+{"builtin_value": 2, "external": 4, "owner": "fn:aurora_internal.desktop.services.HostServices.execute"}
+{"external": 1, "owner": "fn:aurora_internal.desktop.services.HostServices.refresh"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.desktop.services.HostServices.snapshot"}
+{"builtin_value": 2, "external": 9, "owner": "fn:aurora_internal.desktop.services.discover_host"}
 {"builtin_value": 4, "owner": "fn:aurora_internal.dual_strata.activation_field.ActivationField.from_dict"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.activation_field.ActivationField.law_bindings_from_top"}
 {"builtin_value": 14, "external": 1, "owner": "fn:aurora_internal.dual_strata.activation_field.ActivationField.spread"}
@@ -3459,7 +3539,7 @@
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.activation_field._resolve_state_dir"}
 {"external": 2, "owner": "fn:aurora_internal.dual_strata.activation_field._save_field"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.activation_field._tokenize"}
-{"builtin_value": 12, "external": 3, "owner": "fn:aurora_internal.dual_strata.activation_field.extract_seeds_from_systems"}
+{"builtin_value": 14, "external": 3, "owner": "fn:aurora_internal.dual_strata.activation_field.extract_seeds_from_systems"}
 {"builtin_value": 6, "owner": "fn:aurora_internal.dual_strata.activation_field.run_activation_cycle"}
 {"builtin_value": 10, "owner": "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.build_snapshot"}
 {"external": 2, "owner": "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.persist"}
@@ -3492,6 +3572,47 @@
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.dce_bridge.derive_surface_behavior"}
 {"builtin_value": 4, "owner": "fn:aurora_internal.dual_strata.dce_bridge.recursion_weights_from_lattice"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.downward_traversal.expand_crest"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.home_growth._read_json"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.home_growth._wanted"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.home_growth._write_json"}
+{"builtin_value": 1, "external": 4, "owner": "fn:aurora_internal.dual_strata.home_growth.install_pending_growth"}
+{"builtin_value": 1, "external": 4, "owner": "fn:aurora_internal.dual_strata.home_growth.pull_growth"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.home_link_presence._lived_waiting"}
+{"builtin_value": 2, "external": 2, "owner": "fn:aurora_internal.dual_strata.home_link_presence.home_link_quantities"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.home_link_presence.projection_freshness"}
+{"external": 3, "owner": "fn:aurora_internal.dual_strata.home_link_presence.weigh_projection"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.hub_route._read_json"}
+{"external": 3, "owner": "fn:aurora_internal.dual_strata.hub_route._write_json"}
+{"builtin_value": 1, "external": 2, "owner": "fn:aurora_internal.dual_strata.hub_route.answer_pending"}
+{"external": 3, "owner": "fn:aurora_internal.dual_strata.hub_route.file_hub_request"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.hub_route.holder"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.hub_route.mark_answered"}
+{"builtin_value": 3, "external": 1, "owner": "fn:aurora_internal.dual_strata.hub_route.pending_messages"}
+{"builtin_value": 4, "external": 2, "owner": "fn:aurora_internal.dual_strata.hub_route.receive_message"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.hub_route.record_reply"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.hub_route.send_hub_message"}
+{"builtin_value": 4, "external": 2, "owner": "fn:aurora_internal.dual_strata.hub_route.send_to_holder"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._close"}
+{"builtin_value": 5, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._follow"}
+{"builtin_value": 4, "external": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._hand_down"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._load"}
+{"builtin_value": 4, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._observe"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._save"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._settle_if_due"}
+{"builtin_value": 22, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._take_evidence"}
+{"builtin_value": 7, "external": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk._take_question"}
+{"builtin_value": 4, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk.take"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.HomeInquiryDesk.tick"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers._append_line"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers._read_lines_since"}
+{"builtin_value": 6, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers._stage_signature"}
+{"builtin_value": 5, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers._stage_view"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.evidence_id"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.json_safe"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.pressure_dict"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.receive_down"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.relay_down"}
+{"builtin_value": 1, "external": 2, "owner": "fn:aurora_internal.dual_strata.inquiry_tiers.send_down"}
 {"builtin_value": 3, "owner": "fn:aurora_internal.dual_strata.lifecycle_catalog._catalog_crystal_facets"}
 {"builtin_value": 3, "external": 1, "owner": "fn:aurora_internal.dual_strata.lifecycle_catalog._catalog_semantic_variants"}
 {"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.lifecycle_catalog._catalog_warp_components"}
@@ -3505,9 +3626,11 @@
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.prediction_field._match_intent_type"}
 {"builtin_value": 3, "external": 2, "owner": "fn:aurora_internal.dual_strata.prediction_field._structured_mismatch"}
 {"builtin_value": 39, "owner": "fn:aurora_internal.dual_strata.prediction_field.build_prediction_signal"}
-{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_staged_frames"}
-{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.push_staged_frame"}
-{"builtin_value": 3, "external": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.stage_hypothesis"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager._pop_staged_frames"}
+{"builtin_value": 3, "external": 2, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager._push_staged_frame"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.harvest_into_systems"}
+{"builtin_value": 2, "external": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.relay_to"}
+{"builtin_value": 5, "external": 2, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.stage_hypothesis"}
 {"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.stage_passes_for_tick"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager._add_projection"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager._as_items"}
@@ -3516,6 +3639,7 @@
 {"builtin_value": 19, "external": 2, "owner": "fn:aurora_internal.dual_strata.predictive_stager._extract_slot_projections"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager._load_queue"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager._perspective_confidence"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager._queue_path"}
 {"external": 2, "owner": "fn:aurora_internal.dual_strata.predictive_stager._save_queue"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.predictive_stager.n_passes_for_density"}
 {"builtin_value": 4, "external": 1, "owner": "fn:aurora_internal.dual_strata.presence_metrics.PresenceMetrics.snapshot"}
@@ -3566,37 +3690,76 @@
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.sleep_cycle.mark_dream_triggered"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.sleep_cycle.read_sleep_state"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.DurableOutbox.__init__"}
-{"builtin_value": 4, "owner": "fn:aurora_internal.dual_strata.strata_link.DurableOutbox._load"}
-{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.DurableOutbox.append"}
+{"builtin_value": 5, "owner": "fn:aurora_internal.dual_strata.strata_link.DurableOutbox._load"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.DurableOutbox.append"}
 {"builtin_value": 1, "external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.__init__"}
 {"builtin_value": 5, "external": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._call"}
+{"builtin_value": 7, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._confirm"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._growth_due"}
 {"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._http_transport"}
-{"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._push_state_locked"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._migration_check_due"}
+{"builtin_value": 1, "external": 4, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._push_state_locked"}
+{"external": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._run"}
+{"builtin_value": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._state_call"}
 {"builtin_value": 6, "external": 6, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._sync_once_locked"}
+{"builtin_value": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.check_migration"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.migrate"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.pull_growth"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.request_claim"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.start"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.__init__"}
+{"builtin_value": 5, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._advance_move"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._cancel_move"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._drop_handoff"}
-{"builtin_value": 11, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._load_state"}
-{"builtin_value": 17, "external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._state_op"}
+{"builtin_value": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._end_move"}
+{"builtin_value": 4, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._growth_op"}
+{"builtin_value": 19, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._load_state"}
+{"builtin_value": 5, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._owner_epochs"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._resolve_target"}
+{"builtin_value": 26, "external": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._state_op"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.downlink_enabled"}
 {"builtin_value": 3, "external": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.handle_http"}
-{"builtin_value": 9, "external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.handle_sync"}
-{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.start"}
+{"builtin_value": 11, "external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.handle_sync"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.known_devices"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.local_move_order"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.request_move"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.set_home_surface"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.start"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer.start._Handler.do_GET"}
-{"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link._atomic_write_json"}
 {"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link._collect_sensory_snapshot"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.strata_link._devices_from_disk"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link._free_bytes"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link._read_json"}
 {"builtin_value": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.apply_downlink_record"}
-{"builtin_value": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record"}
-{"builtin_value": 3, "external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink"}
+{"builtin_value": 10, "external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.apply_uplink_record"}
+{"builtin_value": 4, "external": 4, "owner": "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink"}
 {"builtin_value": 4, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.configure_surface"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.ensure_secret"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.listen_host"}
 {"external": 4, "owner": "fn:aurora_internal.dual_strata.strata_link.main"}
+{"builtin_value": 1, "external": 3, "owner": "fn:aurora_internal.dual_strata.strata_link.publish_raw_input"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.read_home_requests"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.request_home"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.require_surface_admission"}
 {"builtin_value": 2, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.sign"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.stamp_lived_moment"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.start_strata_link_server_if_configured"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_link.surface_identity"}
 {"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_link.verify"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_migration._print"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_migration._read"}
+{"builtin_value": 2, "external": 2, "owner": "fn:aurora_internal.dual_strata.strata_migration._record_key"}
+{"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_migration._record_time"}
+{"builtin_value": 6, "owner": "fn:aurora_internal.dual_strata.strata_migration._suggest"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_migration._write"}
+{"builtin_value": 3, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_migration.accept_receipt"}
+{"builtin_value": 2, "external": 7, "owner": "fn:aurora_internal.dual_strata.strata_migration.apply_pending_migration"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.strata_migration.choose"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.strata_migration.divergence_report"}
+{"builtin_value": 1, "external": 2, "owner": "fn:aurora_internal.dual_strata.strata_migration.main"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.strata_migration.migration_class"}
+{"builtin_value": 3, "external": 3, "owner": "fn:aurora_internal.dual_strata.strata_migration.stage_received"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.strata_migration.union_history"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_state_transfer.IncomingTransfer._row"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.strata_state_transfer.IncomingTransfer.accept_existing"}
 {"external": 2, "owner": "fn:aurora_internal.dual_strata.strata_state_transfer.IncomingTransfer.begin"}
@@ -3663,7 +3826,11 @@
 {"external": 3, "owner": "fn:aurora_internal.dual_strata.surface_channel.await_surface_turn"}
 {"builtin_value": 3, "external": 3, "owner": "fn:aurora_internal.dual_strata.surface_channel.queue_surface_turn"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.surface_channel.surface_daemon_alive"}
-{"builtin_value": 2, "external": 2, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed.deposit_continuity_packet"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed._add_to_ranges"}
+{"builtin_value": 3, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed._ledger_key"}
+{"builtin_value": 2, "external": 1, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed._ledger_load"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed._ledger_save"}
+{"builtin_value": 3, "external": 2, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed.deposit_continuity_packet"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed.peek_continuity_packets"}
 {"external": 3, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed.read_and_clear_continuity_packets"}
 {"builtin_value": 4, "external": 4, "owner": "fn:aurora_internal.dual_strata.surface_continuity_feed.write_continuity_packet"}
@@ -3671,6 +3838,8 @@
 {"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.surface_sensory_proxy.TransientSensorySnapshotProxy._consume_latest_snapshot"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.dual_strata.surface_sensory_proxy.TransientSensorySnapshotProxy._vector"}
 {"builtin_value": 8, "external": 1, "owner": "fn:aurora_internal.dual_strata.surface_sensory_proxy.TransientSensorySnapshotProxy.get_state"}
+{"builtin_value": 2, "owner": "fn:aurora_internal.dual_strata.surface_working_state.capture"}
+{"external": 2, "owner": "fn:aurora_internal.dual_strata.surface_working_state.decode"}
 {"external": 1, "owner": "fn:aurora_internal.dual_strata.topological_semantic_coordinator.TopologicalSemanticCoordinator.__init__"}
 {"external": 2, "owner": "fn:aurora_internal.dual_strata.topological_semantic_coordinator.TopologicalSemanticCoordinator._log_shadow_comparison"}
 {"builtin_value": 2, "external": 2, "owner": "fn:aurora_internal.dual_strata.topological_semantic_coordinator.TopologicalSemanticCoordinator.observe_turn"}
@@ -3739,6 +3908,12 @@
 {"builtin_value": 1, "external": 2, "owner": "fn:aurora_internal.genealogy_evidence_journal.read_records"}
 {"external": 2, "owner": "fn:aurora_internal.genealogy_evidence_journal.read_since"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.genealogy_evidence_journal.small_notes"}
+{"external": 1, "owner": "fn:aurora_internal.hub_panels._alive"}
+{"external": 1, "owner": "fn:aurora_internal.hub_panels._read"}
+{"builtin_value": 16, "external": 5, "owner": "fn:aurora_internal.hub_panels._strata_extras"}
+{"builtin_value": 7, "external": 1, "owner": "fn:aurora_internal.hub_panels.ledger_panel"}
+{"external": 1, "owner": "fn:aurora_internal.hub_panels.pass_panel"}
+{"builtin_value": 4, "external": 14, "owner": "fn:aurora_internal.hub_panels.strata_panel"}
 {"builtin_value": 2, "owner": "fn:aurora_internal.lesson_replay.parse_lesson"}
 {"builtin_value": 3, "owner": "fn:aurora_internal.lineage_canonical._generated_lookup"}
 {"builtin_value": 2, "external": 5, "owner": "fn:aurora_internal.lineage_canonical._load_generated_constraints"}
@@ -3749,6 +3924,9 @@
 {"builtin_value": 3, "owner": "fn:aurora_internal.lineage_canonical.constraints_for_operation"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.lineage_canonical.label_for_axis"}
 {"builtin_value": 2, "owner": "fn:aurora_internal.lineage_canonical.operator_action_for_axis"}
+{"builtin_value": 8, "external": 2, "owner": "fn:aurora_internal.process_lock.ProcessLock.__enter__"}
+{"external": 2, "owner": "fn:aurora_internal.process_lock.ProcessLock.__exit__"}
+{"external": 1, "owner": "fn:aurora_internal.process_lock.ProcessLock.__init__"}
 {"builtin_value": 2, "owner": "fn:aurora_internal.quasiarch_development_inquiry._lived_ancestors"}
 {"builtin_value": 3, "owner": "fn:aurora_internal.quasiarch_development_inquiry.consequential_changes"}
 {"builtin_value": 8, "owner": "fn:aurora_internal.quasiarch_development_inquiry.dream_ancestry"}
@@ -3883,6 +4061,7 @@
 {"builtin_value": 1, "owner": "fn:aurora_internal.tool_registry._desktop_file_manager"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.tool_registry._desktop_macro"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.tool_registry._desktop_process_control"}
+{"builtin_value": 1, "external": 4, "owner": "fn:aurora_internal.tool_registry._embodiment_move"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.tool_registry._external_ai_package_forbidden"}
 {"external": 1, "owner": "fn:aurora_internal.tool_registry._external_ai_url_forbidden"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.tool_registry._file_read"}
@@ -3911,6 +4090,7 @@
 {"external": 1, "owner": "fn:aurora_internal.tool_registry._time_now"}
 {"builtin_value": 1, "owner": "fn:aurora_internal.tool_registry._visual_analysis"}
 {"builtin_value": 1, "external": 4, "owner": "fn:aurora_internal.tool_registry._weather_fetch"}
+{"builtin_value": 3, "external": 1, "owner": "fn:aurora_internal.tool_registry.call"}
 {"builtin_value": 1, "owner": "fn:aurora_istate_operations.apply_operation"}
 {"builtin_value": 1, "owner": "fn:aurora_istate_operations.read_cell_cpm"}
 {"external": 1, "owner": "fn:aurora_ivm.ContradictionLedger.__init__"}
@@ -4160,15 +4340,18 @@
 {"external": 2, "owner": "fn:aurora_praxis_initiative._now_day"}
 {"builtin_value": 7, "external": 1, "owner": "fn:aurora_praxis_initiative.topic_seed"}
 {"builtin_value": 1, "external": 3, "owner": "fn:aurora_praxis_messenger.PraxisMessenger.__init__"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._deliver_once"}
 {"external": 5, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._http"}
 {"external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._load_cursor"}
 {"builtin_value": 2, "external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._log"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._pairs"}
-{"builtin_value": 1, "external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._reenter_pending"}
+{"external": 3, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._record_sent"}
+{"builtin_value": 1, "external": 2, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._reenter_pending"}
 {"external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._remember_heard_pairs"}
+{"builtin_value": 1, "external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._retry_outbox"}
 {"external": 2, "owner": "fn:aurora_praxis_messenger.PraxisMessenger._save_cursor"}
-{"builtin_value": 8, "external": 7, "owner": "fn:aurora_praxis_messenger.PraxisMessenger.handle_message"}
-{"builtin_value": 9, "external": 2, "owner": "fn:aurora_praxis_messenger.PraxisMessenger.pull_once"}
+{"builtin_value": 8, "external": 4, "owner": "fn:aurora_praxis_messenger.PraxisMessenger.handle_message"}
+{"builtin_value": 12, "external": 4, "owner": "fn:aurora_praxis_messenger.PraxisMessenger.pull_once"}
 {"external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger.start"}
 {"external": 1, "owner": "fn:aurora_praxis_messenger.PraxisMessenger.waiting"}
 {"external": 3, "owner": "fn:aurora_praxis_messenger.SpeakerScopedMemory.__init__"}
@@ -4190,8 +4373,8 @@
 {"builtin_value": 1, "owner": "fn:aurora_pressure_ontology.PressureOntology.seed_to_oets"}
 {"external": 1, "owner": "fn:aurora_pressure_ontology.get_ontology"}
 {"builtin_value": 1, "owner": "fn:aurora_pressure_ontology.seed_ontology_to_oets"}
-{"builtin_value": 3, "external": 1, "owner": "fn:aurora_quantum_dream_substrate.CrystalEntanglementRegistry.auto_entangle_from_genealogy"}
-{"builtin_value": 1, "external": 2, "owner": "fn:aurora_quantum_dream_substrate.CrystalEntanglementRegistry.propagate"}
+{"builtin_value": 4, "owner": "fn:aurora_quantum_dream_substrate.CrystalEntanglementRegistry.auto_entangle_from_genealogy"}
+{"external": 1, "owner": "fn:aurora_quantum_dream_substrate.CrystalEntanglementRegistry.propagate"}
 {"builtin_value": 4, "owner": "fn:aurora_quantum_dream_substrate.QuantumDreamSubstrate._dream_encounter_with_selves"}
 {"builtin_value": 2, "owner": "fn:aurora_quantum_dream_substrate.QuantumDreamSubstrate._run_mtsl_perturbation_probe"}
 {"builtin_value": 5, "external": 1, "owner": "fn:aurora_quantum_dream_substrate._consciousness_fusion_cycle"}
@@ -4918,6 +5101,7 @@
 {"builtin_value": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._DeviceEmbodiment._fire"}
 {"builtin_value": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._DeviceEmbodiment.claim_substrate"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._FieldLock.__init__"}
+{"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._FieldLock._took"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._FieldLock.release"}
 {"builtin_value": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._WaveformTrajectory.emergence_signal"}
 {"builtin_value": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._WaveformTrajectory.record"}
@@ -4950,6 +5134,7 @@
 {"builtin_value": 4, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._extract_response"}
 {"builtin_value": 2, "external": 26, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._extract_richer_visual_features"}
 {"external": 8, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._extract_ui_screenshot_features"}
+{"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._face_journal_path"}
 {"builtin_value": 5, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._feed_self_entity"}
 {"builtin_value": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._feed_sensory_crystal_frames"}
 {"builtin_value": 2, "external": 9, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._finalize_ui_observation_session"}
@@ -4957,6 +5142,7 @@
 {"builtin_value": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._ground_self_identity_in_systems"}
 {"builtin_value": 4, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._habitat_availability"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._historical_experience_live_idle"}
+{"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._hub_message_loop"}
 {"builtin_value": 5, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._infer_dominant_facet"}
 {"builtin_value": 6, "external": 5, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._ingest_correction_teaching"}
 {"builtin_value": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._ingest_disambiguation"}
@@ -4983,6 +5169,7 @@
 {"builtin_value": 5, "external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._proactive_loop"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._read_room_notes"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._record_turn_state"}
+{"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._refresh_axis_state_from_systems"}
 {"builtin_value": 4, "external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._register_capability_gap"}
 {"external": 7, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._rgb_to_hue_degrees"}
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._run_curiosity_session"}
@@ -5005,8 +5192,8 @@
 {"builtin_value": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._tick_sensory_attention"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._ui_observation_state_dir"}
 {"builtin_value": 5, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge._update_entity_model"}
-{"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link"}
-{"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_axis_state"}
+{"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link"}
+{"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_axis_state"}
 {"builtin_value": 62, "external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_cognitive_stats"}
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_concept_crystal_state"}
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_development_state"}
@@ -5014,7 +5201,7 @@
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_gauntlet_status"}
 {"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_historical_experience_status"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_live_turn_diagnostics"}
-{"builtin_value": 1, "external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_mobile_developmental_health"}
+{"builtin_value": 2, "external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_mobile_developmental_health"}
 {"builtin_value": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_pending_report"}
 {"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_praxis_messenger_status"}
 {"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_praxis_status"}
@@ -5033,10 +5220,10 @@
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.habitat_isolate_corrupt"}
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.habitat_reset"}
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.habitat_restore"}
-{"builtin_value": 4, "external": 16, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.handle_message"}
+{"builtin_value": 4, "external": 17, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.handle_message"}
 {"builtin_value": 2, "external": 6, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.handle_message._continue_deep_turn"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.handle_message._on_surface_ready"}
-{"builtin_value": 2, "external": 10, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize"}
+{"builtin_value": 2, "external": 15, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.lesson_status"}
 {"builtin_value": 1, "external": 4, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.post_room_note"}
 {"builtin_value": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.provide_audio_observation"}
@@ -5047,18 +5234,19 @@
 {"builtin_value": 10, "external": 6, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.provide_screen_observation"}
 {"builtin_value": 4, "external": 9, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.provide_uploaded_content"}
 {"external": 8, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.record_boot_health"}
+{"builtin_value": 5, "external": 9, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.record_face_expression"}
 {"builtin_value": 1, "external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.record_ui_screenshot"}
 {"external": 4, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.record_ui_timeline_event"}
-{"builtin_value": 2, "external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.run_evolutionary_burst"}
+{"builtin_value": 2, "external": 4, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.run_evolutionary_burst"}
 {"external": 4, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.start_gauntlet"}
 {"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.start_gauntlet._run"}
 {"builtin_value": 2, "external": 7, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.start_ui_observation_session"}
 {"external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.stop_ui_observation_session"}
-{"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.strata_link_transfer"}
+{"builtin_value": 1, "external": 5, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.strata_link_transfer"}
 {"builtin_value": 1, "external": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.strata_link_transfer_cmd"}
 {"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.teach_lesson"}
-{"external": 2, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.trigger_curiosity_cycle"}
-{"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.trigger_evo_cycle"}
+{"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.trigger_curiosity_cycle"}
+{"external": 4, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.trigger_evo_cycle"}
 {"builtin_value": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_bridge.trigger_evo_cycle._go"}
 {"external": 3, "owner": "fn:flutter_app.android.app.src.main.python.aurora_historical_experience_environment.HistoricalExperienceEnvironment.__init__"}
 {"builtin_value": 1, "owner": "fn:flutter_app.android.app.src.main.python.aurora_historical_experience_environment.HistoricalExperienceEnvironment._actor_label"}
@@ -5211,6 +5399,12 @@
 {"builtin_value": 1, "external": 1, "owner": "fn:scripts.aurora_fault_instrumentation_injector._insert_import"}
 {"builtin_value": 4, "external": 4, "owner": "fn:scripts.aurora_fault_instrumentation_injector.instrument_file"}
 {"builtin_value": 2, "external": 1, "owner": "fn:scripts.aurora_fault_instrumentation_injector.main"}
+{"external": 1, "owner": "fn:scripts.aurora_home_setup._print"}
+{"external": 2, "owner": "fn:scripts.aurora_home_setup._resident_running"}
+{"external": 2, "owner": "fn:scripts.aurora_home_setup.cmd_first_pairing"}
+{"builtin_value": 3, "owner": "fn:scripts.aurora_home_setup.cmd_pair"}
+{"external": 1, "owner": "fn:scripts.aurora_home_setup.home_network_address"}
+{"external": 3, "owner": "fn:scripts.aurora_home_setup.main"}
 {"external": 3, "owner": "fn:scripts.aurora_kg_observe.Recorder.audit"}
 {"builtin_value": 1, "owner": "fn:scripts.aurora_kg_observe.Recorder.export"}
 {"external": 1, "owner": "fn:scripts.aurora_kg_observe.Recorder.install"}
@@ -6130,6 +6324,13 @@
 {"external": 1, "owner": "fn:tests.test_crystal_weave.test_what_the_genealogy_qualified_by_occurrence_arrives_qualified"}
 {"external": 2, "owner": "fn:tests.test_crystal_weave.test_what_was_said_to_her_is_told_and_what_she_said_she_witnessed_and_both_count"}
 {"builtin_value": 1, "owner": "fn:tests.test_crystal_weave.wcycle"}
+{"builtin_value": 1, "owner": "fn:tests.test_crystal_web.cr"}
+{"external": 2, "owner": "fn:tests.test_crystal_web.get"}
+{"builtin_value": 1, "external": 2, "owner": "fn:tests.test_crystal_web.serve"}
+{"external": 2, "owner": "fn:tests.test_crystal_web.test_beyond_loopback_needs_a_token_and_every_request_carries_it"}
+{"builtin_value": 3, "external": 4, "owner": "fn:tests.test_crystal_web.test_it_never_writes_and_imports_nothing_of_the_stack"}
+{"builtin_value": 1, "external": 1, "owner": "fn:tests.test_crystal_web.test_it_reloads_when_the_store_changes"}
+{"external": 4, "owner": "fn:tests.test_crystal_web.test_the_server_answers_reads_and_refuses_everything_else"}
 {"external": 1, "owner": "fn:tests.test_d1_device_path_attribution._aurora_bridge_source"}
 {"external": 1, "owner": "fn:tests.test_d1_device_path_attribution._aurora_daemon_source"}
 {"external": 15, "owner": "fn:tests.test_d1_device_path_attribution.test_device_delivered_text_byte_attributes_to_resp_a_live"}
@@ -6157,6 +6358,18 @@
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_der_geometric_time.test_one_tick_is_exactly_the_old_per_tick_decay"}
 {"external": 1, "owner": "fn:tests.test_der_geometric_time.test_the_heartbeat_callers_default_dt_is_unchanged"}
 {"external": 1, "owner": "fn:tests.test_der_geometric_time.test_zero_time_changes_no_energy"}
+{"external": 4, "owner": "fn:tests.test_desktop_embodiment.request"}
+{"external": 1, "owner": "fn:tests.test_desktop_embodiment.resident"}
+{"builtin_value": 1, "owner": "fn:tests.test_desktop_embodiment.test_autonomous_outreach_cannot_escape_through_shell_browser_or_model_kwargs"}
+{"external": 1, "owner": "fn:tests.test_desktop_embodiment.test_composition_detects_unknown_interfaces_exclusivity_and_cycles"}
+{"external": 1, "owner": "fn:tests.test_desktop_embodiment.test_console_is_authenticated_and_rejects_foreign_origin"}
+{"external": 2, "owner": "fn:tests.test_desktop_embodiment.test_field_lock_blocks_cognition_but_not_diagnostics_or_owner_recovery"}
+{"external": 1, "owner": "fn:tests.test_desktop_embodiment.test_owner_console_remains_usable_after_failed_cognitive_boot"}
+{"external": 2, "owner": "fn:tests.test_desktop_embodiment.test_process_lock_rejects_second_process_and_recovers_after_exit"}
+{"builtin_value": 2, "external": 3, "owner": "fn:tests.test_desktop_embodiment.test_raw_input_is_disposable_and_prediction_timestamps_survive_transport"}
+{"builtin_value": 3, "external": 1, "owner": "fn:tests.test_desktop_embodiment.test_real_loopback_handoff_freezes_source_and_moves_only_surface_state"}
+{"external": 1, "owner": "fn:tests.test_desktop_embodiment.test_surface_checkpoint_roundtrips_real_working_memory_without_copying_organs"}
+{"external": 3, "owner": "fn:tests.test_desktop_embodiment.until"}
 {"external": 2, "owner": "fn:tests.test_desktop_stack_includes_scout_worker.test_run_scout_worker_script_exists_and_is_executable"}
 {"external": 1, "owner": "fn:tests.test_desktop_stack_includes_scout_worker.test_status_action_runs_cleanly_and_lists_scout"}
 {"external": 1, "owner": "fn:tests.test_desktop_stack_includes_scout_worker.test_strata_stack_script_is_syntactically_valid_bash"}
@@ -6309,6 +6522,12 @@
 {"external": 4, "owner": "fn:tests.test_f5_register_exploration_plumbing._make_composer_with_real_lexicon"}
 {"external": 3, "owner": "fn:tests.test_f5_register_exploration_plumbing.test_compose_and_select_constraint_word_accept_f5_kwargs_without_breaking"}
 {"external": 1, "owner": "fn:tests.test_f5_register_exploration_plumbing.test_register_estimate_source_inversion_signature"}
+{"external": 1, "owner": "fn:tests.test_face_expression_journal.bridge"}
+{"external": 2, "owner": "fn:tests.test_face_expression_journal.test_a_bad_payload_is_answered_not_raised"}
+{"builtin_value": 1, "external": 3, "owner": "fn:tests.test_face_expression_journal.test_a_settled_expression_is_kept_with_the_state_it_came_from"}
+{"builtin_value": 1, "external": 2, "owner": "fn:tests.test_face_expression_journal.test_before_boot_nothing_is_kept_and_nothing_fails"}
+{"external": 1, "owner": "fn:tests.test_face_expression_journal.test_the_axis_poll_carries_her_attention"}
+{"external": 1, "owner": "fn:tests.test_face_expression_journal.test_the_journal_is_a_surface_present_store"}
 {"external": 1, "owner": "fn:tests.test_fail_recurrence_novelty.TestHistoricalRecurrenceIsNovelNotReplay.test_dream_substrate_recurrence_carries_no_literal_waking_text"}
 {"external": 1, "owner": "fn:tests.test_fail_recurrence_novelty.TestRecurrenceRequiresGenuineMatch.test_no_hardcoded_recurrence_count_threshold"}
 {"external": 1, "owner": "fn:tests.test_fail_recurrence_novelty.TestRecurrenceRequiresGenuineMatch.test_same_topic_different_action_type_does_not_falsely_link"}
@@ -6470,6 +6689,22 @@
 {"external": 1, "owner": "fn:tests.test_historical_rehearsal.env_with"}
 {"external": 2, "owner": "fn:tests.test_historical_rehearsal.test_comparison_uses_words_and_uptake"}
 {"external": 1, "owner": "fn:tests.test_historical_rehearsal.test_silence_is_retired_at_once_and_zero_overlap_is_apart"}
+{"builtin_value": 1, "owner": "fn:tests.test_home_growth._hold"}
+{"builtin_value": 7, "owner": "fn:tests.test_home_growth.rig"}
+{"builtin_value": 5, "external": 4, "owner": "fn:tests.test_home_growth.test_only_home_owned_stores_that_differ_come_down"}
+{"external": 1, "owner": "fn:tests.test_home_link_presence.test_a_paired_surface_feels_its_distance_from_home"}
+{"external": 2, "owner": "fn:tests.test_home_link_presence.test_home_word_fades_smoothly_with_age_and_never_stops"}
+{"external": 6, "owner": "fn:tests.test_hosted_acm.test_hosted_bridge_uses_real_loopback_io_and_stops_cleanly"}
+{"external": 1, "owner": "fn:tests.test_hub_panels.hyp"}
+{"builtin_value": 6, "external": 4, "owner": "fn:tests.test_hub_panels.link_files"}
+{"builtin_value": 2, "external": 1, "owner": "fn:tests.test_hub_panels.test_a_process_is_running_when_its_pid_lives"}
+{"external": 1, "owner": "fn:tests.test_hub_panels.test_looking_creates_nothing_and_a_missing_link_is_just_not_configured"}
+{"builtin_value": 1, "external": 6, "owner": "fn:tests.test_hub_panels.test_the_hub_serves_the_panels_and_a_page_with_tabs"}
+{"builtin_value": 3, "owner": "fn:tests.test_hub_panels.test_the_ledger_panel_reads_its_research_off_the_crystals_most_evidence_first"}
+{"builtin_value": 1, "external": 4, "owner": "fn:tests.test_hub_panels.test_the_panels_read_only_and_import_nothing_of_the_stack"}
+{"external": 1, "owner": "fn:tests.test_hub_panels.test_the_strata_panel_shows_the_link_but_never_a_secret"}
+{"builtin_value": 1, "owner": "fn:tests.test_hub_route._hold"}
+{"builtin_value": 1, "owner": "fn:tests.test_hub_route.test_a_message_from_the_hub_reaches_her_on_the_phone_and_her_answer_comes_back"}
 {"external": 2, "owner": "fn:tests.test_hypothesis_crystals._pipeline"}
 {"external": 2, "owner": "fn:tests.test_hypothesis_crystals.test_a_restored_exchange_never_recounts_replayed_events"}
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_hypothesis_crystals.test_facets_are_touched_so_decay_never_fades_live_research"}
@@ -6499,6 +6734,9 @@
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_input_identity.test_a_thread_started_by_the_turn_carries_no_identity_it_is_unattributed_not_guessed"}
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_input_identity.test_the_persisted_file_repeats_nothing_per_record_and_keeps_only_inputs_it_still_refers_to"}
 {"external": 6, "owner": "fn:tests.test_input_identity.test_the_turn_entry_sets_and_always_resets_the_identity"}
+{"builtin_value": 1, "owner": "fn:tests.test_inquiry_tiers._home_engine.complete"}
+{"external": 1, "owner": "fn:tests.test_inquiry_tiers.test_on_a_surface_the_exhausted_frontier_goes_home_with_what_she_lived"}
+{"builtin_value": 1, "owner": "fn:tests.test_inquiry_tiers.test_resolution_ledgers_are_not_rewritten_on_a_surface"}
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_internal_origin_exempt._read"}
 {"external": 1, "owner": "fn:tests.test_internal_origin_exempt.test_the_dream_trainer_declares_its_replays_internal"}
 {"external": 1, "owner": "fn:tests.test_internal_origin_exempt.test_the_gateway_carries_declared_metadata_into_evidence"}
@@ -6900,6 +7138,8 @@
 {"builtin_value": 1, "external": 4, "owner": "fn:tests.test_praxis_shared_state_and_discovery.test_loop_still_pulls_with_the_real_field_lock_predicate"}
 {"builtin_value": 1, "external": 2, "owner": "fn:tests.test_praxis_shared_state_and_discovery.test_pause_still_stops_discovery"}
 {"external": 1, "owner": "fn:tests.test_prediction_field_manifold.test_manifold_familiarity_present_marks_source"}
+{"builtin_value": 1, "owner": "fn:tests.test_predictive_stager_state_dir.test_predictive_frames_follow_active_state_directory"}
+{"builtin_value": 1, "external": 1, "owner": "fn:tests.test_predictive_stager_state_dir.test_predictive_queue_recovers_from_wrong_json_shape"}
 {"external": 1, "owner": "fn:tests.test_preoutcome_pressure_capture.TestCommitApplicationCapturesPreOutcomePressure.test_pending_validation_carries_a_pressure_snapshot"}
 {"external": 1, "owner": "fn:tests.test_preoutcome_pressure_capture.TestCommitApplicationCapturesPreOutcomePressure.test_snapshot_reflects_the_state_at_commit_time_not_a_constant"}
 {"external": 2, "owner": "fn:tests.test_preoutcome_pressure_capture.TestLiveCorrectionFeedsRichStreamNotTheAggregate.test_agreement_does_not_record_a_fail_event"}
@@ -7265,24 +7505,44 @@
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_stale_scout_report_cannot_hijack_new_turn.test_report_arriving_while_its_own_turn_is_still_current_is_accepted_normally"}
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_stimulus_pressure_seams.test_the_pump_disturbance_is_built_from_the_utterances_loads"}
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_stimulus_pressure_seams.test_turn_level_sediment_sites_pass_the_utterance"}
+{"external": 1, "owner": "fn:tests.test_strata_fencing.Wire.transport_for.transport"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_fencing._frozen"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_fencing._ready_for_handoff"}
+{"external": 1, "owner": "fn:tests.test_strata_fencing.test_a_device_that_never_held_her_cannot_start_living_offline"}
+{"external": 1, "owner": "fn:tests.test_strata_fencing.test_a_failed_move_never_makes_two_holders"}
+{"builtin_value": 1, "external": 2, "owner": "fn:tests.test_strata_fencing.test_home_refuses_a_handoff_from_a_source_that_has_not_frozen.strip_flag"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_fencing.test_the_target_of_a_completed_move_drops_an_old_freeze"}
 {"builtin_value": 1, "owner": "fn:tests.test_strata_link._enable_downlink"}
 {"external": 1, "owner": "fn:tests.test_strata_link.test_a_forged_response_is_rejected.forged"}
 {"builtin_value": 1, "owner": "fn:tests.test_strata_link.test_a_long_disconnect_loses_nothing_and_keeps_order"}
 {"builtin_value": 2, "external": 3, "owner": "fn:tests.test_strata_link.test_a_rebuilt_subsurface_restarts_downlink_numbering"}
 {"builtin_value": 2, "external": 1, "owner": "fn:tests.test_strata_link.test_downlink_is_off_until_enabled"}
 {"builtin_value": 1, "owner": "fn:tests.test_strata_link.test_one_turn_over_real_http"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_link.test_only_the_owner_is_applied_and_a_claim_raises_the_epoch"}
 {"builtin_value": 1, "owner": "fn:tests.test_strata_link.test_pairing_carries_the_claim"}
 {"builtin_value": 2, "external": 4, "owner": "fn:tests.test_strata_link.test_projection_is_delivered_once_and_only_when_it_changes"}
 {"external": 2, "owner": "fn:tests.test_strata_link.test_the_daemons_own_consumer_integrates_a_turn_lived_on_another_device"}
+{"external": 1, "owner": "fn:tests.test_strata_migration._lines"}
+{"builtin_value": 9, "external": 10, "owner": "fn:tests.test_strata_migration.rig"}
+{"external": 1, "owner": "fn:tests.test_strata_migration.test_another_device_cannot_see_or_drive_this_migration"}
+{"builtin_value": 7, "external": 6, "owner": "fn:tests.test_strata_migration.test_apply_unions_installs_archives_and_receipts"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_migration.test_lived_before_snapshot_is_not_lived_twice_and_after_is_integrated_once"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_moves._frozen"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_moves.rig"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_moves.test_a_move_home_takes_no_network_step"}
+{"external": 1, "owner": "fn:tests.test_strata_moves.test_a_request_made_away_waits_and_runs_when_home_returns"}
+{"external": 1, "owner": "fn:tests.test_strata_moves.test_her_tool_only_asks_and_lists_where_she_can_go"}
+{"builtin_value": 1, "external": 1, "owner": "fn:tests.test_strata_moves.test_the_holder_asks_and_home_moves_her"}
 {"external": 4, "owner": "fn:tests.test_strata_state_transfer.Wire.transport_for.transport"}
 {"builtin_value": 2, "owner": "fn:tests.test_strata_state_transfer._same"}
 {"builtin_value": 2, "owner": "fn:tests.test_strata_state_transfer.test_a_corrupted_chunk_is_caught_and_installs_nothing"}
 {"builtin_value": 1, "external": 1, "owner": "fn:tests.test_strata_state_transfer.test_a_manifest_that_escapes_the_state_dir_is_refused"}
+{"builtin_value": 1, "owner": "fn:tests.test_strata_state_transfer.test_an_expired_checkpoint_does_not_allow_stateless_takeover"}
 {"builtin_value": 5, "external": 1, "owner": "fn:tests.test_strata_state_transfer.test_seed_installs_verified_files_and_nothing_excluded"}
 {"builtin_value": 2, "owner": "fn:tests.test_strata_state_transfer.test_seed_over_the_real_http_server"}
 {"builtin_value": 1, "owner": "fn:tests.test_strata_state_transfer.test_seed_resumes_after_the_link_drops"}
 {"builtin_value": 2, "external": 1, "owner": "fn:tests.test_strata_state_transfer.test_sensory_snapshot_goes_up_and_guidance_comes_down"}
-{"builtin_value": 3, "owner": "fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device"}
+{"builtin_value": 5, "owner": "fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device"}
 {"external": 1, "owner": "fn:tests.test_strategic_horizon.test_journal_entry_written_for_every_grant"}
 {"external": 1, "owner": "fn:tests.test_subsurface_live_presence.test_heartbeat_gap_grows_if_not_refreshed"}
 {"builtin_value": 2, "external": 2, "owner": "fn:tests.test_subsurface_live_presence.test_heartbeat_is_independent_of_presence_frame_writes"}
@@ -7313,9 +7573,24 @@
 {"builtin_value": 1, "external": 2, "owner": "fn:tests.test_surface_does_not_wait_for_scout.test_repeated_surface_lookups_do_not_accumulate_latency"}
 {"external": 2, "owner": "fn:tests.test_surface_does_not_wait_for_scout.test_surface_lookup_returns_the_same_speed_whether_or_not_a_worker_exists"}
 {"builtin_value": 1, "external": 4, "owner": "fn:tests.test_surface_does_not_wait_for_scout.test_surface_modules_contain_no_sleep_based_polling_loop_around_scout_state"}
+{"builtin_value": 1, "owner": "fn:tests.test_surface_face_live_read._PV.__init__"}
+{"external": 1, "owner": "fn:tests.test_surface_face_live_read.calm"}
+{"builtin_value": 1, "owner": "fn:tests.test_surface_face_live_read.test_a_read_racing_a_turn_is_skipped_not_faulted"}
+{"builtin_value": 1, "external": 7, "owner": "fn:tests.test_surface_face_live_read.test_background_holds_back_while_a_live_turn_waits"}
+{"builtin_value": 1, "owner": "fn:tests.test_surface_face_live_read.test_curiosity_engine_gets_the_dimensional_system"}
+{"external": 2, "owner": "fn:tests.test_surface_face_live_read.test_field_lock_names_its_holder"}
+{"external": 3, "owner": "fn:tests.test_surface_face_live_read.test_get_axis_state_reads_live_once_per_interval"}
 {"external": 1, "owner": "fn:tests.test_surface_poedex_dispatch.test_integrating_the_evidence_need_event_actually_dispatches_a_scout_request"}
 {"external": 1, "owner": "fn:tests.test_surface_poedex_dispatch.test_lookup_still_returns_a_bound_lesson_instantly_without_dispatching"}
 {"external": 2, "owner": "fn:tests.test_surface_poedex_dispatch.test_lookup_with_no_bound_lesson_returns_immediately_not_after_a_wait"}
+{"external": 1, "owner": "fn:tests.test_surface_profile_bridge._bridge"}
+{"external": 3, "owner": "fn:tests.test_surface_profile_bridge.test_hub_buttons_on_a_surface_become_requests_home"}
+{"external": 2, "owner": "fn:tests.test_surface_profile_bridge.test_organs_left_to_home_read_at_home_not_degraded"}
+{"builtin_value": 1, "owner": "fn:tests.test_surface_store_gate.test_a_declined_write_is_not_a_fault"}
+{"external": 2, "owner": "fn:tests.test_surface_store_gate.test_atomic_write_json_honours_the_gate"}
+{"builtin_value": 1, "external": 1, "owner": "fn:tests.test_surface_store_gate.test_hub_view_is_written_beside_the_link"}
+{"builtin_value": 4, "owner": "fn:tests.test_surface_store_gate.test_interaction_memory_journal_is_home_owned"}
+{"builtin_value": 1, "owner": "fn:tests.test_surface_store_gate.test_pressure_log_is_home_owned_but_still_felt"}
 {"builtin_value": 1, "owner": "fn:tests.test_system_introspection_bridge.test_finish_episode_publishes_to_existing_systems"}
 {"external": 1, "owner": "fn:tests.test_system_introspection_bridge.test_runtime_fault_uses_source_derived_function_location"}
 {"external": 1, "owner": "fn:tests.test_tensor_downward_modulation.test_emotion_moves_the_baseline_toward_the_pressure_topology_and_conserves_the_total"}
@@ -7461,8 +7736,8 @@
 {"builtin_value": 20, "external": 9, "owner": "mod:aurora_constraint_engine"}
 {"external": 1, "owner": "mod:aurora_core_concept_crystallization"}
 {"external": 2, "owner": "mod:aurora_curiosity_engine"}
-{"builtin_value": 2, "external": 11, "owner": "mod:aurora_daemon"}
-{"external": 1, "owner": "mod:aurora_desktop_agent"}
+{"builtin_value": 2, "external": 12, "owner": "mod:aurora_daemon"}
+{"external": 2, "owner": "mod:aurora_desktop_agent"}
 {"external": 7, "owner": "mod:aurora_diag"}
 {"external": 1, "owner": "mod:aurora_dimensional_systems"}
 {"external": 3, "owner": "mod:aurora_dream_new_experience_canary"}
@@ -7477,7 +7752,7 @@
 {"external": 3, "owner": "mod:aurora_genealogy_environment_shadow"}
 {"external": 1, "owner": "mod:aurora_genealogy_promotion_dimension_observer"}
 {"external": 3, "owner": "mod:aurora_genealogy_promotion_dimension_shadow"}
-{"external": 10, "owner": "mod:aurora_hardware_io"}
+{"external": 11, "owner": "mod:aurora_hardware_io"}
 {"builtin_value": 3, "owner": "mod:aurora_i_state_beings"}
 {"external": 1, "owner": "mod:aurora_image_ingestion"}
 {"external": 9, "owner": "mod:aurora_internal.aurora_ability_lineage_compiler"}
@@ -7523,6 +7798,7 @@
 {"external": 4, "owner": "mod:aurora_internal.aurora_second_gen"}
 {"external": 11, "owner": "mod:aurora_internal.aurora_semantic_probe_battery"}
 {"external": 9, "owner": "mod:aurora_internal.aurora_sensory_crystal"}
+{"external": 1, "owner": "mod:aurora_internal.aurora_store_ownership"}
 {"external": 1, "owner": "mod:aurora_internal.aurora_strategic_horizon"}
 {"external": 8, "owner": "mod:aurora_internal.aurora_structural_pressure_steering"}
 {"external": 1, "owner": "mod:aurora_internal.aurora_system_introspection"}
@@ -7532,8 +7808,13 @@
 {"external": 1, "owner": "mod:aurora_internal.aurora_variant_promotion"}
 {"external": 2, "owner": "mod:aurora_internal.aurora_word_use"}
 {"external": 1, "owner": "mod:aurora_internal.crystal_runtime"}
+{"external": 1, "owner": "mod:aurora_internal.crystal_web"}
+{"external": 1, "owner": "mod:aurora_internal.desktop.policy"}
 {"external": 1, "owner": "mod:aurora_internal.dual_strata.cers_tensor_locator"}
+{"external": 1, "owner": "mod:aurora_internal.dual_strata.predictive_stager"}
 {"external": 3, "owner": "mod:aurora_internal.dual_strata.semantic_intention_bridge"}
+{"external": 1, "owner": "mod:aurora_internal.dual_strata.strata_link"}
+{"external": 1, "owner": "mod:aurora_internal.dual_strata.strata_migration"}
 {"external": 1, "owner": "mod:aurora_internal.dual_strata.subsurface_presence"}
 {"external": 1, "owner": "mod:aurora_internal.dual_strata.surface_continuity_feed"}
 {"builtin_value": 1, "owner": "mod:aurora_internal.dual_strata.topology_tracker"}
@@ -7567,6 +7848,7 @@
 {"external": 1, "owner": "mod:aurora_simulation_engine"}
 {"external": 2, "owner": "mod:aurora_social_corroboration"}
 {"external": 2, "owner": "mod:aurora_streaming_expression"}
+{"external": 1, "owner": "mod:aurora_surface_daemon"}
 {"external": 1, "owner": "mod:aurora_thought_formation"}
 {"builtin_value": 1, "external": 7, "owner": "mod:aurora_toroidal_circulation"}
 {"external": 2, "owner": "mod:aurora_training_run"}
@@ -7579,7 +7861,7 @@
 {"external": 3, "owner": "mod:conftest"}
 {"external": 1, "owner": "mod:constraint_evolutionary_sim"}
 {"external": 1, "owner": "mod:crystalzip"}
-{"external": 36, "owner": "mod:flutter_app.android.app.src.main.python.aurora_bridge"}
+{"external": 38, "owner": "mod:flutter_app.android.app.src.main.python.aurora_bridge"}
 {"builtin_value": 1, "external": 1, "owner": "mod:reply_aurora"}
 {"external": 6, "owner": "mod:run_chain"}
 {"external": 4, "owner": "mod:run_corpus"}
@@ -7591,6 +7873,7 @@
 {"external": 1, "owner": "mod:scripts.audit_unified_response_regression"}
 {"external": 14, "owner": "mod:scripts.aurora_ci_segment"}
 {"external": 1, "owner": "mod:scripts.aurora_fault_instrumentation_injector"}
+{"external": 1, "owner": "mod:scripts.aurora_home_setup"}
 {"external": 2, "owner": "mod:scripts.aurora_kg_observe"}
 {"builtin_value": 1, "external": 18, "owner": "mod:scripts.aurora_knowledge_graph"}
 {"builtin_value": 3, "external": 2, "owner": "mod:scripts.backfill_noncomp_and_relations"}
@@ -7742,6 +8025,7 @@
 {"external": 4, "owner": "mod:tests.test_dream_agency"}
 {"external": 4, "owner": "mod:tests.test_dream_as_new_experience"}
 {"external": 4, "owner": "mod:tests.test_dream_developmental_writeback"}
+{"external": 1, "owner": "mod:tests.test_dream_entanglement_evidence_boundary"}
 {"external": 4, "owner": "mod:tests.test_dream_evolution_boundary"}
 {"external": 4, "owner": "mod:tests.test_dream_salience_abstraction"}
 {"external": 4, "owner": "mod:tests.test_dream_source_abstraction"}
@@ -7755,6 +8039,7 @@
 {"external": 4, "owner": "mod:tests.test_evolution_chamber_live_driveshaft"}
 {"external": 4, "owner": "mod:tests.test_evolution_hook_override_none_handling"}
 {"external": 4, "owner": "mod:tests.test_evolutionary_ancestry_acquisition"}
+{"external": 4, "owner": "mod:tests.test_face_expression_journal"}
 {"external": 4, "owner": "mod:tests.test_fail_recurrence_novelty"}
 {"external": 6, "owner": "mod:tests.test_fault_instrumentation_injector"}
 {"external": 4, "owner": "mod:tests.test_field_balancer_genealogy_type_repair"}
@@ -7938,8 +8223,10 @@
 {"external": 4, "owner": "mod:tests.test_subsurface_scout_bridge"}
 {"builtin_value": 3, "owner": "mod:tests.test_surface_boundary"}
 {"external": 4, "owner": "mod:tests.test_surface_does_not_wait_for_scout"}
+{"builtin_value": 1, "external": 3, "owner": "mod:tests.test_surface_face_live_read"}
 {"external": 4, "owner": "mod:tests.test_surface_poedex_dispatch"}
 {"external": 4, "owner": "mod:tests.test_surface_scout_evidence_harvest"}
+{"external": 1, "owner": "mod:tests.test_surface_store_gate"}
 {"external": 4, "owner": "mod:tests.test_tensor_downward_modulation"}
 {"external": 4, "owner": "mod:tests.test_thought_downward"}
 {"external": 4, "owner": "mod:tests.test_toroidal_circulation_layer"}

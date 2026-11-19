@@ -2,6 +2,185 @@
  "composites": [
   {
    "binding": {
+    "CALLS": 7
+   },
+   "cohesion": 0.583,
+   "evidence": [
+    [
+     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.shape"
+    ],
+    [
+     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.fromUnsigned8"
+    ],
+    [
+     "fn:flutter_app.android.app.src.test.java.org.aurora.app.PresenceMotionTest.PresenceMotionTest.noisyStateAndVoiceKeepEveryValueContinuous",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.PresenceMotion.PresenceMotion.setVoice"
+    ]
+   ],
+   "external_binding": 5,
+   "higher_order": "subsys:area:phone_native",
+   "id": "subsys:composite:phone_native:1128caeb",
+   "members": [
+    "flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt",
+    "flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt"
+   ],
+   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
+  },
+  {
+   "binding": {
+    "CALLS": 12
+   },
+   "cohesion": 0.8,
+   "evidence": [
+    [
+     "fn:flutter_app.test.face_motion_test.test",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.FaceRig"
+    ],
+    [
+     "fn:flutter_app.test.face_motion_test.test",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.snapshot"
+    ],
+    [
+     "fn:flutter_app.test.face_motion_test.test",
+     "CALLS",
+     "fn:flutter_app.lib.widgets.face_motion.FaceRig.setSpeech"
+    ]
+   ],
+   "external_binding": 3,
+   "higher_order": "subsys:area:phone_ui",
+   "id": "subsys:composite:phone_ui:860d72ae",
+   "members": [
+    "flutter_app/lib/widgets/face_motion.dart",
+    "flutter_app/test/face_motion_test.dart"
+   ],
+   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
+  },
+  {
+   "binding": {
+    "CALLS": 2,
+    "FEEDS": 6,
+    "INSTANTIATES": 4,
+    "SHARED_STATE": 11
+   },
+   "cohesion": 0.079,
+   "evidence": [
+    [
+     "fn:tests.test_home_growth.rig",
+     "INSTANTIATES",
+     "cls:tests.test_strata_fencing.Wire"
+    ],
+    [
+     "fn:tests.test_home_growth.rig",
+     "CALLS",
+     "fn:tests.test_strata_fencing.Wire.transport_for"
+    ],
+    [
+     "fn:tests.test_home_growth.rig",
+     "FEEDS",
+     "fn:tests.test_strata_fencing.Wire.__init__"
+    ],
+    [
+     "fn:tests.test_hub_route.rig",
+     "INSTANTIATES",
+     "cls:tests.test_strata_fencing.Wire"
+    ],
+    [
+     "fn:tests.test_hub_route.rig",
+     "CALLS",
+     "fn:tests.test_strata_fencing.Wire.transport_for"
+    ],
+    [
+     "fn:tests.test_hub_route.rig",
+     "FEEDS",
+     "fn:tests.test_strata_fencing.Wire.__init__"
+    ],
+    [
+     "fn:tests.test_strata_migration.rig",
+     "INSTANTIATES",
+     "cls:tests.test_strata_fencing.Wire"
+    ],
+    [
+     "fn:tests.test_strata_migration.rig",
+     "FEEDS",
+     "fn:tests.test_strata_fencing.Wire.__init__"
+    ],
+    [
+     "mod:tests.test_strata_fencing",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "fn:tests.test_strata_moves.rig",
+     "INSTANTIATES",
+     "cls:tests.test_strata_fencing.Wire"
+    ],
+    [
+     "fn:tests.test_strata_moves.rig",
+     "FEEDS",
+     "fn:tests.test_strata_fencing.Wire.__init__"
+    ],
+    [
+     "mod:tests.test_strata_fencing",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_strata_migration",
+     "SHARES",
+     "store:lexicon.json"
+    ],
+    [
+     "mod:tests.test_home_growth",
+     "SHARES",
+     "store:lexicon.json"
+    ],
+    [
+     "mod:tests.test_strata_migration",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_strata_migration",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_strata_moves",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_strata_moves",
+     "SHARES",
+     "store:surface_working_state.json"
+    ],
+    [
+     "mod:tests.test_home_growth",
+     "SHARES",
+     "store:surface_working_state.json"
+    ]
+   ],
+   "external_binding": 268,
+   "higher_order": "subsys:area:tests",
+   "id": "subsys:composite:tests:f60e925c",
+   "members": [
+    "tests/test_home_growth.py",
+    "tests/test_hub_route.py",
+    "tests/test_strata_fencing.py",
+    "tests/test_strata_migration.py",
+    "tests/test_strata_moves.py"
+   ],
+   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
+  },
+  {
+   "binding": {
     "CALLS": 3
    },
    "cohesion": 0.75,
@@ -112,10 +291,10 @@
   {
    "binding": {
     "CALLS": 19,
-    "FEEDS": 15,
+    "FEEDS": 16,
     "SHARED_STATE": 1
    },
-   "cohesion": 0.104,
+   "cohesion": 0.094,
    "evidence": [
     [
      "fn:aurora_internal.tool_registry._audio_analysis",
@@ -133,7 +312,7 @@
      "fn:aurora_desktop_agent.get_agent"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.note",
+     "field:aurora_internal.tool_registry.ToolResult.data",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
@@ -143,12 +322,12 @@
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
-     "field:aurora_internal.tool_registry.ToolResult.data",
+     "field:aurora_internal.tool_registry.ToolResult.note",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ]
    ],
-   "external_binding": 300,
+   "external_binding": 347,
    "higher_order": "subsys:category:bridges",
    "id": "subsys:composite:bridges:9c439ea7",
    "members": [
@@ -197,7 +376,7 @@
     "INSTANTIATES": 2,
     "SHARED_STATE": 1
    },
-   "cohesion": 0.128,
+   "cohesion": 0.122,
    "evidence": [
     [
      "fn:aurora_praxis_initiative.PraxisInitiative._attempt",
@@ -230,7 +409,7 @@
      "fn:aurora_social_corroboration.SocialCorroboration.status"
     ]
    ],
-   "external_binding": 184,
+   "external_binding": 195,
    "higher_order": "subsys:category:bridges",
    "id": "subsys:composite:bridges:32b189f0",
    "members": [
@@ -243,10 +422,10 @@
   {
    "binding": {
     "CALLS": 80,
-    "FEEDS": 164,
+    "FEEDS": 174,
     "INSTANTIATES": 3
    },
-   "cohesion": 0.232,
+   "cohesion": 0.234,
    "evidence": [
     [
      "fn:aurora_crystal_ingestion._bare_word",
@@ -359,17 +538,17 @@
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior._profile",
+     "fn:aurora_internal.crystal_interior.aspects",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior.aspects",
+     "fn:aurora_internal.crystal_interior._profile",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ]
    ],
-   "external_binding": 818,
+   "external_binding": 841,
    "higher_order": "subsys:category:crystal",
    "id": "subsys:composite:crystal:cbfaf025",
    "members": [
@@ -495,7 +674,7 @@
     "CALLS": 7,
     "FEEDS": 4
    },
-   "cohesion": 0.046,
+   "cohesion": 0.045,
    "evidence": [
     [
      "fn:aurora_internal.aurora_lexical_crystals.LexicalCrystals.place",
@@ -533,7 +712,7 @@
      "fn:concept_crystal.ConceptCrystalRegistry.all_crystals"
     ]
    ],
-   "external_binding": 228,
+   "external_binding": 231,
    "higher_order": "subsys:category:crystal",
    "id": "subsys:composite:crystal:2c7f2bbb",
    "members": [
@@ -603,7 +782,7 @@
      "fn:aurora_dimensional_systems.DimensionalSystems.process_synthesis"
     ]
    ],
-   "external_binding": 1190,
+   "external_binding": 1193,
    "higher_order": "subsys:category:dimensional",
    "id": "subsys:composite:dimensional:78d8264b",
    "members": [
@@ -620,7 +799,7 @@
     "FEEDS": 9,
     "INSTANTIATES": 1
    },
-   "cohesion": 0.195,
+   "cohesion": 0.19,
    "evidence": [
     [
      "fn:aurora_computational_model.CPMSession.__init__",
@@ -638,7 +817,7 @@
      "fn:aurora_constraint_head.ConstraintHead.recursion_depth"
     ]
    ],
-   "external_binding": 62,
+   "external_binding": 64,
    "higher_order": "subsys:category:foundation",
    "id": "subsys:composite:foundation:9389ce53",
    "members": [
@@ -778,7 +957,7 @@
      "fn:aurora_internal.aurora_shared_helpers.clamp"
     ]
    ],
-   "external_binding": 1862,
+   "external_binding": 1870,
    "higher_order": "subsys:category:foundation",
    "id": "subsys:composite:foundation:5e482b6c",
    "members": [
@@ -1008,7 +1187,7 @@
     "INSTANTIATES": 5,
     "SHARED_STATE": 4
    },
-   "cohesion": 0.076,
+   "cohesion": 0.075,
    "evidence": [
     [
      "cls:tensor_occupancy_warp_bridge.TensorOccupancyWarpBridge",
@@ -1111,7 +1290,7 @@
      "store:universal_function_constraints.json"
     ]
    ],
-   "external_binding": 697,
+   "external_binding": 701,
    "higher_order": "subsys:category:genealogy",
    "id": "subsys:composite:genealogy:10b01d71",
    "members": [
@@ -1132,7 +1311,7 @@
     "INSTANTIATES": 4,
     "SHARED_STATE": 4
    },
-   "cohesion": 0.047,
+   "cohesion": 0.046,
    "evidence": [
     [
      "mod:aurora_autonomy",
@@ -1255,7 +1434,7 @@
      "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder._aurora_fault"
     ]
    ],
-   "external_binding": 3339,
+   "external_binding": 3370,
    "higher_order": "subsys:category:governance",
    "id": "subsys:composite:governance:16699d84",
    "members": [
@@ -1543,7 +1722,7 @@
     "CALLS": 2,
     "FEEDS": 1
    },
-   "cohesion": 0.014,
+   "cohesion": 0.013,
    "evidence": [
     [
      "fn:aurora_classroom._real_example_seed",
@@ -1561,7 +1740,7 @@
      "fn:aurora_internal.aurora_directed_training_corpus.DirectedTrainingCorpusBridge.samples_for_dimensions"
     ]
    ],
-   "external_binding": 219,
+   "external_binding": 220,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:f7283074",
    "members": [
@@ -1610,7 +1789,7 @@
      "fn:aurora_training_pulse.TrainingPulse.energize"
     ]
    ],
-   "external_binding": 210,
+   "external_binding": 212,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:680a4391",
    "members": [
@@ -1742,7 +1921,7 @@
      "fn:aurora_internal.aurora_evolution_hook.assign_target"
     ]
    ],
-   "external_binding": 914,
+   "external_binding": 915,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:6f24c869",
    "members": [
@@ -1845,7 +2024,7 @@
     "INSTANTIATES": 1,
     "SHARED_STATE": 1
    },
-   "cohesion": 0.091,
+   "cohesion": 0.087,
    "evidence": [
     [
      "fn:aurora_quantum_dream_substrate.QuantumDreamSubstrate._dream_encounter_with_selves",
@@ -1863,7 +2042,7 @@
      "fn:aurora_possibility_selves.crystal_authority"
     ]
    ],
-   "external_binding": 231,
+   "external_binding": 241,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:b74d3707",
    "members": [
@@ -1879,7 +2058,7 @@
     "INSTANTIATES": 11,
     "SHARED_STATE": 4
    },
-   "cohesion": 0.066,
+   "cohesion": 0.065,
    "evidence": [
     [
      "fn:aurora_concept_imager.ingest_concept_image",
@@ -1922,7 +2101,7 @@
      "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
     ],
     [
-     "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
+     "fn:aurora_expression_perception.build_layer5_associative_modules",
      "FEEDS",
      "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
     ],
@@ -1957,12 +2136,7 @@
      "fn:aurora_expression_perception.infer_word_role"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.accepted",
-     "FEEDS",
-     "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
-    ],
-    [
-     "field:aurora_articulation.ArticulationDecision.pressure_relief",
+     "field:aurora_articulation.ArticulationDecision.candidate_pressure",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
@@ -1970,9 +2144,14 @@
      "field:aurora_articulation.ArticulationDecision.original_pressure",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
+    ],
+    [
+     "field:aurora_articulation.ArticulationDecision.selected",
+     "FEEDS",
+     "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ]
    ],
-   "external_binding": 1109,
+   "external_binding": 1129,
    "higher_order": "subsys:category:perception",
    "id": "subsys:composite:perception:ab562dfd",
    "members": [
@@ -1988,10 +2167,10 @@
   },
   {
    "binding": {
-    "CALLS": 13,
-    "SPAWNS": 1
+    "CALLS": 16,
+    "SPAWNS": 2
    },
-   "cohesion": 0.667,
+   "cohesion": 0.621,
    "evidence": [
     [
      "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine",
@@ -2007,14 +2186,30 @@
      "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine",
      "CALLS",
      "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.AuroraService.AuroraService.callPythonString"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onRangeStart",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.word"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onWaveFormDataCapture",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.pushWaveform"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.startAmbientAudioCapture",
+     "CALLS",
+     "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.hear"
     ]
    ],
-   "external_binding": 7,
+   "external_binding": 11,
    "higher_order": "subsys:category:phone_android",
-   "id": "subsys:composite:phone_android:95732a08",
+   "id": "subsys:composite:phone_android:3c827534",
    "members": [
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
-    "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt"
+    "flutter_app/android/app/src/main/kotlin/org/aurora/app/MainActivity.kt",
+    "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -2022,7 +2217,7 @@
    "binding": {
     "CALLS": 6
    },
-   "cohesion": 0.316,
+   "cohesion": 0.3,
    "evidence": [
     [
      "fn:flutter_app.lib.habitat.habitat_bridge.HabitatBridge.getAffordances",
@@ -2040,7 +2235,7 @@
      "fn:flutter_app.lib.habitat.habitat_model.decodeHabitatJson"
     ]
    ],
-   "external_binding": 13,
+   "external_binding": 14,
    "higher_order": "subsys:category:phone_habitat",
    "id": "subsys:composite:phone_habitat:a1e0ab56",
    "members": [
@@ -2055,7 +2250,7 @@
     "FEEDS": 7,
     "SHARED_STATE": 1
    },
-   "cohesion": 0.018,
+   "cohesion": 0.017,
    "evidence": [
     [
      "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_historical_experience_status",
@@ -2073,7 +2268,7 @@
      "fn:flutter_app.android.app.src.main.python.aurora_historical_experience_environment.HistoricalExperienceEnvironment.resume"
     ]
    ],
-   "external_binding": 777,
+   "external_binding": 829,
    "higher_order": "subsys:category:phone_python",
    "id": "subsys:composite:phone_python:92d4d84c",
    "members": [
@@ -2086,7 +2281,7 @@
    "binding": {
     "CALLS": 45
    },
-   "cohesion": 0.45,
+   "cohesion": 0.441,
    "evidence": [
     [
      "fn:flutter_app.lib.screens.home_screen._HomeScreenState.initState",
@@ -2104,7 +2299,7 @@
      "fn:flutter_app.lib.screens.hub_screen._HubScreenState.Duration"
     ]
    ],
-   "external_binding": 55,
+   "external_binding": 57,
    "higher_order": "subsys:category:phone_ui",
    "id": "subsys:composite:phone_ui:e24ca393",
    "members": [
@@ -2166,7 +2361,7 @@
      "fn:aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state"
     ]
    ],
-   "external_binding": 504,
+   "external_binding": 506,
    "higher_order": "subsys:category:reasoning",
    "id": "subsys:composite:reasoning:b1415b0b",
    "members": [
@@ -2260,7 +2455,7 @@
      "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for"
     ],
     [
-     "field:aurora_internal.aurora_worth_evaluator.WorthTrajectory.FALLING",
+     "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for",
      "FEEDS",
      "fn:aurora_internal.aurora_operator_composer.OperatorComposer._parent_trajectory_ok"
     ],
@@ -2308,13 +2503,13 @@
   },
   {
    "binding": {
-    "CALLS": 97,
-    "FEEDS": 208,
+    "CALLS": 103,
+    "FEEDS": 223,
     "INHERITS": 1,
     "INSTANTIATES": 3,
     "SHARED_STATE": 12
    },
-   "cohesion": 0.217,
+   "cohesion": 0.223,
    "evidence": [
     [
      "cls:aurora_representational_resolution.RepresentationalResolutionEngine",
@@ -2427,7 +2622,7 @@
      "fn:aurora_internal.aurora_live_possibility_frontier._projection_contexts_for_candidate"
     ]
    ],
-   "external_binding": 1160,
+   "external_binding": 1193,
    "higher_order": "subsys:category:reasoning",
    "id": "subsys:composite:reasoning:929f8dd5",
    "members": [
@@ -2533,15 +2728,15 @@
     [
      "mod:aurora",
      "SHARES",
-     "organ:ExistenceMode"
+     "organ:understanding_contract"
     ],
     [
      "mod:aurora",
      "SHARES",
-     "organ:consciousness"
+     "organ:aurora"
     ]
    ],
-   "external_binding": 4197,
+   "external_binding": 4247,
    "higher_order": "subsys:category:runtime",
    "id": "subsys:composite:runtime:0414c162",
    "members": [
@@ -2559,7 +2754,7 @@
     "FEEDS": 191,
     "INSTANTIATES": 25
    },
-   "cohesion": 0.335,
+   "cohesion": 0.334,
    "evidence": [
     [
      "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.__init__",
@@ -2682,7 +2877,7 @@
      "fn:aurora_internal.dual_strata.micro_reasoning.generate_micro_reasoning"
     ]
    ],
-   "external_binding": 639,
+   "external_binding": 643,
    "higher_order": "subsys:category:strata",
    "id": "subsys:composite:strata:a8913e4f",
    "members": [
@@ -2709,12 +2904,12 @@
   },
   {
    "binding": {
-    "CALLS": 55,
-    "FEEDS": 75,
+    "CALLS": 57,
+    "FEEDS": 82,
     "INSTANTIATES": 4,
     "SHARED_STATE": 2
    },
-   "cohesion": 0.271,
+   "cohesion": 0.137,
    "evidence": [
     [
      "fn:aurora_internal.dual_strata.sensory_observation.run_sensory_observation_cycle",
@@ -2764,7 +2959,7 @@
     [
      "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink",
      "CALLS",
-     "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames"
+     "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.relay_to"
     ],
     [
      "fn:aurora_internal.dual_strata.strata_link.apply_downlink_record",
@@ -2772,9 +2967,9 @@
      "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.push_staged_frame"
     ],
     [
-     "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames",
+     "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink",
      "FEEDS",
-     "fn:aurora_internal.dual_strata.strata_link.DurableOutbox.append"
+     "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.relay_to"
     ],
     [
      "fn:aurora_internal.dual_strata.strata_link.StrataLinkServer._state_op",
@@ -2837,7 +3032,7 @@
      "fn:aurora_internal.dual_strata.sensory_snapshot_channel.write_surface_snapshot"
     ]
    ],
-   "external_binding": 365,
+   "external_binding": 917,
    "higher_order": "subsys:category:strata",
    "id": "subsys:composite:strata:ef2079cf",
    "members": [
@@ -2859,7 +3054,7 @@
     "FEEDS": 14,
     "INSTANTIATES": 2
    },
-   "cohesion": 0.049,
+   "cohesion": 0.048,
    "evidence": [
     [
      "fn:aurora_internal.dual_strata.presence_metrics.PresenceMetrics.snapshot",
@@ -2922,7 +3117,7 @@
      "fn:aurora_internal.dual_strata.presence_metrics.PresenceMetrics.record_scout_backend"
     ]
    ],
-   "external_binding": 545,
+   "external_binding": 550,
    "higher_order": "subsys:category:strata",
    "id": "subsys:composite:strata:46b5e9ce",
    "members": [
@@ -2989,7 +3184,7 @@
      "fn:tests.test_confluence._engine"
     ]
    ],
-   "external_binding": 171,
+   "external_binding": 172,
    "higher_order": "subsys:category:tests",
    "id": "subsys:composite:tests:14c6dc66",
    "members": [
@@ -3101,7 +3296,7 @@
     "FEEDS": 1,
     "SHARED_STATE": 2
    },
-   "cohesion": 0.098,
+   "cohesion": 0.088,
    "evidence": [
     [
      "mod:scripts.seed_abstract_regions_s1",
@@ -3119,7 +3314,7 @@
      "fn:scripts.seed_oets_aurora_vocabulary._relation"
     ]
    ],
-   "external_binding": 55,
+   "external_binding": 62,
    "higher_order": "subsys:category:tooling",
    "id": "subsys:composite:tooling:1128286a",
    "members": [
@@ -3172,7 +3367,7 @@
     "flutter_app/android/app/src/main/python/aurora_bridge.py"
    ],
    "kinds": {
-    "CALLS": 77,
+    "CALLS": 78,
     "IMPORTS": 1
    }
   },
@@ -3218,9 +3413,55 @@
     "flutter_app/android/app/src/main/python/aurora_bridge.py"
    ],
    "kinds": {
-    "CALLS": 22,
+    "CALLS": 23,
     "IMPORTS": 1,
     "INSTANTIATES": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
+     "mod:aurora_internal.dual_strata.strata_link"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge._ask_home",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.request_home"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_strata_link_status",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.strata_link_client_status"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.configure_surface"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.link_dir"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_link.stop_strata_link_client"
+    ]
+   ],
+   "files": [
+    "aurora_internal/dual_strata/strata_link.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "CALLS": 17,
+    "IMPORTS": 1
    }
   },
   {
@@ -3268,52 +3509,6 @@
     "CALLS": 12,
     "IMPORTS": 1,
     "INSTANTIATES": 1
-   }
-  },
-  {
-   "domains": [
-    "desktop",
-    "phone"
-   ],
-   "evidence": [
-    [
-     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
-     "IMPORTS",
-     "mod:aurora_internal.dual_strata.strata_link"
-    ],
-    [
-     "fn:flutter_app.android.app.src.main.python.aurora_bridge.get_strata_link_status",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.strata_link.strata_link_client_status"
-    ],
-    [
-     "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.strata_link.configure_surface"
-    ],
-    [
-     "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.strata_link.stop_strata_link_client"
-    ],
-    [
-     "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.strata_link.start_strata_link_client_if_configured"
-    ],
-    [
-     "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link",
-     "CALLS",
-     "fn:aurora_internal.dual_strata.strata_link.strata_link_client_status"
-    ]
-   ],
-   "files": [
-    "aurora_internal/dual_strata/strata_link.py",
-    "flutter_app/android/app/src/main/python/aurora_bridge.py"
-   ],
-   "kinds": {
-    "CALLS": 11,
-    "IMPORTS": 1
    }
   },
   {
@@ -3695,6 +3890,47 @@
     [
      "mod:flutter_app.android.app.src.main.python.aurora_bridge",
      "IMPORTS",
+     "mod:aurora_internal.dual_strata.surface_working_state"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge._capture_present_for_move",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.surface_working_state.capture"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge._restore_present_for_move",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.surface_working_state.restore"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.strata_link_transfer",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.surface_working_state.capture"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.strata_link_transfer.install_surface",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.surface_working_state.restore"
+    ]
+   ],
+   "files": [
+    "aurora_internal/dual_strata/surface_working_state.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "CALLS": 4,
+    "IMPORTS": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
      "mod:constraint_evolutionary_sim"
     ],
     [
@@ -3980,6 +4216,68 @@
     "CALLS": 1,
     "IMPORTS": 1,
     "INSTANTIATES": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
+     "mod:aurora_internal.dual_strata.strata_migration"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.configure_strata_link",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_migration.load_receipt"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.strata_migration.surface_only_ready"
+    ]
+   ],
+   "files": [
+    "aurora_internal/dual_strata/strata_migration.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "CALLS": 2,
+    "IMPORTS": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
+     "mod:aurora_internal.aurora_store_ownership"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+     "CALLS",
+     "fn:aurora_internal.aurora_store_ownership.enable_surface_only"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge._store_relational_claim",
+     "CALLS",
+     "fn:aurora_internal.aurora_store_ownership.store_write_allowed"
+    ]
+   ],
+   "files": [
+    "aurora_internal/aurora_store_ownership.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "CALLS": 2,
+    "IMPORTS": 1
    }
   },
   {
@@ -4375,6 +4673,32 @@
     [
      "mod:flutter_app.android.app.src.main.python.aurora_bridge",
      "IMPORTS",
+     "mod:aurora_internal.dual_strata.hub_route"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge._hub_message_loop",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.hub_route.answer_pending"
+    ]
+   ],
+   "files": [
+    "aurora_internal/dual_strata/hub_route.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "CALLS": 1,
+    "IMPORTS": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
      "mod:aurora_computational_model"
     ],
     [
@@ -4468,6 +4792,84 @@
    "kinds": {
     "CALLS": 1,
     "IMPORTS": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
+     "mod:aurora_internal.dual_strata.home_growth"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+     "CALLS",
+     "fn:aurora_internal.dual_strata.home_growth.install_pending_growth"
+    ]
+   ],
+   "files": [
+    "aurora_internal/dual_strata/home_growth.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "CALLS": 1,
+    "IMPORTS": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
+     "mod:aurora_representational_resolution"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+     "CALLS",
+     "fn:aurora_representational_resolution.set_home_tier"
+    ]
+   ],
+   "files": [
+    "aurora_representational_resolution.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "CALLS": 1,
+    "IMPORTS": 1
+   }
+  },
+  {
+   "domains": [
+    "desktop",
+    "phone"
+   ],
+   "evidence": [
+    [
+     "mod:flutter_app.android.app.src.main.python.aurora_bridge",
+     "IMPORTS",
+     "mod:aurora_internal.dual_strata.inquiry_tiers"
+    ],
+    [
+     "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize",
+     "INSTANTIATES",
+     "cls:aurora_internal.dual_strata.inquiry_tiers.SurfaceInquiryTier"
+    ]
+   ],
+   "files": [
+    "aurora_internal/dual_strata/inquiry_tiers.py",
+    "flutter_app/android/app/src/main/python/aurora_bridge.py"
+   ],
+   "kinds": {
+    "IMPORTS": 1,
+    "INSTANTIATES": 1
    }
   },
   {
@@ -4686,11 +5088,11 @@
     [
      "mod:flutter_app.android.app.src.main.python.aurora_bridge",
      "IMPORTS",
-     "mod:aurora_sedimemory"
+     "mod:aurora_internal.dual_strata"
     ]
    ],
    "files": [
-    "aurora_sedimemory.py",
+    "aurora_internal/dual_strata/__init__.py",
     "flutter_app/android/app/src/main/python/aurora_bridge.py"
    ],
    "kinds": {
@@ -4706,11 +5108,11 @@
     [
      "mod:flutter_app.android.app.src.main.python.aurora_bridge",
      "IMPORTS",
-     "mod:aurora_internal.dual_strata"
+     "mod:aurora_sedimemory"
     ]
    ],
    "files": [
-    "aurora_internal/dual_strata/__init__.py",
+    "aurora_sedimemory.py",
     "flutter_app/android/app/src/main/python/aurora_bridge.py"
    ],
    "kinds": {
@@ -5291,12 +5693,12 @@
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.fit_rationales"
+       "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
       ],
       [
        "mod:aurora_internal.scouting.contracts",
        "SHARES",
-       "field:aurora_internal.scouting.contracts.ScoutReport.response_relationships"
+       "field:aurora_internal.scouting.contracts.ScoutReport.fit_rationales"
       ]
      ],
      "link": [
@@ -5319,7 +5721,7 @@
   {
    "best_evidence_composite": "subsys:composite:bridges:32b189f0",
    "candidate": false,
-   "cohesion": 0.128,
+   "cohesion": 0.122,
    "declared_links": 2,
    "domain": "desktop",
    "hub": "aurora_praxis_messenger.py",
@@ -5403,21 +5805,21 @@
   {
    "best_evidence_composite": "subsys:composite:bridges:9c439ea7",
    "candidate": false,
-   "cohesion": 0.1,
+   "cohesion": 0.09,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_desktop_agent.py",
    "id": "bridges.3",
    "internal_binding": {
     "CALLS": 19,
-    "FEEDS": 12
+    "FEEDS": 13
    },
    "jaccard": 0.667,
    "links": [
     {
      "binding": {
       "CALLS": 19,
-      "FEEDS": 12
+      "FEEDS": 13
      },
      "evidence": [
       [
@@ -5454,14 +5856,14 @@
   {
    "best_evidence_composite": "subsys:composite:crystal:cbfaf025",
    "candidate": false,
-   "cohesion": 0.232,
+   "cohesion": 0.234,
    "declared_links": 30,
    "domain": "desktop",
    "hub": "aurora_internal/crystal_runtime.py",
    "id": "crystal.1",
    "internal_binding": {
     "CALLS": 80,
-    "FEEDS": 164,
+    "FEEDS": 174,
     "INSTANTIATES": 3
    },
    "jaccard": 1.0,
@@ -5631,7 +6033,7 @@
     {
      "binding": {
       "CALLS": 1,
-      "FEEDS": 2
+      "FEEDS": 3
      },
      "evidence": [
       [
@@ -5647,7 +6049,7 @@
       [
        "fn:aurora_internal.crystal_associations.apply_to_crystals",
        "FEEDS",
-       "fn:aurora_internal.crystal_runtime.run_pass"
+       "fn:aurora_internal.crystal_runtime._write_report"
       ]
      ],
      "link": [
@@ -5722,12 +6124,12 @@
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior._profile",
+       "fn:aurora_internal.crystal_interior.aspects",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior.aspects",
+       "fn:aurora_internal.crystal_interior._profile",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ]
@@ -5816,7 +6218,7 @@
     {
      "binding": {
       "CALLS": 2,
-      "FEEDS": 4
+      "FEEDS": 6
      },
      "evidence": [
       [
@@ -5979,7 +6381,7 @@
     {
      "binding": {
       "CALLS": 1,
-      "FEEDS": 2
+      "FEEDS": 3
      },
      "evidence": [
       [
@@ -5995,7 +6397,7 @@
       [
        "fn:aurora_internal.crystal_interior.apply_to_crystals",
        "FEEDS",
-       "fn:aurora_internal.crystal_runtime.run_pass"
+       "fn:aurora_internal.crystal_runtime._write_report"
       ]
      ],
      "link": [
@@ -6125,7 +6527,7 @@
     {
      "binding": {
       "CALLS": 2,
-      "FEEDS": 4
+      "FEEDS": 5
      },
      "evidence": [
       [
@@ -6152,7 +6554,7 @@
     {
      "binding": {
       "CALLS": 9,
-      "FEEDS": 12,
+      "FEEDS": 15,
       "INSTANTIATES": 1
      },
      "evidence": [
@@ -6180,7 +6582,7 @@
     {
      "binding": {
       "CALLS": 2,
-      "FEEDS": 4
+      "FEEDS": 6
      },
      "evidence": [
       [
@@ -6421,7 +6823,7 @@
   {
    "best_evidence_composite": "subsys:composite:crystal:2c7f2bbb",
    "candidate": false,
-   "cohesion": 0.046,
+   "cohesion": 0.045,
    "declared_links": 3,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_lexical_crystals.py",
@@ -6908,17 +7310,17 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.N",
-       "FEEDS",
-       "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
-      ],
-      [
        "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.A",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.T",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.X",
+       "FEEDS",
+       "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
+      ],
+      [
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.B",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ]
@@ -7259,7 +7661,7 @@
   {
    "best_evidence_composite": "subsys:composite:foundation:9389ce53",
    "candidate": false,
-   "cohesion": 0.195,
+   "cohesion": 0.19,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_computational_model.py",
@@ -9601,7 +10003,7 @@
   {
    "best_evidence_composite": "subsys:composite:learning:b74d3707",
    "candidate": false,
-   "cohesion": 0.091,
+   "cohesion": 0.087,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_possibility_selves.py",
@@ -9656,7 +10058,7 @@
   {
    "best_evidence_composite": null,
    "candidate": false,
-   "cohesion": 0.027,
+   "cohesion": 0.025,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_interaction_memory.py",
@@ -9700,7 +10102,7 @@
   {
    "best_evidence_composite": "subsys:composite:perception:ab562dfd",
    "candidate": false,
-   "cohesion": 0.063,
+   "cohesion": 0.062,
    "declared_links": 10,
    "domain": "desktop",
    "hub": "aurora_expression_perception.py",
@@ -9789,7 +10191,7 @@
        "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
       ],
       [
-       "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
+       "fn:aurora_expression_perception.build_layer5_associative_modules",
        "FEEDS",
        "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
       ]
@@ -9953,18 +10355,18 @@
    "subsystem": "perception"
   },
   {
-   "best_evidence_composite": "subsys:composite:phone_android:95732a08",
+   "best_evidence_composite": "subsys:composite:phone_android:3c827534",
    "candidate": false,
-   "cohesion": 0.952,
-   "declared_links": 5,
+   "cohesion": 0.793,
+   "declared_links": 6,
    "domain": "phone",
    "hub": "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
    "id": "phone_android.1",
    "internal_binding": {
-    "CALLS": 17,
+    "CALLS": 20,
     "SPAWNS": 3
    },
-   "jaccard": 0.4,
+   "jaccard": 0.6,
    "links": [
     {
      "binding": {
@@ -10010,6 +10412,14 @@
      ]
     },
     {
+     "binding": {},
+     "evidence": [],
+     "link": [
+      "flutter_app/android/app/src/main/kotlin/org/aurora/app/AuroraService.kt",
+      "flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt"
+     ]
+    },
+    {
      "binding": {
       "CALLS": 2
      },
@@ -10032,13 +10442,24 @@
     },
     {
      "binding": {
+      "CALLS": 3,
       "SPAWNS": 1
      },
      "evidence": [
       [
-       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.configureFlutterEngine",
-       "SPAWNS",
-       "cls:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService"
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onRangeStart",
+       "CALLS",
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.word"
+      ],
+      [
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onWaveFormDataCapture",
+       "CALLS",
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.pushWaveform"
+      ],
+      [
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.startAmbientAudioCapture",
+       "CALLS",
+       "fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.PresenceVoice.hear"
       ]
      ],
      "link": [
@@ -10077,13 +10498,13 @@
     "flutter_app/android/app/src/main/kotlin/org/aurora/app/ScreenObserverService.kt"
    ],
    "missing_from_graph": [],
-   "status": "supported",
+   "status": "partly_supported",
    "subsystem": "phone_android"
   },
   {
    "best_evidence_composite": "subsys:composite:phone_habitat:a1e0ab56",
    "candidate": false,
-   "cohesion": 0.35,
+   "cohesion": 0.368,
    "declared_links": 7,
    "domain": "phone",
    "hub": "flutter_app/lib/habitat/habitat_gesture_layer.dart",
@@ -10229,7 +10650,7 @@
   {
    "best_evidence_composite": "subsys:composite:phone_python:92d4d84c",
    "candidate": false,
-   "cohesion": 0.018,
+   "cohesion": 0.017,
    "declared_links": 1,
    "domain": "phone",
    "hub": "flutter_app/android/app/src/main/python/aurora_bridge.py",
@@ -10282,13 +10703,13 @@
   {
    "best_evidence_composite": "subsys:composite:phone_ui:e24ca393",
    "candidate": false,
-   "cohesion": 0.456,
+   "cohesion": 0.407,
    "declared_links": 3,
    "domain": "phone",
    "hub": "flutter_app/lib/main.dart",
    "id": "phone_ui.1",
    "internal_binding": {
-    "CALLS": 47
+    "CALLS": 46
    },
    "jaccard": 0.5,
    "links": [
@@ -10339,14 +10760,14 @@
   {
    "best_evidence_composite": "subsys:composite:reasoning:929f8dd5",
    "candidate": false,
-   "cohesion": 0.208,
+   "cohesion": 0.214,
    "declared_links": 8,
    "domain": "desktop",
    "hub": "aurora_representational_address.py",
    "id": "reasoning.1",
    "internal_binding": {
-    "CALLS": 97,
-    "FEEDS": 208,
+    "CALLS": 103,
+    "FEEDS": 223,
     "INHERITS": 1,
     "INSTANTIATES": 4,
     "SHARED_STATE": 12
@@ -10455,8 +10876,8 @@
     },
     {
      "binding": {
-      "CALLS": 22,
-      "FEEDS": 47
+      "CALLS": 24,
+      "FEEDS": 52
      },
      "evidence": [
       [
@@ -10509,8 +10930,8 @@
     },
     {
      "binding": {
-      "CALLS": 30,
-      "FEEDS": 67,
+      "CALLS": 34,
+      "FEEDS": 77,
       "INHERITS": 1,
       "SHARED_STATE": 11
      },
@@ -10755,7 +11176,7 @@
        "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for"
       ],
       [
-       "field:aurora_internal.aurora_worth_evaluator.WorthTrajectory.FALLING",
+       "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for",
        "FEEDS",
        "fn:aurora_internal.aurora_operator_composer.OperatorComposer._parent_trajectory_ok"
       ]
@@ -10910,8 +11331,8 @@
   {
    "best_evidence_composite": "subsys:composite:runtime:0414c162",
    "candidate": false,
-   "cohesion": 0.029,
-   "declared_links": 7,
+   "cohesion": 0.031,
+   "declared_links": 8,
    "domain": "desktop",
    "hub": "aurora.py",
    "id": "runtime.1",
@@ -10919,9 +11340,9 @@
     "CALLS": 10,
     "FEEDS": 53,
     "INSTANTIATES": 4,
-    "SHARED_STATE": 60
+    "SHARED_STATE": 73
    },
-   "jaccard": 0.714,
+   "jaccard": 0.625,
    "links": [
     {
      "binding": {
@@ -11042,6 +11463,14 @@
      ]
     },
     {
+     "binding": {},
+     "evidence": [],
+     "link": [
+      "aurora_hub.py",
+      "aurora_internal/__init__.py"
+     ]
+    },
+    {
      "binding": {
       "CALLS": 3,
       "FEEDS": 4,
@@ -11090,6 +11519,7 @@
    "members": [
     "aurora.py",
     "aurora_daemon.py",
+    "aurora_hub.py",
     "aurora_internal/__init__.py",
     "aurora_internal/aurora_turn_chain.py",
     "aurora_runtime.py",
@@ -11103,14 +11533,14 @@
   {
    "best_evidence_composite": "subsys:composite:strata:a8913e4f",
    "candidate": false,
-   "cohesion": 0.222,
+   "cohesion": 0.18,
    "declared_links": 80,
    "domain": "desktop",
    "hub": "aurora_internal/dual_strata/__init__.py",
    "id": "strata.1",
    "internal_binding": {
-    "CALLS": 175,
-    "FEEDS": 284,
+    "CALLS": 177,
+    "FEEDS": 291,
     "INSTANTIATES": 32,
     "SHARED_STATE": 5
    },
@@ -12171,13 +12601,13 @@
     {
      "binding": {
       "CALLS": 2,
-      "FEEDS": 2
+      "FEEDS": 3
      },
      "evidence": [
       [
        "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink",
        "CALLS",
-       "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames"
+       "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.relay_to"
       ],
       [
        "fn:aurora_internal.dual_strata.strata_link.apply_downlink_record",
@@ -12185,9 +12615,9 @@
        "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.push_staged_frame"
       ],
       [
-       "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames",
+       "fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink",
        "FEEDS",
-       "fn:aurora_internal.dual_strata.strata_link.DurableOutbox.append"
+       "fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.relay_to"
       ]
      ],
      "link": [
@@ -12328,12 +12758,12 @@
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.observation_count",
+       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
+       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.context_families",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ]
@@ -12551,8 +12981,8 @@
     },
     {
      "binding": {
-      "CALLS": 31,
-      "FEEDS": 42,
+      "CALLS": 32,
+      "FEEDS": 46,
       "INSTANTIATES": 4,
       "SHARED_STATE": 2
      },
@@ -12580,8 +13010,8 @@
     },
     {
      "binding": {
-      "CALLS": 3,
-      "FEEDS": 5
+      "CALLS": 4,
+      "FEEDS": 7
      },
      "evidence": [
       [
