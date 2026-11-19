@@ -915,10 +915,10 @@ class FailPointLedger:
     def save(self) -> bool:
         try:
             os.makedirs(self.state_dir, exist_ok=True)
+            path = os.path.join(self.state_dir, _FAIL_POINTS_FILE)
             from aurora_internal.aurora_store_ownership import store_write_allowed
             if not store_write_allowed(path):
                 return True
-            path = os.path.join(self.state_dir, _FAIL_POINTS_FILE)
             # Safety: if in-memory state is empty but disk has data, merge before saving.
             # Guards against a startup where load() failed (corrupt JSON) so the ledger
             # was never populated -- we must not overwrite good disk data with zeros.
