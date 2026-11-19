@@ -3,6 +3,10 @@
 This marker authorizes the dedicated GitHub Actions graph and module ownership
 regeneration on the consolidated integration branch only, not on main.
 
+Retry the generator with the explicit Markdown rendering step after derived
+source-map updates. This change is a workflow correction, not a new source
+contract.
+
 The preceding source restoration passed the focused Build725, reflective,
 desktop resident, Praxis and strata check: 152 passed, 2 skipped.
 The final graph must use exactly the installed source and canonical ownership
