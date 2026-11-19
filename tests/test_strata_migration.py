@@ -120,6 +120,7 @@ def test_apply_unions_installs_archives_and_receipts(rig):
     assert json.loads((archive / "phone" / "grammar_state.json").read_text())["motifs"] == {"a": 1}
     assert receipt["chosen"] == {"lexicon.json": "phone", "grammar_state.json": "home"}
     assert sl.link_dir(home).joinpath(sm.RECEIPT_FILENAME).exists()
+    assert sl.link_dir(home).joinpath("downlink_enabled").exists()     # one history now
 
 
 def test_phone_is_surface_only_only_after_a_matching_receipt(rig):

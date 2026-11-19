@@ -67,6 +67,7 @@ class DesktopRuntime:
         self.home_requests_seen = {}
         self.pending_moves = []
         self.inquiry_desk = None
+        self._move_job = None
 
     def _persist_jobs(self):
         with self._jobs_lock:
@@ -197,6 +198,7 @@ class DesktopRuntime:
         self._tasks["sensing"] = (5, self._sensing_tick)
         self._due["sensing"] = 5
         self._tasks["home_requests"] = (3, self._home_requests_tick)
+        self._tasks["move"] = (2, self._move_tick)
         self._due["home_requests"] = 3
         # Mutation remains governed by the organism's existing self-modification
         # boundary, not enabled merely by installing a desktop interface.
@@ -227,6 +229,7 @@ class DesktopRuntime:
         self.surface_id = surface_identity(self.state_dir)
         self.link = StrataLinkServer(self.state_dir, host=os.environ.get("AURORA_STRATA_LINK_HOST", "127.0.0.1"),
                                     port=int(os.environ.get("AURORA_STRATA_LINK_PORT", "8791")), state_install_allowed=False)
+        self.link.set_home_surface(self.surface_id)
         self.link.handle_sync({"surface_id": self.surface_id})
         self.link.start()
         self.systems["_strata_link_server"] = self.link
@@ -337,9 +340,40 @@ class DesktopRuntime:
         return self.inquiry_desk
 
     def _embodiment_move_requested(self, req):
-        """Her own request to move (3c) is carried out by home; filled in by
-        the move orchestration."""
-        self.pending_moves.append(dict(req))
+        """Her own request to move (3c): home files it and carries it out in
+        its safe order.  Only the device that holds her may ask."""
+        payload = dict(req.get("payload") or {})
+        if self.link is None:
+            result = {"ok": False, "error": "strata server is unavailable"}
+        else:
+            result = self.link.request_move(str(payload.get("to") or ""), requested_by="her",
+                                            from_surface=str(req.get("from") or ""))
+        self.pending_moves.append({"request": dict(req), "result": result, "at": time.time()})
+        del self.pending_moves[:-20]
+        return result
+
+    def request_move_from_hub(self, to):
+        """Sir's Move button: the same request, filed for the holder."""
+        if self.link is None:
+            return {"ok": False, "error": "strata server is unavailable"}
+        return self.link.request_move(str(to or ""), requested_by="hub")
+
+    def _move_tick(self, systems):
+        """The desktop's own surface takes its part in a move locally."""
+        if self.link is None:
+            return None
+        order = self.link.local_move_order(self.surface_id)
+        if not order:
+            return None
+        key = (order.get("move_id"), order.get("action"))
+        if key == self._move_job:
+            return None
+        self._move_job = key
+        if order.get("action") == "checkpoint":
+            return self.submit("handoff_prepare", {"move_id": order.get("move_id")})
+        if order.get("action") == "claim" and order.get("token"):
+            return self.submit("handoff_claim", {"token": order["token"], "move_id": order.get("move_id")})
+        return None
 
     def _sensing_tick(self, systems):
         if self.link and not self.link.surface_ready(self.surface_id):
@@ -603,6 +637,7 @@ class DesktopRuntime:
                 "strata": self.link.status() if self.link else {"status": "not_started"},
                 "first_pairing": self._first_pairing_status(),
                 "home_requests": dict(self.home_requests_seen),
+                "moving": self.link.move_status() if self.link else None,
                 "shared_inquiry": self.inquiry_desk.status() if self.inquiry_desk is not None else None,
                 "acm": {**self.acm.status(), "coalesced_observations": self._coalesced_kernel} if self.acm else {"status": "not_configured"},
                 "surface": "local" if not self.link or self.link.surface_ready(self.surface_id) else "standby",

@@ -104,6 +104,12 @@ MAX_CLOCK_SKEW_S = 300.0
 
 _PROJECTION_FILENAME = "subsurface_projection.json"
 HANDOFF_TTL_S = 3600.0          # a checkpoint waits this long for its claimant
+# A move (3c) starts only once its target has spoken to home this recently, so
+# she is never frozen with nowhere to go; a step that hears nothing for the
+# step window is cancelled and she stays where she was.
+MOVE_TARGET_RECENT_S = 90.0
+MOVE_STEP_TIMEOUT_S = 300.0
+MOVE_WAIT_FOR_TARGET_S = 1800.0
 MAX_SENSORY_SNAPSHOT_BYTES = 1_500_000
 
 
@@ -510,7 +516,8 @@ def apply_uplink_record(state_dir: Any, record: Mapping[str, Any], *, late: bool
     return "unknown_channel"
 
 
-def collect_subsurface_downlink(state_dir: Any, outbox: DurableOutbox, memo: Dict[str, Any]) -> int:
+def collect_subsurface_downlink(state_dir: Any, outbox: DurableOutbox, memo: Dict[str, Any],
+                                devices: Optional[List[Dict[str, Any]]] = None) -> int:
     """Subsurface side: stage what the active Surface is likely to need.
 
     The projection is sent only when its content changed.  Predictive frames
@@ -552,7 +559,38 @@ def collect_subsurface_downlink(state_dir: Any, outbox: DurableOutbox, memo: Dic
         queued += relay_down(state_dir, outbox, memo)
     except Exception:
         pass
+    try:
+        # 3c: she knows where she can go.  Sent when the set or the holder
+        # changes, not every time a device speaks.
+        if devices is None:
+            devices = _devices_from_disk(state_dir)
+        shape = json.dumps([[d["id"], d["name"], d["home"], d["holds_her"]] for d in devices], sort_keys=True)
+        if devices and shape != memo.get("devices_shape"):
+            outbox.append("devices", "state", {"devices": devices, "at": time.time()})
+            memo["devices_shape"] = shape
+            queued += 1
+    except Exception:
+        pass
     return queued
+
+
+def _devices_from_disk(state_dir: Any) -> List[Dict[str, Any]]:
+    data = _read_json(link_dir(state_dir) / "server_state.json", {})
+    if not isinstance(data, dict):
+        return []
+    home_id = _read_text(link_dir(state_dir) / "home_surface_id.txt")
+    names = dict(data.get("names") or {})
+    seen = dict(data.get("last_seen") or {})
+    ids = set(seen) | ({home_id} if home_id else set())
+    return [{"id": sid, "name": "home" if sid == home_id else str(names.get(sid) or sid),
+             "home": sid == home_id, "holds_her": str(data.get("owner") or "") == sid,
+             "last_spoke_at": seen.get(sid)} for sid in sorted(ids)]
+
+
+def read_known_devices(state_dir: Any) -> List[Dict[str, Any]]:
+    """Surface side: where she can go, as home last said."""
+    data = _read_json(link_dir(state_dir) / "devices.json", {})
+    return list(data.get("devices") or []) if isinstance(data, dict) else []
 
 
 def apply_downlink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
@@ -576,6 +614,9 @@ def apply_downlink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
                             for e in read_surface_guidance_queue(state_dir)):
             return "applied"  # already queued here; a resend changes nothing
         append_surface_guidance(state_dir, payload)
+        return "applied"
+    if channel == "devices" and isinstance(payload, dict):
+        _atomic_write_json(link_dir(state_dir) / "devices.json", payload)
         return "applied"
     if channel == "home_inquiry" and isinstance(payload, dict):
         from aurora_internal.dual_strata.inquiry_tiers import receive_down
@@ -643,7 +684,12 @@ class StrataLinkServer:
                 "sealed": {str(k): int(v or 0) for k, v in dict(data.get("sealed") or {}).items()},
                 # surface_id -> its first-pairing migration (strata_migration)
                 "first_pairing": {str(k): dict(v) for k, v in dict(data.get("first_pairing") or {}).items()
-                                  if isinstance(v, dict)}}
+                                  if isinstance(v, dict)},
+                # 3c: the one move home is carrying out, and the last few
+                "move": dict(data["move"]) if isinstance(data.get("move"), dict) else None,
+                "moves": [m for m in (data.get("moves") or []) if isinstance(m, dict)][-20:],
+                # surface_id -> the name its device goes by
+                "names": {str(k): str(v)[:64] for k, v in dict(data.get("names") or {}).items() if v}}
 
     @staticmethod
     def _owner_epochs(data: Mapping[str, Any]) -> Dict[str, str]:
@@ -736,6 +782,8 @@ class StrataLinkServer:
             now = time.time()
             self.counters["syncs"] += 1
             state["last_seen"][surface_id] = now
+            if request.get("name"):
+                state["names"][surface_id] = str(request.get("name"))[:64]
             handoff = state.get("handoff")
             expired = bool(handoff and now - float(handoff.get("at", 0.0) or 0.0) > HANDOFF_TTL_S)
             wants_claim = bool(request.get("claim")) and state["owner"] != surface_id
@@ -789,12 +837,14 @@ class StrataLinkServer:
                 if str(request.get("link_key") or "") == link_key:
                     self.outbox.ack(int(request.get("down_ack", 0) or 0))
                 if self.downlink_enabled() and not state.get("handoff"):
-                    collect_subsurface_downlink(self.state_dir, self.outbox, state["memo"])
+                    collect_subsurface_downlink(self.state_dir, self.outbox, state["memo"],
+                                                devices=self.known_devices(state))
                     down = self.outbox.pending(MAX_BATCH)
             else:
                 self.counters["standby_syncs"] += 1
                 up_ack = self._accept_from_superseded(
                     state, surface_id, [r for r in (request.get("up") or []) if isinstance(r, dict)], up_ack)
+            move_order = self._advance_move(state, surface_id, now)
             _atomic_write_json(self._state_path, state)
             response = {"v": LINK_VERSION, "epoch": state["epoch"], "owner": state["owner"],
                         "role": "active" if active else "standby", "link_key": link_key,
@@ -808,7 +858,146 @@ class StrataLinkServer:
                 response["error"] = refused
             if state_result is not None:
                 response["state_result"] = state_result
+            if move_order is not None:
+                response["move"] = move_order
             return response
+
+    # -- moving her (3c): she asks, home carries it out --------------------------
+
+    home_surface_id: str = ""        # the desktop's own surface, set by its resident
+
+    def set_home_surface(self, surface_id: str) -> None:
+        self.home_surface_id = str(surface_id or "")
+        (link_dir(self.state_dir) / "home_surface_id.txt").write_text(self.home_surface_id, encoding="utf-8")
+
+    def _resolve_target(self, state: Mapping[str, Any], to: str) -> str:
+        wanted = str(to or "").strip()
+        if not wanted:
+            return ""
+        if wanted.lower() == "home":
+            return self.home_surface_id
+        if wanted in state["last_seen"] or wanted == self.home_surface_id:
+            return wanted
+        for sid, name in state["names"].items():
+            if name.lower() == wanted.lower():
+                return sid
+        return ""
+
+    def known_devices(self, state: Optional[Mapping[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Where she can go: every device home knows, and when it last spoke."""
+        state = state or self._load_state()
+        ids = set(state["last_seen"]) | ({self.home_surface_id} if self.home_surface_id else set())
+        out = []
+        for sid in sorted(ids):
+            is_home = sid == self.home_surface_id
+            out.append({"id": sid, "name": "home" if is_home else state["names"].get(sid, sid),
+                        "home": is_home, "holds_her": state["owner"] == sid,
+                        "last_spoke_at": state["last_seen"].get(sid)})
+        return out
+
+    def request_move(self, to: str, *, requested_by: str = "her",
+                     from_surface: str = "") -> Dict[str, Any]:
+        """File a move.  Only the device that holds her may ask (the hub asks
+        for the holder); home then carries it out in its safe order."""
+        with self._lock:
+            state = self._load_state()
+            owner = state["owner"]
+            if not owner:
+                return {"ok": False, "error": "no_one_holds_her"}
+            if from_surface and from_surface != owner:
+                return {"ok": False, "error": "only_the_holder_may_ask"}
+            target = self._resolve_target(state, to)
+            if not target:
+                return {"ok": False, "error": "unknown_device", "devices": self.known_devices(state)}
+            if target == owner:
+                return {"ok": False, "error": "already_there"}
+            if state.get("move"):
+                return {"ok": False, "error": "a_move_is_already_under_way", "move": state["move"]}
+            if state.get("handoff"):
+                return {"ok": False, "error": "a_checkpoint_is_already_waiting"}
+            now = time.time()
+            state["move"] = {"move_id": uuid.uuid4().hex[:16], "from": owner, "to": target,
+                             "epoch": state["epoch"], "at": now, "stage": "waiting_for_target",
+                             "requested_by": str(requested_by or "her")[:32]}
+            _atomic_write_json(self._state_path, state)
+            return {"ok": True, **state["move"]}
+
+    def _present(self, state: Mapping[str, Any], surface_id: str, now: float) -> bool:
+        if surface_id and surface_id == self.home_surface_id:
+            return True                     # the desktop's own surface is always here
+        return now - float(state["last_seen"].get(surface_id, 0.0) or 0.0) <= MOVE_TARGET_RECENT_S
+
+    def _end_move(self, state: Dict[str, Any], outcome: str, now: float) -> None:
+        move = dict(state.get("move") or {})
+        if not move:
+            return
+        move.update({"outcome": outcome, "ended_at": now})
+        state["moves"] = (state.get("moves") or [])[-19:] + [move]
+        state["move"] = None
+
+    def _cancel_move(self, state: Dict[str, Any], outcome: str, now: float) -> None:
+        """She stays where she was.  A checkpoint already taken is dropped and
+        the source holds her again at the next epoch (as handoff_cancel)."""
+        move = state.get("move") or {}
+        handoff = state.get("handoff")
+        if handoff and handoff.get("from") == move.get("from"):
+            state["handoff"] = None
+            self._take_ownership(state, str(move.get("from")), now)
+            self._drop_handoff()
+        self._end_move(state, outcome, now)
+
+    def _advance_move(self, state: Dict[str, Any], surface_id: str, now: float) -> Optional[Dict[str, Any]]:
+        """Carry the move one step on, and return this device's part in it."""
+        move = state.get("move")
+        if not move:
+            return None
+        source, target, stage = str(move.get("from")), str(move.get("to")), str(move.get("stage"))
+        if state["owner"] == target and not state.get("handoff"):
+            self._end_move(state, "completed", now)
+            return None
+        if state["owner"] != source and not state.get("handoff"):
+            self._end_move(state, "superseded", now)
+            return None
+        if stage == "waiting_for_target":
+            if self._present(state, target, now):
+                move.update(stage="checkpoint_asked", stage_at=now)
+                stage = "checkpoint_asked"
+            elif now - float(move.get("at", now)) > MOVE_WAIT_FOR_TARGET_S:
+                self._end_move(state, "target_never_showed", now)
+                return None
+        if stage == "checkpoint_asked":
+            handoff = state.get("handoff")
+            if handoff and handoff.get("from") == source:
+                move.update(stage="claim_offered", stage_at=now)
+                stage = "claim_offered"
+            elif now - float(move.get("stage_at", now)) > MOVE_STEP_TIMEOUT_S:
+                self._cancel_move(state, "source_did_not_checkpoint", now)
+                return None
+            elif surface_id == source:
+                return {"action": "checkpoint", "move_id": move["move_id"], "to": target}
+        if stage == "claim_offered":
+            handoff = state.get("handoff") or {}
+            if not self._present(state, target, now) and \
+                    now - float(state["last_seen"].get(target, 0.0) or 0.0) > MOVE_STEP_TIMEOUT_S:
+                self._cancel_move(state, "target_went_quiet", now)
+                return None
+            if surface_id == target:
+                return {"action": "claim", "move_id": move["move_id"],
+                        "token": str(handoff.get("token") or "")}
+        return None
+
+    def local_move_order(self, surface_id: str) -> Optional[Dict[str, Any]]:
+        """The desktop's own surface takes part without a network step."""
+        with self._lock:
+            state = self._load_state()
+            order = self._advance_move(state, surface_id, time.time())
+            _atomic_write_json(self._state_path, state)
+            return order
+
+    def move_status(self) -> Dict[str, Any]:
+        state = self._load_state()
+        return {"move": state.get("move"), "recent": (state.get("moves") or [])[-5:],
+                "devices": self.known_devices(state)}
 
     # -- state transfer (seed and handoff) ----------------------------------------
 
@@ -959,6 +1148,8 @@ class StrataLinkServer:
                     "at": now, "digest": handoff.get("digest"), "files": handoff.get("files")}]
                 state["handoff"] = None
                 self._drop_handoff()
+                if (state.get("move") or {}).get("to") == surface_id:
+                    self._end_move(state, "completed", now)
                 return {"ok": True, "completed": True}
             return {"ok": False, "error": f"unknown_state_op: {name}"}
         except st.TransferError as exc:
@@ -1050,6 +1241,7 @@ class StrataLinkServer:
                 "seeded": _read_json(link_dir(self.state_dir) / "seeded.json", None),
                 "handoff_pending": bool(state.get("handoff")),
                 "migrations": state.get("migrations") or [],
+                "move": state.get("move"), "recent_moves": (state.get("moves") or [])[-5:],
                 "down_outbox": self.outbox.stats(),
                 "last_error": self.last_error, **self.counters}
 
@@ -1121,6 +1313,12 @@ def surface_identity(state_dir: Any) -> str:
     return surface_id
 
 
+def device_name(state_dir: Any) -> str:
+    """The name this device goes by when she knows where she can go
+    (strata_link/device_name.txt, written at setup); its id otherwise."""
+    return _read_text(link_dir(state_dir) / "device_name.txt")[:64] or surface_identity(state_dir)
+
+
 class StrataLinkClient:
     """Runs on the Surface device.  File work only: it never touches Aurora's
     cognitive lock, so it cannot delay a live turn."""
@@ -1159,6 +1357,12 @@ class StrataLinkClient:
         self.last_error = ""
         self.counters: Dict[str, int] = {"syncs": 0, "sent": 0, "received": 0,
                                          "failures": 0, "bad_signature": 0}
+        # 3c: home's word on this device's part in a move, and how this device
+        # captures and restores her present for it (set by the app).
+        self.move_order: Optional[Dict[str, Any]] = None
+        self.last_move_result: Optional[Dict[str, Any]] = None
+        self.capture_for_move: Optional[Callable[[], Any]] = None
+        self.restore_for_move: Optional[Callable[[], Any]] = None
 
     def _load_client_state(self) -> Dict[str, Any]:
         data = _read_json(self._state_path, {})
@@ -1179,6 +1383,13 @@ class StrataLinkClient:
         self._save_client_state(role=self.role, surface_ready=self.surface_ready, epoch=self.epoch,
                                 owner=str(response.get("owner") or ""), confirmed_at=self.last_confirmed_at)
         self._resolve_inflight_handoff(str(response.get("handoff_from") or ""))
+        # Home says this device holds her and no checkpoint waits: a freeze
+        # left from a move home cancelled no longer applies.
+        if (self.role == "active" and self.surface_ready and not str(response.get("handoff_from") or "")
+                and not self._load_client_state().get("handoff_in_flight")):
+            self._frozen_path().unlink(missing_ok=True)
+        order = response.get("move")
+        self.move_order = dict(order) if isinstance(order, dict) else None
 
     def _frozen_path(self) -> Path:
         return link_dir(self.state_dir) / "surface_frozen"
@@ -1231,6 +1442,7 @@ class StrataLinkClient:
         down_applied = int(client_state.get("down_applied", 0) or 0)
         batch = self.outbox.pending(MAX_BATCH)
         body = json.dumps({"v": LINK_VERSION, "surface_id": self.surface_id,
+                           "name": device_name(self.state_dir),
                            "claim": self._claim_path.exists(), "up": batch,
                            "link_key": link_key, "down_ack": down_applied},
                           default=str).encode("utf-8")
@@ -1589,6 +1801,29 @@ class StrataLinkClient:
             self.last_error = f"restore_handoff: {type(exc).__name__}: {exc}"[:200]
             return {"ok": False, "error": self.last_error}
 
+    def follow_move_order(self) -> Optional[Dict[str, Any]]:
+        """Do this device's part in a move home is carrying out: checkpoint
+        her present when she leaves, claim it when she arrives."""
+        order = self.move_order
+        if not order:
+            return None
+        self.move_order = None
+        action = str(order.get("action") or "")
+        if action == "checkpoint":
+            if self.capture_for_move is not None:
+                try:
+                    self.capture_for_move()
+                except Exception as exc:
+                    self.last_move_result = {"ok": False, "error": f"capture: {exc}"[:200]}
+                    return self.last_move_result
+            result = self.push_state("handoff")
+        elif action == "claim" and order.get("token"):
+            result = self.pull_handoff(str(order["token"]), restore_callback=self.restore_for_move)
+        else:
+            return None
+        self.last_move_result = {"action": action, "move_id": order.get("move_id"), **result}
+        return self.last_move_result
+
     def verify_sync(self) -> Dict[str, Any]:
         """How this device's state stands against the Subsurface device's,
         file by file, plus what is still waiting on the link."""
@@ -1607,6 +1842,12 @@ class StrataLinkClient:
         interval = self.FAST_INTERVAL_S
         while not self._stop.is_set():
             moved = self.sync_once()
+            if self.move_order:
+                try:
+                    self.follow_move_order()
+                except Exception as exc:
+                    self.last_error = f"move: {type(exc).__name__}: {exc}"[:200]
+                moved = True
             if not self.online:
                 interval = min(max(interval, self.FAST_INTERVAL_S) * 2.0, self.MAX_BACKOFF_S)
             elif moved or self.outbox.stats()["pending"]:
@@ -1643,6 +1884,8 @@ class StrataLinkClient:
                 "surface_ready": self.surface_ready, "away": self.away(),
                 "frozen": self._frozen_path().exists(),
                 "home_last_confirmed_at": self.last_confirmed_at,
+                "device_name": device_name(self.state_dir),
+                "move_order": self.move_order, "last_move": self.last_move_result,
                 "up_outbox": self.outbox.stats(), "last_error": self.last_error,
                 **self.counters}
 

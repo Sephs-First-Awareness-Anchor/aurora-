@@ -288,7 +288,9 @@ def test_projection_is_delivered_once_and_only_when_it_changes(rig):
     rig["client"].sync_once()                           # carries the ack
     assert rig["server"].status()["down_outbox"]["pending"] == 0
     assert rig["client"].sync_once() is False           # unchanged: nothing to send
-    assert rig["client"].counters["received"] == 1
+    # The projection once, and (3c) where she can go, once.
+    assert rig["client"].counters["received"] == 2
+    assert sl.read_known_devices(rig["phone"])
 
     projection.write_text(json.dumps({"dominant_axis": "N", "pressure": 0.7}))
     assert rig["client"].sync_once() is True

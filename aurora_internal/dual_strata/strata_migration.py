@@ -366,6 +366,10 @@ def apply_pending_migration(state_dir: Any) -> Optional[Dict[str, Any]]:
                "archive": str(archive.relative_to(home).as_posix()),
                "installed_digest": st.manifest_digest(manifest), **installed}
     _write(_link_dir(home) / RECEIPT_FILENAME, receipt)
+    # Home and the phone now carry one history, verified file by file: the
+    # link's stated condition for home's intuition to flow down to her surface.
+    (_link_dir(home) / "downlink_enabled").write_text(
+        f"migrated {mid} at {receipt['applied_at']}", encoding="utf-8")
     pending["status"] = "applied"
     pending["receipt"] = receipt
     _write(migration_root(home) / PENDING_FILENAME, pending)

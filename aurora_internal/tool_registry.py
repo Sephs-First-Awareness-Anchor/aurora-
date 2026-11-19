@@ -1990,6 +1990,45 @@ _reg("desktop_clipboard",     "Read or write to the host OS clipboard",         
 _reg("desktop_media_capture", "Listen to the host system internal audio output",                       "BOUNDED",    _desktop_media_capture,  disables_search=True)
 
 
+def _embodiment_move(to: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Her own request to move to another device (surface restructure 3c).
+
+    The request goes to home, which carries it out in its safe order; nothing
+    here moves her.  With no target it reports where she can go."""
+    systems = systems or {}
+    state_dir = str(systems.get("state_dir") or "aurora_state")
+    target = str(to or "").strip()
+    try:
+        from aurora_internal.dual_strata import strata_link as sl
+        server = systems.get("_strata_link_server")
+        if server is not None:                                   # she is at home
+            devices = server.known_devices()
+            if not target:
+                return ToolResult("embodiment_move", json.dumps({"devices": devices}), True)
+            result = server.request_move(target, requested_by="her",
+                                         from_surface=str(systems.get("_desktop_surface_id") or ""))
+            return ToolResult("embodiment_move", json.dumps(result, default=str), bool(result.get("ok")),
+                              "" if result.get("ok") else str(result.get("error") or ""))
+        client = sl._CLIENT
+        devices = sl.read_known_devices(state_dir)
+        if not target:
+            return ToolResult("embodiment_move", json.dumps({"devices": devices}), True)
+        if client is None:
+            return ToolResult("embodiment_move", "", False, "not_paired_with_home")
+        if client.role != "active":
+            return ToolResult("embodiment_move", "", False, "only_the_holder_may_ask")
+        queued = sl.request_home(state_dir, "embodiment_move", {"to": target})
+        queued["waiting_for_home"] = not client.online
+        return ToolResult("embodiment_move", json.dumps(queued, default=str), bool(queued.get("ok")),
+                          "" if queued.get("ok") else str(queued.get("error") or ""))
+    except Exception as exc:
+        return ToolResult("embodiment_move", "", False, f"{type(exc).__name__}: {exc}")
+
+
+_reg("embodiment_move", "Ask home to move her to another device (to=device name or home); no target lists where she can go",
+     "BOUNDED", _embodiment_move, disables_search=True)
+
+
 def _query_curiosity_log(max_entries: int = 5, **_) -> ToolResult:
     """Read the last few entries from Aurora's autonomous curiosity log (thought_chain.jsonl)."""
     try:

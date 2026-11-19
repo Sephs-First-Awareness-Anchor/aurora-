@@ -195,6 +195,23 @@ def _defer_to_home(organ: str) -> None:
         _systems["_deferred_to_home"] = list(_deferred_to_home)
 
 
+def _capture_present_for_move() -> None:
+    from aurora_internal.dual_strata.surface_working_state import capture
+    _dir = _strata_state_dir or "aurora_state"
+    with _lock:
+        with _late_surface_response_lock:
+            capture(_systems, _dir, app_state={"late_responses": list(_late_surface_responses)})
+
+
+def _restore_present_for_move() -> None:
+    from aurora_internal.dual_strata.surface_working_state import restore
+    _dir = _strata_state_dir or "aurora_state"
+    with _lock:
+        restored = restore(_systems, _dir)
+        with _late_surface_response_lock:
+            _late_surface_responses[:] = restored.get("late_responses", [])
+
+
 def is_surface_only() -> bool:
     return bool(_surface_only)
 
@@ -2915,6 +2932,11 @@ def initialize(state_dir: str = "") -> str:
             _strata_client = start_strata_link_client_if_configured(_strata_state_dir)
             if _strata_client is not None:
                 _systems["strata_link"] = _strata_client
+                # 3c: when home carries out a move she asked for, this device
+                # captures or restores her present the same way the manual
+                # checkpoint and claim do.
+                _strata_client.capture_for_move = _capture_present_for_move
+                _strata_client.restore_for_move = _restore_present_for_move
         except Exception as _sl_exc:
             log.warning("Strata link failed to start: %s", _sl_exc)
 
