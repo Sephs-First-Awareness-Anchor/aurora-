@@ -72,6 +72,8 @@ _GENERIC_ANATOMY_TERMS = frozenset({
 # ("how confident are you" is not "how did you produce that answer").
 _EXPLICIT_SELF_INQUIRY_PATTERNS: Tuple[re.Pattern, ...] = tuple(re.compile(p) for p in (
     r"\byour (reasoning|answer|response|logic|thinking|process|route|reply)\b",
+    r"\bwhich (subsystem|part of (your|aurora'?s) system) (shaped|formed|produced|selected) (the|that|this|your) (answer|response|reply)\b",
+    r"\bwhat (part of (your|aurora'?s) system|subsystem) (led you to|shaped|generated|produced|selected) (that|this|your|the) (answer|response|reply)\b",
     r"\bhow (did|do|does) (you|that|this|it) (answer|respond|reason|arrive|decide|produce|conclude|come up|get to|work)\b",
     r"\bwhy did you (say|answer|respond|conclude|decide)\b",
     r"\bwhat (led|caused) you to\b",
@@ -550,12 +552,33 @@ class AuroraReflectiveReaddressing:
             and continuity >= 0.22
             and previous_was_self_inquiry
         )
+        # A direct question about how she formed her prior answer is
+        # grounded by the saved reasoning episode itself. It does not need
+        # a coincidental function-name match. Repair C still bars generic
+        # engineering words and unrelated external-world prompts.
+        observed_answer_path = bool(
+            (previous.get("introspection") or {}).get("steps")
+            and previous.get("delivered_text")
+        )
+        # A bare causal callback inherits response-inquiry scope only
+        # from a recorded response-specific failure, never from mere
+        # proximity or similarity to a technical trace.
+        deictic_terms = {"why", "did", "that", "this", "it", "happen", "happened",
+                         "occur", "occurred", "then", "there"}
+        causal_response_callback = bool(
+            previous_response_diagnosis and episode_callback and causal_callback
+            and not (_tokens(user_input) - deictic_terms)
+        )
         self_inquiry = bool(
-            previous
-            and inquiry
-            and explicit_self_reference
-            and (technical_evidence or explicit_callback or episode_callback)
-            and not (external_content and not technical_evidence and not vague_reference)
+            previous and inquiry
+            and (
+                (explicit_self_reference and (
+                    technical_evidence or explicit_callback or episode_callback
+                    or observed_answer_path))
+                or causal_response_callback
+            )
+            and not (external_content and not technical_evidence
+                     and not vague_reference)
             and not bool(parsed.get("is_opinion"))
         )
 
