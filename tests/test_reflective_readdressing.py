@@ -174,6 +174,10 @@ def test_apply_readdressing_enriches_normal_turn_state(tmp_path):
     bridge, systems = _bridge(tmp_path)
     text = "Which subsystem shaped the answer you just gave?"
     context = bridge.prepare_turn(text, UtteranceParser().parse(text), systems)
+    # Build 613: real external turns commit their exact input hash before
+    # reapplication. The old Build 591 unit test never established that
+    # authority and therefore exercised only the deliberate rejection path.
+    systems["_current_turn_input_hash"] = context["input_hash"]
     state = TurnUnderstandingState(raw_text=text)
     state.pipeline_state = {}
     state.parsed = UtteranceParser().parse(text)
