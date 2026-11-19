@@ -663,6 +663,9 @@ class StrataLinkServer:
                                          "rejected_signature": 0, "standby_syncs": 0,
                                          "late_applied": 0}
         self.last_error = ""
+        # 3b: sha256 of home-owned stores by (size, mtime), so a surface asking
+        # what home has grown does not make home re-hash her whole state.
+        self._growth_cache: Any = None
 
     # -- state --------------------------------------------------------------
 
@@ -1035,6 +1038,8 @@ class StrataLinkServer:
                     record.update(status="applied", tail_open=True,
                                   lived_seq=int((status.get("receipt") or {}).get("lived_seq", 0) or 0))
                 return {"ok": True, **status}
+            if name in ("growth_offer", "growth_chunk"):
+                return self._growth_op(name, op, state, surface_id)
             tid_hint = str(op.get("transfer_id") or "")
             migrating = (name == "offer" and str(op.get("purpose") or "") == "migrate") or \
                 (name in ("chunk", "commit") and tid_hint.startswith("migrate-"))
@@ -1158,6 +1163,31 @@ class StrataLinkServer:
         except Exception as exc:
             self.last_error = f"state_op {name}: {type(exc).__name__}: {exc}"[:200]
             return {"ok": False, "error": f"{type(exc).__name__}: {exc}"[:300]}
+
+    def _growth_op(self, name: str, op: Mapping[str, Any], state: Mapping[str, Any],
+                   surface_id: str) -> Dict[str, Any]:
+        """Home's growth, offered to any paired surface (holder or standby):
+        the manifest of her home-owned stores, and their bytes.  Read only;
+        nothing at home changes.  Before home holds her (seeded or migrated)
+        there is nothing of hers here to offer."""
+        from aurora_internal.dual_strata import home_growth as hg
+        from aurora_internal.dual_strata import strata_state_transfer as st
+        if not self.downlink_enabled():
+            return {"ok": False, "error": "home_not_yet_holding_her"}
+        record = (state.get("first_pairing") or {}).get(surface_id)
+        if record and record.get("status") != "applied":
+            # This phone's own history is still on its way home: home's copy
+            # is not yet hers, so it must not overwrite the phone's.
+            return {"ok": False, "error": "first_pairing_not_yet_applied"}
+        if name == "growth_offer":
+            if self._growth_cache is None:
+                self._growth_cache = hg.HashCache()
+            return {"ok": True, "manifest": hg.home_growth_manifest(self.state_dir, self._growth_cache)}
+        rel = str(op.get("path") or "")
+        if not hg.is_growth_path(rel):
+            return {"ok": False, "error": "not_a_home_owned_store"}
+        return {"ok": True, **st.read_chunk(self.state_dir, rel, int(op.get("offset", 0) or 0),
+                                             int(op.get("length", st.CHUNK_BYTES) or st.CHUNK_BYTES))}
 
     # -- HTTP ----------------------------------------------------------------
 
@@ -1363,6 +1393,9 @@ class StrataLinkClient:
         self.last_move_result: Optional[Dict[str, Any]] = None
         self.capture_for_move: Optional[Callable[[], Any]] = None
         self.restore_for_move: Optional[Callable[[], Any]] = None
+        # 3b: home's growth comes down to this surface's read-only copies.
+        self.last_growth: Optional[Dict[str, Any]] = None
+        self._next_growth_at = 0.0
 
     def _load_client_state(self) -> Dict[str, Any]:
         data = _read_json(self._state_path, {})
@@ -1541,7 +1574,8 @@ class StrataLinkClient:
         response = self._call({"state_op": op, **extra})
         result = response.get("state_result")
         # A first-pairing migration is staged from a standby device.
-        standby_ok = op.get("op") == "migration_status" or str(op.get("transfer_id") or "").startswith("migrate-")
+        standby_ok = op.get("op") in ("migration_status", "growth_offer", "growth_chunk") \
+            or str(op.get("transfer_id") or "").startswith("migrate-")
         if response.get("role") != "active" and not standby_ok:
             raise TransferError(f"this device is not the active Surface ({response.get('error') or 'standby'})")
         if isinstance(result, dict) and "expected_offset" in result:
@@ -1838,7 +1872,31 @@ class StrataLinkClient:
         except st.TransferError as exc:
             return {"ok": False, "error": str(exc)}
 
+    def pull_growth(self, *, chunk_bytes: Optional[int] = None) -> Dict[str, Any]:
+        """Fetch what home has grown in her home-owned stores; it is installed
+        at this device's next start (home_growth.install_pending_growth)."""
+        from aurora_internal.dual_strata import home_growth as hg
+        with self._sync_lock:
+            result = hg.pull_growth(lambda op: self._state_call(op), self.state_dir,
+                                    chunk_bytes=chunk_bytes)
+        self.last_growth = {"at": time.time(), **result}
+        return result
+
+    def _growth_due(self) -> bool:
+        """Only a surface-only device keeps read-only copies of home's stores;
+        a whole-mind device learns for itself and is never overwritten."""
+        if not self.online or time.time() < self._next_growth_at or self.move_order:
+            return False
+        if self._frozen_path().exists() or self.outbox.stats()["pending"]:
+            return False
+        try:
+            from aurora_internal.dual_strata.strata_migration import surface_only_ready
+            return bool(surface_only_ready(self.state_dir))
+        except Exception:
+            return False
+
     def _run(self) -> None:
+        from aurora_internal.dual_strata.home_growth import GROWTH_PULL_INTERVAL_S
         interval = self.FAST_INTERVAL_S
         while not self._stop.is_set():
             moved = self.sync_once()
@@ -1848,6 +1906,12 @@ class StrataLinkClient:
                 except Exception as exc:
                     self.last_error = f"move: {type(exc).__name__}: {exc}"[:200]
                 moved = True
+            elif self._growth_due():
+                self._next_growth_at = time.time() + GROWTH_PULL_INTERVAL_S
+                try:
+                    self.pull_growth()
+                except Exception as exc:
+                    self.last_error = f"growth: {type(exc).__name__}: {exc}"[:200]
             if not self.online:
                 interval = min(max(interval, self.FAST_INTERVAL_S) * 2.0, self.MAX_BACKOFF_S)
             elif moved or self.outbox.stats()["pending"]:
@@ -1886,6 +1950,7 @@ class StrataLinkClient:
                 "home_last_confirmed_at": self.last_confirmed_at,
                 "device_name": device_name(self.state_dir),
                 "move_order": self.move_order, "last_move": self.last_move_result,
+                "last_growth": self.last_growth,
                 "up_outbox": self.outbox.stats(), "last_error": self.last_error,
                 **self.counters}
 

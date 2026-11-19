@@ -2679,6 +2679,16 @@ def initialize(state_dir: str = "") -> str:
     except Exception as _so_exc:
         log.warning("Surface profile check failed; staying the whole mind: %s", _so_exc)
     if _surface_only:
+        # What home has grown since this surface last started comes into the
+        # read-only copies now, before the gate is armed and before any organ
+        # loads a store, so the surface wakes as the same mind home is.
+        try:
+            from aurora_internal.dual_strata.home_growth import install_pending_growth
+            _growth = install_pending_growth(os.path.abspath(_strata_state_dir))
+            if _growth.get("installed") or _growth.get("error"):
+                log.info("Home's growth installed on the surface: %s", _growth)
+        except Exception as _growth_exc:
+            log.warning("Home's growth not installed this start: %s", _growth_exc)
         from aurora_internal.aurora_store_ownership import enable_surface_only
         enable_surface_only(os.path.abspath(_strata_state_dir))
         _evo_sim = None
