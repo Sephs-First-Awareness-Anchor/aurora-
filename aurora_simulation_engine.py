@@ -647,47 +647,28 @@ class ConsciousLearner:
             pass
 
     def propose_shard(self, content: Any, source: str = "sedimemory_a_axis_compression",
-        self,
-        content: Any,
-        source: str = "sedimemory_a_axis_compression",
-        confidence: float = 0.6,
-        provenance: str = "sedimemory",
-    ) -> Optional[UnderstandingShard]:
-        """
-        Create an UnderstandingShard from external content (e.g. A-axis compression).
-        Used by the SediMemory WisdomStore bridge to surface deep sediment into
-        the conscious learner without going through the full observe_outcome cycle.
-        """
+                      confidence: float = 0.6, provenance: str = "sedimemory") -> Optional[UnderstandingShard]:
+        """Create an explicitly typed semantic claim from an existing semantic source."""
         context_type = str(source)
-        shard_id = _generate_id("shard_prop")
-        understanding = (
-            str(content.get("dominant_basin", ""))
-            if isinstance(content, dict) else str(content)[:120]
-        )
-        if not understanding:
+        understanding = str(content.get("dominant_basin", "")) if isinstance(content, dict) else str(content)[:120]
+        understanding = understanding.strip()
+        if not understanding or _is_legacy_outcome_meta(understanding):
             return None
-        # Check for existing shard with the same source context
         existing = self._find_similar_by_context(context_type)
-        if existing:
-            existing.strengthen()
-            return existing
-        # Externally-supplied content (not derived from a raw prompt) is
-        # its own provenance class and is treated as a resolved subject --
-        # `source` (e.g. "sedimemory_a_axis_compression") is the topic, not
-        # an internal transport marker, so it doesn't collide with
-        # afterthought/ordinary-episode shards under check_admission().
+        if existing and getattr(existing, "evidence_kind", "") == "semantic_claim":
+            existing.strengthen(); return existing
         shard = UnderstandingShard(
-            shard_id=shard_id,
+            shard_id=_generate_id("shard_prop"),
             response_concept=ResponseConcept.THOUGHTFUL_REFLECTION,
-            observation_summary=f"[{provenance}] compressed pattern from {source}",
+            observation_summary=f"[{provenance}] semantic claim from {source}",
             understanding=understanding,
             context_type=context_type,
             confidence=max(0.1, min(1.0, float(confidence))),
-            episode_source=str(provenance),
-            semantic_topic=context_type,
-            topic_resolution_status="resolved",
+            episode_source=str(provenance), semantic_topic=context_type,
+            topic_resolution_status="resolved", evidence_kind="semantic_claim",
+            evidence={"source": str(source), "provenance": str(provenance)},
         )
-        self.shards[shard.shard_id] = shard
+        self.shards[shard.shard_id]=shard
         self._by_concept[ResponseConcept.THOUGHTFUL_REFLECTION].append(shard.shard_id)
         return shard
 
@@ -698,117 +679,67 @@ class ConsciousLearner:
         return None
 
     def what_have_i_learned(self) -> List[str]:
-        """Return genuine understanding — reads from DPS crystal understanding facets.
-
-        Crystals are the persistent store; in-memory shards are session-only fallback.
-        """
-        if self._dps is not None:
-            try:
-                results = []
-                for crystal in self._dps.crystals.values():
-                    best = None
-                    for facet in crystal.facets.values():
-                        if facet.role == "understanding":
-                            if best is None or facet.confidence > best.confidence:
-                                best = facet
-                    if best is not None and best.confidence >= 0.5:
-                        results.append((best.confidence, str(best.content)))
-                results.sort(reverse=True)
-                if results:
-                    return [text for _, text in results[:10]]
-            except Exception as _aurora_boundary_exc:
-                _aurora_fault(locals(), _aurora_boundary_exc, 'what_have_i_learned', 369)
-                pass
-        # Session-only fallback (shards not persisted to disk). Build 616
-        # Repair D: this is one of the admission boundary's listed exit
-        # points ("conversation memory") -- a shard withheld by
-        # check_admission() (unresolved topic, internal mechanism label,
-        # insufficient evidence, unresolved contradiction) must not surface
-        # here even at confidence > 0.5.
-        confident = [
-            s for s in self.shards.values()
-            if s.confidence > 0.5 and self.check_admission(s)[0]
-        ]
-        confident.sort(key=lambda s: s.confidence, reverse=True)
-        return [s.understanding for s in confident[:10]]
+        """Return admitted semantic claims only; response-outcome telemetry is excluded."""
+        confident=[s for s in self.shards.values() if s.confidence>0.5 and self.check_admission(s)[0]]
+        confident.sort(key=lambda s:s.confidence, reverse=True)
+        return [s.understanding for s in confident[:10] if s.understanding]
 
     def purge_legacy_semantic_contamination(self, oets: Any) -> int:
+        """Remove persisted semantic authority created by the obsolete outcome-prose bridge.
+
+        The historical experiential shard remains in learner state/genealogy.  Only the
+        generated bookkeeping sentence loses semantic-memory authority.
+        """
+        web = getattr(oets, "web", None) if oets is not None else None
+        if web is None:
+            return 0
+        removed = 0
+        try:
+            for word, node in list(getattr(web, "nodes", {}).items()):
+                lineage = str(getattr(node, "lineage", "") or "")
+                role = str(getattr(node, "role", "") or "")
+                texts = [getattr(node, "best_definition", lambda: "")()]
+                texts += [
+                    str(d.get("text", ""))
+                    for d in getattr(node, "definitions", [])
+                    if isinstance(d, dict)
+                ]
+                if (
+                    role == "learned_behavior"
+                    and lineage.startswith("learner:")
+                    and any(_is_legacy_outcome_meta(t) for t in texts)
+                ):
+                    if hasattr(web, "_remove_node"):
+                        web._remove_node(word)
+                        removed += 1
+        except Exception:
+            return removed
+        return removed
+
 
     def inject_into_oets(self, oets: Any) -> int:
-        """
-        Bridge high-confidence learner shards into the OETS semantic web
-        so they persist in Aurora's system-wide memory and can be recalled
-        during interactive responses.
-
-        Returns number of nodes created/reinforced.
-        """
-        if oets is None:
-            return 0
-        web = getattr(oets, "web", None)
-        if web is None or not hasattr(web, "add_node"):
-            return 0
-
-        injected = 0
+        """Persist only typed semantic claims; response outcomes can never mint OETS meaning."""
+        if oets is None: return 0
+        web=getattr(oets,"web",None)
+        if web is None or not hasattr(web,"add_node"): return 0
+        self.purge_legacy_semantic_contamination(oets)
+        injected=0
         for shard in self.shards.values():
-            admissible, reason = self.check_admission(shard)
+            admissible,reason=self.check_admission(shard)
             if not admissible:
-                self._quarantine(shard, reason)
-                continue
-            understanding = (shard.understanding or "").strip()
-            if not understanding or len(understanding.split()) < 4:
-                continue
-            concept_name = (
-                shard.response_concept.value
-                if hasattr(shard.response_concept, "value")
-                else str(shard.response_concept)
-            ).lower().replace("_", " ")
-            # Deterministic slug from first 4 words of understanding
-            import re as _re
-            slug_words = understanding.lower().split()[:4]
-            slug = "_".join(_re.sub(r"[^a-z]", "", w) for w in slug_words)
-            if not slug:
-                continue
+                self._quarantine(shard,reason); continue
+            primary=shard.semantic_topic.split("/")[0].strip().lower()
+            understanding=(shard.understanding or "").strip()
+            if not primary or not understanding: continue
             try:
-                # Live user report (2026-08-21): when `understanding` is
-                # _derive_understanding()'s internal shard-bookkeeping
-                # sentence ("earlier built connection when approached with
-                # warm acknowledgment -- it connects to chaos, curious
-                # (A-axis relief, depth 0.31)") -- identity/dedup notation
-                # for this learner's own shards, never natural language --
-                # add_node(meaning=...) and add_definition() both used to
-                # write it straight into node.definitions, which OTHER
-                # live-turn code (e.g. _build_comprehension_response's
-                # `best = node.definitions[0]['text']`) reads back and
-                # speaks near-verbatim as if it were a real word meaning.
-                # That bookkeeping template is the ONLY thing built by
-                # _derive_understanding(), which is exclusively called from
-                # observe_outcome() and always sets outcome_axis in the
-                # same call (see _outcome_axis() -- observe_outcome returns
-                # early when it comes back empty). propose_shard() (real
-                # externally-supplied content, e.g. SediMemory-compressed
-                # semantic claims) never sets outcome_axis, so that's the
-                # real, structural signal for "this understanding text is
-                # the mechanical template" rather than genuine content --
-                # not a shard-kind label that would have to be threaded
-                # through separately.
-                is_bookkeeping_template = bool(shard.outcome_axis)
-                node = web.add_node(
-                    word=slug,
-                    role="learned_behavior",
-                    valence=min(0.9, shard.confidence),
-                    meaning="" if is_bookkeeping_template else understanding,
-                    lineage=f"learner:{concept_name}",
-                )
-                if not is_bookkeeping_template and hasattr(node, "add_definition"):
-                    node.add_definition(
-                        understanding,
-                        source="conscious_learner",
-                        confidence=shard.confidence,
-                    )
+                node=web.add_node(word=primary, role="learned_semantic_claim",
+                                  valence=min(0.9,shard.confidence), meaning="",
+                                  lineage=f"learner_semantic:{shard.episode_source}")
+                if hasattr(node,"add_definition"):
+                    node.add_definition(understanding,source="conscious_learner_semantic_claim",confidence=shard.confidence)
                 injected += 1
-            except Exception as _aurora_boundary_exc:
-                _aurora_fault(locals(), _aurora_boundary_exc, 'inject_into_oets', 423)
-                continue
+            except Exception as exc:
+                _aurora_record_exception_from_locals(locals(),module=__name__,operation="ConsciousLearner.inject_into_oets",exc=exc,context={"function":"inject_into_oets"})
         return injected
 
     def export_state(self) -> Dict[str, Any]:
