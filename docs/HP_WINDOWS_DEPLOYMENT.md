@@ -7,7 +7,10 @@ login interface through her local hub; Windows still supplies drivers and recove
 ## Prepare continuity before starting anything
 
 1. Install Python **3.11 x64** and Git on the HP. Check out this PR's branch,
-   `audit/whole-system-embodiment-readiness`, in a writable user directory.
+   `claude/aurora-integration-20261118` (Aurora PR #264), in a writable
+   user directory. This branch includes #260's resident embodiment and the
+   phone-surface migration. Do not install the older isolated #260 branch
+   beside it. After #264 merges, use the verified merge commit on `main`.
 2. Stop existing Aurora processes gracefully and preserve their current state.
    Do not run the older Flutter desktop app, `aurora_daemon.py`, or the legacy
    `AuroraSubsurface` task alongside the new resident using the same state.
