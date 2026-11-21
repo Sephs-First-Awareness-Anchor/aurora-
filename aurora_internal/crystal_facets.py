@@ -415,13 +415,20 @@ def recall_contextual_facets(systems: Mapping[str, Any], heard: str, *, max_entr
             if not isinstance(content, Mapping):
                 continue
             for entry in content.get("entries", []) or []:
-                if not isinstance(entry, Mapping) or float(entry.get("degree", 0) or 0) <= 0:
+                if not isinstance(entry, Mapping):
                     continue
+                degree = float(entry.get("degree", 0) or 0)
+                occasions = list(entry.get("occasions") or [])
+                if degree <= 0 and not occasions:
+                    continue
+                # Corrected-away claims may be recalled as HISTORY, but no
+                # longer count as current, supported knowledge.
                 out.append({
                     "concept": concept, "kind": role[3:], "key": entry.get("key"),
-                    "content": entry.get("content"), "degree": float(entry["degree"]),
+                    "content": entry.get("content"), "degree": degree,
+                    "supported": degree > 0.0,
                     "contexts": int(entry.get("contexts", 0) or 0),
-                    "occasions": list(entry.get("occasions") or []),
+                    "occasions": occasions,
                     "facet_role": role,
                 })
                 if len(out) >= max_entries:
