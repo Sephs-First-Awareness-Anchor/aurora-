@@ -72,6 +72,9 @@ from aurora_support_stack import (
     ResearchResult,
 )
 from aurora_internal.dual_strata.surface_channel import request_surface_turn
+# Her own NonComp read of each message routes the turn; the phrase lists run
+# in shadow beside it (aurora_turn_read.py, docs/TURN_ROUTING_PHRASE_LIST_MAP.md).
+import aurora_turn_read as _aurora_turn_read
 
 
 _SUPPORT_CONSTRAINT_SPECS: Dict[str, Dict[str, str]] = {
@@ -2220,6 +2223,14 @@ def _strip_conversational_leadin(text: str) -> str:
 
 
 def _looks_like_question(text: str) -> bool:
+    """Is this message asked of her?  Her own NonComp read of the turn decides
+    (aurora_turn_read); the prefix list below keeps running beside it in
+    shadow and decides only for text she has not read this turn."""
+    lexical = _lexical_looks_like_question(text)
+    return _aurora_turn_read.route("is_question", text, lexical, lambda read: read.is_question)
+
+
+def _lexical_looks_like_question(text: str) -> bool:
     t = (text or "").strip()
     if not t:
         return False
@@ -2820,6 +2831,24 @@ def _should_prefer_live_perspective(
     systems: Optional[Dict[str, Any]] = None,
     anchor: str = "",
 ) -> bool:
+    """Should she answer from her own perspective rather than look something
+    up?  Her NonComp read decides (aurora_turn_read); the phrase lists below
+    run in shadow."""
+    lexical = _lexical_should_prefer_live_perspective(
+        user_text, understood=understood, systems=systems, anchor=anchor,
+    )
+    return _aurora_turn_read.route(
+        "prefer_perspective", user_text, lexical, lambda read: read.prefer_perspective,
+    )
+
+
+def _lexical_should_prefer_live_perspective(
+    user_text: str,
+    *,
+    understood: Optional[Dict[str, Any]] = None,
+    systems: Optional[Dict[str, Any]] = None,
+    anchor: str = "",
+) -> bool:
     understood = dict(understood or {})
     working_memory = (systems or {}).get("working_memory") if isinstance(systems, dict) else None
     if _is_explicit_meaning_or_continuity_request(
@@ -2845,7 +2874,7 @@ def _should_prefer_live_perspective(
             )
         )
     )
-    internal_state_request = _is_aurora_self_question(user_text) or _looks_like_inner_state_query(
+    internal_state_request = _lexical_is_aurora_self_question(user_text) or _lexical_looks_like_inner_state_query(
         user_text, understood
     )
     if not (opinion_like or internal_state_request):
@@ -2974,6 +3003,14 @@ def _inject_surface_recent_context(
 
 
 def _is_aurora_self_question(text: str, parsed: dict = None) -> bool:
+    """Is this message about her (answered from herself, never searched
+    outside)?  Her NonComp read decides (aurora_turn_read); the marker list
+    in _lexical_is_aurora_self_question runs in shadow."""
+    lexical = _lexical_is_aurora_self_question(text, parsed)
+    return _aurora_turn_read.route("about_her", text, lexical, lambda read: read.about_her)
+
+
+def _lexical_is_aurora_self_question(text: str, parsed: dict = None) -> bool:
     """
     If the question is about Aurora's internal architecture/state/identity,
     or a personal wellbeing question directed at Aurora,
@@ -4204,6 +4241,13 @@ def _project_utterance_axes(text: str, systems: dict, parsed: Optional[Dict[str,
 
 
 def _looks_like_inner_state_query(text: str, parsed: Optional[dict] = None) -> bool:
+    """Is she asked about her own state?  Her NonComp read decides
+    (aurora_turn_read); the marker list runs in shadow."""
+    lexical = _lexical_looks_like_inner_state_query(text, parsed)
+    return _aurora_turn_read.route("inner_state", text, lexical, lambda read: read.inner_state)
+
+
+def _lexical_looks_like_inner_state_query(text: str, parsed: Optional[dict] = None) -> bool:
     low = str(text or "").strip().lower()
     if not low:
         return False
@@ -4293,7 +4337,10 @@ def _classify_input_intent(text: str, *, _axis_activation: dict = None, _parsed:
         "who are you", "where have you been",
         "who were you", "what were you",
     )
-    if any(trigger in _text_low_cl for trigger in _RECALL_TRIGGERS):
+    # Her NonComp read decides whether this is recall (aurora_turn_read); the
+    # trigger list runs in shadow and decides only for text she has not read.
+    _lexical_recall = any(trigger in _text_low_cl for trigger in _RECALL_TRIGGERS)
+    if _aurora_turn_read.route("recall", text, _lexical_recall, lambda read: read.recall):
         return "recall_question"
 
     # Inner-state routing is derived from the current relational configuration,
@@ -12161,7 +12208,11 @@ def _apply_noncomp_input_guidance(
     self_relation = _compute_self_relation(systems, anchor)
     peer_relation = _compute_peer_relation(systems, anchor, understood)
     try:
-        summary = dict(interpreter.interpret(user_text).to_dict() or {})
+        # The turn's read already interpreted this message once; reuse it so
+        # the same message does not lay sediment and record worth twice.
+        summary = _aurora_turn_read.reuse_interpretation(systems, user_text)
+        if summary is None:
+            summary = dict(interpreter.interpret(user_text).to_dict() or {})
     except Exception as _aurora_boundary_exc:
         _aurora_fault(locals(), _aurora_boundary_exc, '_apply_noncomp_input_guidance', 10580)
         return {}
@@ -31769,6 +31820,22 @@ def _run_live_response_turn(
     )
     _live_profile_start = time.perf_counter()
     _live_profile_stages: Dict[str, float] = {}
+
+    # Her own NonComp read of this message, formed once, before anything
+    # routes it.  From here on the routing questions (is it asked, is it
+    # about her, is it her inner state, her perspective, recall) are
+    # answered by this read; the phrase lists run in shadow beside it.
+    try:
+        _sync_noncomp_runtime_band(systems)
+        _aurora_turn_read.form_turn_read(systems, user_text, parse=_turn_parse_cache.parse)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_run_live_response_turn:form_turn_read",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
 
     # Try/fail/correct-course: resolve any referent hypothesis this system
     # offered last turn against what the user actually said next, before

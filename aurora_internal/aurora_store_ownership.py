@@ -78,6 +78,7 @@ OWNERSHIP_TABLE: Tuple[Tuple[str, str], ...] = (
     ("abstain_log.jsonl", JOURNAL),
     ("surface_pressure_log.jsonl", JOURNAL),
     ("mtsl_shadow_comparison.jsonl", JOURNAL),
+    ("turn_read_shadow.jsonl", JOURNAL),                    # her read vs the phrase lists
     ("system_introspection_episodes.jsonl", JOURNAL),
     ("*.log", JOURNAL),
     # caches
