@@ -357,9 +357,10 @@ def test_web_hub_turn_reaches_phone_over_link_and_survives_hub_restart(resident,
 def test_handoff_uses_the_address_selected_by_pairing(tmp_path, monkeypatch):
     from scripts import aurora_home_setup as setup
     from aurora_internal.desktop.common import read_json
-    host = setup.home_network_address()
-    if not host:
-        pytest.skip("test host has no non-loopback IPv4 address")
+    from aurora_working_memory import WorkingMemory
+    # Isolated Linux test runners can bind a second loopback address. Windows
+    # CI uses its NIC, exercising the same binding as a private VPN adapter.
+    host = setup.home_network_address() or "127.0.0.2"
     for name in ("no_proxy", "NO_PROXY"):
         monkeypatch.setenv(name, host + ",127.0.0.1")
     root = tmp_path / "state"
