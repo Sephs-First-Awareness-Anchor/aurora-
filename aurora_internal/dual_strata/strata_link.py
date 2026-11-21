@@ -129,10 +129,12 @@ def publish_raw_input(state_dir, text):
 # "inquiry" and "inquiry_evidence" carry one shared inquiry between her two
 # strata (inquiry_tiers): a question her surface's lenses could not settle,
 # and the lived consequence of an experiment home handed down.
+# "screen_skill" and "screen_skill_use" carry what she learned on the phone by
+# being shown (aurora_screen_apprenticeship) home, where her deep learning lives.
 # How often a phone whose first pairing is waiting at home asks how it stands.
 MIGRATION_CHECK_INTERVAL_S = 60.0
 HOME_REQUEST_KINDS = ("curiosity_cycle", "evo_cycle", "embodiment_move",
-                      "inquiry", "inquiry_evidence")
+                      "inquiry", "inquiry_evidence", "screen_skill", "screen_skill_use")
 _HOME_REQUESTS_FILENAME = "home_requests.jsonl"
 
 
@@ -572,6 +574,11 @@ def collect_subsurface_downlink(state_dir: Any, outbox: DurableOutbox, memo: Dic
     except Exception:
         pass
     try:
+        from aurora_internal.aurora_screen_apprenticeship import relay_down as _skills_down
+        queued += _skills_down(state_dir, outbox, memo)
+    except Exception:
+        pass
+    try:
         # 3c: she knows where she can go.  Sent when the set or the holder
         # changes, not every time a device speaks.
         if devices is None:
@@ -633,6 +640,9 @@ def apply_downlink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
     if channel == "home_inquiry" and isinstance(payload, dict):
         from aurora_internal.dual_strata.inquiry_tiers import receive_down
         return receive_down(state_dir, payload)
+    if channel == "home_skills" and isinstance(payload, dict):
+        from aurora_internal.aurora_screen_apprenticeship import receive_down as _skills_receive
+        return _skills_receive(state_dir, payload)
     if channel == "hub_message" and isinstance(payload, dict):
         from aurora_internal.dual_strata.hub_route import receive_message
         return receive_message(state_dir, payload, surface_identity(state_dir))

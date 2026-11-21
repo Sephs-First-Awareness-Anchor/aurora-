@@ -96,7 +96,26 @@ class _HomeScreenState extends State<HomeScreen>
     _listenBridgeEvents();
     setState(() => _embState = 'BACKGROUND');
     _refreshScreenObserverStatus();
+    AuroraBridge.surfaceControls.addListener(_onControlsChanged);
+    try {
+      await AuroraBridge.getSurfaceControls();
+    } catch (e, st) {
+      UiDiagnostics.report('control panel', e, st);
+    }
     _startListening();
+  }
+
+  // The Hub's control panel (surface restructure 6): Sir switched one of the
+  // phone's resources.  Listening and her line follow at once.
+  void _onControlsChanged() {
+    if (!mounted) return;
+    if (!AuroraBridge.control('listening') && _listening) {
+      AuroraBridge.stopListening();
+      setState(() => _listening = false);
+    } else if (AuroraBridge.control('listening') && !_listening && !_speaking) {
+      _startListening();
+    }
+    if (!AuroraBridge.control('presence_line')) AuroraBridge.stopOverlay();
   }
 
   void _listenBridgeEvents() {
@@ -337,6 +356,7 @@ class _HomeScreenState extends State<HomeScreen>
       _statusTxt = 'Listening for "Aurora"…';
     });
     AuroraBridge.setState('BACKGROUND');
+    if (!AuroraBridge.control('presence_line')) return;
     final started = await AuroraBridge.startOverlay();
     if (!started) {
       setState(() => _statusTxt = 'Overlay permission needed');
@@ -371,6 +391,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _startListening() {
     if (_listening || _speaking || _embState == 'DORMANT' || _quietMode) return;
+    if (!AuroraBridge.control('listening')) return;
     setState(() { _listening = true; _partialText = ''; });
     AuroraBridge.startListening();
   }
@@ -379,6 +400,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _speak(String text) async {
     if (text.isEmpty) return;
+    // Voice switched off on the Hub: her words still show in the chat.
+    if (!AuroraBridge.control('voice')) return;
     AuroraBridge.stopListening();
     setState(() { _speaking = true; _listening = false; });
     await AuroraBridge.speak(text);
@@ -696,6 +719,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    AuroraBridge.surfaceControls.removeListener(_onControlsChanged);
     _pulseCtrl.dispose();
     _textCtrl.dispose();
     _scrollCtrl.dispose();

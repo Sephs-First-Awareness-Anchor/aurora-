@@ -342,6 +342,11 @@ class DesktopRuntime:
             elif kind in ("inquiry", "inquiry_evidence"):
                 self._inquiry_desk().take(req)
                 done[kind] = done.get(kind, 0) + 1
+            elif kind in ("screen_skill", "screen_skill_use"):
+                # What she learned on the phone by being shown, kept here.
+                from aurora_internal.aurora_screen_apprenticeship import HomeScreenSkills
+                HomeScreenSkills(self.state_dir).take(req)
+                done[kind] = done.get(kind, 0) + 1
             elif kind in ("hub_move", "hub_message") and req.get("from") == "hub":
                 # Sir at the desktop hub, on this machine (hub_route).  A phone
                 # cannot file these: its uplink carries only HOME_REQUEST_KINDS.

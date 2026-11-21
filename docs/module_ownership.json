@@ -15694,6 +15694,18 @@
     "aurora.py"
    ]
   },
+  "tests/test_surface_control_panel.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": []
+  },
   "tests/test_surface_does_not_wait_for_scout.py": {
    "domain": "desktop",
    "subsystem": "tests",

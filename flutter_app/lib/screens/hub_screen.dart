@@ -1,3 +1,11 @@
+// Authors: Sunni (Sir) Morningstar & Cael Devo
+//
+// Surface restructure 6: on the surface the Hub is built around her link
+// home. Order: her link home, the control panel (what the phone lends
+// her), her present (axes, field line, live turns), then everything that
+// lives at home, collapsed under "From home". Her room moved to Self.
+// The Hub asks her nothing while another tab is on screen, and reads the
+// home panels only while "From home" is open.
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -60,11 +68,8 @@ class HubScreen extends StatefulWidget {
 class _HubScreenState extends State<HubScreen> {
   Map<String, dynamic> _stats    = {};
   bool _praxisSwitching = false;
-  Map<String, dynamic> _room     = {};
-  List<dynamic>        _notes    = [];
-  List<dynamic>        _messages = [];
-  List<dynamic>        _activity = [];
   bool _loading = true;
+  bool _fromHomeOpen = false;
   Timer? _timer;
 
   // Build 774 live turn diagnostics -- on-device visibility into which of
@@ -91,33 +96,46 @@ class _HubScreenState extends State<HubScreen> {
   @override
   void initState() {
     super.initState();
-    _refresh();
+    AuroraBridge.visibleTab.addListener(_onTabChanged);
+    _refresh(force: true);
+    _loadControls();
     _timer = Timer.periodic(const Duration(seconds: 4), (_) => _refresh());
+  }
+
+  void _onTabChanged() {
+    if (AuroraBridge.isTabShown(AuroraBridge.tabHub)) _refresh();
+  }
+
+  Future<void> _loadControls() async {
+    try {
+      await AuroraBridge.getSurfaceControls();
+    } catch (e, st) {
+      UiDiagnostics.report('control panel', e, st);
+    }
   }
 
   @override
   void dispose() {
+    AuroraBridge.visibleTab.removeListener(_onTabChanged);
     _timer?.cancel();
     _gauntletTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _refresh() async {
+  Future<void> _refresh({bool force = false}) async {
+    // The app shell keeps the Hub alive while other tabs show; it asks
+    // her nothing until it is on screen again.
+    if (!force && !AuroraBridge.isTabShown(AuroraBridge.tabHub)) return;
     try {
       final stats = await AuroraBridge.getCognitiveStats();
-      final roomRaw = await AuroraBridge.getRoomState();
-      final roomJson = roomRaw['raw'] as String? ?? '{}';
-      final room = jsonDecode(roomJson) as Map<String, dynamic>;
-      final habitatReport = await HabitatBridge.integrityReport();
+      final habitatReport = _fromHomeOpen
+          ? await HabitatBridge.integrityReport()
+          : _habitatReport;
       final turnDiagnostics = await AuroraBridge.getLiveTurnDiagnostics();
       final fieldStatus = await AuroraBridge.getFieldStatus();
       if (mounted) {
         setState(() {
           _stats    = stats;
-          _room     = room;
-          _notes    = (room['notes']    as List<dynamic>?) ?? [];
-          _messages = (room['messages'] as List<dynamic>?) ?? [];
-          _activity = (room['activity'] as List<dynamic>?) ?? [];
           _habitatReport = habitatReport;
           _turnDiagnostics = turnDiagnostics;
           _fieldStatus = fieldStatus;
@@ -436,16 +454,12 @@ class _HubScreenState extends State<HubScreen> {
                 onRefresh: _refresh,
                 child: ListView(children: [
                   _buildHeader(),
+                  _buildLinkHomePanel(),
+                  _buildControlPanel(),
+                  _sectionTitle('HER PRESENT', color: _green),
                   _buildAxisPanel(),
-                  _buildCognitivePanel(),
-                  _buildDevelopmentPanel(),
                   _buildLiveTurnDiagnosticsPanel(),
-                  _buildEvolutionPanel(),
-                  _buildGenealogyPanel(),
-                  _buildQuasiarchPanel(),
-                  _buildGauntletPanel(),
-                  _buildHabitatPanel(),
-                  _buildRoomPanel(),
+                  _buildFromHome(),
                   const SizedBox(height: 24),
                 ]),
               ),
@@ -1486,88 +1500,6 @@ class _HubScreenState extends State<HubScreen> {
     );
   }
 
-  Widget _buildRoomPanel() {
-    final daemonStatus = _room['daemon_status'] as Map<String, dynamic>? ?? {};
-    final heat   = daemonStatus['heat'] as String? ?? '—';
-    final epoch  = daemonStatus['epoch'] as int? ?? 0;
-
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _sectionTitle('AURORA\'S ROOM', color: _green),
-      if (daemonStatus.isNotEmpty)
-        _card(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(children: [
-            _heatDot(heat),
-            const SizedBox(width: 8),
-            Text('Daemon  •  epoch $epoch  •  heat $heat',
-              style: const TextStyle(color: _textDim, fontSize: 11)),
-          ]),
-        ),
-      if (_notes.isNotEmpty) ...[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
-          child: Row(children: [
-            const Icon(Icons.sticky_note_2_outlined, size: 12, color: _textDim),
-            const SizedBox(width: 6),
-            const Text('ROOM NOTES', style: TextStyle(color: _textDim, fontSize: 10, letterSpacing: 1.2)),
-          ]),
-        ),
-        for (final n in _notes.take(3)) _noteCard(n as Map<String, dynamic>),
-      ],
-      if (_messages.isNotEmpty) ...[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
-          child: Row(children: [
-            const Icon(Icons.mail_outline, size: 12, color: _textDim),
-            const SizedBox(width: 6),
-            const Text('MESSAGES', style: TextStyle(color: _textDim, fontSize: 10, letterSpacing: 1.2)),
-          ]),
-        ),
-        for (final m in _messages.take(2)) _msgCard(m as Map<String, dynamic>),
-      ],
-      if (_activity.isNotEmpty) ...[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
-          child: Row(children: [
-            const Icon(Icons.history, size: 12, color: _textDim),
-            const SizedBox(width: 6),
-            const Text('ACTIVITY', style: TextStyle(color: _textDim, fontSize: 10, letterSpacing: 1.2)),
-          ]),
-        ),
-        _card(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final a in _activity.take(5))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(children: [
-                  Text(a['ts_str'] as String? ?? '', style: const TextStyle(color: _textDim, fontSize: 10)),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(
-                    '${a['action'] ?? ''}: ${a['detail'] ?? ''}',
-                    style: const TextStyle(color: _text, fontSize: 11),
-                    overflow: TextOverflow.ellipsis,
-                  )),
-                ]),
-              ),
-          ],
-        )),
-      ],
-      _sectionTitle('ROOM NAVIGATION', color: _textDim),
-      _card(child: Wrap(spacing: 8, runSpacing: 6, children: [
-        for (final tab in ['Self', 'Awareness', 'Mind', 'Memory', 'Health',
-                           'Energy', 'Experiments', 'Growth', 'Response', 'Notes', 'Poedex'])
-          ActionChip(
-            label: Text(tab, style: const TextStyle(fontSize: 11)),
-            backgroundColor: _border,
-            side: const BorderSide(color: _border),
-            labelStyle: const TextStyle(color: _text),
-            onPressed: () => _navRoom(tab),
-          ),
-      ])),
-    ]);
-  }
-
   // ── Shared widget helpers ───────────────────────────────────────────────────
 
   Widget _actionButton({
@@ -1599,40 +1531,6 @@ class _HubScreenState extends State<HubScreen> {
     );
   }
 
-  Widget _noteCard(Map<String, dynamic> n) => _card(
-    padding: const EdgeInsets.all(10),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: _green.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(n['type'] as String? ?? 'note',
-            style: const TextStyle(color: _green, fontSize: 9, fontWeight: FontWeight.w600)),
-        ),
-        const SizedBox(width: 8),
-        Text(n['ts_str'] as String? ?? '', style: const TextStyle(color: _textDim, fontSize: 10)),
-      ]),
-      const SizedBox(height: 4),
-      Text(n['content'] as String? ?? '',
-        style: const TextStyle(color: _text, fontSize: 11, height: 1.4),
-        maxLines: 4, overflow: TextOverflow.ellipsis),
-    ]),
-  );
-
-  Widget _msgCard(Map<String, dynamic> m) => _card(
-    padding: const EdgeInsets.all(10),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Icon(Icons.mail_outline, size: 12, color: _cyan),
-      const SizedBox(width: 8),
-      Expanded(child: Text(m['body'] as String? ?? '',
-        style: const TextStyle(color: _text, fontSize: 11, height: 1.4),
-        maxLines: 3, overflow: TextOverflow.ellipsis)),
-    ]),
-  );
-
   Widget _miniStat(String label, String value, Color color) => Container(
     padding: const EdgeInsets.all(8),
     decoration: BoxDecoration(
@@ -1647,17 +1545,226 @@ class _HubScreenState extends State<HubScreen> {
     ]),
   );
 
-  Widget _heatDot(String heat) {
-    final color = heat == 'CRITICAL' ? _red
-        : heat == 'HIGH'     ? _amber
-        : heat == 'ELEVATED' ? _amber
-        : _green;
-    return Container(width: 8, height: 8,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+  // ── Surface restructure 6: her link home ───────────────────────────────────
+
+  static String _ago(double epochS) {
+    if (epochS <= 0) return 'never';
+    final s = DateTime.now().millisecondsSinceEpoch / 1000.0 - epochS;
+    if (s < 0) return 'just now';
+    if (s < 90) return '${s.round()} s ago';
+    if (s < 5400) return '${(s / 60).round()} min ago';
+    if (s < 172800) return '${(s / 3600).toStringAsFixed(1)} h ago';
+    return '${(s / 86400).round()} days ago';
   }
 
-  void _navRoom(String tab) {
-    AuroraBridge.provideRoomCommand('{"navigate":"$tab"}');
-    _showSnack('Sent Aurora to $tab tab');
+  static String _span(double epochS) {
+    if (epochS <= 0) return '';
+    final s = DateTime.now().millisecondsSinceEpoch / 1000.0 - epochS;
+    if (s < 90) return '${s.round().clamp(0, 90)} s';
+    if (s < 5400) return '${(s / 60).round()} min';
+    if (s < 172800) return '${(s / 3600).toStringAsFixed(1)} h';
+    return '${(s / 86400).round()} days';
+  }
+
+  // Everything here is read from the link client as it stands
+  // (strata_link_client_status, mirrored flat by get_cognitive_stats).
+  Widget _buildLinkHomePanel() {
+    final status      = (_stats['strata_link_status'] as String?) ?? 'not_configured';
+    final role        = (_stats['strata_link_role'] as String?) ?? '';
+    final away        = _stats['strata_link_away'] == true;
+    final ready       = _stats['strata_link_surface_ready'] == true;
+    final lastSync    = (_stats['strata_link_last_sync_at'] as num?)?.toDouble() ?? 0.0;
+    final homeWord    = (_stats['strata_link_home_confirmed_at'] as num?)?.toDouble() ?? 0.0;
+    final pending     = _stats['strata_link_pending'] as int? ?? 0;
+    final firstPair   = (_stats['strata_link_first_pairing'] as String?) ?? '';
+    final device      = (_stats['strata_link_device_name'] as String?) ?? '';
+    final error       = (_stats['strata_link_error'] as String?) ?? '';
+    final paired      = _stats['surface_only'] == true;
+    final unpaired    = status == 'not_configured';
+
+    final String where;
+    final Color whereColor;
+    if (unpaired) {
+      where = 'Here, on this phone alone';
+      whereColor = _textDim;
+    } else if (away) {
+      where = 'Here, away from home';
+      whereColor = _amber;
+    } else if (role == 'active' && ready) {
+      where = 'Here, held by this phone';
+      whereColor = _green;
+    } else if (status == 'standby' || role == 'standby') {
+      where = 'At home (this phone stands by)';
+      whereColor = _cyan;
+    } else {
+      where = status.replaceAll('_', ' ');
+      whereColor = _textDim;
+    }
+
+    final String homeLine;
+    if (unpaired) {
+      homeLine = 'no home paired';
+    } else if (status == 'online') {
+      homeLine = 'reachable · last answered ${_ago(lastSync)}';
+    } else {
+      homeLine = 'out of reach · last answered ${_ago(lastSync)}'
+          '${error.isNotEmpty ? ' · $error' : ''}';
+    }
+
+    final String pairing;
+    if (paired) {
+      pairing = 'paired: this phone is her surface';
+    } else if (unpaired) {
+      pairing = 'not paired';
+    } else if (firstPair.isNotEmpty) {
+      pairing = 'first pairing: ${firstPair.replaceAll('_', ' ')}';
+    } else {
+      pairing = 'linked, first pairing not started';
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('HER LINK HOME', color: _purple),
+      _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _statRow('Where she is', where, valueColor: whereColor),
+        _statRow('Home', homeLine,
+            valueColor: status == 'online' ? _green : (unpaired ? _textDim : _amber)),
+        if (away) _statRow('Away for', _span(lastSync), valueColor: _amber),
+        if (!unpaired) _statRow('Turns waiting to go home', '$pending',
+            valueColor: pending > 0 ? _amber : _text),
+        if (!unpaired) _statRow("Home's last word", _ago(homeWord)),
+        _statRow('Pairing', pairing, valueColor: paired ? _green : _text),
+        if (device.isNotEmpty) _statRow('This device', device),
+        const SizedBox(height: 10),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          _actionButton(
+            label: unpaired ? 'Pair with home' : 'Pair again',
+            icon: Icons.link, color: _purple, compact: true,
+            onTap: _pairStrataLink,
+          ),
+          _actionButton(
+            label: 'Move her', icon: Icons.swap_horiz, color: _cyan, compact: true,
+            onTap: _strataTransferMenu,
+          ),
+          _actionButton(
+            label: paired ? 'Ask home: curiosity' : 'Curiosity cycle',
+            icon: Icons.explore_outlined, color: _green, compact: true,
+            onTap: _onCuriosityCycle,
+          ),
+          _actionButton(
+            label: paired ? 'Ask home: evolution' : 'Evolution cycle',
+            icon: Icons.auto_awesome_outlined, color: _amber, compact: true,
+            onTap: _onEvoCycle,
+          ),
+        ]),
+      ])),
+    ]);
+  }
+
+  // ── Surface restructure 6: control panel ───────────────────────────────────
+  // What the phone lends her. Each switch is one resource; turning one
+  // off stops that resource, never her. Stored by set_surface_control.
+
+  static const _controlLabels = <String, String>{
+    'presence_line': 'Presence line over other apps',
+    'listening': 'Listening (microphone)',
+    'camera_sensing': 'Camera sensing',
+    'screen_sensing': 'Screen sensing',
+    'voice': 'Voice (she speaks aloud)',
+    'growth_while_charging_only': 'Growth only while charging (until paired)',
+  };
+
+  Future<void> _setControl(String name, bool value) async {
+    try {
+      final answer = await AuroraBridge.setSurfaceControl(name, value);
+      if (answer['ok'] != true) {
+        _showSnack('Could not change ${_controlLabels[name] ?? name}');
+      }
+    } catch (e, st) {
+      UiDiagnostics.report('control panel: $name', e, st);
+    }
+  }
+
+  String _growthLine() {
+    final g = _fieldStatus['growth'];
+    if (g is! Map) return 'not read yet';
+    if (g['paired_surface'] == true) return 'paired: her growth runs at home';
+    if (g['stepping_aside'] == true) return 'stepping aside while you talk';
+    if (g['control_on'] != true) return 'running whenever she has room';
+    if (g['charging'] == null) return "running (charger state not read yet)";
+    return g['waits_for_charging'] == true
+        ? 'waiting for the charger'
+        : 'running while charging';
+  }
+
+  Widget _buildControlPanel() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('CONTROL PANEL', color: _cyan),
+      _card(
+        padding: const EdgeInsets.fromLTRB(14, 6, 6, 10),
+        child: ValueListenableBuilder<Map<String, bool>>(
+          valueListenable: AuroraBridge.surfaceControls,
+          builder: (context, controls, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final e in _controlLabels.entries)
+                Row(children: [
+                  Expanded(child: Text(e.value,
+                      style: const TextStyle(color: _text, fontSize: 12))),
+                  Switch(
+                    value: controls[e.key] ?? true,
+                    activeColor: _purple,
+                    onChanged: controls.isEmpty
+                        ? null
+                        : (v) => _setControl(e.key, v),
+                  ),
+                ]),
+              Padding(
+                padding: const EdgeInsets.only(right: 8, top: 2),
+                child: _statRow('Her growth', _growthLine()),
+              ),
+              if (controls.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text('Reading the panel from her bridge…',
+                      style: TextStyle(color: _textDim, fontSize: 11)),
+                ),
+            ],
+          ),
+        ),
+      ),
+    ]);
+  }
+
+  // ── Surface restructure 6: from home, collapsed ────────────────────────────
+  // Built only while open (ExpansionTile drops closed children), so these
+  // panels cost the phone nothing until Sir looks.
+  Widget _buildFromHome() {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: _fromHomeOpen,
+        onExpansionChanged: (open) {
+          setState(() => _fromHomeOpen = open);
+          if (open) _refresh();
+        },
+        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+        childrenPadding: EdgeInsets.zero,
+        iconColor: _purple,
+        collapsedIconColor: _textDim,
+        title: const Text('FROM HOME', style: TextStyle(
+            color: _purple, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
+        subtitle: const Text('Development, emergence, genealogy, QuasiArch, gauntlet, habitat',
+            style: TextStyle(color: _textDim, fontSize: 10)),
+        children: [
+          _buildCognitivePanel(),
+          _buildDevelopmentPanel(),
+          _buildEvolutionPanel(),
+          _buildGenealogyPanel(),
+          _buildQuasiarchPanel(),
+          _buildGauntletPanel(),
+          _buildHabitatPanel(),
+        ],
+      ),
+    );
   }
 }

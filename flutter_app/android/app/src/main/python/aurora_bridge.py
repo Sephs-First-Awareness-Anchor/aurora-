@@ -177,6 +177,10 @@ _lock          = _FieldLock()
 # never queued behind a second background pass after the first one ends.
 _present_waiting: int = 0
 _present_waiting_lock = threading.Lock()
+# Live turns waiting for or holding the field (stepping aside for Sir,
+# 2026-11-21): background work that does not take the field, such as her
+# dreams and curiosity, reads this to know a turn with him is under way.
+_present_active: int = 0
 
 
 # Surface restructure 3: a paired phone whose first pairing home has received
@@ -236,6 +240,152 @@ def is_surface_only() -> bool:
     return bool(_surface_only)
 
 
+# ── Surface control panel (surface restructure 6, Sir 2026-11-21) ─────────
+# The phone's own resources, which Sir controls from the Hub: her presence
+# line, what she senses (microphone, camera, screen), her voice, and whether
+# her growth work waits for the charger until the phone is paired.  None of
+# these decides anything for her: they say what this device lends her.
+# Kept in surface_sensory_controls.json, which is this device's own
+# (surface_present in aurora_store_ownership) and does not move with her.
+_SURFACE_CONTROL_DEFAULTS = {
+    "presence_line": True,
+    "listening": True,
+    "camera_sensing": True,
+    "screen_sensing": True,
+    "voice": True,
+    # Starts off (Sir, 2026-11-21): her growth runs on battery as she
+    # chooses; the switch is there for when he wants to save battery.
+    "growth_while_charging_only": False,
+}
+_SURFACE_CONTROLS_FILE = "surface_sensory_controls.json"
+_surface_controls: dict = dict(_SURFACE_CONTROL_DEFAULTS)
+_surface_controls_lock = threading.Lock()
+
+
+def _surface_controls_path() -> str:
+    return os.path.join(_strata_state_dir or "aurora_state", _SURFACE_CONTROLS_FILE)
+
+
+def _load_surface_controls() -> None:
+    import json as _json_sc
+    loaded: dict = {}
+    try:
+        with open(_surface_controls_path(), "r", encoding="utf-8") as fh:
+            raw = _json_sc.load(fh)
+        if isinstance(raw, dict):
+            loaded = {k: bool(raw[k]) for k in _SURFACE_CONTROL_DEFAULTS if k in raw}
+    except FileNotFoundError:
+        pass
+    except Exception as _sc_exc:
+        log.warning("Surface controls unreadable; using defaults: %s", _sc_exc)
+    with _surface_controls_lock:
+        _surface_controls.clear()
+        _surface_controls.update(_SURFACE_CONTROL_DEFAULTS)
+        _surface_controls.update(loaded)
+
+
+def surface_control(name: str) -> bool:
+    with _surface_controls_lock:
+        return bool(_surface_controls.get(name, _SURFACE_CONTROL_DEFAULTS.get(name, True)))
+
+
+def _growth_waits_for_charging() -> bool:
+    """True while an unpaired phone holds her growth work for the charger.
+
+    Her turns, face, voice, senses, conversations and own initiative never
+    wait.  A paired surface runs no growth here at all, so this is off there.
+    When the charger state has not arrived from the phone yet, nothing waits:
+    the gate holds only on a reading, never on a guess."""
+    if _surface_only or not surface_control("growth_while_charging_only"):
+        return False
+    charging = _hardware_sensors.get("charging")
+    if charging is None:
+        return False
+    return not bool(charging)
+
+
+def _growth_status() -> dict:
+    charging = _hardware_sensors.get("charging")
+    return {
+        "waits_for_charging": _growth_waits_for_charging(),
+        "control_on": surface_control("growth_while_charging_only"),
+        "charging": None if charging is None else bool(charging),
+        "paired_surface": bool(_surface_only),
+        # Her growth is holding because a conversation with Sir is under way.
+        "stepping_aside": _conversation_active(),
+    }
+
+
+# Stepping aside for Sir (2026-11-21, his words: "when I'm interacting with
+# her she isn't held up by other processes ... This shouldn't take away from
+# her autonomy").  While a live turn waits or runs, and until his side of the
+# conversation has been quiet for CONVERSATION_QUIET_S, her background work
+# (history stream, Praxis and the learning probe, curiosity, dreams,
+# evolution, the clone harvest, her messenger) holds and then carries on by
+# itself.  Nothing is dropped and nothing is chosen for her: the work is
+# spaced around the conversation.  Her own initiative (the proactive loop)
+# is not held here; speaking to him is hers to choose.
+CONVERSATION_QUIET_S = 45.0
+
+
+def _conversation_active(now: float = 0.0) -> bool:
+    if _present_active > 0 or _present_is_waiting():
+        return True
+    now = now or time.time()
+    return _last_output_time > 0.0 and (now - _last_output_time) < CONVERSATION_QUIET_S
+
+
+def _growth_may_run() -> bool:
+    """Her growth work may take its next step: not in a conversation with
+    Sir, and not waiting for the charger (only when he has that switch on)."""
+    return not _conversation_active() and not _growth_waits_for_charging()
+
+
+def _yield_curiosity_to_present() -> None:
+    """A live turn has arrived: her curiosity steps aside at its next step.
+    It is released again by its own loop once _growth_may_run says so."""
+    try:
+        from aurora_curiosity_engine import interrupt_curiosity_cycles
+        interrupt_curiosity_cycles()
+    except Exception:
+        pass
+
+
+def get_surface_controls() -> str:
+    import json as _json_sc
+    with _surface_controls_lock:
+        controls = dict(_surface_controls)
+    return _json_sc.dumps({"controls": controls, "growth": _growth_status()}, default=str)
+
+
+def set_surface_control(name: str, value: bool) -> str:
+    """Sir turns one of the phone's resources on or off from the Hub."""
+    import json as _json_sc
+    name = str(name or "")
+    if name not in _SURFACE_CONTROL_DEFAULTS:
+        return _json_sc.dumps({"ok": False, "error": f"unknown control: {name}"})
+    with _surface_controls_lock:
+        _surface_controls[name] = bool(value)
+        snapshot = dict(_surface_controls)
+    try:
+        path = _surface_controls_path()
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            _json_sc.dump(snapshot, fh)
+        os.replace(tmp, path)
+    except Exception as _sc_exc:
+        return _json_sc.dumps({"ok": False, "error": f"{type(_sc_exc).__name__}: {_sc_exc}"[:200],
+                               "controls": snapshot})
+    return _json_sc.dumps({"ok": True, "controls": snapshot, "growth": _growth_status()}, default=str)
+
+
+def set_surface_control_cmd(command: str) -> str:
+    """One-string form for the Kotlin bridge: "name:on" or "name:off"."""
+    name, _, value = str(command or "").partition(":")
+    return set_surface_control(name.strip(), value.strip().lower() in ("on", "true", "1"))
+
+
 def _ask_home(kind: str, payload: "dict | None" = None) -> dict:
     """On a surface, growth work is asked of home rather than run here."""
     try:
@@ -257,18 +407,29 @@ class _PresentClaim:
     """
 
     def __enter__(self) -> bool:
-        global _present_waiting
+        global _present_waiting, _present_active
         with _present_waiting_lock:
             _present_waiting += 1
+            _present_active += 1
+        _yield_curiosity_to_present()
         try:
             _lock.acquire()
+        except BaseException:
+            with _present_waiting_lock:
+                _present_active -= 1
+            raise
         finally:
             with _present_waiting_lock:
                 _present_waiting -= 1
         return True
 
     def __exit__(self, *exc) -> None:
-        _lock.release()
+        global _present_active
+        try:
+            _lock.release()
+        finally:
+            with _present_waiting_lock:
+                _present_active -= 1
 _boot_completed_at: float = 0.0
 # Background pacing (phone overload fix, 2026-11-07).  Every background
 # source -- historical replay, Praxis bridge, messenger and her reach-outs,
@@ -1863,7 +2024,8 @@ def _start_curiosity_engine(systems: dict) -> None:
         systems["_curiosity_engine"] = engine
         # 90 s idle interval — generous on mobile to conserve battery while
         # still giving Aurora regular autonomous exploration windows.
-        start_curiosity_background(engine, tick_interval_s=90.0)
+        start_curiosity_background(engine, tick_interval_s=90.0,
+                                   may_run=_growth_may_run)
         log.info("Curiosity engine started (90 s idle cycle)")
     except Exception as exc:
         log.warning("Curiosity engine unavailable: %s", exc)
@@ -1877,7 +2039,8 @@ def _start_curiosity_engine(systems: dict) -> None:
         from aurora_quantum_dream_substrate import (  # type: ignore
             start_dream_substrate,
         )
-        start_dream_substrate(systems, cycle_interval_s=600.0)
+        start_dream_substrate(systems, cycle_interval_s=600.0,
+                              may_run=_growth_may_run)
         _dream_substrate_boot_ok = True
         log.info("Quantum dream substrate started (600 s cycles)")
     except Exception as exc:
@@ -2375,6 +2538,8 @@ def _messenger_waiting() -> bool:
 def _messenger_live_idle() -> bool:
     """The messenger's own gate: the same terms as every background source,
     without yielding to itself."""
+    if _conversation_active():
+        return False
     return _historical_experience_live_idle(yield_to_messenger=False)
 
 
@@ -2384,7 +2549,8 @@ _clone_absorption_running = threading.Event()
 def _clone_absorption_live_idle() -> bool:
     """The clone harvest takes the field only when no live turn is waiting
     and the background has its breathing room."""
-    return _systems is not None and not _present_is_waiting() and _background_breathing_room()
+    return (_systems is not None and not _present_is_waiting()
+            and not _conversation_active() and _background_breathing_room())
 
 
 def _start_clone_absorption(state_dir: str) -> None:
@@ -2435,6 +2601,7 @@ def get_field_status() -> str:
         "boot_finished": bool(_boot_state.get("finished", False)),
         "clone_harvest": (absorb or {}).get("status", "") if isinstance(absorb, dict) else "",
         "surface_only": bool(_surface_only),
+        "growth": _growth_status(),
     }, default=str)
 
 
@@ -2519,7 +2686,20 @@ def resume_historical_experience() -> str:
 def _praxis_live_idle() -> bool:
     """Praxis yields to the present on exactly the same terms as historical
     experience.  Delegating rather than copying keeps one definition of
-    "the live path is not claiming the field" for every background source."""
+    "the live path is not claiming the field" for every background source.
+    Praxis and the learning probe are growth work, so on an unpaired phone
+    they also wait for the charger when Sir has that on, and step aside
+    while he is talking with her."""
+    if not _growth_may_run():
+        return False
+    return _historical_experience_live_idle()
+
+
+def _history_stream_live_idle() -> bool:
+    """Her history stream: the shared idle terms, stepping aside while Sir
+    talks with her, and growth's charger wait when he has it on."""
+    if not _growth_may_run():
+        return False
     return _historical_experience_live_idle()
 
 
@@ -2780,6 +2960,7 @@ def initialize(state_dir: str = "") -> str:
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
+    _load_surface_controls()
     global _surface_only
     _surface_only = False
     _deferred_to_home.clear()
@@ -3147,7 +3328,7 @@ def initialize(state_dir: str = "") -> str:
                     state_dir=_hist_state_dir,
                     archive_path=_hist_archive,
                     field_lock=_lock,
-                    live_idle=_historical_experience_live_idle,
+                    live_idle=_history_stream_live_idle,
                     initial_delay_s=8.0,
                 )
                 _systems["historical_experience"] = _historical_experience
@@ -4940,10 +5121,30 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         # ── Skill learning: Turn B — user is instructing how to do the task ──
         # Fires before fidelity so the skill is fully ingested first.
         skill_acknowledged = False
+        _being_shown = None
         if _capability_learning_mode and _systems:
+            # On the phone, what he says while her attention is on the screen
+            # is looked for there and done, one thing he named at a time
+            # (aurora_screen_apprenticeship).  While he is still showing her,
+            # the request stays open and her attention stays on the screen.
+            _appr_b = _screen_apprentice()
+            if _appr_b is not None and _appr_b.wants_to_hear():
+                try:
+                    _being_shown = _appr_b.hear(text)
+                except Exception as _hear_e:
+                    log.warning("screen apprenticeship hear failed: %s", _hear_e)
+                    _being_shown = None
+        if _being_shown and _being_shown.get("watching"):
+            _set_sensory_attention("screen", turns=_ATTENTION_TURNS)
+            skill_acknowledged = True
+        elif _capability_learning_mode and _systems:
             # Save context before clearing — needed for the retrospective deposit
             _saved_learning_ctx = dict(_capability_learning_context)
-            _ingest_skill_procedure(text, _capability_learning_context)
+            # What she was shown across several turns is one procedure.
+            _procedure_text = text
+            if _being_shown and _being_shown.get("finished") and _being_shown.get("instructions"):
+                _procedure_text = "\n".join(str(i) for i in _being_shown["instructions"])
+            _ingest_skill_procedure(_procedure_text, _capability_learning_context)
             _capability_learning_mode    = False
             _capability_learning_context = {}
             _pending_capability_gap      = {}
@@ -5514,6 +5715,15 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                 # the identity field can express the need and learning mode is armed.
                 # Only fires when not already in learning mode and not after a skill-
                 # acknowledged turn (which just ingested the procedure).
+                # A phone request she started and could not finish is a
+                # capability gap by what happened: the app opened, the rest
+                # meant nothing she could find (aurora_screen_apprenticeship).
+                _phone_goal = _systems.pop("_phone_goal_open", None) if _systems else None
+                if _phone_goal and not skill_acknowledged and not _capability_learning_mode:
+                    with _axis_state_lock:
+                        _axis_post_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    _register_capability_gap(text, _axis_pre_synthesis, _axis_post_synthesis,
+                                             gap_domain="device_action")
                 if not skill_acknowledged and not _capability_learning_mode and _systems:
                     with _axis_state_lock:
                         _axis_post_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
@@ -7186,7 +7396,18 @@ def _detect_capability_gap(
     )
 
 
-def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) -> None:
+def _screen_apprentice():
+    """Her apprenticeship on the phone screen (aurora_screen_apprenticeship),
+    or None where she has no hands on a screen."""
+    try:
+        from aurora_internal.aurora_screen_apprenticeship import get_apprenticeship
+        return get_apprenticeship(_systems)
+    except Exception:
+        return None
+
+
+def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict,
+                             gap_domain: Optional[str] = None) -> None:
     """
     Record the capability failure, spike the identity field with the
     blocked-agency profile, and arm the learning mode.
@@ -7205,7 +7426,10 @@ def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) ->
         "task_text":   task_text[:300],
         "axis_pre":    dict(axis_pre),
         "axis_post":   dict(axis_post),
-        "gap_domain":  _classify_gap_domain(axis_post),
+        # A request she began on the phone and could not finish is a device
+        # action by what happened (aurora_screen_apprenticeship), whatever
+        # the axis profile alone would classify it as.
+        "gap_domain":  gap_domain or _classify_gap_domain(axis_post),
         "ts":          _t.time(),
     }
     _capability_learning_mode    = True
@@ -9919,7 +10143,8 @@ def _self_monitor_loop() -> None:
             # grow crystal structures from compressed constraint-physics evolution.
             # Only fires when not in an active user turn (lock not held).
             if _tick % 5 == 0 and _evo_sim is not None and _concept_registry is not None:
-                if _background_breathing_room() and _lock.acquire(blocking=False):
+                if (_growth_may_run() and _background_breathing_room()
+                        and _lock.acquire(blocking=False)):
                     try:
                         with _axis_state_lock:
                             _evo_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
@@ -11619,6 +11844,13 @@ def provide_screen_observation(payload_json: str) -> None:
         import time as _time
 
         payload = _json.loads(str(payload_json or "{}"))
+        # Sir's own presses while he is showing her are steps he is showing.
+        _appr_o = _screen_apprentice()
+        if _appr_o is not None:
+            try:
+                _appr_o.observe_event(payload)
+            except Exception as _obs_e:
+                log.debug("screen apprenticeship observe failed: %s", _obs_e)
         visible = [
             " ".join(str(item).split()).strip()
             for item in list(payload.get("visible_text") or [])
@@ -12322,8 +12554,19 @@ def get_cognitive_stats() -> str:
             stats["strata_link_received"] = int(_sl.get("received", 0) or 0)
             stats["strata_link_rtt_ms"] = float(_sl.get("rtt_ms", 0.0) or 0.0)
             stats["strata_link_error"] = str(_sl.get("last_error", "") or "")[:200]
+            # Surface Hub link card (restructure 6): where she is and how home
+            # last answered, read from the link client as it stands.
+            stats["strata_link_role"] = str(_sl.get("role", "") or "")
+            stats["strata_link_away"] = bool(_sl.get("away", False))
+            stats["strata_link_surface_ready"] = bool(_sl.get("surface_ready", False))
+            stats["strata_link_last_sync_at"] = float(_sl.get("last_sync_at", 0.0) or 0.0)
+            stats["strata_link_home_confirmed_at"] = float(_sl.get("home_last_confirmed_at", 0.0) or 0.0)
+            _fp = _sl.get("first_pairing") or {}
+            stats["strata_link_first_pairing"] = str(_fp.get("status", "") or "") if isinstance(_fp, dict) else ""
+            stats["strata_link_device_name"] = str(_sl.get("device_name", "") or "")
         except Exception:
             stats["strata_link_status"] = "error"
+        stats["surface_only"] = bool(_surface_only)
 
         # ── Praxis messenger ──────────────────────────────────────────────
         # Her DMs with other AI models.  Counts plus the last thing she

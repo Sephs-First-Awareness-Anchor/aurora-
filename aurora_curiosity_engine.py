@@ -25,7 +25,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 _THOUGHT_CHAIN_LOG_PATH = (
     Path(__file__).resolve().parent / "aurora_logs" / "thought_chain.jsonl"
@@ -1237,10 +1237,18 @@ _CURIOSITY_STOP = threading.Event()
 def start_curiosity_background(
     engine: CuriosityEngine,
     tick_interval_s: float = 45.0,
+    may_run: Optional[Callable[[], bool]] = None,
 ) -> None:
     """
     Start CuriosityEngine as a background thread with configurable tick rate.
     User turns always interrupt via _CYCLE_INTERRUPTIBLE.
+
+    may_run, when given, is asked before each idle window; False spaces the
+    window to the next tick and drops nothing (the phone's pacing around a
+    conversation with Sir, surface restructure 6).  When may_run says yes,
+    the owner is saying the present has gone quiet, so a yield that a live
+    turn asked for (interrupt_curiosity_cycles) is released here and her
+    curiosity carries on by itself.  None keeps the old behaviour.
     """
     global _CURIOSITY_THREAD
     resident = getattr(engine, "systems", {}).get("_desktop_runtime")
@@ -1254,7 +1262,12 @@ def start_curiosity_background(
 
     def _loop():
         while not _CURIOSITY_STOP.is_set():
-            if not _CYCLE_INTERRUPTIBLE.is_set():
+            allowed = True
+            if may_run is not None:
+                allowed = _may_run_now(may_run)
+                if allowed:
+                    reset_curiosity_interrupt()
+            if allowed and not _CYCLE_INTERRUPTIBLE.is_set():
                 try:
                     engine.reset_idle_counter()
                     for _ in range(_MAX_CYCLES_PER_IDLE):
@@ -1268,6 +1281,14 @@ def start_curiosity_background(
 
     _CURIOSITY_THREAD = threading.Thread(target=_loop, daemon=True, name="aurora_curiosity")
     _CURIOSITY_THREAD.start()
+
+
+def _may_run_now(may_run: Callable[[], bool]) -> bool:
+    try:
+        return bool(may_run())
+    except Exception as _aurora_boundary_exc:
+        _aurora_fault(locals(), _aurora_boundary_exc, '_may_run_now', 1275)
+        return True
 
 
 def stop_curiosity_background() -> None:

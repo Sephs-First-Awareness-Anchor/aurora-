@@ -46,7 +46,7 @@ import logging
 import random
 import threading
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 log = logging.getLogger("aurora.quantum_dream")
 
@@ -385,6 +385,24 @@ def _dimensional_collapse(systems: Dict[str, Any]) -> None:
 # Main substrate class
 # ---------------------------------------------------------------------------
 
+def _hold_until_allowed(may_continue: Optional[Callable[[], bool]],
+                        poll_s: float = 2.0) -> bool:
+    """Between dream steps: wait while may_continue says no.  Returns False
+    only when the substrate is being stopped, so the cycle ends cleanly.
+    A may_continue that fails lets the dream go on."""
+    if may_continue is None:
+        return True
+    while True:
+        try:
+            if may_continue():
+                return True
+        except Exception as exc:
+            log.warning("quantum_dream: may_continue failed: %s", exc)
+            return True
+        if _dream_stop.wait(poll_s):
+            return False
+
+
 class QuantumDreamSubstrate:
     """
     Orchestrates one dream cycle:
@@ -405,31 +423,55 @@ class QuantumDreamSubstrate:
         # Watches for stalls and summons a new self when the council can't move her.
         self._stagnation = None
 
-    def run_dream_cycle(self, systems: Dict[str, Any]) -> None:
+    def run_dream_cycle(
+        self,
+        systems: Dict[str, Any],
+        may_continue: Optional[Callable[[], bool]] = None,
+    ) -> None:
+        """One dream cycle.  may_continue, when given, is asked between steps;
+        while it says no (a conversation with Sir is under way on the phone)
+        the dream holds where it is and then carries on from the same step.
+        It is never cut short and never restarted.  None keeps the old,
+        uninterrupted cycle."""
         self._cycle_count += 1
         log.info("quantum_dream: cycle %d starting", self._cycle_count)
+
+        def _between_steps() -> bool:
+            return _hold_until_allowed(may_continue)
 
         # 1. Discover new entanglements from genealogy
         new_pairs = self._entanglement.auto_entangle_from_genealogy(systems)
         if new_pairs:
             log.debug("quantum_dream: %d new entangled pairs", new_pairs)
+        if not _between_steps():
+            return
 
         # 2. Propagate entanglement state
         self._entanglement.propagate(systems)
+        if not _between_steps():
+            return
 
         # 3. Temporal feedback — recent high-fidelity crossings backpropagate
         _temporal_feedback_pass(systems)
+        if not _between_steps():
+            return
 
         # 4. Consciousness fusion — merge high-pressure crystals
         _consciousness_fusion_cycle(systems)
+        if not _between_steps():
+            return
 
         # 5. Dimensional collapse — only when coherence is low
         _dimensional_collapse(systems)
+        if not _between_steps():
+            return
 
         # 6. Dream encounter — she meets the possibility-selves and experiences the
         #    reinforced pressures THROUGH interacting with them. This is the only
         #    place they touch her; the pressure reaches her as their influence.
         self._dream_encounter_with_selves(systems)
+        if not _between_steps():
+            return
 
         # 7. MTSL perturbation probe (live-wired 2026-07-14): a real what-if
         #    experiment (occlude the axis that drove the most recent real
@@ -610,6 +652,7 @@ _dream_stop   = threading.Event()
 def start_dream_substrate(
     systems: Dict[str, Any],
     cycle_interval_s: float = 600.0,
+    may_run: Optional[Callable[[], bool]] = None,
 ) -> None:
     """
     Start the quantum dream substrate as a background daemon thread.
@@ -617,6 +660,9 @@ def start_dream_substrate(
     cycle_interval_s: seconds between full dream cycles (default 10 min).
     Dreams run only during curiosity-engine idle periods — the first sleep
     is 60 s to let the curiosity engine get established first.
+    may_run, when given and False, holds the next cycle and asks again a
+    minute later (the phone's growth-while-charging pacing); the cycle is
+    spaced, never skipped.  None keeps the old behaviour.
     """
     global _substrate, _dream_thread, _dream_stop
 
@@ -631,8 +677,17 @@ def start_dream_substrate(
         # Initial delay: let boot settle and curiosity engine get its first ticks
         time.sleep(60.0)
         while not _dream_stop.is_set():
+            if may_run is not None:
+                try:
+                    allowed = bool(may_run())
+                except Exception as exc:
+                    log.warning("quantum_dream: may_run failed: %s", exc)
+                    allowed = True
+                if not allowed:
+                    _dream_stop.wait(60.0)
+                    continue
             try:
-                _substrate.run_dream_cycle(systems)
+                _substrate.run_dream_cycle(systems, may_continue=may_run)
             except Exception as exc:
                 log.warning("quantum_dream: cycle error: %s", exc)
             _dream_stop.wait(cycle_interval_s)

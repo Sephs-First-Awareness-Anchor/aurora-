@@ -18,7 +18,7 @@ The record is `docs/module_ownership.json`. Change a domain, subsystem, layer or
 
 ## Coverage
 
-Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 1043 files.
+Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 1044 files.
 
 Covered: files ending in `.py`, `.dart`, `.rs`, `.kt`, `.java`, `.sh`, `.bat`, `.ps1`, `.jsx`, `.html`, `.service`, and files under `.github/workflows/`, skipping folders named `.git`, `__pycache__`, `node_modules`, `build`, `.dart_tool`, `target`, `aurora_state`, `aurora_state_test`, `aurora_logs`, `vector_data`, `lessons`, `aurora_genealogy`.
 
@@ -36,7 +36,7 @@ Not covered:
 
 | Quasi (domain) | Holds | Subsystems | Composites | Files |
 |---|---|---|---|---|
-| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 45 | 979 |
+| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 45 | 980 |
 | Phone app | The Flutter app with its Android services and on-device Python. | 5 | 4 | 27 |
 | ACM | The Rust kernel, its runner and the native Python ACM runtime. | 8 | 3 | 30 |
 | Repository and CI | Workflows that build, test and run the other domains. | 1 | 0 | 7 |
@@ -59,7 +59,7 @@ Not covered:
 | Dual strata (surface and subsurface) | The dual-strata package and the surface/subsurface daemons and substrate. | 2 | 45 | 8 |
 | Bridges and external tools | Praxis, ACM, scouting, research dispatch and tool registries. | 3 | 9 | 8 |
 | Investigative and diagnostic | Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here. | 5 | 12 | 23 |
-| Tests | The pytest suite. Each test lists the files it exercises. | 3 | 9 | 478 |
+| Tests | The pytest suite. Each test lists the files it exercises. | 3 | 9 | 479 |
 | Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 1 | 5 | 89 |
 
 ## Quasi: Phone app
@@ -1253,6 +1253,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_subsurface_scout_bridge.py` |  |  | location |
 | `tests/test_supposed_stays_supposed.py` |  |  | location |
 | `tests/test_surface_boundary.py` |  |  | location |
+| `tests/test_surface_control_panel.py` |  |  | location |
 | `tests/test_surface_does_not_wait_for_scout.py` |  |  | location |
 | `tests/test_surface_face_live_read.py` |  |  | location |
 | `tests/test_surface_poedex_dispatch.py` |  |  | location |

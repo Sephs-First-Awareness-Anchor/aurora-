@@ -282,6 +282,7 @@ class MainActivity : FlutterActivity() {
                     "hasOverlayPermission"     -> result.success(hasOverlayPermission())
                     "requestOverlayPermission" -> { requestOverlayPermission(); result.success(null) }
                     "hasScreenObserverPermission" -> result.success(hasScreenObserverPermission())
+                    "getPhoneHandsState" -> result.success(PhoneHands.permissionState(applicationContext))
                     "requestScreenObserverPermission" -> { requestScreenObserverPermission(); result.success(null) }
                     "consumeOverlayTap" -> {
                         val had = pendingSummon; pendingSummon = false; result.success(had)
@@ -349,6 +350,23 @@ class MainActivity : FlutterActivity() {
                     }
                     "getLiveTurnDiagnostics" -> {
                         AuroraService.callPythonString("get_live_turn_diagnostics") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    // The surface control panel (restructure 6): the phone's
+                    // resources Sir lends her, read and switched from the Hub.
+                    "getSurfaceControls" -> {
+                        AuroraService.callPythonString("get_surface_controls") { json ->
+                            AuroraService.applySurfaceControls(json)
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "setSurfaceControl" -> {
+                        val name = call.argument<String>("name") ?: ""
+                        val on = call.argument<Boolean>("value") == true
+                        AuroraService.callPythonStringArg("set_surface_control_cmd",
+                                "$name:${if (on) "on" else "off"}") { json ->
+                            AuroraService.applySurfaceControls(json)
                             runOnUiThread { result.success(json) }
                         }
                     }
@@ -556,6 +574,10 @@ class MainActivity : FlutterActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             need(Manifest.permission.POST_NOTIFICATIONS))
             perms.add(Manifest.permission.POST_NOTIFICATIONS)
+        // Her phone hands (texts, calls, contacts, call log, location): asked
+        // once, with the rest.  A refusal stays refused; Android does not
+        // ask again, and the tool says which permission is missing.
+        for (p in PhoneHands.runtimePermissions()) if (need(p)) perms.add(p)
         if (perms.isNotEmpty()) ActivityCompat.requestPermissions(this, perms.toTypedArray(), PERM_REQUEST)
     }
 
@@ -780,6 +802,12 @@ class MainActivity : FlutterActivity() {
             .build()
 
         analysis.setAnalyzer(cameraExecutor) { proxy ->
+            // Camera sensing switched off on the Hub's control panel: the
+            // frame is let go untouched, so nothing reaches her or ML Kit.
+            if (!AuroraService.cameraSensingOn) {
+                proxy.close()
+                return@setAnalyzer
+            }
             val now = System.currentTimeMillis()
             if (now - lastFrameMs >= FRAME_INTERVAL_MS) {
                 lastFrameMs = now
