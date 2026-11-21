@@ -337,7 +337,14 @@ def apply_to_crystals(book: FacetBook, concept_index: Mapping[str, str], crystal
         crystal = crystals.get(cid)
         if crystal is None:
             continue
-        kinds = book.facets_for(concept, top=per_kind)
+        # Include fully contradicted (degree=0) entries when they previously
+        # had counted evidence: the SAME materialized facet must be allowed to
+        # lose all confidence. Held-only/dreamed evidence never earns a facet.
+        kinds = {
+            kind: counted[:per_kind]
+            for kind, rows in book.facets_for(concept, include_uncounted=True).items()
+            if (counted := [r for r in rows if r["contexts"] > r["uncounted"]])
+        }
         if not kinds:
             continue
         touched += 1
