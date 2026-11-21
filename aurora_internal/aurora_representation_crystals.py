@@ -31,8 +31,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 try:  # the facet class the registry itself writes
     from concept_crystal import _DPSCrystalFacet
@@ -174,6 +175,43 @@ class RepresentationCrystals:
             and (path is None or r.get("path") == path)
             and (target is None or r.get("target") == target)
         ]
+
+
+    def recall_relevant(self, heard: str, *, subject: Optional[str] = None, limit: int = 4) -> List[Dict[str, Any]]:
+        """Reuse already-earned, word-associated resolution evidence from the same lsa:res facets.
+
+        Word association only establishes which learned shape may be relevant,
+        not the truth of a natural-language claim.  No recollection is deposited
+        as a fresh observation or promoted by reading.
+        """
+        terms = set(re.findall(r"[a-z][a-z']{1,}", str(heard or "").lower()))
+        if not terms:
+            return []
+        found: List[Dict[str, Any]] = []
+        for record in self.load_all():
+            if record.get("status") != "earned":
+                continue
+            if subject is not None and record.get("subject") != subject:
+                continue
+            path = str(record.get("path") or "")
+            if path and all(axis in ("X", "B") for axis in path.split(">")):
+                continue
+            words = [dict(w) for w in record.get("word_evidence", []) if isinstance(w, Mapping)]
+            matched = [w for w in words if str(w.get("word", "")).lower() in terms
+                       and abs(float(w.get("lift", 0.0) or 0.0)) >= _MIN_WORD_LIFT]
+            if not matched:
+                continue
+            found.append({
+                "id": record["id"], "path": path, "subject": record["subject"],
+                "target": record.get("target"), "status": "earned",
+                "z": float(record.get("z", 0.0) or 0.0),
+                "word_hits": [w["word"] for w in matched],
+                "evidence": matched,
+                "facet_role": self.role(str(record["subject"]), str(record.get("identity_path") or path)),
+                "recognition_kernel": dict(record.get("kernel") or {}).get("id"),
+            })
+        found.sort(key=lambda item: (-len(item["word_hits"]), -item["z"], item["id"]))
+        return found[:max(0, int(limit))]
 
 
 class HypothesisCrystals:
