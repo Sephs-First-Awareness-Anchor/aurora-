@@ -13,6 +13,11 @@ Can a temporary, evidence-grounded composition of existing representations make 
 - `aurora_internal.aurora_confluence` voices asserted/derived propositions present in its knowledge input, not an ungrounded resolution result.
 - `aurora_habitat_motivation._score_affordance` can evaluate the same representational view for action relevance; that makes it a convenient **one-consumer** instrument.
 
+## Existing multi-source understanding, not to duplicate
+`aurora_internal.aurora_learned_rules` already derives conclusions from multiple separate learned assertions, including temporal ordering chains and inherited categories. `aurora_internal.aurora_confluence.knowledge` can pass that derived content into her language composer. The repo's `tests/test_learned_order_rules.py` contains actual taught-statement -> derived answer -> confluence checks, including non-derivability, contradiction, and conditions.
+
+**Therefore, the hypothesis is not that Aurora has no relational or joint reasoning.** The narrower proposed gap is that the Build 714 *perspective-before-resolution* engine does not evaluate jointly complementary structural views before considering permanent field resolution. Any system-wide proposal must prove incremental benefit **beyond** learned rules, confluence, and the existing general representation exchange.
+
 ## Experiment phases and what each can establish
 
 | Area | Instrument | What would count as success | Current test boundary |
@@ -37,3 +42,6 @@ Can a temporary, evidence-grounded composition of existing representations make 
 Require a complete observed input → independently grounded sources → compatibility → native joint hypothesis → real cognitive use → discriminating consequence → qualified reuse → historical recall / future communication chain, with comparative baseline and negative controls. Report each link, missing producers and false positives. If the existing mechanisms already derive the same understanding, do not build a duplicate.
 
 This branch adds tests and documentation only. **It does not modify Aurora's running mind.**
+
+## Evidence-weighted interpretation
+The system-wide test is a collection of **producer and consumer probes**, not a single end-to-end cognition run. One positive test of Habitat affinity is not proof of global developmental improvement. A future end-to-end test must contrast the full existing path (including learned rules) against a candidate joint-path run through independently replayed histories, and measure grounded distinctions reaching perception, recall, reasoning, prediction and speech. As long as the joint interpretation is supplied by a test helper rather than created by Aurora's own runtime, classify that portion as **not demonstrated**.
