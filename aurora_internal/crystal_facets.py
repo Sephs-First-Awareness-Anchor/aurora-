@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import deque
 import os
 import tempfile
 from typing import Any, Dict, Iterable, List, Mapping, Optional
@@ -137,10 +138,12 @@ class FacetBook:
                     # Preserve a bounded witness to the circumstances and later corrections in
                     # this SAME ordinary concept facet.  The source event remains authoritative;
                     # this is a compact, revisit-able view, not another memory system.
-                    ranked = sorted(ev.items(), key=lambda pair: pair[0])
-                    positive = [(ref, e) for ref, e in ranked if e["polarity"] > 0 and e["basis"] in COUNTED_BASES]
-                    negative = [(ref, e) for ref, e in ranked if e["polarity"] < 0 and e["basis"] in COUNTED_BASES]
-                    selected = (positive[-3:] + negative[-3:])[:6]
+                    positive, negative = deque(maxlen=3), deque(maxlen=3)
+                    for ref, evidence in ev.items():
+                        if evidence["basis"] not in COUNTED_BASES:
+                            continue
+                        (positive if evidence["polarity"] > 0 else negative).append((ref, evidence))
+                    selected = list(positive) + list(negative)
                     occasions = [
                         {"ref": ref, "source": e["source"], "basis": e["basis"],
                          "polarity": e["polarity"], "occurrence_class": e["occurrence_class"],
@@ -389,17 +392,18 @@ def recall_contextual_facets(systems: Mapping[str, Any], heard: str, *, max_entr
         return []
     # This index already maps known concepts to their canonical ordinary crystals.
     dps = systems.get("dimensional")
-    if dps is None or not isinstance(getattr(dps, "crystals", None), Mapping):
+    idx = getattr(dps, "concept_index", None)
+    if not isinstance(idx, Mapping):
         return []
-    # Resolve by the existing crystal's own concept, not by creating another
-    # alias or another crystal. Canonicalization is read-only.
-    from aurora_internal.crystal_store import primary_index
-    idx = {str(k).lower(): v for k, v in primary_index(dps).items()}
     out: List[Dict[str, Any]] = []
     kinds = {"episode_ref", "context", "condition", "cause", "effect", "relation",
              "comparison", "evidence", "contradiction", "uncertainty"}
-    for concept in sorted(terms & set(idx)):
+    for concept in sorted(terms):
+        # This is the existing canonical/alias index. No scan, new crystal,
+        # or representation-type-specific registry is needed on a live turn.
         cid = idx.get(concept)
+        if not cid:
+            continue
         crystal = registry.crystal_by_id(cid) if cid else None
         if crystal is None:
             continue
