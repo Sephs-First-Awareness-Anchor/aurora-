@@ -382,13 +382,16 @@ def recall_contextual_facets(systems: Mapping[str, Any], heard: str, *, max_entr
         return []
     # This index already maps known concepts to their canonical ordinary crystals.
     dps = systems.get("dimensional")
-    idx = getattr(dps, "concept_index", None)
-    if not isinstance(idx, Mapping):
+    if dps is None or not isinstance(getattr(dps, "crystals", None), Mapping):
         return []
+    # Resolve by the existing crystal's own concept, not by creating another
+    # alias or another crystal. Canonicalization is read-only.
+    from aurora_internal.crystal_store import primary_index
+    idx = {str(k).lower(): v for k, v in primary_index(dps).items()}
     out: List[Dict[str, Any]] = []
     kinds = {"episode_ref", "context", "condition", "cause", "effect", "relation",
              "comparison", "evidence", "contradiction", "uncertainty"}
-    for concept in sorted(terms & {str(k).lower() for k in idx}):
+    for concept in sorted(terms & set(idx)):
         cid = idx.get(concept)
         crystal = registry.crystal_by_id(cid) if cid else None
         if crystal is None:
