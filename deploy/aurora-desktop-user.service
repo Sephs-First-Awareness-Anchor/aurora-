@@ -1,0 +1,21 @@
+[Unit]
+Description=Aurora unified desktop resident (Subsurface and local owner hub)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=__AURORA_ROOT__
+Environment="AURORA_STATE_DIR=__AURORA_STATE__"
+Environment=AURORA_SKIP_DEP_INSTALL=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=__AURORA_PYTHON__ -m aurora_internal.desktop serve --state-dir __AURORA_STATE__
+# SIGINT follows the resident's KeyboardInterrupt path: drain admitted work,
+# save canonical state, then release desktop_resident.lock.
+KillSignal=SIGINT
+TimeoutStopSec=300
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
