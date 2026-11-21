@@ -45,3 +45,35 @@ This branch adds tests and documentation only. **It does not modify Aurora's run
 
 ## Evidence-weighted interpretation
 The system-wide test is a collection of **producer and consumer probes**, not a single end-to-end cognition run. One positive test of Habitat affinity is not proof of global developmental improvement. A future end-to-end test must contrast the full existing path (including learned rules) against a candidate joint-path run through independently replayed histories, and measure grounded distinctions reaching perception, recall, reasoning, prediction and speech. As long as the joint interpretation is supplied by a test helper rather than created by Aurora's own runtime, classify that portion as **not demonstrated**.
+
+## Executed results, 2026-11-21
+
+### Native nonlinear history → communication transfer
+GitHub Actions workflow: https://github.com/Sephs-First-Awareness-Anchor/aurora-/actions/runs/44892980477
+
+Executed directly against the actual `AuroraResolutionLedger`, `AuroraRepresentationExchange`, and `AuroraCommunicationEmergence` implementations in `tests/test_joint_resolution_native_transfer.py`:
+- 9,000 XOR-history events: nonlinear path `T>T>N` **discovered and earned**; shallower path `T>N` did not explain it.
+- The real communication consumer adopted the representation 6,200 times while processing historical events, and 39 times during 40 subsequent live-stream events from the same knowledge base.
+- The original historical stream index stayed unchanged while later live events were processed.
+- A separate 9,000-event null history discovered and earned **no** paths and caused **zero** false joint communication adoptions.
+- This tests learned constraint-level predictive orientation through a real downstream consumer. It does not establish a human-readable semantic inference, a reliable conversation answer, or episodic interpretation.
+
+CI results in that workflow: 7/7 system-wide canaries, 2/2 native nonlinear transfer tests, 9/9 selected existing relational-reasoning tests, and 2/2 selected representation-exchange tests. These are four distinct scopes, not 20 independent proofs of end-to-end cognition.
+
+### Full conversational baseline vs experimental joint-view arm
+GitHub Actions workflow: https://github.com/Sephs-First-Awareness-Anchor/aurora-/actions/runs/44892783134
+Artifact: https://github.com/Sephs-First-Awareness-Anchor/aurora-/actions/runs/44892783134/artifacts/14702184727
+
+- Both arms booted real `aurora.boot_aurora` from independent copies of `aurora_state`, and both completed six calls to `process_external_user_turn`.
+- 6/6 delivered responses matched exactly. **This is not evidence of equal ability:** the experimental projection builder was never invoked in either arm.
+- Experimental builder calls: **0**; multi-source frontiers: **0**; joint candidates built/staged: **0**; observed joint consequences: **0**.
+- Both arms reported zero earned representations offered by their exchange over these sparse six turns. The exchange had communication-emergence, evolved-surfaces, identity and lexical-grounding consumers registered, but none was offered a learned representation within this short run.
+- Examples of actual delivered replies included `Mara sees lantern, and mara sees shine.`, `Mara sees lantern.`, and `fact, switch, description. on today.`; two turns delivered empty text. No grounded explanation of the switch/battery condition was demonstrated.
+- Verdict: the **new structural joint-field projection extension did not activate in live conversation**. Consequently the short A/B test cannot establish any advantage or harm from that extension.
+
+### Architecture conclusion
+1. The assertion that Aurora cannot discover relationships jointly carried by multiple temporal observations is **false** for the existing resolution-ledger domain. She already does so, with demonstrated history-to-live communication adoption.
+2. The narrower absence of multi-source field composition inside `build_perspective_projections()` is still real, but does **not** establish a whole-system reasoning deficiency or justify introducing a duplicate general resolver.
+3. The remaining missing proof is the full chain from earned structural predictive representation → grounded contextual relational meaning → memory/experiential recall → correct, naturally expressed conversation output. Communication *activation* is not the same as semantic comprehension.
+4. Do not merge any new production joint-resolution mechanism from this PR. Target the actual inter-system propagation gap and compare against all already-working mechanisms first.
+5. All tests used transient simulations, independent copied runtime state, or isolated module inputs. They did not alter the user's live Aurora state or prove physical-device behavior.
