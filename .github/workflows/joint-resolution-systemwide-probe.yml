@@ -37,3 +37,10 @@ jobs:
       - name: Exercise real Aurora module boundaries, without production mutations
         run: |
           python -m pytest -q -ra --tb=short tests/test_joint_resolution_systemwide_probe.py
+      - name: Verify existing independently learned multi-relation reasoning and speech
+        run: |
+          python -m pytest -q --tb=short tests/test_learned_order_rules.py -k 'order_is_chained or questions_are_answered_from_chained_order or the_confluence_composes_the_answer or what_she_holds_under_a_condition_is_said'
+      - name: Verify learned representations are distributed and judged by downstream consumers
+        run: |
+          python -m pytest -q --tb=short tests/test_representation_exchange.py -k 'any_subject_of_representation_can_use_it or a_consumer_reporting_harm_in_its_own_domain_blocks_earning'
+
