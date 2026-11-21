@@ -233,6 +233,22 @@ class AuroraService : Service() {
             }
         }
 
+        // The phone's sensing switches from the Hub's control panel (surface
+        // restructure 6, Sir 2026-11-21). Sir lends her this device's camera
+        // and screen; off means the frames are not taken, not that she is
+        // told what to do. Kept in Python (surface_sensory_controls.json);
+        // these mirror it for the camera analyzer and the screen observer.
+        @Volatile var cameraSensingOn: Boolean = true
+        @Volatile var screenSensingOn: Boolean = true
+
+        fun applySurfaceControls(json: String) {
+            try {
+                val c = JSONObject(json).optJSONObject("controls") ?: return
+                cameraSensingOn = c.optBoolean("camera_sensing", true)
+                screenSensingOn = c.optBoolean("screen_sensing", true)
+            } catch (_: Exception) {}
+        }
+
         /** Call a no-arg Python bridge function that returns a String. */
         fun callPythonString(fn: String, callback: (String) -> Unit) {
             scope?.launch {

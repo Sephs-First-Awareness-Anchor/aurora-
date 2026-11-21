@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'aurora_bridge.dart';
 import 'screens/home_screen.dart';
 import 'screens/hub_screen.dart';
 import 'screens/habitat_space_screen.dart';
@@ -46,7 +47,8 @@ class _AppShellState extends State<_AppShell> {
   // between Aurora, the human, and the environment (spec section 3),
   // not just two more screens. IndexedStack keeps all four alive so
   // Space/Self state survives tab switches without a re-fetch, same as
-  // Aurora/Hub already relied on.
+  // Aurora/Hub already relied on.  Surface restructure 6: kept alive, but
+  // a hidden screen asks her nothing (AuroraBridge.visibleTab).
   static const _screens = [
     HomeScreen(),
     SpaceScreen(),
@@ -63,7 +65,11 @@ class _AppShellState extends State<_AppShell> {
         backgroundColor: const Color(0xFF111118),
         indicatorColor: const Color(0xFFA020F0).withOpacity(0.25),
         selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
+        onDestinationSelected: (i) {
+          setState(() => _tab = i);
+          // Screens kept alive here poll her only while shown.
+          AuroraBridge.visibleTab.value = i;
+        },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.chat_bubble_outline_rounded),
