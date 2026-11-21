@@ -391,18 +391,24 @@ class AuroraRepresentationExchange:
 
         # 1. Consequence of the expectations made before this event arrived.
         scored = 0
+        status_changed = False
         pending = self._pending.pop(stream, {})
         if bits:
             for rep_id, exp in pending.items():
                 rep = self._reps.get(rep_id)
                 if rep is None:
                     continue
+                before_status = self.status_of(rep)
                 bit = self._target_bit(exp, bits, words)
                 p, pm = _clip(exp["p_high"]), _clip(exp["p_marg"])
                 gain = math.log2((p if bit else 1.0 - p) / (pm if bit else 1.0 - pm))
                 self._add(rep["universal"], gain, (p > 0.5) == bool(bit))
                 self._note_words(rep, bool(bit), words)
                 self._ensure_kernel(rep)
+                if self.status_of(rep) != before_status and (
+                    before_status == "earned" or self.status_of(rep) == "earned"
+                ):
+                    status_changed = True
                 scored += 1
 
         # The permanent recognizer needs only the tiny path-depth window, never
@@ -459,6 +465,11 @@ class AuroraRepresentationExchange:
                 "use_ids": use_ids, "kernel": rep.get("kernel") if exp.get("dormant_reactivation") else None,
             }
         self._pending[stream] = fresh
+        # Persist a newly earned (or subsequently invalidated) representation
+        # onto its existing crystal immediately; ordinary score updates remain
+        # batched on the existing save cadence.
+        if status_changed and self._crystals is not None:
+            self.crystallize()
         if len(self._uses) > _MAX_USES:
             for key in sorted(self._uses, key=lambda k: self._uses[k]["event_index"])[: len(self._uses) - _MAX_USES]:
                 self._uses.pop(key, None)
@@ -554,7 +565,11 @@ class AuroraRepresentationExchange:
         for rep in list(self._reps.values()):
             uni = rep["universal"]
             status = self.status_of(rep)
-            if status == "dissolved" or self.public(rep)["positional"]:
+            # A once-earned facet must remain correctable.  Mark its existing
+            # content dissolved rather than leaving stale earned claims behind.
+            if self.public(rep)["positional"] or (
+                status == "dissolved" and rep["id"] not in self._synced
+            ):
                 continue
             if uni["n"] < _BLOCK and status != "earned":
                 continue
@@ -568,6 +583,10 @@ class AuroraRepresentationExchange:
                 "identity_path": rep.get("identity_path", rep["path"]), "target": rep["target"],
                 "status": status, "z": round(_z_of(uni), 3), "first_seen": rep.get("first_seen"),
                 "kernel": rep.get("kernel"),
+                # Association to the very same lsa:res facet, not a separate
+                # vocabulary store or crystal type. Words are evidence of use,
+                # never an asserted semantic relation on their own.
+                "word_evidence": list(self.shape_words(rep["id"], top=8)) if status == "earned" else [],
                 "uni": {k: round(float(v), 6) for k, v in uni.items()},
                 "dom": rep.get("domain", {}),
                 "tab": self.ledger.table_of(rep["subject"], rep["path"]) if hasattr(self.ledger, "table_of") else {},
