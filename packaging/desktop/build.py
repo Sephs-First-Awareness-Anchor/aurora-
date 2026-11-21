@@ -65,7 +65,7 @@ def build():
         "--onedir", "--windowed", "--name", "AuroraDesktop",
         "--distpath", str(ROOT / "dist"), "--workpath", str(BUILD / "work"),
         "--specpath", str(BUILD), "--paths", str(SOURCE),
-        "--add-data", f"{SOURCE}{os.pathsep}aurora_source",
+        "--add-data", f"{SOURCE}{os.pathsep}.",
         "--hidden-import", "PySide6.QtWebEngineWidgets",
         "--collect-submodules", "aurora_internal",
         "--collect-submodules", "aurora_genealogy",
