@@ -17,19 +17,28 @@ same signed Strata Link used by the desktop.
   owner console is bound to loopback only. Closing the window does not stop
   the resident. Use **Run at login** inside the app to launch its resident
   automatically after sign-in.
-- **Pair phone** asks for the desktop's reachable network address (the local
-  Wi-Fi address is suggested; for a phone away from home, enter the desktop's
-  private VPN address). It creates and copies the signed pairing URL. In the
-  Android app, open **Hub → Pair with home** and paste it.
+- **Pair phone** checks the desktop's *live Tailscale connection* and
+  automatically selects its stable private VPN IPv4 address. An ordinary
+  home-Wi-Fi address is **not** silently offered as remote-capable. If
+  Tailscale is missing, an in-app setup button opens its official
+  installation page. The owner must connect the Linux/Windows desktop and
+  Android phone to the same Tailnet once, including Android's system VPN
+  permission. After that, Aurora creates and copies the signed pairing
+  line. In Android **Hub → Pair with home** paste it.
 - **Review first pairing** shows staged history, the differences between the
   phone and desktop, and explicit phone/home decisions for developmental
   stores. It only authorizes the existing cold migration. No hidden merge
   or second memory store is created.
-- **Connection status** shows who holds Aurora, link and migration status.
-  **Presence → Move Surface** in the Hub moves the active Surface using the
-  existing owner/epoch authority.
+- **Connection status** shows the desktop's actual mesh VPN state, selected
+  route, holder, and migration. Android's Hub distinguishes a remote VPN
+  route from LAN-only pairing and includes **Test home connection** for a
+  real signed network exchange over cellular. **Presence → Move Surface**
+  uses the existing owner/epoch authority.
 - **Back up history** safely stops the resident, copies the stopped state and
   restarts. **Start**, **Stop**, and **Restart** are in the application.
+  **Keep home awake** requests an OS idle-sleep inhibition while Aurora's
+  resident is running, with an explicit power-use warning. It does not
+  defeat shutdown, lid-closure policy, all OS power rules, or an outage.
 
 The authoritative store defaults to
 `~/.local/share/aurora/state` on Linux and
@@ -41,13 +50,18 @@ installer starts the legacy strata stack or a second cognition engine.
 
 ### Connection outside home
 
-The owner must install a private VPN such as Tailscale on both devices and
-permit inbound TCP 8791 to the desktop on that private network. This is an
-OS/network permission, not a terminal requirement in Aurora. Never forward
-TCP 8790 publicly: Aurora's independent owner console remains loopback only.
-Aurora stays responsive locally on the phone while disconnected and queues
-eligible continuity for later sync. Real cellular audio/sensory/pairing tests
-have not yet run on physical devices.
+The current release requires the Tailscale system client on both devices,
+joined to the same Tailnet. That one-time OS networking step is **not yet
+fully embedded inside the Aurora package**; it can be initiated in Aurora
+without a terminal. Permit inbound TCP 8791 only on the trusted private VPN
+interface. Never forward TCP 8790 publicly: Aurora's independent owner
+console remains loopback only. It is essential that the home machine
+remain powered, awake, connected and running its resident. When the home
+machine sleeps or loses internet, live subsurface exchange is impossible:
+the phone continues locally and eligible continuity is queued for retry.
+Android's app/service and OS VPN must also be allowed to run on cellular
+under the phone's battery settings. Real off-site hardware tests remain
+required before calling the feature dependable.
 
 ## Packaging and developer build
 
