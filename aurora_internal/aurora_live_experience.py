@@ -109,6 +109,34 @@ def ensure_runtime(systems: Any, state_dir: Optional[str] = None) -> Tuple[Any, 
     return ledger, exchange
 
 
+
+def crystal_context_for_turn(systems: Any, heard: str, *, max_entries: int = 6) -> Dict[str, Any]:
+    """A bounded read of Aurora's EXISTING crystal facets for cognition and recall.
+
+    Returns same-facet context and learned representation references.  Neither
+    this read nor any consumer is allowed to count recall as new experience.
+    The single cache entry is turn-local and never persisted as another store.
+    """
+    if not isinstance(systems, dict) or not str(heard or "").strip():
+        return {"facets": [], "representations": []}
+    exchange = systems.get("representation_exchange")
+    registry = systems.get("_concept_crystal_registry")
+    live_index = int(getattr(exchange, "_last_index", {}).get("live", -1)) if exchange else -1
+    key = (str(heard), live_index, id(registry), int(max_entries))
+    cached = systems.get("_crystal_context_turn_cache")
+    if isinstance(cached, dict) and cached.get("key") == key:
+        return cached["view"]
+    from aurora_internal.crystal_facets import recall_contextual_facets
+    facets = recall_contextual_facets(systems, heard, max_entries=max_entries)
+    representations = []
+    crystal_store = getattr(exchange, "_crystals", None)
+    if crystal_store is not None:
+        representations = crystal_store.recall_relevant(heard, limit=max_entries)
+    view = {"facets": facets, "representations": representations}
+    systems["_crystal_context_turn_cache"] = {"key": key, "view": view}
+    return view
+
+
 def _observe(systems: Any, role: str, session_id: str, text: str, now: Optional[float]) -> Dict[str, Any]:
     ledger, exchange = ensure_runtime(systems)
     if ledger is None or exchange is None:
@@ -134,6 +162,10 @@ def _observe(systems: Any, role: str, session_id: str, text: str, now: Optional[
         exchange.after_event(int(result["event_index"]), stream=LIVE_STREAM, tokens=tokens_of(text))
         if int(result["event_index"]) % 200 == 0:
             exchange.crystallize()
+        if role == "user":
+            # The live reasoning and expression consumers may read the same
+            # authoritative ordinary-crystal facets without another learning pass.
+            systems["_turn_crystal_context"] = crystal_context_for_turn(systems, text)
     return result
 
 
