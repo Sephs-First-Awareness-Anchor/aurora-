@@ -134,7 +134,10 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
         # the SAME memory process, not a specialized memory crystal or process.
         from aurora_internal.aurora_live_experience import crystal_context_for_turn
         crystal_view = crystal_context_for_turn(systems, user_text)
-        crystal_count = len(crystal_view["facets"]) + len(crystal_view["representations"])
+        crystal_count = sum(
+            1 for item in crystal_view["facets"]
+            if item.get("supported") or item.get("kind") == "episode_ref"
+        ) + len(crystal_view["representations"])
         crystal_axes = sorted({
             a for item in crystal_view["representations"]
             for a in str(item.get("path") or "").split(">") if a in ("X", "T", "N", "B", "A")
