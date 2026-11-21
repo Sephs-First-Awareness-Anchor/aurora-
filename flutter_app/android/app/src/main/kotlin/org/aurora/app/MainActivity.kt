@@ -352,6 +352,23 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    // The surface control panel (restructure 6): the phone's
+                    // resources Sir lends her, read and switched from the Hub.
+                    "getSurfaceControls" -> {
+                        AuroraService.callPythonString("get_surface_controls") { json ->
+                            AuroraService.applySurfaceControls(json)
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "setSurfaceControl" -> {
+                        val name = call.argument<String>("name") ?: ""
+                        val on = call.argument<Boolean>("value") == true
+                        AuroraService.callPythonStringArg("set_surface_control_cmd",
+                                "$name:${if (on) "on" else "off"}") { json ->
+                            AuroraService.applySurfaceControls(json)
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     // Who holds her field and for how long (phone fix, Build 980).
                     "getFieldStatus" -> {
                         AuroraService.callPythonString("get_field_status") { json ->
@@ -780,6 +797,12 @@ class MainActivity : FlutterActivity() {
             .build()
 
         analysis.setAnalyzer(cameraExecutor) { proxy ->
+            // Camera sensing switched off on the Hub's control panel: the
+            // frame is let go untouched, so nothing reaches her or ML Kit.
+            if (!AuroraService.cameraSensingOn) {
+                proxy.close()
+                return@setAnalyzer
+            }
             val now = System.currentTimeMillis()
             if (now - lastFrameMs >= FRAME_INTERVAL_MS) {
                 lastFrameMs = now

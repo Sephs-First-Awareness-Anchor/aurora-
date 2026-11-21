@@ -19,10 +19,20 @@ class HabitatInteractiveView extends StatefulWidget {
   final String territory; // "space" | "self"
   final bool humanCanCreate;
 
+  // Surface restructure 6 (lighter render). isShown: when it answers
+  // false, the view asks her nothing (the app shell keeps hidden tabs
+  // alive). isBusy: while her field is held the view looks every 6 s
+  // instead of every 2 s. Both only pace this view's own reads; neither
+  // touches what she does in the habitat.
+  final bool Function()? isShown;
+  final bool Function()? isBusy;
+
   const HabitatInteractiveView({
     super.key,
     required this.territory,
     this.humanCanCreate = true,
+    this.isShown,
+    this.isBusy,
   });
 
   @override
@@ -45,13 +55,38 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
   @override
   void initState() {
     super.initState();
-    _refresh();
+    if (widget.isShown == null || widget.isShown!()) _refresh();
     // UI synchronization only: observe canonical Habitat state changed by Aurora.
-    _stateRefreshTimer = Timer.periodic(const Duration(seconds: 2), (_) => _refresh());
+    _scheduleRefresh();
+  }
+
+  static const _refreshEvery     = Duration(seconds: 2);
+  static const _refreshEveryBusy = Duration(seconds: 6);
+  bool _disposed = false;
+
+  // One read at a time, paced by her field: the next look is scheduled
+  // only after this one returns, so a slow read never stacks up behind
+  // itself on the phone.
+  void _scheduleRefresh() {
+    if (_disposed) return;
+    final busy = widget.isBusy != null && widget.isBusy!();
+    _stateRefreshTimer = Timer(busy ? _refreshEveryBusy : _refreshEvery, () async {
+      if (_disposed) return;
+      if (widget.isShown == null || widget.isShown!()) {
+        try {
+          await _refresh();
+        } catch (_) {
+          // A failed look waits for the next one; HabitatBridge reports
+          // its own failures.
+        }
+      }
+      _scheduleRefresh();
+    });
   }
 
   @override
   void dispose() {
+    _disposed = true;
     _stateRefreshTimer?.cancel();
     super.dispose();
   }

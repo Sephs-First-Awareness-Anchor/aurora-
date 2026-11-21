@@ -102,6 +102,8 @@ class ScreenObserverService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
+        // Screen sensing switched off on the Hub's control panel.
+        if (!AuroraService.screenSensingOn) return
         val now = System.currentTimeMillis()
         if (now - lastEventMs < 650L) return
         lastEventMs = now
