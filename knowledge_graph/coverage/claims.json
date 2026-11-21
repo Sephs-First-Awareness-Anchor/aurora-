@@ -2460,6 +2460,22 @@
    "observations": [],
    "status": "unverified"
   },
+  "mod:scripts.aurora_pr264_finalize_manifest": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:scripts.aurora_pr264_shard": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
   "mod:scripts.aurora_stack_exporter": {
    "claim_basis": "location",
    "notes": [
@@ -4007,6 +4023,14 @@
    "status": "unverified"
   },
   "mod:tests.test_desktop_embodiment": {
+   "claim_basis": "location",
+   "notes": [
+    "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
+   ],
+   "observations": [],
+   "status": "unverified"
+  },
+  "mod:tests.test_desktop_praxis_home_boot": {
    "claim_basis": "location",
    "notes": [
     "no static production importer, organ or recorded run reaches it (dynamic loading would not show)"
@@ -6891,7 +6915,7 @@
  "disagreements": [],
  "ownership": {
   "covers": "every source file in the repository",
-  "declared_files": 1043,
+  "declared_files": 1049,
   "not_covered": [
    {
     "path": "aurora_state/, aurora_state_test/, aurora_logs/, vector_data/, lessons/, aurora_genealogy/",
@@ -6917,7 +6941,7 @@
   "path": "docs/module_ownership.json",
   "schema": "aurora.module_ownership/2",
   "scope": "Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below.",
-  "sha256": "0969b8b59565d491",
+  "sha256": "2107cd6691e2916e",
   "version": 2
  }
 }

@@ -1,0 +1,34 @@
+{
+  "authors": "Sunni (Sir) Morningstar and Cael Devo",
+  "purpose": "Runtime-observed relationships that the PR264 comparison shows as lost, each traced to an intentional replacement. The final-graph workflow subtracts only exact matches; any other observed loss still fails the job.",
+  "replacements": [
+    {
+      "source": "fn:aurora._run_reasoning_pipeline",
+      "type": "SPAWNS",
+      "target": "fn:aurora._run_reasoning_pipeline._run_afterthought_episode_bg",
+      "replaced_by": "aurora._dispatch_afterthought_subsurface starts the aurora-afterthought-N thread; its _worker waits for the live turn and runs SimulationEngine.run_episode with the [AFTERTHOUGHT] seed",
+      "verified": "Runtime recording on f8a1b94 (knowledge_graph/runtime/observations-desktop_turns.json): three afterthought threads started and each ran run_episode"
+    },
+    {
+      "source": "fn:aurora_simulation_engine.ConsciousLearner.observe_outcome",
+      "type": "CALLS",
+      "target": "fn:aurora_simulation_engine._extract_semantic_topic",
+      "replaced_by": "Build 725 restoration (e2289d2): observe_outcome takes semantic_topic and topic_resolution_status from the caller's turn topic, supplied by her native meaning layer, instead of parsing a topic from wording",
+      "verified": "Source read on main df368c4: run_episode passes turn_topic semantic_topic and topic_resolution_status into observe_outcome"
+    },
+    {
+      "source": "fn:aurora_simulation_engine.ConsciousLearner.observe_outcome",
+      "type": "CALLS",
+      "target": "fn:aurora_simulation_engine.ConsciousLearner._derive_understanding",
+      "replaced_by": "Build 725 restoration (e2289d2): outcomes are kept as structured response_outcome evidence with an empty understanding; semantic claims enter only through propose_shard and check_admission",
+      "verified": "Source read on main df368c4: observe_outcome records outcome axis evidence and no generated understanding sentence"
+    },
+    {
+      "source": "fn:aurora_simulation_engine.SimulationSession._topic_from_seed_prompt",
+      "type": "CALLS",
+      "target": "fn:aurora_simulation_engine._extract_semantic_topic",
+      "replaced_by": "Build 725 restoration (e2289d2): the seed prompt keeps its wording as episode content; semantic_topic comes only from the base topic's native meaning, and the transport marker is still stripped",
+      "verified": "Source read on main df368c4: _topic_from_seed_prompt reads semantic_topic from base_topic and never parses one from the prompt"
+    }
+  ]
+}

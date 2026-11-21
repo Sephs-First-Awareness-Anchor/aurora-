@@ -34,15 +34,18 @@ jobs:
           python scripts/render_module_ownership.py --check
       - name: Rebuild canonical knowledge graph at this branch head
         run: |
-          python scripts/aurora_knowledge_graph.py build --quiet
-          python scripts/aurora_knowledge_graph.py check
+          # Keep the committed runtime evidence: without --runtime the graph drops every
+          # observed call and thread, and the observed-loss guard below can never fire.
+          python scripts/aurora_knowledge_graph.py build --runtime knowledge_graph/runtime --quiet
+          python scripts/aurora_knowledge_graph.py check --runtime knowledge_graph/runtime
       - name: Recompute real comparison against frozen KG branch base
         shell: bash
         run: |
           git worktree add --detach "$RUNNER_TEMP/pr264-kg-base" b649850b28ff7e94f4da2447bb23c3804ea68450
           python scripts/aurora_knowledge_graph.py build \
             --root "$RUNNER_TEMP/pr264-kg-base" \
-            --out "$RUNNER_TEMP/pr264-base-graph" --quiet
+            --out "$RUNNER_TEMP/pr264-base-graph" \
+            --runtime "$RUNNER_TEMP/pr264-kg-base/knowledge_graph/runtime" --quiet
           python scripts/aurora_knowledge_graph.py diff \
             "$RUNNER_TEMP/pr264-base-graph" knowledge_graph \
             --out knowledge_graph/comparisons/PR264_FINAL_COMPARISON.md
@@ -54,16 +57,31 @@ jobs:
           report = json.loads(path.read_text(encoding='utf-8'))
           lost = report['relationships']['lost']
           kinds = dict(Counter(row['type'] for row in lost))
-          observed = sum(bool(row.get('observed')) for row in lost)
+          # Observed losses already traced to an intentional replacement are listed,
+          # with their evidence, in PR264_VERIFIED_REPLACEMENTS.json. Only exact
+          # matches are subtracted; every other observed loss still fails the job.
+          verified_path = Path('knowledge_graph/comparisons/PR264_VERIFIED_REPLACEMENTS.json')
+          verified = set()
+          if verified_path.exists():
+              for row in json.loads(verified_path.read_text(encoding='utf-8'))['replacements']:
+                  verified.add((row['source'], row['type'], row['target']))
+          observed_rows = [row for row in lost if row.get('observed')]
+          unverified = [row for row in observed_rows
+                        if (row['source'], row['type'], row['target']) not in verified]
           print('Final unresolved relationships:',len(lost), 'by kind:',kinds)
-          print('Previously runtime-observed among unresolved:', observed)
-          if observed:
+          print('Previously runtime-observed among unresolved:', len(observed_rows),
+                '(verified replacements:', len(observed_rows) - len(unverified), ')')
+          for row in unverified:
+              print('  unverified:', row['source'], row['type'], row['target'])
+          if unverified:
               raise SystemExit('Observed runtime relationship loss requires investigation')
           PY
       - name: Publish committed architecture snapshot on this integration branch
         run: |
           git add -A knowledge_graph docs/module_ownership.json docs/LAYER_MODULE_OWNERSHIP.md
-          git diff --cached --check
+          # The comparison report uses Markdown hard line breaks (two trailing spaces) by
+          # design, so whitespace is checked on everything except generated reports.
+          git diff --cached --check -- . ':(exclude)knowledge_graph/comparisons/*.md'
           if git diff --cached --quiet; then
             echo "No graph changes to commit"
           else
@@ -72,4 +90,4 @@ jobs:
             git commit -m "Regenerate PR264 architecture graph and final baseline comparison"
             git push origin HEAD:refs/heads/claude/aurora-integration-20261118
           fi
-          python scripts/aurora_knowledge_graph.py check
+          python scripts/aurora_knowledge_graph.py check --runtime knowledge_graph/runtime

@@ -84,3 +84,19 @@ and DictRecord extractions, Dart widget relocations and Kotlin overlay work.
 
 The fresh comparison will be recorded as
 `knowledge_graph/comparisons/PR264_FINAL_COMPARISON.{md,json}`.
+
+## Verified replacements after merge
+
+Rebuilt on main `df368c4` with fresh runtime recordings, the final
+comparison shows 227 lost relationships, 4 of them runtime-observed. Each
+is traced to an intentional replacement and listed with its evidence in
+`knowledge_graph/comparisons/PR264_VERIFIED_REPLACEMENTS.json`:
+
+- The old `_run_afterthought_episode_bg` thread is replaced by
+  `_dispatch_afterthought_subsurface`; the recording shows three
+  afterthought threads, each running the simulation episode.
+- Three `ConsciousLearner` / `_topic_from_seed_prompt` calls into the
+  regex topic parser and the templated understanding sentence were removed
+  by the Build 725 restoration: semantic topics now come only from her
+  native meaning layer, and outcomes stay structured evidence. Both
+  helpers remain in the module but nothing calls them.

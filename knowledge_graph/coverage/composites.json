@@ -133,17 +133,17 @@
      "fn:aurora_desktop_agent.get_agent"
     ],
     [
+     "field:aurora_internal.tool_registry.ToolResult.data",
+     "FEEDS",
+     "fn:aurora_tool_mind.ingest_tool_result"
+    ],
+    [
      "field:aurora_internal.tool_registry.ToolResult.success",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ],
     [
      "field:aurora_internal.tool_registry.ToolResult.note",
-     "FEEDS",
-     "fn:aurora_tool_mind.ingest_tool_result"
-    ],
-    [
-     "field:aurora_internal.tool_registry.ToolResult.data",
      "FEEDS",
      "fn:aurora_tool_mind.ingest_tool_result"
     ]
@@ -359,12 +359,12 @@
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior._profile",
+     "fn:aurora_internal.crystal_interior.aspects",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ],
     [
-     "fn:aurora_internal.crystal_interior.aspects",
+     "fn:aurora_internal.crystal_interior._profile",
      "FEEDS",
      "fn:aurora_internal.crystal_convergence._cos"
     ]
@@ -495,7 +495,7 @@
     "CALLS": 7,
     "FEEDS": 4
    },
-   "cohesion": 0.045,
+   "cohesion": 0.046,
    "evidence": [
     [
      "fn:aurora_internal.aurora_lexical_crystals.LexicalCrystals.place",
@@ -533,7 +533,7 @@
      "fn:concept_crystal.ConceptCrystalRegistry.all_crystals"
     ]
    ],
-   "external_binding": 231,
+   "external_binding": 227,
    "higher_order": "subsys:category:crystal",
    "id": "subsys:composite:crystal:2c7f2bbb",
    "members": [
@@ -603,7 +603,7 @@
      "fn:aurora_dimensional_systems.DimensionalSystems.process_synthesis"
     ]
    ],
-   "external_binding": 1193,
+   "external_binding": 1190,
    "higher_order": "subsys:category:dimensional",
    "id": "subsys:composite:dimensional:78d8264b",
    "members": [
@@ -649,13 +649,13 @@
   },
   {
    "binding": {
-    "CALLS": 68,
+    "CALLS": 67,
     "FEEDS": 158,
     "INHERITS": 1,
     "INSTANTIATES": 29,
     "SHARED_STATE": 3
    },
-   "cohesion": 0.122,
+   "cohesion": 0.121,
    "evidence": [
     [
      "cls:aurora_ivm.ContradictionRecord",
@@ -748,7 +748,7 @@
      "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
     ],
     [
-     "field:aurora_ivm.RecursionLevel.CORE",
+     "field:aurora_ivm.RecursionLevel.SURFACE",
      "FEEDS",
      "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
     ],
@@ -778,7 +778,7 @@
      "fn:aurora_internal.aurora_shared_helpers.clamp"
     ]
    ],
-   "external_binding": 1870,
+   "external_binding": 1873,
    "higher_order": "subsys:category:foundation",
    "id": "subsys:composite:foundation:5e482b6c",
    "members": [
@@ -839,7 +839,7 @@
     "FEEDS": 3,
     "INSTANTIATES": 1
    },
-   "cohesion": 0.08,
+   "cohesion": 0.077,
    "evidence": [
     [
      "fn:aurora_manifold_lookup._directory",
@@ -857,7 +857,7 @@
      "fn:aurora_manifold_directory_reader.ManifoldDirectory.load"
     ]
    ],
-   "external_binding": 80,
+   "external_binding": 84,
    "higher_order": "subsys:category:foundation",
    "id": "subsys:composite:foundation:8bbcbdb6",
    "members": [
@@ -986,7 +986,7 @@
      "field:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger.links"
     ]
    ],
-   "external_binding": 1127,
+   "external_binding": 1128,
    "higher_order": "subsys:category:genealogy",
    "id": "subsys:composite:genealogy:c9b3e419",
    "members": [
@@ -1061,12 +1061,12 @@
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._detect_changes",
+     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator.assimilate",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
     [
-     "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
+     "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
      "FEEDS",
      "fn:aurora_warp_protocol.warp_guard"
     ],
@@ -1093,7 +1093,7 @@
     [
      "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator.assimilate",
      "CALLS",
-     "fn:aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.rebuild"
+     "fn:aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.status"
     ],
     [
      "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator.assimilate",
@@ -1111,7 +1111,7 @@
      "store:universal_function_constraints.json"
     ]
    ],
-   "external_binding": 701,
+   "external_binding": 707,
    "higher_order": "subsys:category:genealogy",
    "id": "subsys:composite:genealogy:10b01d71",
    "members": [
@@ -1127,7 +1127,7 @@
   },
   {
    "binding": {
-    "CALLS": 134,
+    "CALLS": 133,
     "FEEDS": 22,
     "INSTANTIATES": 4,
     "SHARED_STATE": 4
@@ -1255,7 +1255,7 @@
      "fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder._aurora_fault"
     ]
    ],
-   "external_binding": 3371,
+   "external_binding": 3363,
    "higher_order": "subsys:category:governance",
    "id": "subsys:composite:governance:16699d84",
    "members": [
@@ -1496,7 +1496,7 @@
      "fn:aurora_internal.aurora_meaning_evolution.canonical_signature"
     ]
    ],
-   "external_binding": 244,
+   "external_binding": 246,
    "higher_order": "subsys:category:language",
    "id": "subsys:composite:language:ab4e00b7",
    "members": [
@@ -1742,7 +1742,7 @@
      "fn:aurora_internal.aurora_evolution_hook.assign_target"
     ]
    ],
-   "external_binding": 915,
+   "external_binding": 917,
    "higher_order": "subsys:category:learning",
    "id": "subsys:composite:learning:6f24c869",
    "members": [
@@ -1874,12 +1874,12 @@
   },
   {
    "binding": {
-    "CALLS": 32,
+    "CALLS": 28,
     "FEEDS": 31,
     "INSTANTIATES": 11,
     "SHARED_STATE": 4
    },
-   "cohesion": 0.065,
+   "cohesion": 0.062,
    "evidence": [
     [
      "fn:aurora_concept_imager.ingest_concept_image",
@@ -1922,7 +1922,7 @@
      "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
     ],
     [
-     "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
+     "fn:aurora_expression_perception.build_layer5_associative_modules",
      "FEEDS",
      "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
     ],
@@ -1962,17 +1962,17 @@
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.candidate_pressure",
+     "field:aurora_articulation.ArticulationDecision.original_pressure",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ],
     [
-     "field:aurora_articulation.ArticulationDecision.pressure_relief",
+     "field:aurora_articulation.ArticulationDecision.accepted",
      "FEEDS",
      "fn:aurora_expression_perception.ExpressionPerceptionEngine.ingest_interaction"
     ]
    ],
-   "external_binding": 1129,
+   "external_binding": 1128,
    "higher_order": "subsys:category:perception",
    "id": "subsys:composite:perception:ab562dfd",
    "members": [
@@ -2121,7 +2121,7 @@
      "fn:flutter_app.android.app.src.main.python.aurora_historical_experience_environment.HistoricalExperienceEnvironment.resume"
     ]
    ],
-   "external_binding": 829,
+   "external_binding": 831,
    "higher_order": "subsys:category:phone_python",
    "id": "subsys:composite:phone_python:92d4d84c",
    "members": [
@@ -2240,7 +2240,7 @@
     "CALLS": 13,
     "FEEDS": 28
    },
-   "cohesion": 0.075,
+   "cohesion": 0.074,
    "evidence": [
     [
      "fn:aurora_internal.aurora_comprehension_gap.ComprehensionGapDetector._ambiguous_promoted_word",
@@ -2288,7 +2288,7 @@
      "fn:aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state"
     ]
    ],
-   "external_binding": 506,
+   "external_binding": 511,
    "higher_order": "subsys:category:reasoning",
    "id": "subsys:composite:reasoning:b1415b0b",
    "members": [
@@ -2382,7 +2382,7 @@
      "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for"
     ],
     [
-     "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for",
+     "field:aurora_internal.aurora_worth_evaluator.WorthTrajectory.FALLING",
      "FEEDS",
      "fn:aurora_internal.aurora_operator_composer.OperatorComposer._parent_trajectory_ok"
     ],
@@ -2430,13 +2430,13 @@
   },
   {
    "binding": {
-    "CALLS": 103,
+    "CALLS": 105,
     "FEEDS": 223,
     "INHERITS": 1,
     "INSTANTIATES": 3,
     "SHARED_STATE": 12
    },
-   "cohesion": 0.223,
+   "cohesion": 0.224,
    "evidence": [
     [
      "cls:aurora_representational_resolution.RepresentationalResolutionEngine",
@@ -2570,7 +2570,7 @@
     "INSTANTIATES": 9,
     "SHARED_STATE": 84
    },
-   "cohesion": 0.055,
+   "cohesion": 0.054,
    "evidence": [
     [
      "fn:aurora._run_reasoning_pipeline",
@@ -2693,7 +2693,7 @@
      "fn:aurora_internal.desktop.common.write_json"
     ]
    ],
-   "external_binding": 4562,
+   "external_binding": 4618,
    "higher_order": "subsys:category:runtime",
    "id": "subsys:composite:runtime:556d4dba",
    "members": [
@@ -2720,7 +2720,7 @@
     "INSTANTIATES": 9,
     "SHARED_STATE": 3
    },
-   "cohesion": 0.222,
+   "cohesion": 0.221,
    "evidence": [
     [
      "fn:aurora_internal.dual_strata.home_growth._growth_root",
@@ -2843,7 +2843,7 @@
      "fn:aurora_internal.dual_strata.hub_route.record_reply"
     ]
    ],
-   "external_binding": 994,
+   "external_binding": 997,
    "higher_order": "subsys:category:strata",
    "id": "subsys:composite:strata:b8d56ae3",
    "members": [
@@ -2866,11 +2866,11 @@
   },
   {
    "binding": {
-    "CALLS": 106,
+    "CALLS": 105,
     "FEEDS": 191,
     "INSTANTIATES": 25
    },
-   "cohesion": 0.334,
+   "cohesion": 0.333,
    "evidence": [
     [
      "fn:aurora_internal.dual_strata.cers_bridge.CERSBridge.__init__",
@@ -3265,12 +3265,12 @@
      "store:surface_working_state.json"
     ],
     [
-     "mod:tests.test_home_growth",
+     "mod:tests.test_strata_migration",
      "SHARES",
      "store:lexicon.json"
     ],
     [
-     "mod:tests.test_strata_migration",
+     "mod:tests.test_home_growth",
      "SHARES",
      "store:lexicon.json"
     ],
@@ -3439,6 +3439,37 @@
    "members": [
     "scripts/analyze_cross_generational_representations.py",
     "scripts/analyze_native_representation_inquiries.py"
+   ],
+   "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
+  },
+  {
+   "binding": {
+    "CALLS": 3
+   },
+   "cohesion": 0.6,
+   "evidence": [
+    [
+     "fn:scripts.aurora_pr264_finalize_manifest.main",
+     "CALLS",
+     "fn:scripts.render_module_ownership.load_mapping"
+    ],
+    [
+     "fn:scripts.aurora_pr264_finalize_manifest.main",
+     "CALLS",
+     "fn:scripts.render_module_ownership.scan"
+    ],
+    [
+     "fn:scripts.aurora_pr264_finalize_manifest.main",
+     "CALLS",
+     "fn:scripts.render_module_ownership.dump_mapping"
+    ]
+   ],
+   "external_binding": 2,
+   "higher_order": "subsys:category:tooling",
+   "id": "subsys:composite:tooling:39c63b53",
+   "members": [
+    "scripts/aurora_pr264_finalize_manifest.py",
+    "scripts/render_module_ownership.py"
    ],
    "rule": "pairs bound by >= 3 implemented or observed edges of two kinds (or >= 3 calls), connected within one higher-order group"
   },
@@ -5763,7 +5794,7 @@
      },
      "evidence": [
       [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
+       "field:aurora_internal.scouting.contracts.ScoutRequest.inquiry",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
@@ -5773,7 +5804,7 @@
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ],
       [
-       "field:aurora_internal.scouting.contracts.ScoutRequest.inquiry",
+       "field:aurora_internal.scouting.contracts.ScoutRequest.representation_refs",
        "FEEDS",
        "fn:aurora_internal.scouting.backends.LocalHumanDialogueBackend._tokens"
       ]
@@ -6276,12 +6307,12 @@
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior._profile",
+       "fn:aurora_internal.crystal_interior.aspects",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ],
       [
-       "fn:aurora_internal.crystal_interior.aspects",
+       "fn:aurora_internal.crystal_interior._profile",
        "FEEDS",
        "fn:aurora_internal.crystal_convergence._cos"
       ]
@@ -6975,7 +7006,7 @@
   {
    "best_evidence_composite": "subsys:composite:crystal:2c7f2bbb",
    "candidate": false,
-   "cohesion": 0.045,
+   "cohesion": 0.046,
    "declared_links": 3,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_lexical_crystals.py",
@@ -7259,13 +7290,13 @@
   {
    "best_evidence_composite": "subsys:composite:foundation:5e482b6c",
    "candidate": false,
-   "cohesion": 0.116,
+   "cohesion": 0.115,
    "declared_links": 25,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_noncomp_registry.py",
    "id": "foundation.1",
    "internal_binding": {
-    "CALLS": 73,
+    "CALLS": 72,
     "FEEDS": 158,
     "INHERITS": 1,
     "INSTANTIATES": 30,
@@ -7467,12 +7498,12 @@
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.T",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.N",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ],
       [
-       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.N",
+       "field:aurora_internal.aurora_constraint_manifold_patched.Constraint.T",
        "FEEDS",
        "fn:aurora_internal.aurora_leverage_scalar.LeverageBiasEngine._nudge_for_constraint"
       ]
@@ -7577,7 +7608,7 @@
     },
     {
      "binding": {
-      "CALLS": 3,
+      "CALLS": 2,
       "INSTANTIATES": 2
      },
      "evidence": [
@@ -7664,7 +7695,7 @@
        "fn:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor.measure"
       ],
       [
-       "field:aurora_ivm.RecursionLevel.CORE",
+       "field:aurora_ivm.RecursionLevel.SURFACE",
        "FEEDS",
        "field:aurora_internal.aurora_polarity_gradient.PolarityGradientSensor._prev_sign_conflict"
       ]
@@ -7921,7 +7952,7 @@
   {
    "best_evidence_composite": "subsys:composite:foundation:8bbcbdb6",
    "candidate": false,
-   "cohesion": 0.08,
+   "cohesion": 0.077,
    "declared_links": 1,
    "domain": "desktop",
    "hub": "aurora_manifold_directory_reader.py",
@@ -8216,12 +8247,12 @@
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._detect_changes",
+       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator.assimilate",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ],
       [
-       "fn:aurora_internal.aurora_manual_code_lineage._purpose_lane_for_axis",
+       "fn:aurora_internal.aurora_manual_code_lineage.ManualCodeLineageAssimilator._constraints_for_file",
        "FEEDS",
        "fn:aurora_warp_protocol.warp_guard"
       ]
@@ -8452,13 +8483,13 @@
   {
    "best_evidence_composite": "subsys:composite:governance:16699d84",
    "candidate": false,
-   "cohesion": 0.047,
+   "cohesion": 0.046,
    "declared_links": 25,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_runtime_faults.py",
    "id": "governance.1",
    "internal_binding": {
-    "CALLS": 130,
+    "CALLS": 129,
     "FEEDS": 11,
     "INSTANTIATES": 3,
     "SHARED_STATE": 4
@@ -8951,7 +8982,7 @@
     },
     {
      "binding": {
-      "CALLS": 12
+      "CALLS": 11
      },
      "evidence": [
       [
@@ -10254,13 +10285,13 @@
   {
    "best_evidence_composite": "subsys:composite:perception:ab562dfd",
    "candidate": false,
-   "cohesion": 0.062,
+   "cohesion": 0.059,
    "declared_links": 10,
    "domain": "desktop",
    "hub": "aurora_expression_perception.py",
    "id": "perception.1",
    "internal_binding": {
-    "CALLS": 33,
+    "CALLS": 29,
     "FEEDS": 28,
     "INSTANTIATES": 14,
     "SHARED_STATE": 3
@@ -10343,7 +10374,7 @@
        "fn:aurora_image_ingestion.ImageIngestionProtocol.status"
       ],
       [
-       "field:aurora_expression_perception.ExpressionPerceptionEngine.oets",
+       "fn:aurora_expression_perception.build_layer5_associative_modules",
        "FEEDS",
        "fn:aurora_image_ingestion.ImageIngestionProtocol.__init__"
       ]
@@ -10463,7 +10494,7 @@
     },
     {
      "binding": {
-      "CALLS": 13,
+      "CALLS": 9,
       "FEEDS": 10,
       "INSTANTIATES": 8
      },
@@ -11078,13 +11109,13 @@
   {
    "best_evidence_composite": "subsys:composite:reasoning:929f8dd5",
    "candidate": false,
-   "cohesion": 0.214,
+   "cohesion": 0.215,
    "declared_links": 8,
    "domain": "desktop",
    "hub": "aurora_representational_address.py",
    "id": "reasoning.1",
    "internal_binding": {
-    "CALLS": 103,
+    "CALLS": 105,
     "FEEDS": 223,
     "INHERITS": 1,
     "INSTANTIATES": 4,
@@ -11194,7 +11225,7 @@
     },
     {
      "binding": {
-      "CALLS": 24,
+      "CALLS": 25,
       "FEEDS": 52
      },
      "evidence": [
@@ -11248,7 +11279,7 @@
     },
     {
      "binding": {
-      "CALLS": 34,
+      "CALLS": 35,
       "FEEDS": 77,
       "INHERITS": 1,
       "SHARED_STATE": 11
@@ -11321,7 +11352,7 @@
   {
    "best_evidence_composite": "subsys:composite:reasoning:b1415b0b",
    "candidate": false,
-   "cohesion": 0.073,
+   "cohesion": 0.072,
    "declared_links": 4,
    "domain": "desktop",
    "hub": "aurora_internal/aurora_constraint_semantic_continuity.py",
@@ -11494,7 +11525,7 @@
        "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for"
       ],
       [
-       "fn:aurora_internal.aurora_worth_evaluator.CrossScaleWorthEvaluator.history_for",
+       "field:aurora_internal.aurora_worth_evaluator.WorthTrajectory.FALLING",
        "FEEDS",
        "fn:aurora_internal.aurora_operator_composer.OperatorComposer._parent_trajectory_ok"
       ]
@@ -11649,7 +11680,7 @@
   {
    "best_evidence_composite": "subsys:composite:runtime:556d4dba",
    "candidate": false,
-   "cohesion": 0.055,
+   "cohesion": 0.054,
    "declared_links": 23,
    "domain": "desktop",
    "hub": "aurora_internal/desktop/runtime.py",
@@ -12239,13 +12270,13 @@
   {
    "best_evidence_composite": "subsys:composite:strata:a8913e4f",
    "candidate": false,
-   "cohesion": 0.211,
+   "cohesion": 0.21,
    "declared_links": 94,
    "domain": "desktop",
    "hub": "aurora_internal/dual_strata/__init__.py",
    "id": "strata.1",
    "internal_binding": {
-    "CALLS": 220,
+    "CALLS": 219,
     "FEEDS": 384,
     "INSTANTIATES": 37,
     "SHARED_STATE": 6
@@ -12943,7 +12974,7 @@
     },
     {
      "binding": {
-      "CALLS": 7,
+      "CALLS": 6,
       "FEEDS": 11
      },
      "evidence": [
@@ -13706,7 +13737,7 @@
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
       [
-       "field:aurora_internal.dual_strata.semantic_variant_registry.SemanticVariant.context_families",
+       "fn:aurora_internal.dual_strata.semantic_variant_registry._recompute_confidence",
        "FEEDS",
        "fn:aurora_internal.dual_strata.subsurface_state.clip01"
       ],
@@ -13766,7 +13797,7 @@
        "fn:aurora_internal.dual_strata.topology_tracker.TopologyFingerprint.from_signature"
       ],
       [
-       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.sinks",
+       "field:aurora_internal.dual_strata.topology_tracker.TopologySignature.loops",
        "FEEDS",
        "fn:aurora_internal.dual_strata.semantic_variant_registry.TopologyProfile.from_signature"
       ]

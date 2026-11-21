@@ -91,7 +91,7 @@
 {"builtin_value": 7, "owner": "fn:aurora._broadcast_poedex_result"}
 {"builtin_value": 14, "external": 4, "owner": "fn:aurora._build_articulation_perspective_context"}
 {"builtin_value": 1, "owner": "fn:aurora._build_collaborative_hypothesis_prompt"}
-{"builtin_value": 55, "owner": "fn:aurora._build_communication_contributors"}
+{"builtin_value": 56, "owner": "fn:aurora._build_communication_contributors"}
 {"builtin_value": 150, "external": 17, "owner": "fn:aurora._build_comprehension_response"}
 {"builtin_value": 138, "external": 3, "owner": "fn:aurora._build_established_strata_evidence"}
 {"builtin_value": 2, "owner": "fn:aurora._build_established_strata_evidence._learn_gap"}
@@ -109,6 +109,7 @@
 {"builtin_value": 27, "external": 1, "owner": "fn:aurora._build_sensory_native_meaning"}
 {"builtin_value": 2, "external": 2, "owner": "fn:aurora._build_simulation_live_bridge_context"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora._can_offer_word_dissection"}
+{"builtin_value": 7, "owner": "fn:aurora._candidate_semantic_text"}
 {"builtin_value": 2, "owner": "fn:aurora._capture_hardware_voice_state"}
 {"builtin_value": 2, "owner": "fn:aurora._capture_pressure_snapshot"}
 {"builtin_value": 3, "owner": "fn:aurora._capture_waveform_deposit"}
@@ -162,6 +163,8 @@
 {"builtin_value": 4, "external": 2, "owner": "fn:aurora._digest_research_text"}
 {"builtin_value": 3, "owner": "fn:aurora._dimension_scores"}
 {"builtin_value": 11, "external": 3, "owner": "fn:aurora._discourse_anchor_context"}
+{"builtin_value": 4, "external": 3, "owner": "fn:aurora._dispatch_afterthought_subsurface"}
+{"external": 2, "owner": "fn:aurora._dispatch_afterthought_subsurface._worker"}
 {"builtin_value": 1, "owner": "fn:aurora._dispatch_user_directive"}
 {"builtin_value": 1, "owner": "fn:aurora._dual_strata_state_dir"}
 {"builtin_value": 5, "owner": "fn:aurora._emit_honest_abstain_and_seek"}
@@ -190,7 +193,7 @@
 {"builtin_value": 3, "external": 4, "owner": "fn:aurora._extract_user_owned_fact_from_text"}
 {"builtin_value": 2, "owner": "fn:aurora._feed_arithmetic_lived_experience"}
 {"builtin_value": 33, "external": 4, "owner": "fn:aurora._finalize_articulation"}
-{"builtin_value": 49, "external": 1, "owner": "fn:aurora._finalize_validated_communication"}
+{"builtin_value": 52, "external": 1, "owner": "fn:aurora._finalize_validated_communication"}
 {"builtin_value": 2, "owner": "fn:aurora._flush_quasiarch_runtime_events"}
 {"builtin_value": 1, "owner": "fn:aurora._format_arithmetic_number"}
 {"builtin_value": 4, "owner": "fn:aurora._format_evidence_for_injection"}
@@ -199,7 +202,7 @@
 {"builtin_value": 1, "owner": "fn:aurora._gap_type_value"}
 {"builtin_value": 5, "owner": "fn:aurora._gather_subsurface_contributions"}
 {"builtin_value": 1, "owner": "fn:aurora._genealogy_axis_weights"}
-{"builtin_value": 57, "external": 3, "owner": "fn:aurora._generate_from_manifold"}
+{"builtin_value": 64, "external": 3, "owner": "fn:aurora._generate_from_manifold"}
 {"builtin_value": 8, "owner": "fn:aurora._generate_identity_response"}
 {"builtin_value": 54, "owner": "fn:aurora._generate_perspective_from_core"}
 {"builtin_value": 2, "owner": "fn:aurora._generic_pressure_axes"}
@@ -242,6 +245,7 @@
 {"builtin_value": 5, "owner": "fn:aurora._looks_like_inner_state_query"}
 {"builtin_value": 15, "owner": "fn:aurora._lookup_local_grounded_definition"}
 {"builtin_value": 1, "owner": "fn:aurora._make_quasiarch_runtime_event"}
+{"builtin_value": 1, "owner": "fn:aurora._manifold_coordinate_summary"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora._meaning_text_is_grounded"}
 {"builtin_value": 2, "owner": "fn:aurora._measure_polarity_gradient_snapshot"}
 {"builtin_value": 15, "external": 1, "owner": "fn:aurora._merge_native_meaning_bundle"}
@@ -318,7 +322,7 @@
 {"builtin_value": 4, "external": 1, "owner": "fn:aurora._run_live_response_turn._declarative_segments"}
 {"builtin_value": 5, "owner": "fn:aurora._run_observation_pipeline"}
 {"builtin_value": 1, "owner": "fn:aurora._run_question_alignment_audit"}
-{"builtin_value": 138, "external": 14, "owner": "fn:aurora._run_reasoning_pipeline"}
+{"builtin_value": 138, "external": 13, "owner": "fn:aurora._run_reasoning_pipeline"}
 {"builtin_value": 13, "owner": "fn:aurora._run_simulation_live_response_bridge"}
 {"builtin_value": 1, "external": 2, "owner": "fn:aurora._run_surface_queued_turn"}
 {"builtin_value": 5, "owner": "fn:aurora._run_training_constraint_pass"}
@@ -334,6 +338,8 @@
 {"builtin_value": 3, "owner": "fn:aurora._select_active_abilities._ability_metadata"}
 {"builtin_value": 11, "external": 2, "owner": "fn:aurora._select_noncomp_anchor"}
 {"builtin_value": 3, "owner": "fn:aurora._self_state_axis_pressures"}
+{"builtin_value": 2, "external": 2, "owner": "fn:aurora._semantic_basis_tokens"}
+{"builtin_value": 2, "owner": "fn:aurora._semantic_relation_fit"}
 {"external": 4, "owner": "fn:aurora._sensory_crystal_needs_seeding"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora._shares_content_word"}
 {"builtin_value": 6, "owner": "fn:aurora._should_prefer_live_perspective"}
@@ -374,7 +380,7 @@
 {"external": 1, "owner": "fn:aurora._write_dual_strata_json"}
 {"builtin_value": 1, "owner": "fn:aurora.aurora_go_play"}
 {"builtin_value": 1, "owner": "fn:aurora.aurora_trade_blows"}
-{"builtin_value": 88, "external": 35, "owner": "fn:aurora.boot_aurora"}
+{"builtin_value": 90, "external": 35, "owner": "fn:aurora.boot_aurora"}
 {"builtin_value": 1, "owner": "fn:aurora.boot_aurora._ccr_bucket_from_facets"}
 {"builtin_value": 3, "owner": "fn:aurora.boot_aurora._h_seek"}
 {"builtin_value": 70, "external": 41, "owner": "fn:aurora.chat"}
@@ -1227,6 +1233,7 @@
 {"external": 1, "owner": "fn:aurora_habitat._append_jsonl"}
 {"external": 2, "owner": "fn:aurora_habitat._atomic_write_json"}
 {"external": 1, "owner": "fn:aurora_habitat._consequence_axis_amplitudes"}
+{"builtin_value": 1, "owner": "fn:aurora_habitat._entity_renderability"}
 {"builtin_value": 4, "owner": "fn:aurora_habitat._entity_state_changed"}
 {"external": 1, "owner": "fn:aurora_habitat._new_id"}
 {"external": 1, "owner": "fn:aurora_habitat._now"}
@@ -1237,7 +1244,7 @@
 {"builtin_value": 15, "owner": "fn:aurora_habitat_motivation._candidate_record"}
 {"builtin_value": 1, "owner": "fn:aurora_habitat_motivation._contains_identity"}
 {"builtin_value": 4, "external": 2, "owner": "fn:aurora_habitat_motivation._cosine"}
-{"builtin_value": 1, "external": 7, "owner": "fn:aurora_habitat_motivation._creation_instance"}
+{"builtin_value": 1, "external": 11, "owner": "fn:aurora_habitat_motivation._creation_instance"}
 {"builtin_value": 1, "owner": "fn:aurora_habitat_motivation._dimension_affinity"}
 {"builtin_value": 1, "owner": "fn:aurora_habitat_motivation._dominant_axis"}
 {"builtin_value": 11, "owner": "fn:aurora_habitat_motivation._entity_evidence"}
@@ -3516,6 +3523,7 @@
 {"builtin_value": 2, "external": 2, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._schedule_once"}
 {"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._start_clone_absorption"}
 {"external": 2, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._start_scout"}
+{"builtin_value": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime._update_diagnostics"}
 {"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime.live_idle"}
 {"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime.start"}
 {"external": 1, "owner": "fn:aurora_internal.desktop.runtime.DesktopRuntime.status"}
@@ -4662,9 +4670,12 @@
 {"builtin_value": 1, "owner": "fn:aurora_simulation_engine.ConsciousLearner.export_state"}
 {"builtin_value": 6, "external": 3, "owner": "fn:aurora_simulation_engine.ConsciousLearner.generate_pool"}
 {"builtin_value": 3, "external": 3, "owner": "fn:aurora_simulation_engine.ConsciousLearner.import_state"}
-{"builtin_value": 2, "external": 1, "owner": "fn:aurora_simulation_engine.ConsciousLearner.inject_into_oets"}
+{"builtin_value": 1, "owner": "fn:aurora_simulation_engine.ConsciousLearner.inject_into_oets"}
+{"builtin_value": 1, "owner": "fn:aurora_simulation_engine.ConsciousLearner.observe_outcome"}
 {"builtin_value": 1, "owner": "fn:aurora_simulation_engine.ConsciousLearner.propose_shard"}
-{"builtin_value": 3, "owner": "fn:aurora_simulation_engine.ConsciousLearner.what_have_i_learned"}
+{"builtin_value": 2, "owner": "fn:aurora_simulation_engine.ConsciousLearner.purge_legacy_semantic_contamination"}
+{"builtin_value": 3, "owner": "fn:aurora_simulation_engine.ConsciousLearner.set_dps"}
+{"builtin_value": 1, "owner": "fn:aurora_simulation_engine.ConsciousLearner.what_have_i_learned"}
 {"builtin_value": 9, "owner": "fn:aurora_simulation_engine.ConversationObservation.describe"}
 {"builtin_value": 1, "owner": "fn:aurora_simulation_engine.DivergenceTracker._compute_divergence"}
 {"builtin_value": 1, "owner": "fn:aurora_simulation_engine.DivergenceTracker.capture"}
@@ -4692,7 +4703,7 @@
 {"builtin_value": 2, "external": 1, "owner": "fn:aurora_simulation_engine.SimulationSession._personality_for_spec"}
 {"builtin_value": 1, "external": 1, "owner": "fn:aurora_simulation_engine.SimulationSession._select_response"}
 {"builtin_value": 17, "owner": "fn:aurora_simulation_engine.SimulationSession._shape_topic_for_turn"}
-{"builtin_value": 3, "owner": "fn:aurora_simulation_engine.SimulationSession._topic_from_seed_prompt"}
+{"builtin_value": 6, "owner": "fn:aurora_simulation_engine.SimulationSession._topic_from_seed_prompt"}
 {"builtin_value": 12, "external": 1, "owner": "fn:aurora_simulation_engine.SimulationSession.run_episode"}
 {"builtin_value": 3, "owner": "fn:aurora_simulation_engine.SimulationSession.run_epoch"}
 {"builtin_value": 4, "external": 1, "owner": "fn:aurora_simulation_engine.SimulationSession.run_epoch_grounding"}
@@ -4701,6 +4712,7 @@
 {"builtin_value": 1, "owner": "fn:aurora_simulation_engine._aurora_asked_for_context"}
 {"builtin_value": 2, "external": 2, "owner": "fn:aurora_simulation_engine._extract_semantic_topic"}
 {"builtin_value": 1, "external": 3, "owner": "fn:aurora_simulation_engine._generate_id"}
+{"builtin_value": 1, "owner": "fn:aurora_simulation_engine._is_legacy_outcome_meta"}
 {"builtin_value": 1, "owner": "fn:aurora_simulation_engine._strip_internal_transport_marker"}
 {"builtin_value": 1, "owner": "fn:aurora_simulation_engine.verify_layer7"}
 {"external": 1, "owner": "fn:aurora_social_corroboration.SocialCorroboration.__init__"}
@@ -5542,6 +5554,9 @@
 {"builtin_value": 37, "owner": "fn:scripts.aurora_knowledge_graph.write_subsystems_md"}
 {"builtin_value": 18, "owner": "fn:scripts.aurora_knowledge_graph.write_summary"}
 {"builtin_value": 1, "owner": "fn:scripts.aurora_knowledge_graph.write_summary.top"}
+{"external": 1, "owner": "fn:scripts.aurora_pr264_shard.main"}
+{"builtin_value": 2, "owner": "fn:scripts.aurora_pr264_shard.partition"}
+{"builtin_value": 1, "owner": "fn:scripts.aurora_pr264_shard.tracked_test_files"}
 {"builtin_value": 19, "owner": "fn:scripts.aurora_stack_exporter.build_document"}
 {"external": 1, "owner": "fn:scripts.aurora_stack_exporter.iter_files"}
 {"builtin_value": 3, "owner": "fn:scripts.aurora_stack_exporter.markdown_anchor_for"}

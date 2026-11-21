@@ -18,7 +18,7 @@ The record is `docs/module_ownership.json`. Change a domain, subsystem, layer or
 
 ## Coverage
 
-Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 1043 files.
+Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 1049 files.
 
 Covered: files ending in `.py`, `.dart`, `.rs`, `.kt`, `.java`, `.sh`, `.bat`, `.ps1`, `.jsx`, `.html`, `.service`, and files under `.github/workflows/`, skipping folders named `.git`, `__pycache__`, `node_modules`, `build`, `.dart_tool`, `target`, `aurora_state`, `aurora_state_test`, `aurora_logs`, `vector_data`, `lessons`, `aurora_genealogy`.
 
@@ -36,10 +36,10 @@ Not covered:
 
 | Quasi (domain) | Holds | Subsystems | Composites | Files |
 |---|---|---|---|---|
-| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 45 | 979 |
+| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 45 | 982 |
 | Phone app | The Flutter app with its Android services and on-device Python. | 5 | 4 | 27 |
 | ACM | The Rust kernel, its runner and the native Python ACM runtime. | 8 | 3 | 30 |
-| Repository and CI | Workflows that build, test and run the other domains. | 1 | 0 | 7 |
+| Repository and CI | Workflows that build, test and run the other domains. | 1 | 0 | 10 |
 
 ## Quasi: Desktop Aurora
 
@@ -59,8 +59,8 @@ Not covered:
 | Dual strata (surface and subsurface) | The dual-strata package and the surface/subsurface daemons and substrate. | 2 | 45 | 8 |
 | Bridges and external tools | Praxis, ACM, scouting, research dispatch and tool registries. | 3 | 9 | 8 |
 | Investigative and diagnostic | Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here. | 5 | 12 | 23 |
-| Tests | The pytest suite. Each test lists the files it exercises. | 3 | 9 | 478 |
-| Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 1 | 5 | 89 |
+| Tests | The pytest suite. Each test lists the files it exercises. | 3 | 9 | 479 |
+| Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 1 | 5 | 91 |
 
 ## Quasi: Phone app
 
@@ -89,7 +89,7 @@ Not covered:
 
 | Higher order (subsystem) | Holds | Composites | Files in composites | Base files |
 |---|---|---|---|---|
-| CI workflows | GitHub Actions workflows for runs, clones, experiments, the APK and Python CI. | 0 | 0 | 7 |
+| CI workflows | GitHub Actions workflows for runs, clones, experiments, the APK and Python CI. | 0 | 0 | 10 |
 
 ## Desktop layers (L0 to L8)
 
@@ -933,6 +933,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_daemon_subsurface_and_ambient.py` |  |  | location |
 | `tests/test_der_geometric_time.py` |  |  | location |
 | `tests/test_desktop_embodiment.py` |  |  | location |
+| `tests/test_desktop_praxis_home_boot.py` |  |  | location |
 | `tests/test_desktop_stack_includes_scout_worker.py` |  |  | location |
 | `tests/test_development_experiment.py` |  |  | location |
 | `tests/test_developmental_ecology_boundary.py` |  |  | location |
@@ -1324,6 +1325,8 @@ Composite is blank for a base file that no import joins to another file in its s
 | `scripts/aurora_home_setup.py` | tooling.1 |  | location |
 | `scripts/aurora_kg_observe.py` |  |  | location |
 | `scripts/aurora_knowledge_graph.py` |  |  | location |
+| `scripts/aurora_pr264_finalize_manifest.py` |  |  | location |
+| `scripts/aurora_pr264_shard.py` |  |  | location |
 | `scripts/aurora_stack_exporter.py` |  |  | location |
 | `scripts/aurora_state_compress.py` |  |  | location |
 | `scripts/backfill_noncomp_and_relations.py` |  |  | location |
@@ -1530,4 +1533,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `.github/workflows/build-apk.yml` |  |  | location |
 | `.github/workflows/desktop-embodiment.yml` |  |  | location |
 | `.github/workflows/flutter-android.yml` |  |  | location |
+| `.github/workflows/pr264-final-knowledge-graph.yml` |  |  | location |
+| `.github/workflows/pr264-full-regression.yml` |  |  | location |
+| `.github/workflows/pr264-stabilization.yml` |  |  | location |
 | `.github/workflows/python-ci.yml` |  |  | location |
