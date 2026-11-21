@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'tests/test_joint_resolution_systemwide_probe.py'
+      - 'tests/test_joint_resolution_native_transfer.py'
       - 'aurora_representational_resolution.py'
       - 'aurora_habitat_motivation.py'
       - 'aurora_internal/crystal_facets.py'
@@ -37,6 +38,9 @@ jobs:
       - name: Exercise real Aurora module boundaries, without production mutations
         run: |
           python -m pytest -q -ra --tb=short tests/test_joint_resolution_systemwide_probe.py
+      - name: Trace native nonlinear joint learning through general exchange into communication, against null
+        run: |
+          python -m pytest -q -s --tb=short tests/test_joint_resolution_native_transfer.py
       - name: Verify existing independently learned multi-relation reasoning and speech
         run: |
           python -m pytest -q --tb=short tests/test_learned_order_rules.py -k 'order_is_chained or questions_are_answered_from_chained_order or the_confluence_composes_the_answer or what_she_holds_under_a_condition_is_said'
