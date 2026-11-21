@@ -132,6 +132,10 @@ def test_fully_contradicted_lived_evidence_zeros_existing_facet_without_erasing_
     facet = _facet(crystal, "fk:condition")
     assert facet.confidence == 0.0
     assert len(facet.content["entries"][0]["occasions"]) == 2
+    systems = {"dimensional": dps, "_concept_crystal_registry": registry}
+    historical = crystal_context_for_turn(systems, "lantern")["facets"]
+    assert len(historical) == 1 and historical[0]["supported"] is False
+    assert {o["ref"] for o in historical[0]["occasions"]} == {"observed:1", "corrected:2"}
     assert len(dps.crystals) == 1
 
 
