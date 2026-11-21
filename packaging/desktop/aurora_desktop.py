@@ -124,7 +124,7 @@ def _is_login_enabled() -> bool:
     if os.name == "nt":
         import winreg
         try:
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\\Microsoft\\Windows\\CurrentVersion\\Run") as key:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run") as key:
                 val, _ = winreg.QueryValueEx(key, "AuroraDesktop")
                 return val == subprocess.list2cmdline(command)
         except FileNotFoundError:
@@ -136,7 +136,7 @@ def _set_login_enabled(enabled: bool):
     command, path = _startup_registration()
     if os.name == "nt":
         import winreg
-        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\\Microsoft\\Windows\\CurrentVersion\\Run") as key:
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run") as key:
             if enabled:
                 winreg.SetValueEx(key, "AuroraDesktop", 0, winreg.REG_SZ, subprocess.list2cmdline(command))
             else:
@@ -153,8 +153,8 @@ def _set_login_enabled(enabled: bool):
     path.parent.mkdir(parents=True, exist_ok=True)
     import shlex
     args = " ".join(shlex.quote(item) for item in command)
-    path.write_text("[Desktop Entry]\\nType=Application\\nName=Aurora Background\\n" +
-        "Exec=" + args + "\\nTerminal=false\\nX-GNOME-Autostart-enabled=true\\n",
+    path.write_text("[Desktop Entry]\nType=Application\nName=Aurora Background\n" +
+        "Exec=" + args + "\nTerminal=false\nX-GNOME-Autostart-enabled=true\n",
         encoding="utf-8")
 
 
@@ -338,7 +338,7 @@ def run_gui(state_dir: Path):
         }
         QMessageBox.information(window, "Aurora: remote link and devices",
             json.dumps(data, indent=2, default=str)[:7000] +
-            "\\n\\nA VPN being active on this desktop does not prove the "
+            "\n\nA VPN being active on this desktop does not prove the "
             "phone is reachable. Verify an actual cellular sync from the "
             "phone's Hub. Keep home powered and awake.")
 
@@ -437,8 +437,8 @@ def run_gui(state_dir: Path):
                 window, "Secure connection is not ready",
                 "Away-from-home pairing needs a private route that survives "
                 "Wi-Fi/cellular changes. Connect Tailscale on this desktop "
-                "and the phone once, using the same Tailnet.\\n\\n"
-                + str(vpn["reason"]) + "\\n\\n"
+                "and the phone once, using the same Tailnet.\n\n"
+                + str(vpn["reason"]) + "\n\n"
                 "Open the official Tailscale setup page now? "
                 "Aurora will then detect your connected VPN address automatically.")
             if reply == QMessageBox.StandardButton.Yes:
@@ -448,10 +448,10 @@ def run_gui(state_dir: Path):
         host = vpn["ipv4"] or vpn["address"]
         answer = QMessageBox.question(
             window, "Pair phone over private network",
-            "Desktop private VPN address: " + host + "\\n\\n"
+            "Desktop private VPN address: " + host + "\n\n"
             "The phone must have its own Tailscale connection to the same Tailnet. "
             "This keeps her link routed through the VPN on home Wi-Fi or cellular, "
-            "while the desktop is powered and connected.\\n\\n"
+            "while the desktop is powered and connected.\n\n"
             "Create her pairing link using this private VPN address?")
         if answer != QMessageBox.StandardButton.Yes:
             return
