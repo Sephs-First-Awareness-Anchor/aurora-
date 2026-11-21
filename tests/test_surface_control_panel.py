@@ -4,7 +4,8 @@
 test_surface_control_panel.py -- surface restructure 6 (2026-11-21).
 
 The phone's control panel and growth-while-charging pacing.  These pin:
-  * the panel's controls default on, change one at a time, persist in her
+  * the panel's sensing and voice controls default on and the charger
+    switch defaults off (Sir, 2026-11-21); each changes one at a time, persists in her
     state directory and come back on the next start;
   * an unknown control is refused and changes nothing;
   * growth waits for the charger only on an unpaired phone, with the control
@@ -13,7 +14,14 @@ The phone's control panel and growth-while-charging pacing.  These pin:
   * the sources Sir approved (history stream, Praxis and the learning probe,
     curiosity, dreams, evolution) wait; her messenger and the shared breathing
     room do not, so her conversations and her own initiative stay live;
-  * curiosity and dreams respect may_run, and space a cycle rather than drop.
+  * curiosity and dreams respect may_run, and space a cycle rather than drop;
+  * while Sir is talking with her (a live turn waits or runs, or he wrote in
+    the last CONVERSATION_QUIET_S), all her background work steps aside and
+    carries on by itself afterwards; her own initiative is not held (his
+    words: "when I'm interacting with her she isn't held up by other
+    processes ... This shouldn't take away from her autonomy");
+  * a live turn releases curiosity mid-cycle, and a dream holds between its
+    steps and resumes from the same step.
 """
 from __future__ import annotations
 
@@ -37,18 +45,24 @@ def phone(monkeypatch, tmp_path):
     monkeypatch.setattr(ab, "_strata_state_dir", str(tmp_path))
     monkeypatch.setattr(ab, "_surface_only", False)
     monkeypatch.setattr(ab, "_hardware_sensors", {})
+    monkeypatch.setattr(ab, "_last_output_time", 0.0)
+    monkeypatch.setattr(ab, "_present_active", 0)
+    monkeypatch.setattr(ab, "_present_waiting", 0)
     ab._load_surface_controls()
     yield tmp_path
-    # Leave the module as other tests expect it: every control on.
+    # Leave the module as other tests expect it: the panel's defaults.
     with ab._surface_controls_lock:
         ab._surface_controls.clear()
         ab._surface_controls.update(ab._SURFACE_CONTROL_DEFAULTS)
 
 
-def test_controls_default_on(phone):
+def test_controls_defaults(phone):
     answer = json.loads(ab.get_surface_controls())
-    assert answer["controls"] == {k: True for k in ab._SURFACE_CONTROL_DEFAULTS}
-    assert set(answer["growth"]) == {"waits_for_charging", "control_on", "charging", "paired_surface"}
+    expected = {k: True for k in ab._SURFACE_CONTROL_DEFAULTS}
+    expected["growth_while_charging_only"] = False   # her growth runs on battery
+    assert answer["controls"] == expected
+    assert set(answer["growth"]) == {"waits_for_charging", "control_on", "charging",
+                                     "paired_surface", "stepping_aside"}
 
 
 def test_set_control_persists_and_reloads(phone):
@@ -78,7 +92,7 @@ def test_cmd_form_for_kotlin(phone):
 def test_unreadable_store_falls_back_to_defaults(phone):
     (phone / ab._SURFACE_CONTROLS_FILE).write_text("{not json", encoding="utf-8")
     ab._load_surface_controls()
-    assert all(ab.surface_control(k) for k in ab._SURFACE_CONTROL_DEFAULTS)
+    assert all(ab.surface_control(k) == v for k, v in ab._SURFACE_CONTROL_DEFAULTS.items())
 
 
 def test_controls_file_stays_with_the_phone():
@@ -88,6 +102,7 @@ def test_controls_file_stays_with_the_phone():
 
 @pytest.mark.parametrize("charging,expected", [(False, True), (True, False), (None, False)])
 def test_gate_holds_only_on_a_not_charging_reading(phone, monkeypatch, charging, expected):
+    ab.set_surface_control("growth_while_charging_only", True)
     sensors = {} if charging is None else {"charging": charging}
     monkeypatch.setattr(ab, "_hardware_sensors", sensors)
     assert ab._growth_waits_for_charging() is expected
@@ -95,6 +110,7 @@ def test_gate_holds_only_on_a_not_charging_reading(phone, monkeypatch, charging,
 
 
 def test_gate_off_on_a_paired_surface(phone, monkeypatch):
+    ab.set_surface_control("growth_while_charging_only", True)
     monkeypatch.setattr(ab, "_hardware_sensors", {"charging": False})
     monkeypatch.setattr(ab, "_surface_only", True)
     assert ab._growth_waits_for_charging() is False
@@ -103,11 +119,14 @@ def test_gate_off_on_a_paired_surface(phone, monkeypatch):
 
 def test_gate_off_when_sir_turns_the_control_off(phone, monkeypatch):
     monkeypatch.setattr(ab, "_hardware_sensors", {"charging": False})
+    ab.set_surface_control("growth_while_charging_only", True)
+    assert ab._growth_waits_for_charging() is True
     ab.set_surface_control("growth_while_charging_only", False)
     assert ab._growth_waits_for_charging() is False
 
 
 def test_growth_sources_wait_but_her_conversations_do_not(phone, monkeypatch):
+    ab.set_surface_control("growth_while_charging_only", True)
     monkeypatch.setattr(ab, "_hardware_sensors", {"charging": False})
     calls = []
 
@@ -184,7 +203,7 @@ def test_dreams_respect_may_run(monkeypatch):
     cycles = []
 
     class _Substrate:
-        def run_dream_cycle(self, systems) -> None:
+        def run_dream_cycle(self, systems, may_continue=None) -> None:
             cycles.append(1)
 
     monkeypatch.setattr(qd, "QuantumDreamSubstrate", _Substrate)
@@ -203,3 +222,125 @@ def test_dreams_respect_may_run(monkeypatch):
 
     assert run(lambda: False) == 0
     assert run(lambda: True) == 1
+
+
+# ── Stepping aside while Sir talks with her ───────────────────────────────────
+
+def test_growth_runs_on_battery_by_default(phone, monkeypatch):
+    monkeypatch.setattr(ab, "_hardware_sensors", {"charging": False})
+    assert ab._growth_may_run() is True
+
+
+def test_conversation_window(phone, monkeypatch):
+    now = time.time()
+    monkeypatch.setattr(ab, "_last_output_time", now - 5.0)
+    assert ab._conversation_active(now) is True
+    assert ab._growth_may_run() is False
+    monkeypatch.setattr(ab, "_last_output_time", now - ab.CONVERSATION_QUIET_S - 1.0)
+    assert ab._conversation_active(now) is False
+    assert ab._growth_may_run() is True
+
+
+def test_live_turn_marks_the_conversation(phone, monkeypatch):
+    monkeypatch.setattr(ab, "_lock", ab._FieldLock())
+    assert ab._conversation_active() is False
+    with ab._PresentClaim():
+        assert ab._present_active == 1
+        assert ab._conversation_active() is True
+        assert ab._growth_may_run() is False
+    assert ab._present_active == 0
+    assert ab._conversation_active() is False
+
+
+def test_every_background_source_steps_aside(phone, monkeypatch):
+    monkeypatch.setattr(ab, "_historical_experience_live_idle", lambda yield_to_messenger=True: True)
+    monkeypatch.setattr(ab, "_background_breathing_room", lambda *a, **k: True)
+    monkeypatch.setattr(ab, "_systems", {})
+    assert ab._history_stream_live_idle() and ab._praxis_live_idle()
+    assert ab._messenger_live_idle() and ab._clone_absorption_live_idle()
+    monkeypatch.setattr(ab, "_last_output_time", time.time())
+    assert not ab._history_stream_live_idle()
+    assert not ab._praxis_live_idle()
+    assert not ab._messenger_live_idle()
+    assert not ab._clone_absorption_live_idle()
+    assert ab._growth_status()["stepping_aside"] is True
+
+
+def test_her_initiative_is_not_held_by_the_conversation():
+    # The proactive loop is paced by the shared breathing room only; the
+    # conversation window must not appear there.
+    src = Path(ab.__file__).read_text(encoding="utf-8")
+    start = src.index("def _background_breathing_room(")
+    body = src[start:src.index("\ndef ", start + 10)]
+    assert "_conversation_active" not in body
+
+
+def test_live_turn_releases_curiosity_and_quiet_resumes_it(monkeypatch):
+    sys.path.insert(0, str(_ROOT))
+    ce = pytest.importorskip("aurora_curiosity_engine")
+    ce.reset_curiosity_interrupt()
+    monkeypatch.setattr(ab, "_lock", ab._FieldLock())
+    monkeypatch.setattr(ab, "_present_active", 0)
+    with ab._PresentClaim():
+        assert ce._CYCLE_INTERRUPTIBLE.is_set()
+
+    class _Engine:
+        systems: dict = {}
+
+        def __init__(self) -> None:
+            self.cycles = 0
+
+        def reset_idle_counter(self) -> None:
+            pass
+
+        def run_curiosity_cycle(self) -> None:
+            self.cycles += 1
+
+    # Once the owner says the present has gone quiet, her curiosity is
+    # released by its own loop and carries on.
+    engine = _Engine()
+    ce._CURIOSITY_THREAD = None
+    ce.start_curiosity_background(engine, tick_interval_s=0.05, may_run=lambda: True)
+    time.sleep(0.3)
+    ce._CURIOSITY_STOP.set()
+    ce._CURIOSITY_THREAD.join(2)
+    ce._CURIOSITY_THREAD = None
+    ce.reset_curiosity_interrupt()
+    assert engine.cycles > 0
+
+
+def test_dream_holds_between_steps_and_resumes(monkeypatch):
+    sys.path.insert(0, str(_ROOT))
+    qd = pytest.importorskip("aurora_quantum_dream_substrate")
+    steps = []
+    for name in ("_temporal_feedback_pass", "_consciousness_fusion_cycle", "_dimensional_collapse"):
+        monkeypatch.setattr(qd, name, lambda systems, _n=name: steps.append(_n))
+    sub = qd.QuantumDreamSubstrate()
+    monkeypatch.setattr(sub._entanglement, "auto_entangle_from_genealogy", lambda systems: steps.append("entangle") or 0)
+    monkeypatch.setattr(sub._entanglement, "propagate", lambda systems: steps.append("propagate"))
+    monkeypatch.setattr(sub, "_dream_encounter_with_selves", lambda systems: steps.append("encounter"))
+    monkeypatch.setattr(sub, "_run_mtsl_perturbation_probe", lambda systems: steps.append("probe"))
+    real_wait = qd._dream_stop.wait
+    monkeypatch.setattr(qd._dream_stop, "wait", lambda t=None: real_wait(0.01))
+    qd._dream_stop.clear()
+    # Sir is talking for the first three checks between steps, then quiet.
+    answers = iter([False, False, False])
+    sub.run_dream_cycle({}, may_continue=lambda: next(answers, True))
+    assert steps == ["entangle", "propagate", "_temporal_feedback_pass",
+                     "_consciousness_fusion_cycle", "_dimensional_collapse",
+                     "encounter", "probe"]
+
+
+def test_dream_stops_cleanly_while_held(monkeypatch):
+    sys.path.insert(0, str(_ROOT))
+    qd = pytest.importorskip("aurora_quantum_dream_substrate")
+    sub = qd.QuantumDreamSubstrate()
+    steps = []
+    monkeypatch.setattr(sub._entanglement, "auto_entangle_from_genealogy", lambda systems: steps.append(1) or 0)
+    monkeypatch.setattr(sub._entanglement, "propagate", lambda systems: steps.append(2))
+    qd._dream_stop.set()
+    try:
+        sub.run_dream_cycle({}, may_continue=lambda: False)
+    finally:
+        qd._dream_stop.clear()
+    assert steps == [1]

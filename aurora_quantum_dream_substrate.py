@@ -385,6 +385,24 @@ def _dimensional_collapse(systems: Dict[str, Any]) -> None:
 # Main substrate class
 # ---------------------------------------------------------------------------
 
+def _hold_until_allowed(may_continue: Optional[Callable[[], bool]],
+                        poll_s: float = 2.0) -> bool:
+    """Between dream steps: wait while may_continue says no.  Returns False
+    only when the substrate is being stopped, so the cycle ends cleanly.
+    A may_continue that fails lets the dream go on."""
+    if may_continue is None:
+        return True
+    while True:
+        try:
+            if may_continue():
+                return True
+        except Exception as exc:
+            log.warning("quantum_dream: may_continue failed: %s", exc)
+            return True
+        if _dream_stop.wait(poll_s):
+            return False
+
+
 class QuantumDreamSubstrate:
     """
     Orchestrates one dream cycle:
@@ -405,31 +423,55 @@ class QuantumDreamSubstrate:
         # Watches for stalls and summons a new self when the council can't move her.
         self._stagnation = None
 
-    def run_dream_cycle(self, systems: Dict[str, Any]) -> None:
+    def run_dream_cycle(
+        self,
+        systems: Dict[str, Any],
+        may_continue: Optional[Callable[[], bool]] = None,
+    ) -> None:
+        """One dream cycle.  may_continue, when given, is asked between steps;
+        while it says no (a conversation with Sir is under way on the phone)
+        the dream holds where it is and then carries on from the same step.
+        It is never cut short and never restarted.  None keeps the old,
+        uninterrupted cycle."""
         self._cycle_count += 1
         log.info("quantum_dream: cycle %d starting", self._cycle_count)
+
+        def _between_steps() -> bool:
+            return _hold_until_allowed(may_continue)
 
         # 1. Discover new entanglements from genealogy
         new_pairs = self._entanglement.auto_entangle_from_genealogy(systems)
         if new_pairs:
             log.debug("quantum_dream: %d new entangled pairs", new_pairs)
+        if not _between_steps():
+            return
 
         # 2. Propagate entanglement state
         self._entanglement.propagate(systems)
+        if not _between_steps():
+            return
 
         # 3. Temporal feedback — recent high-fidelity crossings backpropagate
         _temporal_feedback_pass(systems)
+        if not _between_steps():
+            return
 
         # 4. Consciousness fusion — merge high-pressure crystals
         _consciousness_fusion_cycle(systems)
+        if not _between_steps():
+            return
 
         # 5. Dimensional collapse — only when coherence is low
         _dimensional_collapse(systems)
+        if not _between_steps():
+            return
 
         # 6. Dream encounter — she meets the possibility-selves and experiences the
         #    reinforced pressures THROUGH interacting with them. This is the only
         #    place they touch her; the pressure reaches her as their influence.
         self._dream_encounter_with_selves(systems)
+        if not _between_steps():
+            return
 
         # 7. MTSL perturbation probe (live-wired 2026-07-14): a real what-if
         #    experiment (occlude the axis that drove the most recent real
@@ -645,7 +687,7 @@ def start_dream_substrate(
                     _dream_stop.wait(60.0)
                     continue
             try:
-                _substrate.run_dream_cycle(systems)
+                _substrate.run_dream_cycle(systems, may_continue=may_run)
             except Exception as exc:
                 log.warning("quantum_dream: cycle error: %s", exc)
             _dream_stop.wait(cycle_interval_s)

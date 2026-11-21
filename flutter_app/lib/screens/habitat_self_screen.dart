@@ -123,6 +123,9 @@ class _SelfScreenState extends State<SelfScreen> {
     if (_growth['paired_surface'] == true) {
       return ('Her study and experiments run at home', _cyan);
     }
+    if (_growth['stepping_aside'] == true) {
+      return ('Her study steps aside while you talk', _textDim);
+    }
     if (_growth['waits_for_charging'] == true) {
       return ('Her study waits for the charger', _amber);
     }

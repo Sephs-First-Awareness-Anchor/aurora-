@@ -177,6 +177,10 @@ _lock          = _FieldLock()
 # never queued behind a second background pass after the first one ends.
 _present_waiting: int = 0
 _present_waiting_lock = threading.Lock()
+# Live turns waiting for or holding the field (stepping aside for Sir,
+# 2026-11-21): background work that does not take the field, such as her
+# dreams and curiosity, reads this to know a turn with him is under way.
+_present_active: int = 0
 
 
 # Surface restructure 3: a paired phone whose first pairing home has received
@@ -249,7 +253,9 @@ _SURFACE_CONTROL_DEFAULTS = {
     "camera_sensing": True,
     "screen_sensing": True,
     "voice": True,
-    "growth_while_charging_only": True,
+    # Starts off (Sir, 2026-11-21): her growth runs on battery as she
+    # chooses; the switch is there for when he wants to save battery.
+    "growth_while_charging_only": False,
 }
 _SURFACE_CONTROLS_FILE = "surface_sensory_controls.json"
 _surface_controls: dict = dict(_SURFACE_CONTROL_DEFAULTS)
@@ -305,7 +311,44 @@ def _growth_status() -> dict:
         "control_on": surface_control("growth_while_charging_only"),
         "charging": None if charging is None else bool(charging),
         "paired_surface": bool(_surface_only),
+        # Her growth is holding because a conversation with Sir is under way.
+        "stepping_aside": _conversation_active(),
     }
+
+
+# Stepping aside for Sir (2026-11-21, his words: "when I'm interacting with
+# her she isn't held up by other processes ... This shouldn't take away from
+# her autonomy").  While a live turn waits or runs, and until his side of the
+# conversation has been quiet for CONVERSATION_QUIET_S, her background work
+# (history stream, Praxis and the learning probe, curiosity, dreams,
+# evolution, the clone harvest, her messenger) holds and then carries on by
+# itself.  Nothing is dropped and nothing is chosen for her: the work is
+# spaced around the conversation.  Her own initiative (the proactive loop)
+# is not held here; speaking to him is hers to choose.
+CONVERSATION_QUIET_S = 45.0
+
+
+def _conversation_active(now: float = 0.0) -> bool:
+    if _present_active > 0 or _present_is_waiting():
+        return True
+    now = now or time.time()
+    return _last_output_time > 0.0 and (now - _last_output_time) < CONVERSATION_QUIET_S
+
+
+def _growth_may_run() -> bool:
+    """Her growth work may take its next step: not in a conversation with
+    Sir, and not waiting for the charger (only when he has that switch on)."""
+    return not _conversation_active() and not _growth_waits_for_charging()
+
+
+def _yield_curiosity_to_present() -> None:
+    """A live turn has arrived: her curiosity steps aside at its next step.
+    It is released again by its own loop once _growth_may_run says so."""
+    try:
+        from aurora_curiosity_engine import interrupt_curiosity_cycles
+        interrupt_curiosity_cycles()
+    except Exception:
+        pass
 
 
 def get_surface_controls() -> str:
@@ -364,18 +407,29 @@ class _PresentClaim:
     """
 
     def __enter__(self) -> bool:
-        global _present_waiting
+        global _present_waiting, _present_active
         with _present_waiting_lock:
             _present_waiting += 1
+            _present_active += 1
+        _yield_curiosity_to_present()
         try:
             _lock.acquire()
+        except BaseException:
+            with _present_waiting_lock:
+                _present_active -= 1
+            raise
         finally:
             with _present_waiting_lock:
                 _present_waiting -= 1
         return True
 
     def __exit__(self, *exc) -> None:
-        _lock.release()
+        global _present_active
+        try:
+            _lock.release()
+        finally:
+            with _present_waiting_lock:
+                _present_active -= 1
 _boot_completed_at: float = 0.0
 # Background pacing (phone overload fix, 2026-11-07).  Every background
 # source -- historical replay, Praxis bridge, messenger and her reach-outs,
@@ -1971,7 +2025,7 @@ def _start_curiosity_engine(systems: dict) -> None:
         # 90 s idle interval — generous on mobile to conserve battery while
         # still giving Aurora regular autonomous exploration windows.
         start_curiosity_background(engine, tick_interval_s=90.0,
-                                   may_run=lambda: not _growth_waits_for_charging())
+                                   may_run=_growth_may_run)
         log.info("Curiosity engine started (90 s idle cycle)")
     except Exception as exc:
         log.warning("Curiosity engine unavailable: %s", exc)
@@ -1986,7 +2040,7 @@ def _start_curiosity_engine(systems: dict) -> None:
             start_dream_substrate,
         )
         start_dream_substrate(systems, cycle_interval_s=600.0,
-                              may_run=lambda: not _growth_waits_for_charging())
+                              may_run=_growth_may_run)
         _dream_substrate_boot_ok = True
         log.info("Quantum dream substrate started (600 s cycles)")
     except Exception as exc:
@@ -2484,6 +2538,8 @@ def _messenger_waiting() -> bool:
 def _messenger_live_idle() -> bool:
     """The messenger's own gate: the same terms as every background source,
     without yielding to itself."""
+    if _conversation_active():
+        return False
     return _historical_experience_live_idle(yield_to_messenger=False)
 
 
@@ -2493,7 +2549,8 @@ _clone_absorption_running = threading.Event()
 def _clone_absorption_live_idle() -> bool:
     """The clone harvest takes the field only when no live turn is waiting
     and the background has its breathing room."""
-    return _systems is not None and not _present_is_waiting() and _background_breathing_room()
+    return (_systems is not None and not _present_is_waiting()
+            and not _conversation_active() and _background_breathing_room())
 
 
 def _start_clone_absorption(state_dir: str) -> None:
@@ -2631,15 +2688,17 @@ def _praxis_live_idle() -> bool:
     experience.  Delegating rather than copying keeps one definition of
     "the live path is not claiming the field" for every background source.
     Praxis and the learning probe are growth work, so on an unpaired phone
-    they also wait for the charger when Sir has that on."""
-    if _growth_waits_for_charging():
+    they also wait for the charger when Sir has that on, and step aside
+    while he is talking with her."""
+    if not _growth_may_run():
         return False
     return _historical_experience_live_idle()
 
 
 def _history_stream_live_idle() -> bool:
-    """Her history stream: the shared idle terms, and growth's charger wait."""
-    if _growth_waits_for_charging():
+    """Her history stream: the shared idle terms, stepping aside while Sir
+    talks with her, and growth's charger wait when he has it on."""
+    if not _growth_may_run():
         return False
     return _historical_experience_live_idle()
 
@@ -10041,7 +10100,7 @@ def _self_monitor_loop() -> None:
             # grow crystal structures from compressed constraint-physics evolution.
             # Only fires when not in an active user turn (lock not held).
             if _tick % 5 == 0 and _evo_sim is not None and _concept_registry is not None:
-                if (not _growth_waits_for_charging() and _background_breathing_room()
+                if (_growth_may_run() and _background_breathing_room()
                         and _lock.acquire(blocking=False)):
                     try:
                         with _axis_state_lock:

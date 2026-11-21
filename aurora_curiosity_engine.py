@@ -1244,8 +1244,11 @@ def start_curiosity_background(
     User turns always interrupt via _CYCLE_INTERRUPTIBLE.
 
     may_run, when given, is asked before each idle window; False spaces the
-    window to the next tick and drops nothing (the phone's growth-while-
-    charging pacing, surface restructure 6).  None keeps the old behaviour.
+    window to the next tick and drops nothing (the phone's pacing around a
+    conversation with Sir, surface restructure 6).  When may_run says yes,
+    the owner is saying the present has gone quiet, so a yield that a live
+    turn asked for (interrupt_curiosity_cycles) is released here and her
+    curiosity carries on by itself.  None keeps the old behaviour.
     """
     global _CURIOSITY_THREAD
     resident = getattr(engine, "systems", {}).get("_desktop_runtime")
@@ -1259,7 +1262,12 @@ def start_curiosity_background(
 
     def _loop():
         while not _CURIOSITY_STOP.is_set():
-            if not _CYCLE_INTERRUPTIBLE.is_set() and (may_run is None or _may_run_now(may_run)):
+            allowed = True
+            if may_run is not None:
+                allowed = _may_run_now(may_run)
+                if allowed:
+                    reset_curiosity_interrupt()
+            if allowed and not _CYCLE_INTERRUPTIBLE.is_set():
                 try:
                     engine.reset_idle_counter()
                     for _ in range(_MAX_CYCLES_PER_IDLE):

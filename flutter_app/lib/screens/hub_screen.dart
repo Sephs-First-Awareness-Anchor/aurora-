@@ -1688,6 +1688,7 @@ class _HubScreenState extends State<HubScreen> {
     final g = _fieldStatus['growth'];
     if (g is! Map) return 'not read yet';
     if (g['paired_surface'] == true) return 'paired: her growth runs at home';
+    if (g['stepping_aside'] == true) return 'stepping aside while you talk';
     if (g['control_on'] != true) return 'running whenever she has room';
     if (g['charging'] == null) return "running (charger state not read yet)";
     return g['waits_for_charging'] == true
