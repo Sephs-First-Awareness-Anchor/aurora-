@@ -6,7 +6,6 @@ Wants=network.target
 [Service]
 Type=simple
 WorkingDirectory=__AURORA_ROOT__
-Environment="AURORA_STATE_DIR=__AURORA_STATE__"
 Environment=AURORA_SKIP_DEP_INSTALL=1
 Environment=PYTHONUNBUFFERED=1
 ExecStart=__AURORA_PYTHON__ -m aurora_internal.desktop serve --state-dir __AURORA_STATE__
