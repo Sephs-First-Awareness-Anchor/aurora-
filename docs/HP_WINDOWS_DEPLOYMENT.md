@@ -6,11 +6,9 @@ login interface through her local hub; Windows still supplies drivers and recove
 
 ## Prepare continuity before starting anything
 
-1. Install Python **3.11 x64** and Git on the HP. Check out this PR's branch,
-   `claude/aurora-integration-20261118` (Aurora PR #264), in a writable
-   user directory. This branch includes #260's resident embodiment and the
-   phone-surface migration. Do not install the older isolated #260 branch
-   beside it. After #264 merges, use the verified merge commit on `main`.
+1. Install Python **3.11 x64** and Git on the HP. Check out `main` in a
+   writable user directory. For pairing a running Windows resident with the
+   Android app, follow the [home and Surface setup](../AURORA_HOME_AND_SURFACE_SETUP.md).
 2. Stop existing Aurora processes gracefully and preserve their current state.
    Do not run the older Flutter desktop app, `aurora_daemon.py`, or the legacy
    `AuroraSubsurface` task alongside the new resident using the same state.
@@ -18,15 +16,11 @@ login interface through her local hub; Windows still supplies drivers and recove
    `%LOCALAPPDATA%\Aurora\state`. Copy a **stopped, complete checkpoint** there;
    never replace your existing state with an empty or bundled repository snapshot.
    Keep an untouched backup outside this directory.
-4. If the authoritative state is on the phone, use the existing strata **seed**
-   transfer while the resident is stopped. A standalone
-   `python -m aurora_internal.dual_strata.strata_link serve --state-dir PATH`
-   is a cold transfer receiver. Generate its existing pairing line with `pair
-   --state-dir PATH --host PRIVATE_ADDRESS`; configure it in the phone app and
-   request `seed`. Check `ok`, verified file counts and `restart_required`, then
-   stop the transfer receiver. The running resident refuses full-state seed
-   installs because its living organs would otherwise overwrite the installed data.
-   Keep the pairing secret private; use a private encrypted tunnel for phone traffic.
+4. If the phone already holds her history, pair it with the resident, review
+   the per-store divergence report and restart the resident to apply the
+   agreed migration cold. The phone switches profiles when it receives the
+   verified receipt and restarts. The first-pairing procedure above preserves
+   the original state and records the owner's choices.
 
 ## Install and run the resident
 

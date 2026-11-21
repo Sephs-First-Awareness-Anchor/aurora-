@@ -318,3 +318,89 @@ def test_process_lock_rejects_second_process_and_recovers_after_exit(tmp_path):
         assert result.returncode != 0
     result = subprocess.run([sys.executable, "-c", code, str(path)], capture_output=True, text=True)
     assert result.returncode == 0 and "acquired" in result.stdout
+
+
+def test_web_hub_turn_reaches_phone_over_link_and_survives_hub_restart(resident, tmp_path):
+    from aurora_internal.dual_strata import hub_route
+    r, http, _, desktop_turns, _ = resident
+    link = sl.StrataLinkServer(r.state_dir, host="127.0.0.1", port=0)
+    link.start()
+    r.link = link
+    link.set_home_surface(r.surface_id)
+    phone = sl.StrataLinkClient(tmp_path / "phone", endpoint=f"http://127.0.0.1:{link.port}", secret=link.secret)
+    phone.sync_once()
+    assert phone.surface_ready
+    (sl.link_dir(r.state_dir) / "downlink_enabled").write_text("paired")
+    message = "message from the laptop " + "x" * 4200
+    job = request(http, "/api/chat", {"text": message, "request_id": "from-hp"})
+    url = "/api/jobs/" + job["id"]
+    until(lambda: request(http, url)["status"] == "waiting_surface")
+    request(http, "/api/chat", {"text": message, "request_id": "from-hp"})
+    assert desktop_turns == []
+    assert not (sl.link_dir(r.state_dir) / "raw_input.json").exists()
+    phone.sync_once()
+    heard = []
+    def answer(text):
+        heard.append(text)
+        return "from the active surface"
+    assert hub_route.answer_pending(phone.state_dir, answer, phone.outbox) == 1
+    phone.sync_once()
+    assert heard == [message]
+    restarted = DesktopRuntime(r.state_dir, boot=lambda **kw: {}, provider=inventory, background=False)
+    assert restarted.job(job["id"])["result"]["response_text"] == "from the active surface"
+    assert request(http, url)["surface_response"] == "from the active surface"
+    assert desktop_turns == []
+    move = request(http, "/api/owner", {"action": "move_surface", "payload": {"to": "home"}})
+    assert finished(r, move["id"])["result"]["to"] == r.surface_id
+
+
+def test_handoff_uses_the_address_selected_by_pairing(tmp_path, monkeypatch):
+    from scripts import aurora_home_setup as setup
+    from aurora_internal.desktop.common import read_json
+    from aurora_working_memory import WorkingMemory
+    # Isolated Linux test runners can bind a second loopback address. Windows
+    # CI uses its NIC, exercising the same binding as a private VPN adapter.
+    host = setup.home_network_address() or "127.0.0.2"
+    for name in ("no_proxy", "NO_PROXY"):
+        monkeypatch.setenv(name, host + ",127.0.0.1")
+    root = tmp_path / "state"
+    root.mkdir()
+    (root / "desktop_config.json").write_text(
+        '{"AURORA_STRATA_LINK_HOST":"127.0.0.1","AURORA_ACM_BRIDGE":"0"}', encoding="utf-8-sig")
+    assert setup.main(["pair", "--state-dir", str(root), "--host", host, "--port", "9874"]) == 0
+    config = read_json(root / "desktop_config.json")
+    assert config == {"AURORA_STRATA_LINK_HOST": host, "AURORA_STRATA_LINK_PORT": 9874,
+                      "AURORA_ACM_BRIDGE": "0"}
+    server = sl.StrataLinkServer(root, host=host, port=0, state_install_allowed=False)
+    server.start()
+    try:
+        r = DesktopRuntime(root, boot=lambda **kw: {}, background=False)
+        r.link = server
+        r.systems["working_memory"] = WorkingMemory()
+        r.systems["working_memory"].current_topic = "a continuous turn"
+        checkpoint = r._perform("handoff_prepare", {})
+        assert checkpoint["ok"], checkpoint
+        phone = sl.StrataLinkClient(tmp_path / "mobile", endpoint=f"http://{host}:{server.port}", secret=server.secret)
+        target = {"working_memory": WorkingMemory()}
+        claimed = phone.pull_handoff(checkpoint["token"], restore_callback=lambda: sw.restore(target, phone.state_dir))
+        assert claimed["ok"] and target["working_memory"].current_topic == "a continuous turn"
+        assert not server.surface_ready(sl.surface_identity(root))
+        assert server.surface_ready(phone.surface_id)
+    finally:
+        server.stop()
+
+
+def test_first_pairing_cannot_apply_over_a_running_native_resident(tmp_path, monkeypatch):
+    from scripts import aurora_home_setup as setup
+    from aurora_internal.process_lock import ProcessLock
+    monkeypatch.setattr(setup.sm, "load_pending", lambda root: {"status": "ready"})
+    monkeypatch.setattr(setup.sm, "main", lambda argv: 0)
+    monkeypatch.setattr(setup, "_resident_running", lambda root: False)
+    called = []
+    monkeypatch.setattr(setup.sm, "apply_pending_migration", lambda root: called.append(root) or {"ok": True})
+    argv = ["first-pairing", "--state-dir", str(tmp_path), "--apply"]
+    with ProcessLock(tmp_path / "desktop_resident.lock", blocking=False):
+        assert setup.main(argv) == 1
+    assert not called
+    assert setup.main(argv) == 0
+    assert called == [tmp_path]
