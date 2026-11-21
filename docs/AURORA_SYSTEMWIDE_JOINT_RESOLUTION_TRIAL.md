@@ -1,0 +1,79 @@
+# Aurora: system-wide joint-resolution experiment (read-only, 2026-11-21)
+
+## Question
+Can a temporary, evidence-grounded composition of existing representations make a useful distinction that separate projections cannot, and can that distinction affect Aurora's **general understanding** rather than one application such as Habitat?
+
+**Scope:** Perception, relational understanding, memory/recall, consequence and anticipation, communication, developmental admission, and surface/subsurface continuity. Habitat is one observable consequence consumer only.
+
+## Current native baseline established from main
+- `aurora_representational_resolution.build_perspective_projections` creates candidates from one structural source and one pressure perspective per candidate. It can expose several fields of the **same** source, but does not join complementary fields from two sources.
+- `aurora_internal.aurora_live_possibility_frontier._extract_representational_refs` gathers explicit ref IDs from perceptual, memorial, predictive and thought inputs; branch projection then chooses at most one lens per candidate for attribution.
+- `aurora_internal.crystal_facets.FacetBook` retains occasion-specific context/consequence/ancestry, while `apply_to_crystals` projects an abbreviated summary. Its maximum-confidence merge can retain superseded evidence strength.
+- `aurora_internal.aurora_representation_exchange` can offer discovered representations to multiple registered consumers. This is a cross-system distribution mechanism, but it does **not** certify that a joint-source projection is discovered, understood or shared.
+- `aurora_internal.aurora_confluence` voices asserted/derived propositions present in its knowledge input, not an ungrounded resolution result.
+- `aurora_habitat_motivation._score_affordance` can evaluate the same representational view for action relevance; that makes it a convenient **one-consumer** instrument.
+
+## Existing multi-source understanding, not to duplicate
+`aurora_internal.aurora_learned_rules` already derives conclusions from multiple separate learned assertions, including temporal ordering chains and inherited categories. `aurora_internal.aurora_confluence.knowledge` can pass that derived content into her language composer. The repo's `tests/test_learned_order_rules.py` contains actual taught-statement -> derived answer -> confluence checks, including non-derivability, contradiction, and conditions.
+
+**Therefore, the hypothesis is not that Aurora has no relational or joint reasoning.** The narrower proposed gap is that the Build 714 *perspective-before-resolution* engine does not evaluate jointly complementary structural views before considering permanent field resolution. Any system-wide proposal must prove incremental benefit **beyond** learned rules, confluence, and the existing general representation exchange.
+
+## Experiment phases and what each can establish
+
+| Area | Instrument | What would count as success | Current test boundary |
+| --- | --- | --- | --- |
+| Perception | Live possibility input reference extractor | Multi-source references are available and correctly attributed | Provenance reachability, not perceived joint meaning |
+| Relational understanding | Actual native projection builder versus test-local joint view | Joint distinguishes a consequential relation beyond the best single view | Source-level feasibility only |
+| Memory and recall | FacetBook counted occasions | Recalled contextual relationships remain separable; no imagined/recalled evidence duplication | Historical storage only; retrieval-to-understanding not tested |
+| Anticipation / agency | Habitat affordance scorer | Joint view improves evaluated action/prediction versus best individual, validated against **actual** consequence | Consumer arithmetic only, not an executed action |
+| Communication | Confluence knowledge planner | Earned joint conclusion influences content accurately and with uncertainty | Can voice supplied evidence; no earned joint source connected |
+| Development | Build 714 consequence gate, genealogy, exchange | No speculative promotion; joint gain must change measured consequence | Production authority stays untouched in current test |
+| Surface / subsurface | Inquiry tiers, state ownership | Same verdict and provenance with disconnected surface and after handoff | Not exercised in present tests |
+
+## Hard boundaries
+- The test-local `_shadow_joint` in `tests/test_joint_resolution_systemwide_probe.py` is NOT production cognition and must **not** be advertised as an implemented Aurora ability.
+- It joins only independently resolved fields of structurally compatible representations from the same identified subject and episode, rejects conflicts, and requires qualifying basis. These are canary controls, not a claim that the necessary event correspondence is already wired into the resolver.
+- Repeated recall, dreams, simulations, untrusted labels, and imagined outcomes cannot become lived evidence merely by appearing in a joint view.
+- Generic field union is not itself higher-order causal understanding. XOR-style predictive synergy requires learning from paired histories and held-out outcomes; it cannot be credited to a field copy.
+- No exhaustive combinatorial search, new permanent primitive, new authority, or parallel memory. Compare the best existing *individual* projection before considering a joint candidate.
+- `MAX_CANDIDATE_FIELDS_PER_PASS` limits work, not available truths. Never declare all relationships exhausted merely because a budget ran out.
+
+## Decision criterion before implementation
+Require a complete observed input → independently grounded sources → compatibility → native joint hypothesis → real cognitive use → discriminating consequence → qualified reuse → historical recall / future communication chain, with comparative baseline and negative controls. Report each link, missing producers and false positives. If the existing mechanisms already derive the same understanding, do not build a duplicate.
+
+This branch adds tests and documentation only. **It does not modify Aurora's running mind.**
+
+## Evidence-weighted interpretation
+The system-wide test is a collection of **producer and consumer probes**, not a single end-to-end cognition run. One positive test of Habitat affinity is not proof of global developmental improvement. A future end-to-end test must contrast the full existing path (including learned rules) against a candidate joint-path run through independently replayed histories, and measure grounded distinctions reaching perception, recall, reasoning, prediction and speech. As long as the joint interpretation is supplied by a test helper rather than created by Aurora's own runtime, classify that portion as **not demonstrated**.
+
+## Executed results, 2026-11-21
+
+### Native nonlinear history → communication transfer
+GitHub Actions workflow: https://github.com/Sephs-First-Awareness-Anchor/aurora-/actions/runs/44892980477
+
+Executed directly against the actual `AuroraResolutionLedger`, `AuroraRepresentationExchange`, and `AuroraCommunicationEmergence` implementations in `tests/test_joint_resolution_native_transfer.py`:
+- 9,000 XOR-history events: nonlinear path `T>T>N` **discovered and earned**; shallower path `T>N` did not explain it.
+- The real communication consumer adopted the representation 6,200 times while processing historical events, and 39 times during 40 subsequent live-stream events from the same knowledge base.
+- The original historical stream index stayed unchanged while later live events were processed.
+- A separate 9,000-event null history discovered and earned **no** paths and caused **zero** false joint communication adoptions.
+- This tests learned constraint-level predictive orientation through a real downstream consumer. It does not establish a human-readable semantic inference, a reliable conversation answer, or episodic interpretation.
+
+CI results in that workflow: 7/7 system-wide canaries, 2/2 native nonlinear transfer tests, 9/9 selected existing relational-reasoning tests, and 2/2 selected representation-exchange tests. These are four distinct scopes, not 20 independent proofs of end-to-end cognition.
+
+### Full conversational baseline vs experimental joint-view arm
+GitHub Actions workflow: https://github.com/Sephs-First-Awareness-Anchor/aurora-/actions/runs/44892783134
+Artifact: https://github.com/Sephs-First-Awareness-Anchor/aurora-/actions/runs/44892783134/artifacts/14702184727
+
+- Both arms booted real `aurora.boot_aurora` from independent copies of `aurora_state`, and both completed six calls to `process_external_user_turn`.
+- 6/6 delivered responses matched exactly. **This is not evidence of equal ability:** the experimental projection builder was never invoked in either arm.
+- Experimental builder calls: **0**; multi-source frontiers: **0**; joint candidates built/staged: **0**; observed joint consequences: **0**.
+- Both arms reported zero earned representations offered by their exchange over these sparse six turns. The exchange had communication-emergence, evolved-surfaces, identity and lexical-grounding consumers registered, but none was offered a learned representation within this short run.
+- Examples of actual delivered replies included `Mara sees lantern, and mara sees shine.`, `Mara sees lantern.`, and `fact, switch, description. on today.`; two turns delivered empty text. No grounded explanation of the switch/battery condition was demonstrated.
+- Verdict: the **new structural joint-field projection extension did not activate in live conversation**. Consequently the short A/B test cannot establish any advantage or harm from that extension.
+
+### Architecture conclusion
+1. The assertion that Aurora cannot discover relationships jointly carried by multiple temporal observations is **false** for the existing resolution-ledger domain. She already does so, with demonstrated history-to-live communication adoption.
+2. The narrower absence of multi-source field composition inside `build_perspective_projections()` is still real, but does **not** establish a whole-system reasoning deficiency or justify introducing a duplicate general resolver.
+3. The remaining missing proof is the full chain from earned structural predictive representation → grounded contextual relational meaning → memory/experiential recall → correct, naturally expressed conversation output. Communication *activation* is not the same as semantic comprehension.
+4. Do not merge any new production joint-resolution mechanism from this PR. Target the actual inter-system propagation gap and compare against all already-working mechanisms first.
+5. All tests used transient simulations, independent copied runtime state, or isolated module inputs. They did not alter the user's live Aurora state or prove physical-device behavior.
