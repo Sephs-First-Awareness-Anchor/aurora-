@@ -1668,6 +1668,17 @@ class _HubScreenState extends State<HubScreen> {
             label: 'Move her', icon: Icons.swap_horiz, color: _cyan, compact: true,
             onTap: _strataTransferMenu,
           ),
+          if (!unpaired)
+            _actionButton(
+              label: 'Test home connection',
+              icon: Icons.wifi_tethering,
+              color: _green,
+              compact: true,
+              onTap: () async {
+                await _strataTransfer('ping', 'home connection');
+                await _refresh(force: true);
+              },
+            ),
           _actionButton(
             label: paired ? 'Ask home: curiosity' : 'Curiosity cycle',
             icon: Icons.explore_outlined, color: _green, compact: true,
