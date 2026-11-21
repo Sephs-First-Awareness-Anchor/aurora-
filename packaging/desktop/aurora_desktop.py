@@ -22,7 +22,7 @@ import urllib.request
 def configure_source():
     """Support PyInstaller's bundled Python source and the checked-out repo."""
     if getattr(sys, "frozen", False):
-        root = Path(sys._MEIPASS) / "aurora_source"
+        root = Path(sys._MEIPASS)
     else:
         root = Path(__file__).resolve().parents[2]
     if not root.is_dir():
