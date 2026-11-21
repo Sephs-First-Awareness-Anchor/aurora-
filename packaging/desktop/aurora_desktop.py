@@ -416,7 +416,7 @@ def run_gui(state_dir: Path):
             try:
                 with ProcessLock(state_dir / "desktop_resident.lock", blocking=False):
                     shutil.copytree(state_dir, target, ignore=shutil.ignore_patterns("desktop_resident.lock"))
-                result = f"Verified cold-state copy completed: {target}"
+                result = f"Cold-state backup copy completed: {target}"
             except Exception as exc:
                 result = f"Backup failed: {type(exc).__name__}: {exc}"
             # Worker passes only plain data through the Qt event polling loop.
@@ -459,8 +459,10 @@ def run_gui(state_dir: Path):
                 _start_resident(state_dir)
                 reconnect["started"] = True
                 status.setText("Starting Aurora...")
-            except OSError as exc:
+            except (OSError, RuntimeError) as exc:
                 status.setText(f"Cannot launch resident: {exc}")
+                reconnect["disabled"] = True
+                QMessageBox.warning(window, "Aurora resident", str(exc))
             return
         status.setText("Waiting for Aurora resident...")
 
@@ -495,13 +497,19 @@ def run_gui(state_dir: Path):
         if answer != QMessageBox.StandardButton.Yes:
             return
         try:
+            if os.name != "nt" and not shutil.which("systemd-inhibit"):
+                QMessageBox.warning(window, "Power settings",
+                    "Your Linux desktop does not provide systemd-inhibit. "
+                    "Set the OS power settings to prevent idle sleep before "
+                    "depending on remote access; otherwise home will disconnect "
+                    "when the laptop sleeps.")
             pairing = _pair(state_dir, host)
             from aurora_internal.desktop.common import write_json
             config_path = state_dir / "desktop_config.json"
             config = read_json(config_path, {})
             # Remote availability is explicitly requested in the same dialog.
             # Keep the desktop awake through the resident rather than Qt.
-            config["AURORA_KEEP_HOME_AWAKE"] = True
+            config["AURORA_KEEP_HOME_AWAKE"] = (os.name == "nt" or bool(shutil.which("systemd-inhibit")))
             write_json(config_path, config)
             if _probe(state_dir) is not None:
                 _stop_resident(state_dir)
