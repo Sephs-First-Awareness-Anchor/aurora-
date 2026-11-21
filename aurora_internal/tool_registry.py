@@ -1007,6 +1007,42 @@ def _chaquopy_open_url(url: str) -> tuple:
     ctx.startActivity(intent)
     return True, f"Opened {url}"
 
+def _phone_hands(method: str, *args) -> Dict[str, Any]:
+    """Call one of the phone's own abilities in the app (PhoneHands.kt).
+    Every call answers {"ok": bool, "data": ..., "error": "..."}."""
+    from java import jclass  # type: ignore
+    hands = jclass("org.aurora.app.PhoneHands")
+    raw = getattr(hands, method)(_get_android_context(), *args)
+    try:
+        out = json.loads(str(raw))
+    except ValueError:
+        return {"ok": False, "error": "unreadable_answer"}
+    return out if isinstance(out, dict) else {"ok": False, "error": "unreadable_answer"}
+
+
+def _hands_result(name: str, method: str, *args, render=None) -> ToolResult:
+    """A ToolResult from a PhoneHands call: the data as she reads it, or the
+    plain reason it did not happen (a missing permission is named)."""
+    try:
+        out = _phone_hands(method, *args)
+    except Exception as exc:
+        _aurora_fault(locals(), exc, '_hands_result', 0)
+        return ToolResult(name, "", False, f"phone hands unavailable: {exc}")
+    if not out.get("ok"):
+        return ToolResult(name, "", False, str(out.get("error") or "failed"))
+    data = out.get("data")
+    if render is not None:
+        try:
+            text = render(data)
+        except Exception:
+            text = json.dumps(data, sort_keys=True)
+    elif isinstance(data, (dict, list)):
+        text = json.dumps(data, sort_keys=True)
+    else:
+        text = str(data)
+    return ToolResult(name, text, True)
+
+
 def _termux_run(cmd: list, timeout: int = 15) -> tuple:
     """Run a termux-api command. Returns (stdout, stderr, returncode)."""
     try:
@@ -1026,8 +1062,11 @@ def _termux_run(cmd: list, timeout: int = 15) -> tuple:
 def _mobile_send_sms(number: str = "", message: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     if not number or not message:
         return ToolResult("mobile_send_sms", "", False, "number and message required")
+    if _is_chaquopy_android():
+        return _hands_result("mobile_send_sms", "sendSms", str(number), str(message),
+                             render=lambda d: f"SMS sent to {d.get('to', number)}")
     if not _is_termux():
-        return ToolResult("mobile_send_sms", "", False, "not running on Termux")
+        return ToolResult("mobile_send_sms", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-sms-send", "-n", number, message])
     if rc == 0:
         return ToolResult("mobile_send_sms", f"SMS sent to {number}", True)
@@ -1037,8 +1076,11 @@ def _mobile_send_sms(number: str = "", message: str = "", systems: Optional[Dict
 def _mobile_make_call(number: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     if not number:
         return ToolResult("mobile_make_call", "", False, "phone number required")
+    if _is_chaquopy_android():
+        return _hands_result("mobile_make_call", "makeCall", str(number),
+                             render=lambda d: f"Calling {d.get('calling', number)}")
     if not _is_termux():
-        return ToolResult("mobile_make_call", "", False, "not running on Termux")
+        return ToolResult("mobile_make_call", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-telephony-call", number])
     if rc == 0:
         return ToolResult("mobile_make_call", f"Calling {number}", True)
@@ -1236,8 +1278,10 @@ def _mobile_open_url(url: str = "", systems: Optional[Dict[str, Any]] = None, **
 
 def _mobile_read_sms(limit: int = 10, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Read recent SMS messages."""
+    if _is_chaquopy_android():
+        return _hands_result("mobile_read_sms", "readSms", int(limit))
     if not _is_termux():
-        return ToolResult("mobile_read_sms", "", False, "not running on Termux")
+        return ToolResult("mobile_read_sms", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-sms-list", "-l", str(int(limit)), "-t", "inbox"], timeout=15)
     if rc == 0 and out:
         return ToolResult("mobile_read_sms", out, True)
@@ -1246,8 +1290,10 @@ def _mobile_read_sms(limit: int = 10, systems: Optional[Dict[str, Any]] = None, 
 
 def _mobile_read_contacts(query: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Read phone contacts, optionally filtered by name."""
+    if _is_chaquopy_android():
+        return _hands_result("mobile_read_contacts", "contacts", str(query or ""), 200)
     if not _is_termux():
-        return ToolResult("mobile_read_contacts", "", False, "not running on Termux")
+        return ToolResult("mobile_read_contacts", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-contact-list"], timeout=15)
     if rc != 0:
         return ToolResult("mobile_read_contacts", "", False, err or "contact access failed")
@@ -1258,8 +1304,10 @@ def _mobile_read_contacts(query: str = "", systems: Optional[Dict[str, Any]] = N
 
 
 def _mobile_get_location(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if _is_chaquopy_android():
+        return _hands_result("mobile_get_location", "location", 15000)
     if not _is_termux():
-        return ToolResult("mobile_get_location", "", False, "not running on Termux")
+        return ToolResult("mobile_get_location", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-location", "-p", "gps", "-r", "once"], timeout=30)
     if rc == 0 and out:
         return ToolResult("mobile_get_location", out, True)
@@ -1274,8 +1322,11 @@ def _mobile_notification(title: str = "", message: str = "", systems: Optional[D
     """Post a visible Android notification."""
     if not title or not message:
         return ToolResult("mobile_notification", "", False, "title and message required")
+    if _is_chaquopy_android():
+        return _hands_result("mobile_notification", "notify", str(title), str(message),
+                             render=lambda d: f"Notification posted: {title}")
     if not _is_termux():
-        return ToolResult("mobile_notification", "", False, "not running on Termux")
+        return ToolResult("mobile_notification", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-notification", "--title", title, "--content", message], timeout=10)
     if rc == 0:
         return ToolResult("mobile_notification", f"Notification posted: {title}", True)
@@ -1284,8 +1335,15 @@ def _mobile_notification(title: str = "", message: str = "", systems: Optional[D
 
 def _mobile_clipboard(op: str = "get", text: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Read (op=get) or write (op=set) the Android clipboard."""
+    if _is_chaquopy_android():
+        if op == "set":
+            if not text:
+                return ToolResult("mobile_clipboard", "", False, "text required for set")
+            return _hands_result("mobile_clipboard", "clipboardSet", str(text),
+                                 render=lambda d: "Clipboard written")
+        return _hands_result("mobile_clipboard", "clipboardGet", render=lambda d: str(d or "(empty)"))
     if not _is_termux():
-        return ToolResult("mobile_clipboard", "", False, "not running on Termux")
+        return ToolResult("mobile_clipboard", "", False, "not running on Android/Termux")
     if op == "set":
         if not text:
             return ToolResult("mobile_clipboard", "", False, "text required for set")
@@ -1298,8 +1356,10 @@ def _mobile_clipboard(op: str = "get", text: str = "", systems: Optional[Dict[st
 
 
 def _mobile_battery_status(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if _is_chaquopy_android():
+        return _hands_result("mobile_battery_status", "battery")
     if not _is_termux():
-        return ToolResult("mobile_battery_status", "", False, "not running on Termux")
+        return ToolResult("mobile_battery_status", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-battery-status"], timeout=10)
     if rc == 0 and out:
         return ToolResult("mobile_battery_status", out, True)
@@ -1308,8 +1368,11 @@ def _mobile_battery_status(systems: Optional[Dict[str, Any]] = None, **_) -> Too
 
 def _mobile_torch(state: str = "on", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Toggle the phone's flashlight. state: 'on' or 'off'."""
+    if _is_chaquopy_android():
+        on = str(state).lower() != "off"
+        return _hands_result("mobile_torch", "torch", on, render=lambda d: f"Torch {d}")
     if not _is_termux():
-        return ToolResult("mobile_torch", "", False, "not running on Termux")
+        return ToolResult("mobile_torch", "", False, "not running on Android/Termux")
     cmd = ["termux-torch", "on" if state.lower() != "off" else "off"]
     out, err, rc = _termux_run(cmd, timeout=8)
     if rc == 0:
@@ -1318,15 +1381,20 @@ def _mobile_torch(state: str = "on", systems: Optional[Dict[str, Any]] = None, *
 
 
 def _mobile_vibrate(duration_ms: int = 500, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if _is_chaquopy_android():
+        return _hands_result("mobile_vibrate", "vibrate", int(duration_ms),
+                             render=lambda d: f"Vibrated {d}ms")
     if not _is_termux():
-        return ToolResult("mobile_vibrate", "", False, "not running on Termux")
+        return ToolResult("mobile_vibrate", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-vibrate", "-d", str(int(duration_ms))], timeout=8)
     return ToolResult("mobile_vibrate", f"Vibrated {duration_ms}ms", rc == 0, err if rc != 0 else "")
 
 
 def _mobile_wifi_info(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if _is_chaquopy_android():
+        return _hands_result("mobile_wifi_info", "wifi")
     if not _is_termux():
-        return ToolResult("mobile_wifi_info", "", False, "not running on Termux")
+        return ToolResult("mobile_wifi_info", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-wifi-connectioninfo"], timeout=10)
     if rc == 0 and out:
         return ToolResult("mobile_wifi_info", out, True)
@@ -1335,8 +1403,10 @@ def _mobile_wifi_info(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResu
 
 def _mobile_call_log(limit: int = 10, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Read recent call history."""
+    if _is_chaquopy_android():
+        return _hands_result("mobile_call_log", "callLog", int(limit))
     if not _is_termux():
-        return ToolResult("mobile_call_log", "", False, "not running on Termux")
+        return ToolResult("mobile_call_log", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-call-log", "-l", str(int(limit))], timeout=15)
     if rc == 0 and out:
         return ToolResult("mobile_call_log", out, True)
@@ -1408,9 +1478,14 @@ def _mobile_image_search(
     # Open browser (always useful; only fallback if no programmatic results)
     if (open_browser or not results) and _is_termux():
         _termux_run(["termux-open-url", browser_url], timeout=10)
+    elif (open_browser or not results) and _is_chaquopy_android():
+        try:
+            _chaquopy_open_url(browser_url)
+        except Exception as _aurora_boundary_exc:
+            _aurora_fault(locals(), _aurora_boundary_exc, '_mobile_image_search', 0)
 
     if not results:
-        if _is_termux() and open_browser:
+        if (_is_termux() or _is_chaquopy_android()) and open_browser:
             return ToolResult("mobile_image_search", f"Opened DDG images: {query}", True)
         return ToolResult(
             "mobile_image_search", "", False,
@@ -1423,9 +1498,6 @@ def _mobile_image_search(
         lines.append(f"   {r['url']}")
         if r["source"]:
             lines.append(f"   via {r['source'][:80]}")
-
-    if open_browser and _is_termux():
-        _termux_run(["termux-open-url", browser_url], timeout=10)
 
     return ToolResult("mobile_image_search", "\n".join(lines), True)
 
@@ -1743,6 +1815,37 @@ def _mobile_music_identify(
                 pass
 
 
+def _mobile_screen_read(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """What is on the phone's screen right now, as she can act on it."""
+    try:
+        from aurora_internal.aurora_screen_apprenticeship import get_apprenticeship
+        app = get_apprenticeship(systems)
+        frame = app.hands.read() if app is not None and app.hands is not None else None
+    except Exception as exc:
+        _aurora_fault(locals(), exc, '_mobile_screen_read', 0)
+        return ToolResult("mobile_screen_read", "", False, str(exc))
+    if frame is None:
+        return ToolResult("mobile_screen_read", "", False, "screen hands not enabled")
+    return ToolResult("mobile_screen_read", frame.describe(), True)
+
+
+def _mobile_screen_act(action: str = "tap", target: str = "", text: str = "",
+                       systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Act on the phone's screen: tap/long_press/scroll_forward/scroll_backward/
+    type on what ``target`` names, or back/home/recents/notifications."""
+    try:
+        from aurora_internal.aurora_screen_apprenticeship import get_apprenticeship
+        app = get_apprenticeship(systems)
+        if app is None or app.hands is None:
+            return ToolResult("mobile_screen_act", "", False, "screen hands not enabled")
+        out = app.act_on(str(action or "tap"), str(target or ""), str(text or ""))
+    except Exception as exc:
+        _aurora_fault(locals(), exc, '_mobile_screen_act', 0)
+        return ToolResult("mobile_screen_act", "", False, str(exc))
+    return ToolResult("mobile_screen_act", str(out.get("data") or ""), bool(out.get("ok")),
+                      "" if out.get("ok") else str(out.get("error") or "not done"))
+
+
 _reg("mobile_send_sms",               "Send an SMS text message to a phone number",                                          "PERSISTENT", _mobile_send_sms,               disables_search=True)
 _reg("mobile_make_call",              "Initiate a phone call to a number",                                                   "PERSISTENT", _mobile_make_call,              disables_search=True)
 _reg("mobile_launch_app",             "Launch an Android app by package name (e.g. com.spotify.music)",                      "BOUNDED",    _mobile_launch_app,             disables_search=False)
@@ -1760,6 +1863,8 @@ _reg("mobile_call_log",               "Read recent call history (incoming, outgo
 _reg("mobile_image_search",           "Search for images by text description via DuckDuckGo; returns URLs + metadata",      "BOUNDED",    _mobile_image_search,           disables_search=False)
 _reg("mobile_search",                 "General web search + real page text back, via her own SearchAdapter (no browser)",   "BOUNDED",    _mobile_search,                 disables_search=False)
 _reg("mobile_reverse_image_search",   "Find what an image is / where it appears online via Google Lens",                    "BOUNDED",    _mobile_reverse_image_search,   disables_search=False)
+_reg("mobile_screen_read",            "Read what is on the phone screen right now (her screen sense)",                       "TRANSIENT",  _mobile_screen_read,            disables_search=True)
+_reg("mobile_screen_act",             "Tap, hold, scroll or type on what she sees on the phone screen, or back/home",       "BOUNDED",    _mobile_screen_act,             disables_search=True)
 _reg("mobile_music_identify",         "Identify a song playing nearby by recording audio and querying AudD",                "BOUNDED",    _mobile_music_identify,         disables_search=False)
 
 # Desktop control tools — Aurora operates the laptop
