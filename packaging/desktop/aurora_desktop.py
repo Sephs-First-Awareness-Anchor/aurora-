@@ -171,6 +171,7 @@ def run_gui(state_dir: Path):
     from aurora_internal.dual_strata import strata_migration as migration
     from aurora_internal.hub_panels import strata_panel
     from aurora_internal.desktop.common import read_json
+    from aurora_internal.desktop.remote_link import tailscale_status, remote_diagnostics
 
     state_dir.mkdir(parents=True, exist_ok=True)
     app = QApplication(sys.argv[:1])
@@ -322,8 +323,10 @@ def run_gui(state_dir: Path):
     def connection_info():
         pending = migration.load_pending(state_dir) or {}
         panel = strata_panel(str(state_dir))
+        diag = remote_diagnostics(read_json(state_dir / "desktop_config.json", {}))
         data = {
             "resident": "online" if _probe(state_dir) is not None else "not responding",
+            "private_network": diag,
             "paired": panel.get("paired"),
             "listening": panel.get("listening"),
             "holder": panel.get("holder"),
@@ -333,9 +336,11 @@ def run_gui(state_dir: Path):
                               ("status", "migration_id", "error") if k in pending},
             "downlink_enabled": panel.get("downlink_enabled"),
         }
-        QMessageBox.information(window, "Aurora: devices and connection",
+        QMessageBox.information(window, "Aurora: remote link and devices",
             json.dumps(data, indent=2, default=str)[:7000] +
-            "\n\nUse Presence → Move Surface in Aurora's Hub to move her.")
+            "\\n\\nA VPN being active on this desktop does not prove the "
+            "phone is reachable. Verify an actual cellular sync from the "
+            "phone's Hub. Keep home powered and awake.")
 
     connection_action = QAction("Connection status", window)
     connection_action.triggered.connect(connection_info)
@@ -424,15 +429,31 @@ def run_gui(state_dir: Path):
         status.setText("Waiting for Aurora resident...")
 
     def pair_phone():
-        host, ok = QInputDialog.getText(
-            window, "Pair Android Surface",
-            "Desktop address the phone can reach (LAN or private VPN IPv4):",
-            text=home_network_address())
-        if not ok:
+        # Remote connection is the default requirement, not an optional
+        # LAN address that silently fails when the phone switches to cellular.
+        vpn = tailscale_status()
+        if not vpn["online"]:
+            reply = QMessageBox.question(
+                window, "Secure connection is not ready",
+                "Away-from-home pairing needs a private route that survives "
+                "Wi-Fi/cellular changes. Connect Tailscale on this desktop "
+                "and the phone once, using the same Tailnet.\\n\\n"
+                + str(vpn["reason"]) + "\\n\\n"
+                "Open the official Tailscale setup page now? "
+                "Aurora will then detect your connected VPN address automatically.")
+            if reply == QMessageBox.StandardButton.Yes:
+                from PySide6.QtGui import QDesktopServices
+                QDesktopServices.openUrl(QUrl("https://tailscale.com/download"))
             return
-        host = host.strip()
-        if not host or any(c in host for c in " /\\#?@"):
-            QMessageBox.warning(window, "Invalid address", "Enter a LAN or private VPN IP address/hostname.")
+        host = vpn["address"]
+        answer = QMessageBox.question(
+            window, "Pair phone over private network",
+            "Desktop private VPN address: " + host + "\\n\\n"
+            "The phone must have its own Tailscale connection to the same Tailnet. "
+            "This keeps her link routed through the VPN on home Wi-Fi or cellular, "
+            "while the desktop is powered and connected.\\n\\n"
+            "Create her pairing link using this private VPN address?")
+        if answer != QMessageBox.StandardButton.Yes:
             return
         try:
             pairing = _pair(state_dir, host)
@@ -450,9 +471,10 @@ def run_gui(state_dir: Path):
         dialog = QMessageBox(window)
         dialog.setWindowTitle("Pair Android Surface")
         dialog.setText(
-            "The private pairing link was copied to your clipboard. "
-            "Paste it into Android Aurora → Hub → Pair with home. "
-            "The desktop resident will restart gracefully with this address.")
+            "The private pairing link was copied. Open Aurora on the phone → "
+            "Hub → Pair with home and paste it. Keep Tailscale on both "
+            "devices and keep the desktop awake. The resident will restart "
+            "gracefully with the remote-capable address.")
         dialog.setInformativeText(pairing)
         dialog.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
         dialog.exec()
