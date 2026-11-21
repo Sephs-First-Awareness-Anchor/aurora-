@@ -113,3 +113,23 @@ def test_dissolved_or_unrelated_representations_cannot_become_remembered_facts()
         }, delta={"n": 0})
     assert store.recall_relevant("Tell me about lantern") == []
     assert len(registry.all_crystals()) >= 1
+
+
+def test_fully_contradicted_lived_evidence_zeros_existing_facet_without_erasing_history():
+    dps, registry = _runtime()
+    book = F.FacetBook()
+    kw = {"concept": "lantern", "kind": "condition",
+          "key": "requires-power", "content": {"other": "battery"}}
+    book.add(**kw, ref="observed:1", basis="observed", source="conversation",
+             context={"episode": "first"}, strength=0.8)
+    idx = {"lantern": dps.concept_index["lantern"]}
+    F.apply_to_crystals(book, idx, dps.crystals, dry_run=False)
+    crystal = registry.crystal_by_id(idx["lantern"])
+    assert _facet(crystal, "fk:condition").confidence == 0.8
+    book.add(**kw, ref="corrected:2", basis="corrected", source="conversation",
+             polarity=-1, context={"episode": "second"}, strength=1.0)
+    F.apply_to_crystals(book, idx, dps.crystals, dry_run=False)
+    facet = _facet(crystal, "fk:condition")
+    assert facet.confidence == 0.0
+    assert len(facet.content["entries"][0]["occasions"]) == 2
+    assert len(dps.crystals) == 1
