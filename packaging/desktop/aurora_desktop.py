@@ -108,6 +108,56 @@ def _pair(state_dir: Path, host: str) -> str:
     return match.group(0)
 
 
+def _startup_registration():
+    """Per-user login startup, without admin rights or any command terminal."""
+    if getattr(sys, "frozen", False):
+        command = [sys.executable, "--background"]
+    else:
+        command = [sys.executable, str(Path(__file__).resolve()), "--background"]
+    if os.name == "nt":
+        return command, None
+    return command, Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))) / "autostart" / "aurora.desktop"
+
+
+def _is_login_enabled() -> bool:
+    command, path = _startup_registration()
+    if os.name == "nt":
+        import winreg
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\\Microsoft\\Windows\\CurrentVersion\\Run") as key:
+                val, _ = winreg.QueryValueEx(key, "AuroraDesktop")
+                return val == subprocess.list2cmdline(command)
+        except FileNotFoundError:
+            return False
+    return bool(path and path.exists() and "Exec=" in path.read_text(encoding="utf-8"))
+
+
+def _set_login_enabled(enabled: bool):
+    command, path = _startup_registration()
+    if os.name == "nt":
+        import winreg
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\\Microsoft\\Windows\\CurrentVersion\\Run") as key:
+            if enabled:
+                winreg.SetValueEx(key, "AuroraDesktop", 0, winreg.REG_SZ, subprocess.list2cmdline(command))
+            else:
+                try:
+                    winreg.DeleteValue(key, "AuroraDesktop")
+                except FileNotFoundError:
+                    pass
+        return
+    if path is None:
+        raise RuntimeError("Login startup is supported on Windows and Linux desktop sessions.")
+    if not enabled:
+        path.unlink(missing_ok=True)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    import shlex
+    args = " ".join(shlex.quote(item) for item in command)
+    path.write_text("[Desktop Entry]\\nType=Application\\nName=Aurora Background\\n" +
+        "Exec=" + args + "\\nTerminal=false\\nX-GNOME-Autostart-enabled=true\\n",
+        encoding="utf-8")
+
+
 def run_gui(state_dir: Path):
     from PySide6.QtCore import QTimer, QUrl, Qt
     from PySide6.QtGui import QAction
@@ -146,7 +196,8 @@ def run_gui(state_dir: Path):
     toolbar.addAction(open_action)
 
     reconnect = {"after_stop": False, "started": False, "loaded": False,
-                 "backup_pending": False, "backup_in_progress": False}
+                 "backup_pending": False, "backup_in_progress": False,
+                 "disabled": False}
     seen_migrations = set()
     def report_pending():
         pending = migration.load_pending(state_dir)
@@ -340,6 +391,9 @@ def run_gui(state_dir: Path):
         if reconnect["backup_in_progress"]:
             status.setText("Backing up Aurora's saved history...")
             return
+        if reconnect["disabled"]:
+            status.setText("Aurora is stopped. Press Start to resume her resident.")
+            return
         if reconnect["backup_pending"] and _probe(state_dir) is None and _resident_free(state_dir):
             reconnect["after_stop"] = False
             cold_backup()
@@ -406,6 +460,54 @@ def run_gui(state_dir: Path):
     pair_action = QAction("Pair phone", window)
     pair_action.triggered.connect(pair_phone)
     toolbar.addAction(pair_action)
+    def start_now():
+        reconnect["disabled"] = False
+        reconnect["started"] = False
+        ready_tick()
+
+    def stop_now():
+        if QMessageBox.question(window, "Stop Aurora?",
+                "Aurora will finish admitted work, save and stop. "
+                "You can restart her here without using a terminal.") != QMessageBox.StandardButton.Yes:
+            return
+        reconnect["disabled"] = True
+        try:
+            if _probe(state_dir) is not None:
+                _stop_resident(state_dir)
+        except Exception as exc:
+            QMessageBox.warning(window, "Could not stop resident", str(exc))
+
+    def restart_now():
+        reconnect["disabled"] = False
+        try:
+            restart_after_save()
+        except Exception as exc:
+            QMessageBox.warning(window, "Restart failed", str(exc))
+
+    start_action = QAction("Start", window)
+    start_action.triggered.connect(start_now)
+    toolbar.addAction(start_action)
+    restart_action = QAction("Restart", window)
+    restart_action.triggered.connect(restart_now)
+    toolbar.addAction(restart_action)
+    stop_action = QAction("Stop", window)
+    stop_action.triggered.connect(stop_now)
+    toolbar.addAction(stop_action)
+
+    login_action = QAction("Run at login", window)
+    login_action.setCheckable(True)
+    try:
+        login_action.setChecked(_is_login_enabled())
+    except Exception:
+        pass
+    def toggle_login(enabled):
+        try:
+            _set_login_enabled(enabled)
+        except Exception as exc:
+            login_action.setChecked(not enabled)
+            QMessageBox.warning(window, "Startup preference", str(exc))
+    login_action.toggled.connect(toggle_login)
+    toolbar.addAction(login_action)
     timer = QTimer(window)
     timer.setInterval(1500)
     timer.timeout.connect(ready_tick)
@@ -418,6 +520,7 @@ def run_gui(state_dir: Path):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Aurora Desktop App")
     parser.add_argument("--resident", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--background", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--self-test", action="store_true", help="Check runtime packaging imports")
     parser.add_argument("--state-dir", type=Path, default=_state_dir())
     args = parser.parse_args(argv)
@@ -426,6 +529,10 @@ def main(argv=None):
     if args.resident:
         from aurora_internal.desktop.__main__ import main as resident_main
         return resident_main(["serve", "--state-dir", str(state)])
+    if args.background:
+        if _probe(state) is None and _resident_free(state):
+            _start_resident(state)
+        return 0
     if args.self_test:
         import aurora  # noqa: F401
         from aurora_internal.desktop.runtime import DesktopRuntime  # noqa: F401
