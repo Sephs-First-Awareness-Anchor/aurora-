@@ -2859,6 +2859,7 @@ def strata_link_transfer(action: str, token: str = "") -> str:
                 "rtt_ms": status.get("rtt_ms"),
                 "pending": (status.get("up_outbox") or {}).get("pending"),
                 "last_error": status.get("last_error"),
+                "error": status.get("last_error") if not client.online else "",
             }, default=str)
         if action == "first_pairing":
             # Only the copy is taken under the field lock (as at pairing).
