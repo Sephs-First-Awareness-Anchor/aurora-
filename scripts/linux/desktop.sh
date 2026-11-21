@@ -2,7 +2,14 @@
 # Day-to-day Linux controls for the *same* resident used by Windows.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-STATE_DIR="${AURORA_STATE_DIR:-$HOME/.local/share/aurora/state}"
+STATE_FILE="$HOME/.config/aurora/resident-state-dir"
+if [[ -n "${AURORA_STATE_DIR:-}" ]]; then
+  STATE_DIR="$AURORA_STATE_DIR"
+elif [[ -f "$STATE_FILE" ]]; then
+  IFS= read -r STATE_DIR < "$STATE_FILE"
+else
+  STATE_DIR="$HOME/.local/share/aurora/state"
+fi
 PYTHON="$ROOT/.venv/bin/python"
 ACTION="${1:-status}"
 UNIT="aurora-desktop.service"
@@ -14,7 +21,8 @@ fi
 
 case "$ACTION" in
   run)
-    # For Linux without systemd; this is a foreground resident, not a legacy stack.
+    # Foreground alternative when no systemd user service is available.
+    # Reuse the same single-process cross-platform engine.
     cd "$ROOT"
     exec "$PYTHON" -m aurora_internal.desktop serve --state-dir "$STATE_DIR" --open
     ;;
