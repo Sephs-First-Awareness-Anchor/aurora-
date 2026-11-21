@@ -276,7 +276,7 @@ def test_apply_dry_run_changes_nothing_and_reports():
     add(b, source="told", strength=0.6)
     cr = crystals()
     r = F.apply_to_crystals(b, {"sunni": "id_s", "letter": "id_l"}, cr)
-    assert r == {"crystals_touched": 1, "facets": 1, "entries": 1, "dry_run": True} and len(cr["id_s"].facets) == 0
+    assert r == {"crystals_touched": 1, "facets": 1, "entries": 1, "lowered": 0, "dry_run": True} and len(cr["id_s"].facets) == 0
 
 
 def test_apply_writes_one_facet_per_kind_with_counted_entries_only_and_is_additive_and_idempotent():

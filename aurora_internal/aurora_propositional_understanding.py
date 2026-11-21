@@ -58,6 +58,10 @@ BASES = ("told", "observed", "corrected", "supposed", "unknown")   # how somethi
 # Standing that was held before provenance existed (n above the counted bases) is left exactly as it was.
 UNCOUNTED_BASES = ("supposed", "unknown")
 MAX_HISTORY = 8                                # the first exposure, then the most recent events
+# Directive V2 (experiential recall, 2026-11-21): what a predicate holds under each condition it was said under, kept
+# apart, so a statement said one way when it is warm and the other way when it is cold is two conditions, not a
+# contradiction.  The unconditioned statements are their own bucket ("").  Bounded: the most-said conditions stay.
+MAX_CONDITIONS = 6
 MAX_HEADS = 2
 
 # Participants as nodes of her web.
@@ -530,7 +534,88 @@ def verdict(p: Mapping[str, Any]) -> str:
     settled = dict(p.get("settled") or {})
     if settled:
         return "denied" if settled.get("d") else "held"
+    if conditions_explain(p):
+        return "conditional"
     return "held" if d * 2 < n else ("denied" if d * 2 > n else "contested")
+
+
+# -----------------------------------------------------------------------------
+# Conditions (directive V2: contextual relational understanding)
+# -----------------------------------------------------------------------------
+
+def condition_key(when: Optional[Mapping[str, Any]]) -> str:
+    """A short stable name for the condition a statement was said under ("it be cold", "you not be settled").
+    "" for a statement said with no condition.  Built from the stored condition only."""
+    if not when:
+        return ""
+    w = dict(when)
+    parts = [str(w.get("subject") or "").strip().lower()]
+    if w.get("negated"):
+        parts.append("not")
+    parts += [str(w.get("relation") or "").strip().lower(), str(w.get("obj") or "").strip().lower()]
+    return " ".join(x for x in parts if x)
+
+
+def said_ref(heard: Any) -> str:
+    """A stable reference to the heard utterance (normalised), so an occasion points back at its episode."""
+    import hashlib
+    text = re.sub(r"\s+", " ", str(heard or "").strip().lower())
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:10] if text else ""
+
+
+def condition_verdict(c: Mapping[str, Any]) -> str:
+    """How a predicate stands under ONE condition: the same rule as `verdict`, over that condition's own tally."""
+    c = dict(c or {})
+    n, d = int(c.get("n", 0) or 0), int(c.get("denied", 0) or 0)
+    if n <= 0:
+        return "unsaid"
+    settled = dict(c.get("settled") or {})
+    if settled:
+        return "denied" if settled.get("d") else "held"
+    return "held" if d * 2 < n else ("denied" if d * 2 > n else "contested")
+
+
+def conditions_explain(p: Mapping[str, Any]) -> bool:
+    """Is what looks said-both-ways in fact said one way under one condition and the other way under another?
+    Only when EVERY counted statement is accounted for by a condition tally (older statements recorded before
+    conditions were kept are not, so their standing is left exactly as it was), each condition is itself decided,
+    and the conditions disagree."""
+    conds = dict(dict(p or {}).get("conditions") or {})
+    if len(conds) < 2:
+        return False
+    if sum(int(dict(c).get("n", 0) or 0) for c in conds.values()) != int(dict(p).get("n", 0) or 0):
+        return False
+    vs = {condition_verdict(c) for c in conds.values()}
+    return vs <= {"held", "denied"} and len(vs) > 1
+
+
+def conditional_standing(p: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    """Each condition a predicate was said under, with how it stands there; the unconditioned statements are the
+    entry whose key is "".  Most-said first."""
+    out = []
+    for key, c in dict(dict(p or {}).get("conditions") or {}).items():
+        c = dict(c)
+        out.append({"key": key, "when": dict(c.get("when") or {}), "verdict": condition_verdict(c),
+                    "n": int(c.get("n", 0) or 0), "denied": int(c.get("denied", 0) or 0),
+                    "first_t": c.get("first_t"), "last_t": c.get("last_t")})
+    out.sort(key=lambda r: (-r["n"], r["key"]))
+    return out
+
+
+def condition_words(when: Optional[Mapping[str, Any]]) -> str:
+    """The condition as it can be said, from its own stored words: {it, be, cold} -> "it is cold"."""
+    w = dict(when or {})
+    subj, rel, obj = (str(w.get(k) or "").strip() for k in ("subject", "relation", "obj"))
+    if not subj or not rel:
+        return ""
+    if rel == "be":
+        verb = "am" if subj.lower() == "i" else ("are" if subj.lower() in ("you", "we", "they") or is_plural(subj) else "is")
+        verb += " not" if w.get("negated") else ""
+    elif w.get("negated"):
+        verb = ("do not " if subj.lower() in ("i", "you", "we", "they") or is_plural(subj) else "does not ") + rel
+    else:
+        verb = rel if subj.lower() in ("i", "you", "we", "they") or is_plural(subj) else _third_person(rel)
+    return " ".join(x for x in (subj, verb, obj) if x)
 
 
 def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, modality: str,
@@ -547,12 +632,34 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
     counts[basis] = int(counts.get(basis, 0)) + 1
     p["basis"] = counts
     hist = [dict(e) for e in (p.get("history") or [])]
-    hist.append({"t": int(time.time()), "by": speaker, "d": 1 if negated else 0, "b": basis})
-    if len(hist) > MAX_HISTORY:
-        hist = hist[:1] + hist[-(MAX_HISTORY - 1):]
-    p["history"] = hist
-    if basis == "corrected":                  # the latest correction decides; everything before it stays in history
-        p["settled"] = {"d": 1 if negated else 0, "t": int(time.time()), "by": speaker}
+    now = int(time.time())
+    entry = {"t": now, "by": speaker, "d": 1 if negated else 0, "b": basis}
+    ckey = condition_key(when)
+    if ckey:
+        entry["w"] = ckey                     # the condition it was said under (directive V2)
+    if context:
+        entry["h"] = said_ref(context)        # which heard utterance it was: a stable reference back to the episode
+    hist.append(entry)
+    p["seq"] = int(p.get("seq", 0) or 0) + 1  # how many occasions were ever recorded (history keeps the first + latest)
+    entry["s"] = p["seq"]
+    counted_here = basis not in UNCOUNTED_BASES
+    if basis == "corrected" and not ckey:     # the latest correction decides; everything before it stays in history
+        p["settled"] = {"d": 1 if negated else 0, "t": now, "by": speaker}
+    if counted_here:                          # directive V2: the tally under the condition it was said under
+        conds = {k: dict(v) for k, v in dict(p.get("conditions") or {}).items()}
+        c = conds.get(ckey) or {"n": 0, "denied": 0, "first_t": now}
+        c["n"] = int(c.get("n", 0)) + 1
+        c["denied"] = int(c.get("denied", 0)) + (1 if negated else 0)
+        c["last_t"] = now
+        if when and ckey:
+            c["when"] = dict(when)
+        if basis == "corrected":              # a correction under a condition settles that condition only
+            c["settled"] = {"d": 1 if negated else 0, "t": now, "by": speaker}
+        conds[ckey] = c
+        if len(conds) > MAX_CONDITIONS:
+            keep = sorted(conds.items(), key=lambda kv: (-int(kv[1].get("n", 0)), -int(kv[1].get("last_t", 0)), kv[0]))
+            conds = dict(keep[:MAX_CONDITIONS])
+        p["conditions"] = conds
     if phrase:                                # FIX-A134: the words it was said with, whatever the tagger made of them
         closed = _closed_class()
         said = [w.lower() for w in _words(phrase) if len(w) >= 3 and w.lower() not in closed and "'" not in w]
@@ -576,6 +683,14 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
         p["modal"] = modal
     if surface:
         p["surface"] = surface
+    # What she held right after this occasion, captured as it was then (directive V2): recall reads it back as her
+    # understanding at the time; it is never rewritten when later occasions change what she holds now.
+    hist[-1]["v"] = verdict(p)
+    if ckey and counted_here:
+        hist[-1]["vw"] = condition_verdict(dict(p.get("conditions") or {}).get(ckey) or {})
+    if len(hist) > MAX_HISTORY:
+        hist = hist[:1] + hist[-(MAX_HISTORY - 1):]
+    p["history"] = hist
     preds[predicate] = p
     if len(preds) > MAX_PREDICATES:
         keep = sorted(preds.items(), key=lambda kv: -int(kv[1].get("n", 0)))[:MAX_PREDICATES]
@@ -775,7 +890,8 @@ def standing(rel: Any, predicate: str) -> Dict[str, Any]:
             "verdict": verdict(p), "settled": dict(p.get("settled") or {}),
             "contested": verdict(p) == "contested",
             "basis": dict(p.get("basis") or {}), "first": (hist[0] if hist else {}),
-            "last": (hist[-1] if hist else {}), "history": hist}
+            "last": (hist[-1] if hist else {}), "history": hist,
+            "conditional": verdict(p) == "conditional", "conditions": conditional_standing(p)}
 
 
 def observe(web: Any, subject_word: str, predicate: str, obj: str, *, within: float = 30.0) -> bool:
@@ -829,7 +945,7 @@ def _third_person(verb: str) -> str:
 
 
 def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
-                         predicate: Optional[str] = None) -> Optional[Dict[str, str]]:
+                         predicate: Optional[str] = None, condition: Optional[str] = None) -> Optional[Dict[str, str]]:
     """How she can say what was asserted along this relation: who, the
     predicate as it was said, and to what.  None if nothing was asserted.
 
@@ -858,6 +974,24 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
                 "predicate": "suppose", "n": "1", "denied": "False", "basis": "supposed", "of": predicate}
     if verdict(p) == "unsaid":
         return None          # FIX-A145: kept (provenance unknown), but nothing she holds: never voiced as a statement
+    if verdict(p) == "conditional" or (condition is not None and condition in dict(p.get("conditions") or {})):
+        # Directive V2: held one way under one condition and the other way under another.  It is voiced as it
+        # stands under ONE condition (the one asked for, else the most said), with that condition carried along,
+        # never as if it held everywhere.
+        conds = conditional_standing(p)
+        pick = next((c for c in conds if c["key"] == condition), None) if condition is not None else None
+        pick = pick or next((c for c in conds if c["key"]), None) or (conds[0] if conds else None)
+        if pick is None:
+            return _voice_predicate(rel, speaker_now=speaker_now, self_now=self_now, predicate=predicate, p=p)
+        c = dict(dict(p.get("conditions") or {}).get(pick["key"]) or {})
+        under = dict(p, n=int(c.get("n", 0) or 0), denied=int(c.get("denied", 0) or 0),
+                     settled=dict(c.get("settled") or {}), conditions={})
+        lex = _voice_predicate(rel, speaker_now=speaker_now, self_now=self_now, predicate=predicate, p=under)
+        said = condition_words(pick["when"])
+        if said:
+            lex["object"] = f"{lex['object']} when {said}"
+        lex["condition"] = pick["key"]
+        return lex
     return _voice_predicate(rel, speaker_now=speaker_now, self_now=self_now, predicate=predicate, p=p)
 
 
