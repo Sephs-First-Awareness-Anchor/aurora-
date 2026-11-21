@@ -2848,6 +2848,18 @@ def strata_link_transfer(action: str, token: str = "") -> str:
         client = _sl.start_strata_link_client_if_configured(_dir)
         if client is None:
             return _json.dumps({"ok": False, "error": "not paired with a Subsurface device"})
+        if action == "ping":
+            # Test remote reachability immediately without waiting for the
+            # periodic sync loop or acquiring the cognitive field lock.
+            client.sync_once()
+            status = client.status()
+            return _json.dumps({
+                "ok": bool(client.online),
+                "status": status.get("status"),
+                "rtt_ms": status.get("rtt_ms"),
+                "pending": (status.get("up_outbox") or {}).get("pending"),
+                "last_error": status.get("last_error"),
+            }, default=str)
         if action == "first_pairing":
             # Only the copy is taken under the field lock (as at pairing).
             return _json.dumps(client.migrate(snapshot_guard=lambda: _lock), default=str)
