@@ -8,7 +8,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from aurora_interaction_engine import InteractionEngine
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
@@ -377,6 +377,9 @@ class InteractionMemory:
         atomic_write_json(self.indexes_path, {"indexes": self._indexes})
 
     def _append_journal(self, entry: Mapping[str, Any]) -> None:
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self.journal_path):
+            return
         with self.journal_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(dict(entry), sort_keys=True, default=str) + "\n")
 

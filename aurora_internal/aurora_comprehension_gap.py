@@ -24,7 +24,8 @@ more capable of understanding that type of input in every future conversation.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_comprehension_gap.py')
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import re
@@ -33,7 +34,7 @@ import uuid
 import json
 import os
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any, Callable, Tuple
+from typing import List, Dict, Optional, Any, Tuple
 from enum import Enum
 
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")
@@ -711,13 +712,7 @@ class ClarificationMemory:
             with open(self.STATE_PATH, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_comprehension_gap.py:536",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 536, "source_file": "aurora_internal/aurora_comprehension_gap.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 536)
             pass
 
     def load(self):
@@ -728,13 +723,7 @@ class ClarificationMemory:
             self._total_gaps_resolved = data.get('total_gaps_resolved', 0)
             self._last_ask_turn = data.get('last_ask_turn', -10)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_comprehension_gap.py:546",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 546, "source_file": "aurora_internal/aurora_comprehension_gap.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 546)
             pass
 
 
@@ -803,13 +792,7 @@ class GapResolutionApplicator:
                 notes_parts.append(note)
 
         except Exception as e:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_comprehension_gap.py:614",
-                exc=e,
-                context={"function": "apply", "handler_line": 614, "source_file": "aurora_internal/aurora_comprehension_gap.py"},
-            )
+            _aurora_fault(locals(), e, 'apply', 614)
             notes_parts.append(f"Partial application (error: {type(e).__name__})")
 
         gap.resolution_applied = True
@@ -1031,13 +1014,7 @@ class GapResolutionApplicator:
                 oets.process_interaction(gap.source_text[:200], tone='neutral', i_state='i_is')
                 updated.append('oets')
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_comprehension_gap.py:835",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_apply_structural", "handler_line": 835, "source_file": "aurora_internal/aurora_comprehension_gap.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_apply_structural', 835)
                 pass
 
         # Store a mapping of complex→simple structure in working memory
@@ -1141,13 +1118,7 @@ class GapResolutionApplicator:
                 oets.process_interaction(answer[:300], tone='neutral', i_state='i_is')
                 updated.append('oets')
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_comprehension_gap.py:938",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_apply_general", "handler_line": 938, "source_file": "aurora_internal/aurora_comprehension_gap.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_apply_general', 938)
                 pass
 
         note = f"General clarification absorbed: {answer[:60]}"
@@ -1315,13 +1286,7 @@ class ComprehensionGapSystem:
                     if float(claim_resolution.get('confidence', 0.0) or 0.0) >= 0.75:
                         return None
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_comprehension_gap.py:1105",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process", "handler_line": 1105, "source_file": "aurora_internal/aurora_comprehension_gap.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process', 1105)
                 pass
 
         # ---- STEP 2: Detect volatility in the new input ----
@@ -1542,13 +1507,7 @@ class ComprehensionGapSystem:
                 'resolved': resolved,
             }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_comprehension_gap.py:1325",
-                exc=_aurora_boundary_exc,
-                context={"function": "_absorb_user_correction", "handler_line": 1325, "source_file": "aurora_internal/aurora_comprehension_gap.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_absorb_user_correction', 1325)
             return None
 
     def save(self):

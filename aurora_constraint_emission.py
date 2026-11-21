@@ -12,6 +12,8 @@ State → EXPRESSION (this) → RE-ENTRY → RECONCILIATION → UNDERSTANDING
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_constraint_emission.py')
 
 import hashlib
 import math
@@ -312,13 +314,7 @@ def build_relevance_anchor_set(
             try:
                 rels = get_all(w) or []
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_emission.py:300",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "build_relevance_anchor_set", "handler_line": 300, "source_file": "aurora_constraint_emission.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'build_relevance_anchor_set', 300)
                 continue
             for rel in rels:
                 other = rel.target_word if rel.source_word == w else rel.source_word
@@ -855,13 +851,7 @@ class ConstraintEmitter:
                             slots.predicate = best_word
                         return True
             except (ImportError, Exception) as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_emission.py:803",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_resolve_content_slot", "handler_line": 803, "source_file": "aurora_constraint_emission.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_resolve_content_slot', 803)
                 pass
             return self._resolve_content_slot_from_staged(ctx, slot_name, slots, roles)
 
@@ -1186,13 +1176,7 @@ class ConstraintEmitter:
             if gs and hasattr(gs, "memory") and hasattr(gs.memory, "active_gaps"):
                 gs.memory.active_gaps[gap_id] = gap
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1114",
-                exc=_aurora_boundary_exc,
-                context={"function": "_route_comprehension_gap", "handler_line": 1114, "source_file": "aurora_constraint_emission.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_route_comprehension_gap', 1114)
             pass
 
         # §6.4 Boost research priority on the OETS node
@@ -1204,13 +1188,7 @@ class ConstraintEmitter:
                         1.0, oets_node.research_priority + 0.3
                     )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1125",
-                exc=_aurora_boundary_exc,
-                context={"function": "_route_comprehension_gap", "handler_line": 1125, "source_file": "aurora_constraint_emission.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_route_comprehension_gap', 1125)
             pass
 
     def _topic_signature(self, topic: str, ctx: EmissionContext) -> str:
@@ -1252,13 +1230,7 @@ class ConstraintEmitter:
                 "example_text":           "",
             }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1157",
-                exc=_aurora_boundary_exc,
-                context={"function": "_set_seeking_flag", "handler_line": 1157, "source_file": "aurora_constraint_emission.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_set_seeking_flag', 1157)
             pass
         return flag_id
 
@@ -2070,13 +2042,7 @@ class EmissionContextBuilder:
             from aurora_internal.dual_strata.predictive_stager import PredictiveStager as _PredictiveStager
             _PredictiveStager.harvest_into_systems(systems)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1633",
-                exc=_aurora_boundary_exc,
-                context={"function": "build", "handler_line": 1633, "source_file": "aurora_constraint_emission.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'build', 1633)
             pass
 
         staged_frame = systems.get("_staged_subsurface_frame")
@@ -2096,13 +2062,7 @@ class EmissionContextBuilder:
                 dissonance = lattice.vertices.compute_dissonance()
                 n_heat     = float(dissonance.get("total_heat", 0.0))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_emission.py:1652",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "build", "handler_line": 1652, "source_file": "aurora_constraint_emission.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'build', 1652)
                 pass
 
         # Blend NoncompField (waveform substrate) axis pressures into the
@@ -2127,13 +2087,7 @@ class EmissionContextBuilder:
                     elif _fcan in {"X", "T", "N", "B", "A"}:
                         axis_polarities[_fcan] = float(_fpval) * 0.40
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_emission.py:1676",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "build", "handler_line": 1676, "source_file": "aurora_constraint_emission.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'build', 1676)
                 pass
 
         i_state_polarities: Dict[str, float] = {}
@@ -2142,13 +2096,7 @@ class EmissionContextBuilder:
                 for pred, being in collective.beings.items():
                     i_state_polarities[pred] = float(being.axis_polarity)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_constraint_emission.py:1684",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "build", "handler_line": 1684, "source_file": "aurora_constraint_emission.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'build', 1684)
                 pass
 
         # Grounding feeds assertion confidence. A concept she has genuinely
@@ -2174,13 +2122,7 @@ class EmissionContextBuilder:
                 _conf = min(0.6, 0.36 + (_best_depth - 0.4) * 0.75)
                 i_state_polarities["I_IS"] = max(i_state_polarities.get("I_IS", 0.0), _conf)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1709",
-                exc=_aurora_boundary_exc,
-                context={"function": "build", "handler_line": 1709, "source_file": "aurora_constraint_emission.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'build', 1709)
             pass
 
         return EmissionContext(
@@ -2215,13 +2157,7 @@ class EmissionContextBuilder:
             if scaffolding and hasattr(scaffolding, "web"):
                 return scaffolding.web
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1743",
-                exc=_aurora_boundary_exc,
-                context={"function": "_get_oets_web", "handler_line": 1743, "source_file": "aurora_constraint_emission.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_get_oets_web', 1743)
             pass
         return None
 
@@ -2233,13 +2169,7 @@ class EmissionContextBuilder:
                 return chamber._identity
             return systems.get("identity") or systems.get("core_identity")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1754",
-                exc=_aurora_boundary_exc,
-                context={"function": "_get_identity", "handler_line": 1754, "source_file": "aurora_constraint_emission.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_get_identity', 1754)
             return None
 
     @staticmethod
@@ -2250,13 +2180,7 @@ class EmissionContextBuilder:
             if chamber and hasattr(chamber, "_meaning_anchors"):
                 return chamber._meaning_anchors
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1764",
-                exc=_aurora_boundary_exc,
-                context={"function": "_get_meaning_anchors", "handler_line": 1764, "source_file": "aurora_constraint_emission.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_get_meaning_anchors', 1764)
             pass
         return None
 

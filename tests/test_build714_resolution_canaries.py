@@ -1,8 +1,6 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 """Asserts on aurora_build714_resolution_canaries.py's five live canaries
 (directive Section 31). See that module for the narrative/executable form."""
-import tempfile
-from pathlib import Path
 
 from aurora_build714_resolution_canaries import (
     canary_1_stable_coarse_history,

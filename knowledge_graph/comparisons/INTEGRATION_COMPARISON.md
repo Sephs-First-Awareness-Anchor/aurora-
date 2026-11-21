@@ -1,0 +1,948 @@
+# Architectural comparison
+
+Authors: Sunni (Sir) Morningstar & Cael Devo  
+Base `b649850b28ff` (claude/knowledge-graph), head `0d0794ec21a4` (claude/aurora-integration-20261118). Static content hashes 7b2dc2a25d53 and 7cfb953067e4.
+
+## 1. Function lineage
+
+17556 functions in base, 18195 in head. 1510 kept their identity with a changed body; 18 changed identity (moved or renamed); 58 were removed; 708 are new.
+
+A changed identity breaks any record keyed by the old id (lineage, provenance, fault and test references).
+
+- moved: `fn:aurora_autonomy.DailyQuotas.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_checkpoint.CorpusCursor.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_checkpoint.RollingStats.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_internal.aurora_correspondence_loop.CommittedPrediction.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_internal.constraint_genealogy.PressureVec.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_ivm.ContradictionRecord.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_language_field.LSAEntry.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_vision_clustering.VisualCluster.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:aurora_vision_clustering.VisualFeatureVector.to_dict` -> `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict` (same name and signature)
+- moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@574` -> `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.MainActivity.MainActivity.onError@620` (same name and signature)
+- moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.onDraw` -> `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.onDraw` (same name and signature)
+- moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.run` -> `fn:flutter_app.test.face_motion_test.run` (same name and signature)
+- moved: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.run@39` -> `fn:flutter_app.test.face_motion_test.run` (same name and signature)
+- moved: `fn:flutter_app.lib.screens.home_screen._HomeScreenState.delayed@292` -> `fn:flutter_app.lib.screens.home_screen._HomeScreenState.delayed@310` (same name and signature)
+- moved: `fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1442` -> `fn:flutter_app.lib.screens.hub_screen._HubScreenState._sectionTitle@1495` (same name and signature)
+- moved: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@843` -> `fn:flutter_app.lib.screens.hub_screen._HubScreenState.note@856` (same name and signature)
+- removed: `fn:aurora_behavioral_identity._clamp`; still-present callers in base: `fn:aurora_behavioral_identity.BehavioralIdentityEngine._apply_identity_homeostasis`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._constraint_axes`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._identity_floor_ratio`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._pressure_axes`; ran in desktop_boot,desktop_turns
+- removed: `fn:aurora_checkpoint.CorpusCursor.from_dict`; still-present callers in base: `fn:aurora_checkpoint.CheckpointManager.restore`; ran in desktop_boot
+- removed: `fn:aurora_checkpoint.RollingStats.from_dict`; still-present callers in base: `fn:aurora_checkpoint.CheckpointManager.restore`; ran in desktop_boot
+- removed: `fn:aurora_expression_perception._clamp`; still-present callers in base: `fn:aurora_expression_perception.ExpressionEcology.spawn`, `fn:aurora_expression_perception.ExpressionPressure.evaluate`, `fn:aurora_expression_perception.ImpressionCascade._seed_shard_similarity`, `fn:aurora_expression_perception.ImpressionCascade.energy_to_shard`; ran in desktop_boot,desktop_turns
+- removed: `fn:aurora_governance_persistence_gateway._clamp`; still-present callers in base: `fn:aurora_governance_persistence_gateway.NSpaceGateway._check_coherence`, `fn:aurora_governance_persistence_gateway.NSpaceGateway._express`, `fn:aurora_governance_persistence_gateway.NSpaceGateway._validate`; ran in desktop_turns
+- removed: `fn:aurora_grammar_engine._clamp`; still-present callers in base: `fn:aurora_grammar_engine.GrammarEngine._pressure_state`, `fn:aurora_grammar_engine.GrammarEngine.prepare_response_trace`, `fn:aurora_grammar_engine.GrammarEngine.suggest_structure`, `fn:aurora_grammar_engine.MotifLineage.best_for_pressure._score`; ran in desktop_turns
+- removed: `fn:aurora_hardware_io._clamp`; still-present callers in base: `fn:aurora_hardware_io.SensoryCompetencyEngine._extract_audio_features`, `fn:aurora_hardware_io.SensoryCompetencyEngine._extract_visual_features`, `fn:aurora_hardware_io.SensoryPatternMapper.map_audio_input`, `fn:aurora_hardware_io.SensoryPatternMapper.map_visual_input`
+- removed: `fn:aurora_internal.aurora_braided_substrate._clamp`; still-present callers in base: `fn:aurora_internal.aurora_braided_substrate.BraidedSubstrateLayer._compute_stability`, `fn:aurora_internal.aurora_braided_substrate.BraidedSubstrateLayer._event_to_crossings`, `fn:aurora_internal.aurora_braided_substrate.BraidedSubstrateLayer.update`
+- removed: `fn:aurora_internal.aurora_conversation_rubric_engine._clamp`; still-present callers in base: `fn:aurora_internal.aurora_conversation_rubric_engine.ConversationRubricEngine.score_conversation`, `fn:aurora_internal.aurora_conversation_rubric_engine._causal_score`, `fn:aurora_internal.aurora_conversation_rubric_engine._contradiction_markers`, `fn:aurora_internal.aurora_conversation_rubric_engine._generic_response_penalty`; ran in desktop_turns
+- removed: `fn:aurora_internal.aurora_dream_genealogy_bridge._clamp`; still-present callers in base: `fn:aurora_internal.aurora_dream_genealogy_bridge.DreamGenealogyBridge._build_deficit_evidence`, `fn:aurora_internal.aurora_dream_genealogy_bridge.DreamGenealogyBridge._build_delta_evidence`, `fn:aurora_internal.aurora_dream_genealogy_bridge.DreamGenealogyBridge._build_directive_evidence`, `fn:aurora_internal.aurora_dream_genealogy_bridge.DreamGenealogyBridge._build_leverage_evidence`
+- removed: `fn:aurora_internal.aurora_language_state._clamp`; still-present callers in base: `fn:aurora_internal.aurora_language_state.LanguageStateVector._compute_growth`, `fn:aurora_internal.aurora_language_state.LanguageStateVector.update`, `fn:aurora_internal.aurora_language_state.PhrasePrint.reinforce`, `fn:aurora_internal.aurora_language_state.SemanticIntentCompiler._extract_intent`
+- removed: `fn:aurora_internal.aurora_ontological_scaffolding._clamp`; still-present callers in base: `fn:aurora_internal.aurora_ontological_scaffolding.ClusterEngine._compute_coherence`, `fn:aurora_internal.aurora_ontological_scaffolding.OntologicalScaffoldingEngine._topic_tracking_score`, `fn:aurora_internal.aurora_ontological_scaffolding.OntologicalScaffoldingEngine.consolidate`, `fn:aurora_internal.aurora_ontological_scaffolding.OntologicalWeb._prune_nodes`; ran in desktop_boot,desktop_turns
+- removed: `fn:aurora_internal.aurora_pressure_mathematics_tracker._clamp`; still-present callers in base: `fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._compute_axis_stagnation`, `fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._compute_evolutionary_velocity`, `fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._compute_gradient_health`, `fn:aurora_internal.aurora_pressure_mathematics_tracker.PressureMathematicsTracker._compute_metrics`
+- removed: `fn:aurora_internal.aurora_primitive_extractor._clamp`
+- removed: `fn:aurora_internal.aurora_rubric_influence_graph._clamp`; still-present callers in base: `fn:aurora_internal.aurora_rubric_influence_graph.RubricInfluenceGraph.analyze`
+- removed: `fn:aurora_internal.aurora_semantic_probe_battery._clamp`
+- removed: `fn:aurora_internal.aurora_specialized_avatar_synthesizer._clamp`; still-present callers in base: `fn:aurora_internal.aurora_specialized_avatar_synthesizer.PressureSpecializedAvatarSpec.to_avatar_overrides`, `fn:aurora_internal.aurora_specialized_avatar_synthesizer.SpecializedAvatarSynthesizer._apply_adaptive_policy`, `fn:aurora_internal.aurora_specialized_avatar_synthesizer.SpecializedAvatarSynthesizer._build_persistent_spec`, `fn:aurora_internal.aurora_specialized_avatar_synthesizer.SpecializedAvatarSynthesizer._build_spec_for_leverage`; ran in desktop_boot
+- removed: `fn:aurora_internal.aurora_structural_pressure_steering._clamp`; still-present callers in base: `fn:aurora_internal.aurora_structural_pressure_steering.StructuralPressureSteering._build_accumulated_directive`, `fn:aurora_internal.aurora_structural_pressure_steering.StructuralPressureSteering._build_directive`, `fn:aurora_internal.aurora_structural_pressure_steering.StructuralPressureSteering.apply_to_dpme`
+- removed: `fn:aurora_internal.constraint_genealogy._clamp`; still-present callers in base: `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger.__init__`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._compression_efficiency_for_pair`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._maintenance_discount`, `fn:aurora_internal.constraint_genealogy.ConstraintGenealogyLogger._record_promotion_outcome`; ran in desktop_boot,desktop_turns
+- removed: `fn:aurora_ivm.ContradictionRecord.from_dict`; still-present callers in base: `fn:aurora_ivm.ContradictionLedger.load`
+- removed: `fn:aurora_language_field.LSAEntry.from_dict`; still-present callers in base: `fn:aurora_language_field.LanguageField._load_lsa`
+- removed: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection`; still-present callers in base: `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured`
+- removed: `fn:aurora_runtime._clamp`; still-present callers in base: `fn:aurora_runtime.ChainSimBridge._forward_to_sim`
+- removed: `fn:aurora_simulation_engine._clamp`; still-present callers in base: `fn:aurora_simulation_engine.ConsciousLearner.generate_pool`, `fn:aurora_simulation_engine.ConsciousLearner.import_state`, `fn:aurora_simulation_engine.SimulatedAvatar._behavior_adjustment`, `fn:aurora_simulation_engine.SimulatedAvatar._dimension_pressure_adjustment`; ran in desktop_turns
+- removed: `fn:aurora_vision_clustering.VisualCluster.from_dict`; still-present callers in base: `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`; ran in desktop_boot
+- removed: `fn:aurora_vision_clustering.VisualFeatureVector.from_dict`; still-present callers in base: `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`; ran in desktop_boot
+- removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.lerpColor`
+- removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.onSizeChanged`
+- removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.setDismissMode`
+- removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.tick`
+- removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.updateAxisState`
+- removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.withAlpha`
+- removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.addAurora`; still-present callers in base: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.onCreate`
+- removed: `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.refreshAxisState`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@651`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@654`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@657`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@166`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@605`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@606`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@675`
+- removed: `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@676`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawMouthLens`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawRestingMouth`; still-present callers in base: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawTalkingMouth`; still-present callers in base: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._lensPath`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec._archetype`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec.applied`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec.blend`; still-present callers in base: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._MouthShape.fromExpression`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._activationSigmoid`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._archetypeActivation`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._axesEqual`; still-present callers in base: `fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.didUpdateWidget`, `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.shouldRepaint`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._backgroundColor`; still-present callers in base: `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb._lerpAxes`
+- removed: `fn:flutter_app.lib.widgets.aurora_orb.lerp`
+- removed: `fn:tests.test_strata_link.test_outbox_overflow_is_counted_not_silent`
+- removed: `fn:tests.test_strata_state_transfer.test_an_expired_checkpoint_no_longer_blocks_a_claim`
+- new: `fn:aurora_acm_bridge.HostedACMBridge.__init__`, no static caller
+- new: `fn:aurora_acm_bridge.HostedACMBridge._run`, no static caller
+- new: `fn:aurora_acm_bridge.HostedACMBridge.feed`, called by `fn:aurora_acm_bridge.HostedACMBridge._run`, `fn:tests.test_hosted_acm.test_tick_wrap_reset_and_duplicate_observations_are_counted_without_fabrication`
+- new: `fn:aurora_acm_bridge.HostedACMBridge.start`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._attach_existing_engines`, `fn:tests.test_hosted_acm.test_hosted_bridge_uses_real_loopback_io_and_stops_cleanly`
+- new: `fn:aurora_acm_bridge.HostedACMBridge.status`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._clock`, `fn:aurora_internal.desktop.runtime.DesktopRuntime.status`, `fn:tests.test_hosted_acm.test_hosted_bridge_uses_real_loopback_io_and_stops_cleanly`, `fn:tests.test_hosted_acm.test_tick_wrap_reset_and_duplicate_observations_are_counted_without_fabrication`
+- new: `fn:aurora_acm_bridge.HostedACMBridge.stop`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._run`, `fn:tests.test_hosted_acm.test_hosted_bridge_uses_real_loopback_io_and_stops_cleanly`
+- new: `fn:aurora_acm_bridge.StatusReceiver.reset`, called by `fn:aurora_acm_bridge.HostedACMBridge._run`, `fn:aurora_acm_bridge.run`
+- new: `fn:aurora_curiosity_engine.CuriosityEngine.open_curiosity_loops`, no static caller
+- new: `fn:aurora_hub._build_ui._strata_lines`, called by `fn:aurora_hub._build_ui.refresh_strata`
+- new: `fn:aurora_hub._build_ui._strata_move`, no static caller
+- new: `fn:aurora_hub._build_ui.refresh_strata`, no static caller
+- new: `fn:aurora_internal.aurora_clone_harvest.absorb_harvest._with_field`, called by `fn:aurora_internal.aurora_clone_harvest.absorb_harvest._close_segment`, `fn:aurora_internal.aurora_clone_harvest.absorb_harvest._flush`
+- new: `fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder`, called by `mod:aurora`, `mod:aurora_acm_bridge`, `mod:aurora_articulation`, `mod:aurora_autonomy`
+- new: `fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder._aurora_fault`, called by `fn:aurora.AxisProjector.project`, `fn:aurora.ConstraintFieldBalancer._inject_to_genealogy`, `fn:aurora.ConstraintFieldBalancer.update`, `fn:aurora.ReasoningEngine._update_memory_from_reasoning`
+- new: `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`, called by `fn:aurora_checkpoint.CheckpointManager.restore`, `fn:aurora_image_ingestion.ImageIngestionProtocol.load_index`, `fn:aurora_ivm.ContradictionLedger.load`, `fn:aurora_language_field.LanguageField._load_lsa`
+- new: `fn:aurora_internal.aurora_shared_helpers.clamp`, called by `fn:aurora_behavioral_identity.BehavioralIdentityEngine._apply_identity_homeostasis`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._constraint_axes`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._identity_floor_ratio`, `fn:aurora_behavioral_identity.BehavioralIdentityEngine._pressure_axes`
+- new: `fn:aurora_internal.aurora_state_context.resolve_state_dir`, called by `fn:aurora_hardware_io.speak`
+- new: `fn:aurora_internal.aurora_store_ownership._normalise`, called by `fn:aurora_internal.aurora_store_ownership.classify`, `fn:aurora_internal.aurora_store_ownership.store_write_allowed`
+- new: `fn:aurora_internal.aurora_store_ownership._relative`, called by `fn:aurora_internal.aurora_store_ownership.store_write_allowed`
+- new: `fn:aurora_internal.aurora_store_ownership._write_status`, called by `fn:aurora_internal.aurora_store_ownership.flush_status`, `fn:aurora_internal.aurora_store_ownership.store_write_allowed`
+- new: `fn:aurora_internal.aurora_store_ownership.classify`, called by `fn:aurora_internal.aurora_store_ownership.store_write_allowed`, `fn:aurora_internal.dual_strata.home_growth.home_owned_paths`, `fn:aurora_internal.dual_strata.home_growth.is_growth_path`, `fn:aurora_internal.dual_strata.strata_migration.migration_class`
+- new: `fn:aurora_internal.aurora_store_ownership.disable_surface_only`, called by `fn:tests.test_inquiry_tiers._whole_again`, `fn:tests.test_inquiry_tiers.test_resolution_ledgers_are_not_rewritten_on_a_surface`, `fn:tests.test_surface_store_gate._gate_off_after`, `fn:tests.test_surface_store_gate.test_atomic_write_json_honours_the_gate`
+- new: `fn:aurora_internal.aurora_store_ownership.enable_surface_only`, called by `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize`, `fn:tests.test_inquiry_tiers.test_resolution_ledgers_are_not_rewritten_on_a_surface`, `fn:tests.test_surface_store_gate.test_a_declined_write_is_not_a_fault`, `fn:tests.test_surface_store_gate.test_atomic_write_json_honours_the_gate`
+- new: `fn:aurora_internal.aurora_store_ownership.flush_status`, called by `fn:tests.test_surface_store_gate.test_hub_view_is_written_beside_the_link`
+- new: `fn:aurora_internal.aurora_store_ownership.gate_status`, called by `fn:aurora_internal.aurora_store_ownership._write_status`, `fn:tests.test_surface_store_gate.test_gate_is_off_on_a_whole_mind_device`, `fn:tests.test_surface_store_gate.test_surface_only_declines_home_stores_and_counts_them`
+- new: `fn:aurora_internal.aurora_store_ownership.moves_with_her`, called by `fn:aurora_internal.dual_strata.strata_link.StrataLinkClient._push_state_locked`
+- new: `fn:aurora_internal.aurora_store_ownership.store_write_allowed`, called by `fn:aurora_dream_trainer.FailPointLedger.save`, `fn:aurora_expression_perception.ImpressionCascade.save`, `fn:aurora_expression_perception.LexicalMemory.save`, `fn:aurora_grammar_engine.MotifLineage._save`
+- new: `fn:aurora_internal.aurora_store_ownership.surface_only_root`, called by `fn:tests.test_surface_store_gate.test_gate_is_off_on_a_whole_mind_device`
+- new: `fn:aurora_internal.crystal_runtime._write_report`, called by `fn:aurora_internal.crystal_runtime.run_pass`, `fn:tests.test_hub_panels.test_the_pass_leaves_its_report_and_a_bounded_history`
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.__init__`, no static caller
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.__len__`, no static caller
+- new: `fn:aurora_internal.crystal_web.ConceptWeb._weight`, called by `fn:aurora_internal.crystal_web.ConceptWeb.search`
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.crystals`, no static caller
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.from_file`, called by `fn:aurora_internal.crystal_web.ConceptWeb.from_state_dir`, `fn:aurora_internal.crystal_web_server.WebSource.get`, `fn:aurora_internal.desktop.server.make_server.Handler.do_GET`
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.from_state_dir`, no static caller
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.lookup`, called by `fn:tests.test_crystal_web.test_ties_are_as_strong_as_the_stronger_side_and_work_both_ways`
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.neighborhood`, called by `fn:aurora_internal.desktop.server.make_server.Handler.do_GET`, `fn:tests.test_crystal_web.test_neighborhood_is_bounded_and_carries_the_ties_among_its_nodes`
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.overview`, called by `fn:aurora_internal.desktop.server.make_server.Handler.do_GET`
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.resolve`, called by `fn:aurora_internal.crystal_web.ConceptWeb.lookup`, `fn:aurora_internal.crystal_web.ConceptWeb.neighborhood`, `fn:tests.test_crystal_web.test_a_labelled_name_resolves_to_its_word`
+- new: `fn:aurora_internal.crystal_web.ConceptWeb.search`, called by `fn:tests.test_crystal_web.test_search_ranks_exact_then_word_then_prefix_then_contains_and_is_deterministic`
+- new: `fn:aurora_internal.crystal_web._group_of`, called by `fn:aurora_internal.crystal_web.ConceptWeb.lookup`
+- new: `fn:aurora_internal.crystal_web._short`, called by `fn:aurora_internal.crystal_web.ConceptWeb.lookup`
+- new: `fn:aurora_internal.crystal_web_server.WebSource.__init__`, no static caller
+- new: `fn:aurora_internal.crystal_web_server.WebSource.get`, no static caller
+- new: `fn:aurora_internal.crystal_web_server._int`, called by `fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET`
+- new: `fn:aurora_internal.crystal_web_server.main`, called by `mod:aurora_internal.crystal_web_server`
+- new: `fn:aurora_internal.crystal_web_server.make_handler`, called by `fn:aurora_internal.crystal_web_server.serve`
+- new: `fn:aurora_internal.crystal_web_server.make_handler.Handler._json`, called by `fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET`, `fn:aurora_internal.crystal_web_server.make_handler.Handler.do_POST`
+- new: `fn:aurora_internal.crystal_web_server.make_handler.Handler._send`, called by `fn:aurora_internal.crystal_web_server.make_handler.Handler._json`, `fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET`
+- new: `fn:aurora_internal.crystal_web_server.make_handler.Handler.do_GET`, no static caller
+- new: `fn:aurora_internal.crystal_web_server.make_handler.Handler.do_POST`, no static caller
+- new: `fn:aurora_internal.crystal_web_server.make_handler.Handler.log_message`, no static caller
+- new: `fn:aurora_internal.crystal_web_server.serve`, called by `fn:aurora_internal.crystal_web_server.main`, `fn:tests.test_crystal_web.serve`, `fn:tests.test_crystal_web.test_beyond_loopback_needs_a_token_and_every_request_carries_it`, `fn:tests.test_hub_panels.test_the_hub_serves_the_panels_and_a_page_with_tabs`
+- new: `fn:aurora_internal.desktop.__main__.default_state_dir`, called by `fn:aurora_internal.desktop.__main__.main`
+- new: `fn:aurora_internal.desktop.__main__.main`, called by `mod:aurora_internal.desktop.__main__`
+- new: `fn:aurora_internal.desktop.__main__.main.lifecycle`, no static caller
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace.__init__`, no static caller
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace._dependency_version`, called by `fn:aurora_internal.desktop.blueprints.BlueprintSpace._dependency_version`, `fn:aurora_internal.desktop.blueprints.BlueprintSpace.resolve`
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace._save`, called by `fn:aurora_internal.desktop.blueprints.BlueprintSpace.compose`, `fn:aurora_internal.desktop.blueprints.BlueprintSpace.import_real`, `fn:aurora_internal.desktop.blueprints.BlueprintSpace.resolve`
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace.compose`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._perform`, `fn:tests.test_desktop_embodiment.test_composition_detects_unknown_interfaces_exclusivity_and_cycles`, `fn:tests.test_desktop_embodiment.test_composition_reuses_unaffected_interactions_and_invalidates_dependencies`
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace.compose.visit`, called by `fn:aurora_internal.desktop.blueprints.BlueprintSpace.compose`, `fn:aurora_internal.desktop.blueprints.BlueprintSpace.compose.visit`
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace.import_real`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._boot_once`, `fn:aurora_internal.desktop.runtime.DesktopRuntime._perform`, `fn:aurora_internal.desktop.runtime.DesktopRuntime._schedule_once`
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace.register`, called by `fn:aurora_internal.desktop.blueprints.BlueprintSpace.import_real`, `fn:tests.test_desktop_embodiment.test_composition_detects_unknown_interfaces_exclusivity_and_cycles`, `fn:tests.test_desktop_embodiment.test_composition_reuses_unaffected_interactions_and_invalidates_dependencies`
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace.resolve`, called by `fn:aurora_internal.desktop.blueprints.BlueprintSpace.compose`, `fn:tests.test_desktop_embodiment.test_composition_reuses_unaffected_interactions_and_invalidates_dependencies`
+- new: `fn:aurora_internal.desktop.blueprints.BlueprintSpace.view`, no static caller
+- new: `fn:aurora_internal.desktop.common.digest`, called by `fn:aurora_internal.desktop.blueprints.BlueprintSpace._dependency_version`, `fn:aurora_internal.desktop.blueprints.BlueprintSpace.import_real`, `fn:aurora_internal.desktop.blueprints.BlueprintSpace.register`, `fn:aurora_internal.desktop.blueprints.BlueprintSpace.resolve`
+- new: `fn:aurora_internal.desktop.common.read_json`, called by `fn:aurora_internal.desktop.__main__.main`, `fn:aurora_internal.desktop.blueprints.BlueprintSpace.__init__`, `fn:aurora_internal.desktop.demonstrations.Demonstrations.__init__`, `fn:aurora_internal.desktop.runtime.DesktopRuntime.__init__`
+- new: `fn:aurora_internal.desktop.common.write_json`, called by `fn:aurora_internal.desktop.blueprints.BlueprintSpace._save`, `fn:aurora_internal.desktop.demonstrations.Demonstrations._save`, `fn:aurora_internal.desktop.runtime.DesktopRuntime._persist_jobs`, `fn:aurora_internal.desktop.services.HostServices.refresh`
+- new: `fn:aurora_internal.desktop.demonstrations.Demonstrations.__init__`, no static caller
+- new: `fn:aurora_internal.desktop.demonstrations.Demonstrations._save`, called by `fn:aurora_internal.desktop.demonstrations.Demonstrations.begin`, `fn:aurora_internal.desktop.demonstrations.Demonstrations.finish`, `fn:aurora_internal.desktop.demonstrations.Demonstrations.observe`, `fn:aurora_internal.desktop.demonstrations.Demonstrations.propose`
+- new: `fn:aurora_internal.desktop.demonstrations.Demonstrations.begin`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._perform`, `fn:tests.test_desktop_embodiment.test_demonstration_alone_cannot_record_skill_and_independent_failure_stays_unverified`
+- new: `fn:aurora_internal.desktop.demonstrations.Demonstrations.finish`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._perform`, `fn:tests.test_desktop_embodiment.test_demonstration_alone_cannot_record_skill_and_independent_failure_stays_unverified`
+- new: `fn:aurora_internal.desktop.demonstrations.Demonstrations.observe`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._observe`
+- new: `fn:aurora_internal.desktop.demonstrations.Demonstrations.propose`, called by `fn:tests.test_desktop_embodiment.test_demonstration_alone_cannot_record_skill_and_independent_failure_stays_unverified`
+- new: `fn:aurora_internal.desktop.demonstrations.Demonstrations.verify`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._perform`, `fn:tests.test_desktop_embodiment.test_demonstration_alone_cannot_record_skill_and_independent_failure_stays_unverified`
+- new: `fn:aurora_internal.desktop.demonstrations.Demonstrations.view`, no static caller
+- new: `fn:aurora_internal.desktop.policy.HostPolicy.__init__`, no static caller
+- new: `fn:aurora_internal.desktop.policy.HostPolicy.check`, called by `fn:aurora_internal.desktop.services.HostServices.execute`
+- new: `fn:aurora_internal.desktop.policy.owner_action`, called by `fn:aurora_internal.desktop.runtime.DesktopRuntime._run`, `fn:tests.test_desktop_embodiment.test_autonomous_outreach_cannot_escape_through_shell_browser_or_model_kwargs`, `fn:tests.test_desktop_embodiment.test_demonstration_alone_cannot_record_skill_and_independent_failure_stays_unverified`
+- new: `fn:aurora_internal.desktop.runtime.DesktopRuntime.__init__`, no static caller
+
+## 2. Relationships: consolidated against lost
+
+2412 relationships of base are not in head (structure and documentation edges left out). 1452 are consolidated: the same source still reaches the same target through a helper within two calls. 313 are retargeted: the old target is gone and the source now calls one of the same name (a shared helper). 7 are delegated: the source's module binds a helper at import time that still reaches the old target, a path static resolution does not follow into the closure. 77 belonged to a function that was folded into a shared one (the shared body no longer names those fields or targets one by one). 216 were seen only in the base run and not in the head run, which is a difference between recordings, not code. 136 went with code that was removed. 211 are lost: the source still exists and no longer reaches the target by any of those routes. 7436 relationships are new.
+
+### Retargeted: 313
+
+- 189 FEEDS to `clamp` now through `fn:aurora_internal.aurora_shared_helpers.clamp`
+- 113 CALLS to `clamp` now through `fn:aurora_internal.aurora_shared_helpers.clamp`
+- 6 CALLS to `from_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`
+- 5 FEEDS to `from_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.from_dict`
+
+### Delegated through a module binding: 7
+
+- 1 CALLS to `absorb_harvest` now through `fn:flutter_app.android.app.src.main.python.aurora_bridge._start_clone_absorption`
+- 1 CALLS to `investigate_if_pressured` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `projection_event` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `structural_projection_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `ref_from_ability_id` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `unresolved_field_candidates` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+- 1 CALLS to `projection_consequence` now through `cls:aurora_representational_resolution.RepresentationalResolutionEngine`
+
+### Folded into a shared function: 77
+
+- 28 FEEDS to `to_dict` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 2 READS to `created_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `entry_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `status` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 CALLS to `lerpColor` now through `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraPresenceLineView.onDraw`
+- 1 READS to `inquiries_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `prev_hash` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `to_variant_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_a` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `A` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `resolution_note` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `topic` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `files_read` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `affect` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `projected_accuracy` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `committed_at` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `claim_b` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `observations_used` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 CALLS to `tick` now through `fn:flutter_app.test.face_motion_test.run`
+- 1 READS to `parent_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `parent_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `first_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `last_seen` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `child_order` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `intent_type` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `message_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `contradiction_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `outcome_positive` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `N` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+- 1 READS to `edge_id` now through `fn:aurora_internal.aurora_shared_helpers.DictRecord.to_dict`
+
+### Seen only in the base run: 216
+
+- 5 CALLS to `to_dict` now through ``
+- 3 CALLS to `strengthen` now through ``
+- 3 CALLS to `get_stats` now through ``
+- 2 CALLS to `load` now through ``
+- 2 CALLS to `attach_live_response_simulation_bridge` now through ``
+- 2 CALLS to `activation` now through ``
+- 2 CALLS to `representation_discrepancy` now through ``
+- 2 CALLS to `looks_like_correction` now through ``
+- 2 CALLS to `is_identity_question` now through ``
+- 2 CALLS to `warp_params` now through ``
+- 2 CALLS to `constraint_axes` now through ``
+- 2 CALLS to `coherence_index` now through ``
+- 2 CALLS to `semantic_coherence` now through ``
+- 1 CALLS to `normalize_claim_object` now through ``
+- 1 CALLS to `infer_comparison_type` now through ``
+- 1 CALLS to `memory_sweep_summary` now through ``
+- 1 CALLS to `normalized_vector_distance` now through ``
+- 1 CALLS to `normalize_identity_followup_text` now through ``
+- 1 CALLS to `user_context_anchor_needed` now through ``
+- 1 CALLS to `weighted_persistence_tax_factor` now through ``
+- 1 CALLS to `resolve_call` now through ``
+- 1 CALLS to `native_turn_payload` now through ``
+- 1 CALLS to `contradiction_markers` now through ``
+- 1 CALLS to `check_and_extend` now through ``
+- 1 CALLS to `magnitude` now through ``
+- 1 CALLS to `from_dict` now through ``
+- 1 CALLS to `extract_live_question_relations` now through ``
+- 1 CALLS to `distance_to` now through ``
+- 1 CALLS to `record_validation_issues` now through ``
+- 1 CALLS to `crystal_waveform_match` now through ``
+
+### Lost (review each): IMPORTS 127, FEEDS 49, CALLS 16, MEMBER_OF 5, WRITES 4, READS 4, REFERENCES 4, PART_OF 1, USES_ORGAN 1
+
+- `fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink` CALLS `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames` [base aurora_internal/dual_strata/strata_link.py:327]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:356]
+- `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.onCreate` CALLS `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.addAurora` [base flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt:49]
+- `fn:flutter_app.lib.habitat.habitat_gesture_layer._HabitatInteractiveViewState._buildToolbar` CALLS `fn:flutter_app.lib.screens.hub_screen._HubScreenState.Row` [base flutter_app/lib/habitat/habitat_gesture_layer.dart:165]
+- `fn:flutter_app.lib.overlay_entry.OverlayOrb.build` CALLS `fn:flutter_app.lib.habitat.habitat_gesture_layer._HabitatInteractiveViewState.Icon` [base flutter_app/lib/overlay_entry.dart:27]
+- `fn:flutter_app.lib.screens.habitat_self_screen.SelfScreen.build` CALLS `fn:flutter_app.lib.screens.hub_screen._HubScreenState.Row` [base flutter_app/lib/screens/habitat_self_screen.dart:32]
+- `fn:flutter_app.lib.screens.habitat_space_screen.SpaceScreen.build` CALLS `fn:flutter_app.lib.screens.hub_screen._HubScreenState.Row` [base flutter_app/lib/screens/habitat_space_screen.dart:29]
+- `fn:flutter_app.lib.screens.home_screen._Header.build` CALLS `fn:flutter_app.lib.screens.hub_screen._HubScreenState.Row` [base flutter_app/lib/screens/home_screen.dart:692]
+- `fn:flutter_app.lib.screens.home_screen._InputBar.build` CALLS `fn:flutter_app.lib.screens.hub_screen._HubScreenState.Row` [base flutter_app/lib/screens/home_screen.dart:763]
+- `fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.didUpdateWidget` CALLS `fn:flutter_app.lib.widgets.aurora_orb._axesEqual` [base flutter_app/lib/widgets/aurora_orb.dart:454]
+- `fn:flutter_app.lib.widgets.aurora_orb._AuroraOrbState.initState` CALLS `fn:flutter_app.lib.screens.hub_screen._HubScreenState.Duration` [base flutter_app/lib/widgets/aurora_orb.dart:437]
+- `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint` CALLS `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawRestingMouth` [base flutter_app/lib/widgets/aurora_orb.dart:787]
+- `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint` CALLS `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawTalkingMouth` [base flutter_app/lib/widgets/aurora_orb.dart:785]
+- `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint` CALLS `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec.blend` [base flutter_app/lib/widgets/aurora_orb.dart:724]
+- `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.paint` CALLS `fn:flutter_app.lib.widgets.aurora_orb._backgroundColor` [base flutter_app/lib/widgets/aurora_orb.dart:728]
+- `fn:flutter_app.lib.widgets.aurora_orb._FacePainter.shouldRepaint` CALLS `fn:flutter_app.lib.widgets.aurora_orb._axesEqual` [base flutter_app/lib/widgets/aurora_orb.dart:852]
+- `bus:_last_voice_gate` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke` [base aurora_praxis_messenger.py:562]
+- `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context` [base aurora_braid_wiring.py:255]
+- `bus:_subsurface_projection` FEEDS `fn:aurora._build_live_subsurface_projection` [base aurora.py:17756]
+- `field:aurora_acm_bridge.StatusReceiver.last_status` FEEDS `fn:aurora_acm_bridge._wave_tick_cognitive` [base aurora_acm_bridge.py:420]
+- `field:aurora_internal.dual_strata.strata_link.StrataLinkClient._claim_path` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch` [base aurora_internal/dual_strata/strata_link.py:852]
+- `field:aurora_internal.dual_strata.strata_link.StrataLinkClient._claim_path` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role` [base aurora_internal/dual_strata/strata_link.py:851]
+- `field:aurora_internal.dual_strata.strata_link.StrataLinkClient._claim_path` FEEDS `fn:aurora_internal.dual_strata.strata_link._atomic_write_json` [base aurora_internal/dual_strata/strata_link.py:862]
+- `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.surface_id` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch` [base aurora_internal/dual_strata/strata_link.py:852]
+- `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.surface_id` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role` [base aurora_internal/dual_strata/strata_link.py:851]
+- `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.surface_id` FEEDS `fn:aurora_internal.dual_strata.strata_link._atomic_write_json` [base aurora_internal/dual_strata/strata_link.py:862]
+- `field:aurora_praxis_messenger.PraxisMessenger.cursor` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.online` [base aurora_praxis_messenger.py:588]
+- `field:aurora_praxis_messenger.PraxisMessenger.cursor` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.unread_waiting` [base aurora_praxis_messenger.py:596]
+- `field:aurora_praxis_messenger.PraxisMessenger.cursor` FEEDS `fn:aurora_praxis_messenger.validate_incoming_message` [base aurora_praxis_messenger.py:615]
+- `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_error` [base aurora_praxis_messenger.py:571]
+- `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_novel` [base aurora_praxis_messenger.py:567]
+- `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke` [base aurora_praxis_messenger.py:562]
+- `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `fn:aurora_praxis_messenger.PraxisMessenger._pairs` [base aurora_praxis_messenger.py:564]
+- `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:424]
+- `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` FEEDS `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:457]
+- `fn:aurora_internal.aurora_clone_harvest._organ` FEEDS `fn:aurora_internal.aurora_clone_harvest._add_result` [base aurora_internal/aurora_clone_harvest.py:754]
+- `fn:aurora_internal.aurora_clone_harvest.absorb_harvest` FEEDS `bus:_clone_harvest_absorb` [base flutter_app/android/app/src/main/python/aurora_bridge.py:2818]
+- `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames` FEEDS `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.append` [base aurora_internal/dual_strata/strata_link.py:329]
+- `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.pending` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch` [base aurora_internal/dual_strata/strata_link.py:852]
+- `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.pending` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role` [base aurora_internal/dual_strata/strata_link.py:851]
+- `fn:aurora_internal.dual_strata.strata_link.sign` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch` [base aurora_internal/dual_strata/strata_link.py:852]
+- `fn:aurora_internal.dual_strata.strata_link.sign` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role` [base aurora_internal/dual_strata/strata_link.py:851]
+- `fn:aurora_internal.dual_strata.strata_link.sign` FEEDS `fn:aurora_internal.dual_strata.strata_link._atomic_write_json` [base aurora_internal/dual_strata/strata_link.py:862]
+- `fn:aurora_representational_address.RepresentationalRef.for_c1` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base tests/test_habitat_discovery_canary_build717.py:286]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier` FEEDS `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref` [base aurora_representational_resolution.py:413]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection` [base aurora_representational_resolution.py:363]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:356]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:356]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` [base aurora_representational_resolution.py:354]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` [base aurora_representational_resolution.py:370]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_consequence` [base aurora_representational_resolution.py:739]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event` [base aurora_representational_resolution.py:741]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine.record_pressure_observation` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` [base aurora_representational_resolution.py:745]
+- `fn:aurora_representational_resolution.get_or_create_engine` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base aurora_representational_resolution.py:860]
+- `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection` [base aurora_representational_resolution.py:389]
+- `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` [base aurora_representational_resolution.py:386]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_late_surface_response` FEEDS `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:445]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_relational_claim` FEEDS `store:relational_claims.jsonl` [base flutter_app/android/app/src/main/python/aurora_bridge.py:8120]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` FEEDS `fn:aurora_internal.aurora_clone_harvest.absorb_harvest` [base flutter_app/android/app/src/main/python/aurora_bridge.py:2817]
+- `fn:tests.test_habitat_motivation_build717._drive_real_pressure` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation` [base tests/test_habitat_motivation_build717.py:381]
+- `fn:tests.test_pf3_1_cooccurrence_hub_leak._build_fake_engine` FEEDS `fn:aurora_expression_perception.ExpressionPerceptionEngine._build_expression` [base tests/test_pf3_1_cooccurrence_hub_leak.py:100]
+- `organ:identity_field` FEEDS `field:flutter_app.android.app.src.main.python.aurora_bridge._last_axis_state` [base flutter_app/android/app/src/main/python/aurora_bridge.py:8716]
+- `store:client_state.json` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch` [base aurora_internal/dual_strata/strata_link.py:911]
+- `store:client_state.json` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role` [base aurora_internal/dual_strata/strata_link.py:910]
+- `store:predictive_frame_queue.json` FEEDS `fn:aurora_internal.dual_strata.predictive_stager._load_queue` [base aurora_internal/dual_strata/predictive_stager.py:290]
+- `mod:aurora-acm.native.aurora_acm_native` IMPORTS `ext:math` [base aurora-acm/native/aurora_acm_native.py:23]
+- `mod:aurora_625_pressure_map` IMPORTS `ext:math` [base aurora_625_pressure_map.py:67]
+- `mod:aurora_acm_bridge` IMPORTS `ext:os` [base aurora_acm_bridge.py:33]
+- `mod:aurora_behavioral_identity` IMPORTS `ext:collections` [base aurora_behavioral_identity.py:37]
+- `mod:aurora_braid_wiring` IMPORTS `ext:time` [base aurora_braid_wiring.py:74]
+- `mod:aurora_checkpoint` IMPORTS `ext:pathlib` [base aurora_checkpoint.py:29]
+- `mod:aurora_closure_basis` IMPORTS `ext:math` [base aurora_closure_basis.py:93]
+- `mod:aurora_concept_derivation` IMPORTS `ext:hashlib` [base aurora_concept_derivation.py:53]
+- `mod:aurora_concept_derivation` IMPORTS `ext:time` [base aurora_concept_derivation.py:54]
+- `mod:aurora_consciousness_engine` IMPORTS `ext:enum` [base aurora_consciousness_engine.py:98]
+- `mod:aurora_consciousness_engine` IMPORTS `ext:math` [base aurora_consciousness_engine.py:91]
+- `mod:aurora_consciousness_engine` IMPORTS `ext:random` [base aurora_consciousness_engine.py:92]
+- `mod:aurora_constraint_engine` IMPORTS `ext:math` [base aurora_constraint_engine.py:13]
+- `mod:aurora_constraint_manifold_router` IMPORTS `ext:enum` [base aurora_constraint_manifold_router.py:88]
+- `mod:aurora_constraint_manifold_router` IMPORTS `ext:pathlib` [base aurora_constraint_manifold_router.py:89]
+- `mod:aurora_desktop_agent` IMPORTS `ext:json` [base aurora_desktop_agent.py:20]
+- `mod:aurora_experiential_sim` IMPORTS `ext:json` [base aurora_experiential_sim.py:43]
+- `mod:aurora_expression_perception` IMPORTS `ext:enum` [base aurora_expression_perception.py:46]
+- `mod:aurora_expression_perception` IMPORTS `ext:shutil` [base aurora_expression_perception.py:39]
+- `mod:aurora_genealogy_environment` IMPORTS `ext:os` [base aurora_genealogy_environment.py:97]
+- `mod:aurora_governance_persistence_gateway` IMPORTS `ext:pickle` [base aurora_governance_persistence_gateway.py:49]
+- `mod:aurora_hardware_io` IMPORTS `ext:math` [base aurora_hardware_io.py:1257]
+- `mod:aurora_i_state_beings` IMPORTS `ext:enum` [base aurora_i_state_beings.py:89]
+- `mod:aurora_i_state_beings` IMPORTS `ext:hashlib` [base aurora_i_state_beings.py:85]
+- `mod:aurora_i_state_beings` IMPORTS `ext:math` [base aurora_i_state_beings.py:84]
+- `mod:aurora_image_ingestion` IMPORTS `ext:dataclasses` [base aurora_image_ingestion.py:55]
+- `mod:aurora_image_ingestion` IMPORTS `ext:math` [base aurora_image_ingestion.py:35]
+- `mod:aurora_internal.aurora_attention_engine` IMPORTS `ext:math` [base aurora_internal/aurora_attention_engine.py:41]
+- `mod:aurora_internal.aurora_capability_assimilator` IMPORTS `ext:hashlib` [base aurora_internal/aurora_capability_assimilator.py:39]
+- `mod:aurora_internal.aurora_capability_assimilator` IMPORTS `ext:time` [base aurora_internal/aurora_capability_assimilator.py:42]
+- `mod:aurora_internal.aurora_conversation_episode_compiler` IMPORTS `ext:math` [base aurora_internal/aurora_conversation_episode_compiler.py:22]
+- `mod:aurora_internal.aurora_conversation_rubric_engine` IMPORTS `ext:hashlib` [base aurora_internal/aurora_conversation_rubric_engine.py:22]
+- `mod:aurora_internal.aurora_corpus_lifecycle` IMPORTS `ext:os` [base aurora_internal/aurora_corpus_lifecycle.py:17]
+- `mod:aurora_internal.aurora_corpus_lifecycle` IMPORTS `ext:re` [base aurora_internal/aurora_corpus_lifecycle.py:18]
+- `mod:aurora_internal.aurora_difference_buffer` IMPORTS `ext:math` [base aurora_internal/aurora_difference_buffer.py:83]
+- `mod:aurora_internal.aurora_directed_training_corpus` IMPORTS `ext:random` [base aurora_internal/aurora_directed_training_corpus.py:19]
+- `mod:aurora_internal.aurora_dna_strand_schema` IMPORTS `ext:math` [base aurora_internal/aurora_dna_strand_schema.py:62]
+- `mod:aurora_internal.aurora_dna_strand_schema` IMPORTS `ext:time` [base aurora_internal/aurora_dna_strand_schema.py:63]
+- `mod:aurora_internal.aurora_dream_curriculum_queue` IMPORTS `ext:random` [base aurora_internal/aurora_dream_curriculum_queue.py:27]
+- `mod:aurora_internal.aurora_dream_evolution_orchestrator` IMPORTS `ext:json` [base aurora_internal/aurora_dream_evolution_orchestrator.py:25]
+- `mod:aurora_internal.aurora_dream_genealogy_bridge` IMPORTS `ext:math` [base aurora_internal/aurora_dream_genealogy_bridge.py:36]
+- `mod:aurora_internal.aurora_general_execution_foundry` IMPORTS `ext:queue` [base aurora_internal/aurora_general_execution_foundry.py:45]
+- `mod:aurora_internal.aurora_intake_metabolism` IMPORTS `ext:math` [base aurora_internal/aurora_intake_metabolism.py:95]
+- `mod:aurora_internal.aurora_learning_pipeline` IMPORTS `ext:math` [base aurora_internal/aurora_learning_pipeline.py:21]
+- `mod:aurora_internal.aurora_leverage_relief` IMPORTS `ext:collections` [base aurora_internal/aurora_leverage_relief.py:51]
+- `mod:aurora_internal.aurora_operator_composer` IMPORTS `ext:time` [base aurora_internal/aurora_operator_composer.py:57]
+- `mod:aurora_internal.aurora_proposition_substrate` IMPORTS `ext:re` [base aurora_internal/aurora_proposition_substrate.py:18]
+- `mod:aurora_internal.aurora_quasiarch_observer` IMPORTS `ext:re` [base aurora_internal/aurora_quasiarch_observer.py:16]
+- `mod:aurora_internal.aurora_relational_comparison` IMPORTS `ext:math` [base aurora_internal/aurora_relational_comparison.py:21]
+- `mod:aurora_internal.aurora_solidification` IMPORTS `ext:enum` [base aurora_internal/aurora_solidification.py:65]
+- `mod:aurora_internal.aurora_solidification` IMPORTS `ext:math` [base aurora_internal/aurora_solidification.py:61]
+- `mod:aurora_internal.aurora_solidification` IMPORTS `ext:time` [base aurora_internal/aurora_solidification.py:62]
+- `mod:aurora_internal.aurora_tensor_expressions` IMPORTS `ext:math` [base aurora_internal/aurora_tensor_expressions.py:58]
+- `mod:aurora_internal.constraint_genealogy` IMPORTS `ext:enum` [base aurora_internal/constraint_genealogy.py:44]
+- `mod:aurora_internal.dual_strata.activation_field` IMPORTS `ext:collections` [base aurora_internal/dual_strata/activation_field.py:27]
+- `mod:aurora_internal.dual_strata.strata_state_transfer` IMPORTS `ext:time` [base aurora_internal/dual_strata/strata_state_transfer.py:36]
+- `mod:aurora_internal.dual_strata.topological_semantic_coordinator` IMPORTS `ext:pathlib` [base aurora_internal/dual_strata/topological_semantic_coordinator.py:76]
+- `mod:aurora_internal.scouting.backends` IMPORTS `ext:subprocess` [base aurora_internal/scouting/backends.py:31]
+- `mod:aurora_learning_report` IMPORTS `ext:math` [base aurora_learning_report.py:22]
+- `mod:aurora_live_vision` IMPORTS `ext:hashlib` [base aurora_live_vision.py:28]
+- `mod:aurora_live_vision` IMPORTS `ext:math` [base aurora_live_vision.py:26]
+- `mod:aurora_manifold_directory.noncomp_field` IMPORTS `ext:math` [base aurora_manifold_directory/noncomp_field.py:28]
+- `mod:aurora_quantum_dream_substrate` IMPORTS `ext:math` [base aurora_quantum_dream_substrate.py:45]
+- `mod:aurora_response_teacher` IMPORTS `ext:time` [base aurora_response_teacher.py:41]
+- `mod:aurora_scout_daemon` IMPORTS `ext:json` [base aurora_scout_daemon.py:14]
+- `mod:aurora_sedimemory` IMPORTS `ext:math` [base aurora_sedimemory.py:83]
+- `mod:aurora_self_grounding` IMPORTS `ext:time` [base aurora_self_grounding.py:19]
+- `mod:aurora_thought_formation` IMPORTS `ext:json` [base aurora_thought_formation.py:43]
+- `mod:aurora_vision_clustering` IMPORTS `ext:collections` [base aurora_vision_clustering.py:45]
+- `mod:aurora_vision_clustering` IMPORTS `ext:json` [base aurora_vision_clustering.py:33]
+- `mod:aurora_vision_clustering` IMPORTS `ext:os` [base aurora_vision_clustering.py:32]
+- `mod:aurora_vision_clustering` IMPORTS `ext:pathlib` [base aurora_vision_clustering.py:44]
+- `mod:aurora_vision_clustering` IMPORTS `ext:threading` [base aurora_vision_clustering.py:38]
+- `mod:aurora_working_memory` IMPORTS `ext:dataclasses` [base aurora_working_memory.py:22]
+- `mod:run_aurora` IMPORTS `ext:os` [base run_aurora.py:3]
+- `mod:run_intensive_intervals` IMPORTS `ext:os` [base run_intensive_intervals.py:7]
+- `mod:run_intensive_intervals` IMPORTS `ext:time` [base run_intensive_intervals.py:6]
+- `mod:scripts.append_to_doc` IMPORTS `ext:os` [base scripts/append_to_doc.py:3]
+- `mod:scripts.aurora_state_compress` IMPORTS `ext:os` [base scripts/aurora_state_compress.py:10]
+- `mod:scripts.chat_daemon` IMPORTS `ext:os` [base scripts/chat_daemon.py:3]
+- `mod:scripts.noncomp_actuation_shadow_audit` IMPORTS `ext:os` [base scripts/noncomp_actuation_shadow_audit.py:20]
+- `mod:scripts.prove_learning` IMPORTS `ext:os` [base scripts/prove_learning.py:36]
+- `mod:scripts.prove_learning` IMPORTS `ext:textwrap` [base scripts/prove_learning.py:40]
+- `mod:scripts.source_conversation_corpora` IMPORTS `ext:gzip` [base scripts/source_conversation_corpora.py:13]
+- `mod:tests._engine_integration_test` IMPORTS `ext:math` [base tests/_engine_integration_test.py:9]
+- `mod:tests._pipeline_test` IMPORTS `ext:math` [base tests/_pipeline_test.py:16]
+- `mod:tests.test_build714_resolution_canaries` IMPORTS `ext:pathlib` [base tests/test_build714_resolution_canaries.py:5]
+- `mod:tests.test_build714_resolution_canaries` IMPORTS `ext:tempfile` [base tests/test_build714_resolution_canaries.py:4]
+- `mod:tests.test_classroom_behavior_modes_wiring` IMPORTS `ext:time` [base tests/test_classroom_behavior_modes_wiring.py:19]
+- `mod:tests.test_comm_credit_phase_g_live_wiring` IMPORTS `ext:json` [base tests/test_comm_credit_phase_g_live_wiring.py:35]
+- `mod:tests.test_composer_relevance_selection` IMPORTS `ext:math` [base tests/test_composer_relevance_selection.py:10]
+- `mod:tests.test_crystal_weave` IMPORTS `ext:ast` [base tests/test_crystal_weave.py:3]
+- `mod:tests.test_d2_3_delivery_boundary_telemetry_rejection` IMPORTS `ext:tempfile` [base tests/test_d2_3_delivery_boundary_telemetry_rejection.py:19]
+- `mod:tests.test_daemon_evidence_grounded_mutation` IMPORTS `ext:textwrap` [base tests/test_daemon_evidence_grounded_mutation.py:22]
+- `mod:tests.test_evolution_chamber_live_driveshaft` IMPORTS `ext:time` [base tests/test_evolution_chamber_live_driveshaft.py:28]
+- `mod:tests.test_fault_instrumentation_injector` IMPORTS `ext:tempfile` [base tests/test_fault_instrumentation_injector.py:23]
+- `mod:tests.test_full_reasoning_pipeline` IMPORTS `ext:time` [base tests/test_full_reasoning_pipeline.py:13]
+- `mod:tests.test_genealogy_is_event_generated` IMPORTS `ext:types` [base tests/test_genealogy_is_event_generated.py:11]
+- `mod:tests.test_habitat_discovery_canary_build717` IMPORTS `ext:tempfile` [base tests/test_habitat_discovery_canary_build717.py:81]
+- `mod:tests.test_habitat_motivation_build717` IMPORTS `ext:tempfile` [base tests/test_habitat_motivation_build717.py:25]
+- `mod:tests.test_habitat_self_and_shared_canaries_build717` IMPORTS `ext:time` [base tests/test_habitat_self_and_shared_canaries_build717.py:20]
+- `mod:tests.test_historical_lexical_consequence_attribution` IMPORTS `ext:tempfile` [base tests/test_historical_lexical_consequence_attribution.py:26]
+- `mod:tests.test_icc_ledger` IMPORTS `ext:os` [base tests/test_icc_ledger.py:15]
+- `mod:tests.test_input_effect_shadow` IMPORTS `ext:copy` [base tests/test_input_effect_shadow.py:5]
+- `mod:tests.test_live_possibility_king_authority` IMPORTS `ext:types` [base tests/test_live_possibility_king_authority.py:4]
+- `mod:tests.test_mobile_tools_aurora` IMPORTS `ext:os` [base tests/test_mobile_tools_aurora.py:4]
+- `mod:tests.test_mobile_tools_aurora` IMPORTS `ext:pathlib` [base tests/test_mobile_tools_aurora.py:5]
+- `mod:tests.test_mtsl_acceptance_report` IMPORTS `ext:json` [base tests/test_mtsl_acceptance_report.py:11]
+- `mod:tests.test_mtsl_live_wiring` IMPORTS `ext:tempfile` [base tests/test_mtsl_live_wiring.py:12]
+- `mod:tests.test_perspective_representation_birth` IMPORTS `ext:pathlib` [base tests/test_perspective_representation_birth.py:23]
+- `mod:tests.test_perspective_representation_birth` IMPORTS `ext:time` [base tests/test_perspective_representation_birth.py:22]
+- `mod:tests.test_pipeline2` IMPORTS `ext:json` [base tests/test_pipeline2.py:3]
+- `mod:tests.test_recommendation_hub_incremental` IMPORTS `ext:os` [base tests/test_recommendation_hub_incremental.py:8]
+- `mod:tests.test_reflective_introspection_misrouting_live` IMPORTS `ext:hashlib` [base tests/test_reflective_introspection_misrouting_live.py:16]
+- `mod:tests.test_reflective_readdressing` IMPORTS `ext:types` [base tests/test_reflective_readdressing.py:3]
+- `mod:tests.test_representational_persistence` IMPORTS `ext:tempfile` [base tests/test_representational_persistence.py:15]
+- `mod:tests.test_representational_resolution_build714` IMPORTS `ext:json` [base tests/test_representational_resolution_build714.py:17]
+- `mod:tests.test_representational_resolution_build714` IMPORTS `ext:os` [base tests/test_representational_resolution_build714.py:18]
+- `mod:tests.test_representational_resolution_build714` IMPORTS `ext:tempfile` [base tests/test_representational_resolution_build714.py:20]
+- `mod:tests.test_response_formation_consumes_scout_evidence` IMPORTS `ext:types` [base tests/test_response_formation_consumes_scout_evidence.py:4]
+- `mod:tests.test_round` IMPORTS `ext:json` [base tests/test_round.py:3]
+- `mod:tests.test_sender_agency` IMPORTS `ext:types` [base tests/test_sender_agency.py:12]
+- `mod:tests.test_surface_boundary` IMPORTS `ext:os` [base tests/test_surface_boundary.py:11]
+- `mod:tests.test_surface_boundary` IMPORTS `ext:types` [base tests/test_surface_boundary.py:12]
+- `mod:tests.test_system_introspection_bridge` IMPORTS `ext:types` [base tests/test_system_introspection_bridge.py:2]
+- `mod:tests.test_universal_function_lineage_freshness_fast_path` IMPORTS `ext:shutil` [base tests/test_universal_function_lineage_freshness_fast_path.py:26]
+- `mod:tests.test_universal_function_lineage_freshness_fast_path` IMPORTS `ext:tempfile` [base tests/test_universal_function_lineage_freshness_fast_path.py:28]
+- `mod:reply_aurora` MEMBER_OF `subsys:category:runtime` [base docs/module_ownership.json:0]
+- `mod:tests.test_communication_bar` MEMBER_OF `subsys:declared:tests.1` [base ?:0]
+- `mod:tests.test_communication_emergence` MEMBER_OF `subsys:declared:tests.1` [base ?:0]
+- `mod:tests.test_confluence` MEMBER_OF `subsys:declared:tests.2` [base ?:0]
+- `mod:tests.test_propositional_understanding` MEMBER_OF `subsys:declared:tests.2` [base ?:0]
+- `subsys:area:scripts` PART_OF `subsys:quasi:desktop` [base ?:0]
+- `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output` [base aurora.py:35899]
+- `fn:aurora_acm_bridge.run` READS `field:aurora_acm_bridge.StatusReceiver.last_status` [base aurora_acm_bridge.py:416]
+- `fn:aurora_internal.dual_strata.predictive_stager._load_queue` READS `store:predictive_frame_queue.json` [base aurora_internal/dual_strata/predictive_stager.py:289]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` READS `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:455]
+- `fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.status` REFERENCES `store:up_outbox.json` [base aurora_internal/dual_strata/strata_link.py:1113]
+- `fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device` REFERENCES `store:deep/er/crystals.json` [base tests/test_strata_state_transfer.py:201]
+- `fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device` REFERENCES `store:empty_marker.json` [base tests/test_strata_state_transfer.py:201]
+- `fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device` REFERENCES `store:genealogy/abilities.json` [base tests/test_strata_state_transfer.py:201]
+- `fn:aurora_quantum_dream_substrate.CrystalEntanglementRegistry.propagate` USES_ORGAN `organ:genealogy` [base aurora_quantum_dream_substrate.py:132]
+- `fn:aurora_internal.dual_strata.predictive_stager._save_queue` WRITES `store:predictive_frame_queue.json` [base aurora_internal/dual_strata/predictive_stager.py:306]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_late_surface_response` WRITES `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:445]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` WRITES `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` [base flutter_app/android/app/src/main/python/aurora_bridge.py:456]
+- `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` WRITES `bus:_clone_harvest_absorb` [base flutter_app/android/app/src/main/python/aurora_bridge.py:2818]
+
+### Removed with deleted code: FEEDS 105, CALLS 24, WRITES 3, READS 2, INVOKES 1, INSTANTIATES 1
+
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_event` [base aurora_representational_resolution.py:423]
+- `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection` CALLS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier` [base aurora_representational_resolution.py:403]
+- `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.addAurora` CALLS `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.setDismissMode` [base flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt:102]
+- `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.addAurora` CALLS `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.bringAppToForeground` [base flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt:140]
+- `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.OverlayService.refreshAxisState` CALLS `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.AuroraOrbView.updateAxisState` [base flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt:60]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@651` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:653]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@654` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:656]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.SimpleDialogOption@657` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:659]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@166` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:168]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@605` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:605]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@606` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:608]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@675` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:675]
+- `fn:flutter_app.lib.screens.hub_screen._HubScreenState.TextButton@676` CALLS `fn:flutter_app.lib.screens.home_screen._Header.Text` [base flutter_app/lib/screens/hub_screen.dart:678]
+- `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawRestingMouth` CALLS `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawMouthLens` [base flutter_app/lib/widgets/aurora_orb.dart:813]
+- `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawTalkingMouth` CALLS `fn:flutter_app.lib.widgets.aurora_orb._FacePainter._drawMouthLens` [base flutter_app/lib/widgets/aurora_orb.dart:836]
+- `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec._archetype` CALLS `fn:flutter_app.lib.widgets.aurora_orb._MouthShape.fromExpression` [base flutter_app/lib/widgets/aurora_orb.dart:178]
+- `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec.blend` CALLS `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec._archetype` [base flutter_app/lib/widgets/aurora_orb.dart:279]
+- `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec.blend` CALLS `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec.applied` [base flutter_app/lib/widgets/aurora_orb.dart:306]
+- `fn:flutter_app.lib.widgets.aurora_orb._FaceSpec.blend` CALLS `fn:flutter_app.lib.widgets.aurora_orb._archetypeActivation` [base flutter_app/lib/widgets/aurora_orb.dart:264]
+- `fn:flutter_app.lib.widgets.aurora_orb._archetypeActivation` CALLS `fn:flutter_app.lib.widgets.aurora_orb._activationSigmoid` [base flutter_app/lib/widgets/aurora_orb.dart:75]
+- `fn:flutter_app.lib.widgets.aurora_orb._backgroundColor` CALLS `fn:flutter_app.lib.widgets.aurora_orb.lerp` [base flutter_app/lib/widgets/aurora_orb.dart:335]
+- `fn:tests.test_strata_link.test_outbox_overflow_is_counted_not_silent` CALLS `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.append` [base tests/test_strata_link.py:99]
+- `fn:tests.test_strata_link.test_outbox_overflow_is_counted_not_silent` CALLS `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.stats` [base tests/test_strata_link.py:100]
+- `fn:tests.test_strata_state_transfer.test_an_expired_checkpoint_no_longer_blocks_a_claim` CALLS `fn:aurora_internal.dual_strata.strata_link._atomic_write_json` [base tests/test_strata_state_transfer.py:222]
+- `field:aurora_internal.aurora_correspondence_loop.CommittedPrediction.committed_at` FEEDS `fn:aurora_internal.aurora_correspondence_loop.CommittedPrediction.to_dict` [base aurora_internal/aurora_correspondence_loop.py:220]
+- `field:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.first_seen` FEEDS `fn:aurora_internal.dual_strata.variant_transition_predictor.TransitionRecord.to_dict` [base aurora_internal/dual_strata/variant_transition_predictor.py:59]
+- `field:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.child_id` FEEDS `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` [base aurora_internal/quasiarch_observer/dimensional_memory.py:258]
+- `field:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.child_order` FEEDS `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` [base aurora_internal/quasiarch_observer/dimensional_memory.py:258]
+- `field:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.created_at` FEEDS `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` [base aurora_internal/quasiarch_observer/dimensional_memory.py:258]
+- `field:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.parent_id` FEEDS `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` [base aurora_internal/quasiarch_observer/dimensional_memory.py:258]
+- `field:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.parent_order` FEEDS `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` [base aurora_internal/quasiarch_observer/dimensional_memory.py:258]
+- `field:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.transition_type` FEEDS `fn:aurora_internal.quasiarch_observer.dimensional_memory.LineageEdge.to_dict` [base aurora_internal/quasiarch_observer/dimensional_memory.py:258]
+- `field:aurora_ivm.ContradictionRecord.claim_a` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `field:aurora_ivm.ContradictionRecord.claim_b` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `field:aurora_ivm.ContradictionRecord.contradiction_id` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `field:aurora_ivm.ContradictionRecord.created_at` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `field:aurora_ivm.ContradictionRecord.resolution_note` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `field:aurora_ivm.ContradictionRecord.resolved_at` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `field:aurora_ivm.ContradictionRecord.source_a` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `field:aurora_ivm.ContradictionRecord.source_b` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `field:aurora_ivm.ContradictionRecord.status` FEEDS `fn:aurora_ivm.ContradictionRecord.to_dict` [base aurora_ivm.py:2006]
+- `fn:aurora_behavioral_identity._clamp` FEEDS `field:aurora_behavioral_identity.BehavioralTrait.value` [base aurora_behavioral_identity.py:343]
+- `fn:aurora_behavioral_identity._clamp` FEEDS `field:aurora_behavioral_identity.EvolvingTrait.current_value` [base aurora_behavioral_identity.py:306]
+- `fn:aurora_behavioral_identity._clamp` FEEDS `fn:aurora_behavioral_identity.BehavioralIdentityEngine._constraint_axes` [base aurora_behavioral_identity.py:1424]
+- `fn:aurora_behavioral_identity._clamp` FEEDS `fn:aurora_behavioral_identity.BehavioralIdentityEngine._identity_floor_ratio` [base aurora_behavioral_identity.py:952]
+- `fn:aurora_behavioral_identity._clamp` FEEDS `fn:aurora_behavioral_identity.BehavioralIdentityEngine._pressure_axes` [base aurora_behavioral_identity.py:1440]
+- `fn:aurora_behavioral_identity._clamp` FEEDS `fn:aurora_behavioral_identity.BehavioralTrait.simulate` [base aurora_behavioral_identity.py:338]
+- `fn:aurora_behavioral_identity._clamp` FEEDS `fn:aurora_behavioral_identity.DNASystem.create_allele_from_experience` [base aurora_behavioral_identity.py:1346]
+- `fn:aurora_checkpoint.CorpusCursor.from_dict` FEEDS `field:aurora_checkpoint.CheckpointManager.cursor` [base aurora_checkpoint.py:324]
+- `fn:aurora_checkpoint.RollingStats.from_dict` FEEDS `field:aurora_checkpoint.CheckpointManager.stats` [base aurora_checkpoint.py:325]
+- `fn:aurora_expression_perception._clamp` FEEDS `field:aurora_expression_perception.RhythmSignature.rhythm_score` [base aurora_expression_perception.py:1533]
+- `fn:aurora_expression_perception._clamp` FEEDS `field:aurora_expression_perception.VoiceGenome.breathiness` [base aurora_expression_perception.py:1688]
+- `fn:aurora_expression_perception._clamp` FEEDS `field:aurora_expression_perception.VoiceGenome.formality` [base aurora_expression_perception.py:1689]
+- `fn:aurora_expression_perception._clamp` FEEDS `field:aurora_expression_perception.VoiceGenome.pace` [base aurora_expression_perception.py:1685]
+- `fn:aurora_expression_perception._clamp` FEEDS `field:aurora_expression_perception.VoiceGenome.pitch_base` [base aurora_expression_perception.py:1686]
+- `fn:aurora_expression_perception._clamp` FEEDS `field:aurora_expression_perception.VoiceGenome.pitch_range` [base aurora_expression_perception.py:1687]
+- `fn:aurora_expression_perception._clamp` FEEDS `field:aurora_expression_perception.VoiceGenome.warmth` [base aurora_expression_perception.py:1684]
+- `fn:aurora_expression_perception._clamp` FEEDS `fn:aurora_expression_perception.ExpressionPressure.evaluate` [base aurora_expression_perception.py:1654]
+- `fn:aurora_expression_perception._clamp` FEEDS `fn:aurora_expression_perception.ImpressionCascade._seed_shard_similarity` [base aurora_expression_perception.py:1114]
+- `fn:aurora_expression_perception._clamp` FEEDS `fn:aurora_expression_perception.ManifoldEngine.novelty_at` [base aurora_expression_perception.py:797]
+- `fn:aurora_governance_persistence_gateway._clamp` FEEDS `field:aurora_governance_persistence_gateway.ValidationResult.moral_score` [base aurora_governance_persistence_gateway.py:1050]
+- `fn:aurora_governance_persistence_gateway._clamp` FEEDS `fn:aurora_governance_persistence_gateway.NSpaceGateway._check_coherence` [base aurora_governance_persistence_gateway.py:1436]
+- `fn:aurora_grammar_engine._clamp` FEEDS `fn:aurora_grammar_engine.GrammarEngine.prepare_response_trace` [base aurora_grammar_engine.py:1773]
+- `fn:aurora_grammar_engine._clamp` FEEDS `fn:aurora_grammar_engine.GrammarEngine.suggest_structure` [base aurora_grammar_engine.py:1727]
+- `fn:aurora_grammar_engine._clamp` FEEDS `fn:aurora_grammar_engine.MotifLineage.best_for_pressure._score` [base aurora_grammar_engine.py:848]
+- `fn:aurora_grammar_engine._clamp` FEEDS `fn:aurora_grammar_engine.MotifLineage.best_for_proposition._score` [base aurora_grammar_engine.py:915]
+- `fn:aurora_grammar_engine._clamp` FEEDS `fn:aurora_grammar_engine.StructuralMotif.composability_score` [base aurora_grammar_engine.py:393]
+- `fn:aurora_grammar_engine._clamp` FEEDS `fn:aurora_internal.aurora_confluence.choose_motif.score` [base aurora_internal/aurora_confluence.py:769]
+- `fn:aurora_internal.aurora_braided_substrate._clamp` FEEDS `field:aurora_internal.aurora_braided_substrate.BraidState.heat` [base aurora_internal/aurora_braided_substrate.py:109]
+- `fn:aurora_internal.aurora_braided_substrate._clamp` FEEDS `fn:aurora_internal.aurora_braided_substrate.BraidedSubstrateLayer._compute_stability` [base aurora_internal/aurora_braided_substrate.py:268]
+- `fn:aurora_internal.aurora_conversation_rubric_engine._clamp` FEEDS `fn:aurora_internal.aurora_conversation_rubric_engine._causal_score` [base aurora_internal/aurora_conversation_rubric_engine.py:148]
+- `fn:aurora_internal.aurora_conversation_rubric_engine._clamp` FEEDS `fn:aurora_internal.aurora_conversation_rubric_engine._contradiction_markers` [base aurora_internal/aurora_conversation_rubric_engine.py:247]
+- `fn:aurora_internal.aurora_conversation_rubric_engine._clamp` FEEDS `fn:aurora_internal.aurora_conversation_rubric_engine._generic_response_penalty` [base aurora_internal/aurora_conversation_rubric_engine.py:159]
+- `fn:aurora_internal.aurora_conversation_rubric_engine._clamp` FEEDS `fn:aurora_internal.aurora_conversation_rubric_engine._hedging_score` [base aurora_internal/aurora_conversation_rubric_engine.py:236]
+- `fn:aurora_internal.aurora_conversation_rubric_engine._clamp` FEEDS `fn:aurora_internal.aurora_conversation_rubric_engine._perspective_markers` [base aurora_internal/aurora_conversation_rubric_engine.py:270]
+- `fn:aurora_internal.aurora_conversation_rubric_engine._clamp` FEEDS `fn:aurora_internal.aurora_conversation_rubric_engine._repair_markers` [base aurora_internal/aurora_conversation_rubric_engine.py:259]
+- `fn:aurora_internal.aurora_language_state._clamp` FEEDS `field:aurora_internal.aurora_language_state.IntentObject.certainty` [base aurora_internal/aurora_language_state.py:601]
+- `fn:aurora_internal.aurora_language_state._clamp` FEEDS `field:aurora_internal.aurora_language_state.LanguageStateVector._dims` [base aurora_internal/aurora_language_state.py:231]
+- `fn:aurora_internal.aurora_language_state._clamp` FEEDS `field:aurora_internal.aurora_language_state.PhrasePrint.confidence` [base aurora_internal/aurora_language_state.py:2077]
+- `fn:aurora_internal.aurora_language_state._clamp` FEEDS `fn:aurora_internal.aurora_language_state.LanguageStateVector._compute_growth` [base aurora_internal/aurora_language_state.py:281]
+
+### Consolidated: CALLS 1423, FEEDS 15, WRITES 7, READS 5, USES_ORGAN 1, REFERENCES 1
+
+- `fn:aurora.AxisProjector.project` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:3646]
+- `fn:aurora.ConstraintFieldBalancer._inject_to_genealogy` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:4347]
+- `fn:aurora.ConstraintFieldBalancer.update` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:4236]
+- `fn:aurora.ReasoningEngine._update_memory_from_reasoning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1084]
+- `fn:aurora.ReasoningEngine.reason` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:694]
+- `fn:aurora.SearchAdapter.concept_search` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1439]
+- `fn:aurora.SearchAdapter.ddg_web_search` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1581]
+- `fn:aurora.SearchAdapter.deep_search` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1717]
+- `fn:aurora.SearchAdapter.lookup_word` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1378]
+- `fn:aurora.SearchAdapter.test_connectivity` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1747]
+- `fn:aurora.SearchAdapter.wikipedia_search` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1614]
+- `fn:aurora.SearchAdapter.wikipedia_summary` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1480]
+- `fn:aurora.TeachingEngine.process_teaching_input` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:579]
+- `fn:aurora._ability_guided_context_answer` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:8569]
+- `fn:aurora._absorb_definition_into_self_model` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:11525]
+- `fn:aurora._advance_intake_pipeline._pol` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:33561]
+- `fn:aurora._answer_from_sedimemory_context` CALLS `fn:aurora._answer_from_sedimemory_context` (ran) [base ?:0]
+- `fn:aurora._answer_from_session_readdress_request` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:8111]
+- `fn:aurora._answer_live_sensory_question` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:9977]
+- `fn:aurora._answer_relational_role_question` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16295]
+- `fn:aurora._apply_interaction_quasi_route` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:6525]
+- `fn:aurora._apply_noncomp_input_guidance` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:13170]
+- `fn:aurora._apply_noncomp_output_guidance` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:13276]
+- `fn:aurora._apply_pipeline_modulation` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:18198]
+- `fn:aurora._apply_poedex_learning_result` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:12245]
+- `fn:aurora._apply_poedex_representation_result` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:12458]
+- `fn:aurora._apply_response_pressure_training_plan` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:2243]
+- `fn:aurora._apply_word_meaning_learning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:13610]
+- `fn:aurora._attach_live_response_simulation_bridge` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38306]
+- `fn:aurora._axis_live_pressure` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5688]
+- `fn:aurora._broadcast_poedex_result` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:11929]
+- `fn:aurora._build_articulation_perspective_context` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:7784]
+- `fn:aurora._build_comprehension_response` CALLS `fn:aurora._build_comprehension_response` (ran) [base ?:0]
+- `fn:aurora._build_comprehension_response` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:26623]
+- `fn:aurora._build_established_strata_evidence` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16952]
+- `fn:aurora._build_established_strata_evidence._learn_gap` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17478]
+- `fn:aurora._build_established_strata_evidence._prefetch_gap` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17423]
+- `fn:aurora._build_established_strata_evidence._represent_gap` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17538]
+- `fn:aurora._build_grounded_fallback_response` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:10184]
+- `fn:aurora._build_live_subsurface_projection` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17732]
+- `fn:aurora._build_lookup_query` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:14262]
+- `fn:aurora._build_research_callback._fetch_definition` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1819]
+- `fn:aurora._build_response_pressure_training_plan` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:2030]
+- `fn:aurora._build_simulation_live_bridge_context` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38110]
+- `fn:aurora._capture_hardware_voice_state` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38335]
+- `fn:aurora._capture_pressure_snapshot` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:15571]
+- `fn:aurora._capture_waveform_deposit` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5451]
+- `fn:aurora._chain_down1_information` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:21855]
+- `fn:aurora._chain_down2_belief` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:21649]
+- `fn:aurora._chain_down3_purpose` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:21608]
+- `fn:aurora._chain_up4_meaning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:19887]
+- `fn:aurora._chain_up5_understanding` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:20022]
+- `fn:aurora._clear_pending_hypothesis_offer` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:14061]
+- `fn:aurora._clear_pending_lookup_offer` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:14045]
+- `fn:aurora._collect_response_pressure_guides` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:1974]
+- `fn:aurora._compose_structural_meaning` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5612]
+- `fn:aurora._compress_at_crest` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5874]
+- `fn:aurora._confess_low_confidence_parse` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:18709]
+- `fn:aurora._constraint_emission_is_substantive` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:2869]
+- `fn:aurora._constraint_state_snapshot` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:213]
+- `fn:aurora._contribution_charge` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5502]
+- `fn:aurora._deposit_poedex_result_into_crystals` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:11831]
+- `fn:aurora._derive_applied_effects` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16243]
+- `fn:aurora._derive_problem_solving_drive` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:17992]
+- `fn:aurora._describe_live_lineage_emergence` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:6374]
+- `fn:aurora._describe_pending_code_proposals` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:7501]
+- `fn:aurora._discourse_anchor_context` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:15302]
+- `fn:aurora._dispatch_user_directive` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:33809]
+- `fn:aurora._emit_interpreted_turn_packet` CALLS `fn:aurora._emit_interpreted_turn_packet` (ran) [base ?:0]
+- `fn:aurora._enforce_emission_discipline` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5394]
+- `fn:aurora._ensure_claim_relief_abilities` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:18440]
+- `fn:aurora._ensure_pipeline_abilities` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:18312]
+- `fn:aurora._ensure_seeded_sensory_crystal_state` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:440]
+- `fn:aurora._evolutionary_response_refinement` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16408]
+- `fn:aurora._extract_pipeline_signals` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:16606]
+- `fn:aurora._flush_quasiarch_runtime_events` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:7631]
+- `fn:aurora._full_save` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:38508]
+- `fn:aurora._gather_subsurface_contributions` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:5551]
+- `fn:aurora._generate_from_manifold` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:20812]
+- `fn:aurora._generate_identity_response` CALLS `fn:aurora_internal.aurora_runtime_faults.record_exception_from_locals` [base aurora.py:3340]
+
+## 2b. Composites promoted on evidence
+
+52 in base, 53 in head. Each base composite is matched to the head composite sharing the most files; a composite that splits, loses files or disappears means the binding between those files changed.
+
+- `subsys:composite:foundation:6f0cf83a` (9 files) -> `subsys:composite:foundation:5e482b6c` (overlap 0.64); joined: `aurora_internal/aurora_ontological_scaffolding.py`, `aurora_internal/aurora_pressure_ledger.py`, `aurora_internal/aurora_pressure_mathematics_tracker.py`, `aurora_internal/aurora_shared_helpers.py`, `aurora_internal/aurora_structural_pressure_steering.py`
+- `subsys:composite:foundation:d3ead140` (2 files) -> `subsys:composite:foundation:5e482b6c` (overlap 0.14); joined: `aurora_constraint_engine.py`, `aurora_constraint_manifold_compiler.py`, `aurora_constraint_unit_adapter.py`, `aurora_internal/aurora_constraint_manifold_patched.py`, `aurora_internal/aurora_leverage_scalar.py`, `aurora_internal/aurora_noncomp_registry.py`
+- `subsys:composite:governance:01effd21` (17 files) -> `subsys:composite:governance:16699d84` (overlap 0.94); joined: `aurora_internal/aurora_energy_layer_costs.py`
+- `subsys:composite:phone_android:95732a08` (2 files) -> `subsys:composite:phone_android:3c9f1bf9` (overlap 0.40); joined: `flutter_app/android/app/src/main/kotlin/org/aurora/app/OverlayService.kt`, `flutter_app/android/app/src/main/kotlin/org/aurora/app/PresenceMotion.kt`, `flutter_app/android/app/src/test/java/org/aurora/app/PresenceMotionTest.kt`
+- `subsys:composite:phone_ui:e24ca393` (2 files) -> `subsys:composite:phone_ui:98c133ef` (overlap 0.33); joined: `flutter_app/lib/widgets/aurora_orb.dart`, `flutter_app/lib/widgets/face_motion.dart`, `flutter_app/lib/widgets/ui_diagnostics.dart`, `flutter_app/test/face_motion_test.dart`
+- `subsys:composite:runtime:0414c162` (5 files) -> `subsys:composite:runtime:556d4dba` (overlap 0.38); joined: `aurora_internal/desktop/__main__.py`, `aurora_internal/desktop/blueprints.py`, `aurora_internal/desktop/common.py`, `aurora_internal/desktop/demonstrations.py`, `aurora_internal/desktop/policy.py`, `aurora_internal/desktop/runtime.py`
+- `subsys:composite:strata:ef2079cf` (9 files) -> `subsys:composite:strata:b8d56ae3` (overlap 0.64); joined: `aurora_internal/aurora_store_ownership.py`, `aurora_internal/dual_strata/home_growth.py`, `aurora_internal/dual_strata/hub_route.py`, `aurora_internal/dual_strata/inquiry_tiers.py`, `aurora_internal/dual_strata/strata_migration.py`
+
+## 3. Stored state
+
+Stores named only in base: none.  
+Stores named only in head: `aurora.log`, `computational_blueprints.json`, `crystal_pass_report.json`, `desktop_config.json`, `desktop_demonstrations.json`, `desktop_jobs.json`, `desktop_resident.log`, `desktop_sensors.json`, `devices.json`, `different.json`, `expression_lexicon.json`, `face_expression_journal.jsonl`, `genealogy_surface/genealogy_state.json`, `grammar_engine_state.json`, `grammar_state.json`, `hash_cache.json`, `home_requests.jsonl`, `host_inventory.json`, `hub_messages.jsonl`, `hub_messages_answered.json`, `hub_replies.json`, `inquiry_desk.json`, `inquiry_down.jsonl`, `inquiry_inbox.jsonl`, `last_install.json`, `last_turn_trace.json`, `listen.json`, `lived_numbering.json`, `messenger_delivery.json`, `migration_receipt.json`, `outbox.json`, `pending.json`, `phone_only_store.json`, `raw_input.json`, `ready.json`, `representational_resolution/active_resolutions.json`, `some_new_organ_nobody_listed.json`, `store_gate.json`, `strata_link/outbox.jsonl`, `strata_link/store_gate.json`, `surface_continuity_ledger.json`, `surface_working_state.json`, `unrelated_local.json`.
+
+- `client_state.json`: writers 0->2, readers 2->6
+- `developmental_timeline.jsonl`: writers 5->6, readers 6->6
+- `down_outbox.json`: writers 0->1, readers 2->3
+- `dps_crystals.json`: writers 2->5, readers 8->8
+- `last_system_diagnosis.json`: writers 0->0, readers 2->3
+- `lexical_grounding_state.json`: writers 0->0, readers 2->3
+- `lexicon.json`: writers 7->10, readers 19->23
+- `paths.json`: writers 1->2, readers 1->2
+- `predictive_frame_queue.json`: writers 1->1, readers 1->1; writers gone: `fn:aurora_internal.dual_strata.predictive_stager._save_queue`; readers gone: `fn:aurora_internal.dual_strata.predictive_stager._load_queue`
+- `pressure_experiences.jsonl`: writers 4->4, readers 10->11
+- `resolution_genealogy.json`: writers 0->0, readers 0->1
+- `seeded.json`: writers 0->1, readers 4->5
+- `server_state.json`: writers 0->1, readers 2->6
+- `surface_continuity_feed.json`: writers 4->4, readers 6->7
+- `up_outbox.json`: writers 0->0, readers 1->4
+
+Stored-state keys inside those files are not parsed from code, so a renamed JSON key inside an unchanged store needs the lost FEEDS and Field edges above, or a reading of the diff, to show.
+
+## 4. Fault references
+
+FIX citations in code: 344 in base, 345 in head.
+Fault and error handling nodes: 385 in base, 419 in head; gone: none; new: `cls:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.NativeFaults`, `cls:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics`, `cls:flutter_app.lib.widgets.ui_diagnostics.UiDiagnosticsOverlay`, `cls:flutter_app.lib.widgets.ui_diagnostics.UiFault`, `cls:flutter_app.lib.widgets.ui_diagnostics._FaultPanel`, `cls:flutter_app.lib.widgets.ui_diagnostics._FaultPanelState`, `cls:flutter_app.lib.widgets.ui_diagnostics._UiDiagnosticsOverlayState`, `field:aurora_acm_bridge.HostedACMBridge.last_error`, `field:aurora_internal.desktop.runtime.DesktopRuntime._diagnostics`, `field:aurora_internal.desktop.runtime.DesktopRuntime.errors`, `field:aurora_internal.dual_strata.strata_link.DurableOutbox.last_write_error`, `fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder`, `fn:aurora_internal.aurora_runtime_faults.bind_fault_recorder._aurora_fault`, `fn:aurora_internal.desktop.__main__.default_state_dir`, `fn:aurora_internal.desktop.runtime.DesktopRuntime._update_diagnostics`, `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.NativeFaults.report`, `fn:flutter_app.android.app.src.main.kotlin.org.aurora.app.OverlayService.NativeFaults.report@92`, `fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.apply`, `fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.clear`, `fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.install`, `fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnostics.report`, `fn:flutter_app.lib.widgets.ui_diagnostics.UiDiagnosticsOverlay.createState`, `fn:flutter_app.lib.widgets.ui_diagnostics._FaultPanel.createState`, `fn:flutter_app.lib.widgets.ui_diagnostics._FaultPanelState.Row`, `fn:flutter_app.lib.widgets.ui_diagnostics._FaultPanelState._time`, `fn:flutter_app.lib.widgets.ui_diagnostics._FaultPanelState.build`, `fn:flutter_app.lib.widgets.ui_diagnostics._UiDiagnosticsOverlayState.build`, `fn:scripts.aurora_fault_instrumentation_injector._bind_line`, `fn:tests.test_desktop_embodiment.test_demonstration_alone_cannot_record_skill_and_independent_failure_stays_unverified`, `fn:tests.test_desktop_embodiment.test_field_lock_blocks_cognition_but_not_diagnostics_or_owner_recovery`.
+
+## 5. Developmental records
+
+64 stores look like lineage, evolution, development or history records by name.
+- `developmental_timeline.jsonl`: writers 5->6, readers 6->6
+- `face_expression_journal.jsonl`: writers 0->0, readers 0->2 (only in head)
+- `genealogy_surface/genealogy_state.json`: writers 0->0, readers 0->0 (only in head)
+- `last_turn_trace.json`: writers 0->1, readers 0->1 (only in head)
+- `resolution_genealogy.json`: writers 0->0, readers 0->1
+- `surface_continuity_ledger.json`: writers 0->1, readers 0->1 (only in head)
+
+## 6. Dependencies between modules
+
+- import gone: `mod:aurora-acm.native.aurora_acm_native` -> `ext:math`
+- import gone: `mod:aurora_625_pressure_map` -> `ext:math`
+- import gone: `mod:aurora_acm_bridge` -> `ext:os`
+- import gone: `mod:aurora_behavioral_identity` -> `ext:collections`
+- import gone: `mod:aurora_braid_wiring` -> `ext:time`
+- import gone: `mod:aurora_checkpoint` -> `ext:pathlib`
+- import gone: `mod:aurora_closure_basis` -> `ext:math`
+- import gone: `mod:aurora_concept_derivation` -> `ext:hashlib`
+- import gone: `mod:aurora_concept_derivation` -> `ext:time`
+- import gone: `mod:aurora_consciousness_engine` -> `ext:enum`
+- import gone: `mod:aurora_consciousness_engine` -> `ext:math`
+- import gone: `mod:aurora_consciousness_engine` -> `ext:random`
+- import gone: `mod:aurora_constraint_engine` -> `ext:math`
+- import gone: `mod:aurora_constraint_manifold_router` -> `ext:enum`
+- import gone: `mod:aurora_constraint_manifold_router` -> `ext:pathlib`
+- import gone: `mod:aurora_desktop_agent` -> `ext:json`
+- import gone: `mod:aurora_experiential_sim` -> `ext:json`
+- import gone: `mod:aurora_expression_perception` -> `ext:enum`
+- import gone: `mod:aurora_expression_perception` -> `ext:shutil`
+- import gone: `mod:aurora_genealogy_environment` -> `ext:os`
+- import gone: `mod:aurora_governance_persistence_gateway` -> `ext:pickle`
+- import gone: `mod:aurora_hardware_io` -> `ext:math`
+- import gone: `mod:aurora_i_state_beings` -> `ext:enum`
+- import gone: `mod:aurora_i_state_beings` -> `ext:hashlib`
+- import gone: `mod:aurora_i_state_beings` -> `ext:math`
+- import gone: `mod:aurora_image_ingestion` -> `ext:dataclasses`
+- import gone: `mod:aurora_image_ingestion` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_attention_engine` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_capability_assimilator` -> `ext:hashlib`
+- import gone: `mod:aurora_internal.aurora_capability_assimilator` -> `ext:time`
+- import gone: `mod:aurora_internal.aurora_conversation_episode_compiler` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_conversation_rubric_engine` -> `ext:hashlib`
+- import gone: `mod:aurora_internal.aurora_corpus_lifecycle` -> `ext:os`
+- import gone: `mod:aurora_internal.aurora_corpus_lifecycle` -> `ext:re`
+- import gone: `mod:aurora_internal.aurora_difference_buffer` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_directed_training_corpus` -> `ext:random`
+- import gone: `mod:aurora_internal.aurora_dna_strand_schema` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_dna_strand_schema` -> `ext:time`
+- import gone: `mod:aurora_internal.aurora_dream_curriculum_queue` -> `ext:random`
+- import gone: `mod:aurora_internal.aurora_dream_evolution_orchestrator` -> `ext:json`
+- import gone: `mod:aurora_internal.aurora_dream_genealogy_bridge` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_general_execution_foundry` -> `ext:queue`
+- import gone: `mod:aurora_internal.aurora_intake_metabolism` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_learning_pipeline` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_leverage_relief` -> `ext:collections`
+- import gone: `mod:aurora_internal.aurora_operator_composer` -> `ext:time`
+- import gone: `mod:aurora_internal.aurora_proposition_substrate` -> `ext:re`
+- import gone: `mod:aurora_internal.aurora_quasiarch_observer` -> `ext:re`
+- import gone: `mod:aurora_internal.aurora_relational_comparison` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_solidification` -> `ext:enum`
+- import gone: `mod:aurora_internal.aurora_solidification` -> `ext:math`
+- import gone: `mod:aurora_internal.aurora_solidification` -> `ext:time`
+- import gone: `mod:aurora_internal.aurora_tensor_expressions` -> `ext:math`
+- import gone: `mod:aurora_internal.constraint_genealogy` -> `ext:enum`
+- import gone: `mod:aurora_internal.dual_strata.activation_field` -> `ext:collections`
+- import gone: `mod:aurora_internal.dual_strata.strata_state_transfer` -> `ext:time`
+- import gone: `mod:aurora_internal.dual_strata.topological_semantic_coordinator` -> `ext:pathlib`
+- import gone: `mod:aurora_internal.scouting.backends` -> `ext:subprocess`
+- import gone: `mod:aurora_learning_report` -> `ext:math`
+- import gone: `mod:aurora_live_vision` -> `ext:hashlib`
+- import gone: `mod:aurora_live_vision` -> `ext:math`
+- import gone: `mod:aurora_manifold_directory.noncomp_field` -> `ext:math`
+- import gone: `mod:aurora_quantum_dream_substrate` -> `ext:math`
+- import gone: `mod:aurora_response_teacher` -> `ext:time`
+- import gone: `mod:aurora_scout_daemon` -> `ext:json`
+- import gone: `mod:aurora_sedimemory` -> `ext:math`
+- import gone: `mod:aurora_self_grounding` -> `ext:time`
+- import gone: `mod:aurora_thought_formation` -> `ext:json`
+- import gone: `mod:aurora_vision_clustering` -> `ext:collections`
+- import gone: `mod:aurora_vision_clustering` -> `ext:json`
+- import gone: `mod:aurora_vision_clustering` -> `ext:os`
+- import gone: `mod:aurora_vision_clustering` -> `ext:pathlib`
+- import gone: `mod:aurora_vision_clustering` -> `ext:threading`
+- import gone: `mod:aurora_working_memory` -> `ext:dataclasses`
+- import gone: `mod:run_aurora` -> `ext:os`
+- import gone: `mod:run_intensive_intervals` -> `ext:os`
+- import gone: `mod:run_intensive_intervals` -> `ext:time`
+- import gone: `mod:scripts.append_to_doc` -> `ext:os`
+- import gone: `mod:scripts.aurora_state_compress` -> `ext:os`
+- import gone: `mod:scripts.chat_daemon` -> `ext:os`
+- import new: `mod:aurora` -> `mod:aurora_internal.dual_strata.home_link_presence`
+- import new: `mod:aurora` -> `mod:aurora_internal.dual_strata.strata_link`
+- import new: `mod:aurora_autonomy` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_behavioral_identity` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_checkpoint` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_desktop_agent` -> `ext:ctypes`
+- import new: `mod:aurora_dream_trainer` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_expression_perception` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_expression_perception` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_governance_persistence_gateway` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_grammar_engine` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_grammar_engine` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_hardware_io` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_hardware_io` -> `mod:aurora_internal.aurora_state_context`
+- import new: `mod:aurora_hub` -> `mod:aurora_internal.dual_strata`
+- import new: `mod:aurora_hub` -> `mod:aurora_internal.dual_strata.hub_route`
+- import new: `mod:aurora_hub` -> `mod:aurora_internal.hub_panels`
+- import new: `mod:aurora_interaction_memory` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_braided_substrate` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_conversation_rubric_engine` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_correspondence_loop` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_dream_genealogy_bridge` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_language_state` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_live_lineage_journal` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_ontological_scaffolding` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_ontological_scaffolding` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_pressure_ledger` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_pressure_mathematics_tracker` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_primitive_extractor` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_primitive_perspective` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_reasoning_paths` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_recommendation_hub` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_recursive_causal_reasoning_waveform` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_rubric_influence_graph` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_runtime_constraint_governor` -> `ext:psutil`
+- import new: `mod:aurora_internal.aurora_runtime_constraint_governor` -> `ext:shutil`
+- import new: `mod:aurora_internal.aurora_runtime_faults` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.aurora_semantic_probe_battery` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_shared_helpers` -> `ext:__future__`
+- import new: `mod:aurora_internal.aurora_shared_helpers` -> `ext:dataclasses`
+- import new: `mod:aurora_internal.aurora_shared_helpers` -> `ext:typing`
+- import new: `mod:aurora_internal.aurora_specialized_avatar_synthesizer` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_state_context` -> `ext:os`
+- import new: `mod:aurora_internal.aurora_state_context` -> `ext:pathlib`
+- import new: `mod:aurora_internal.aurora_store_ownership` -> `ext:__future__`
+- import new: `mod:aurora_internal.aurora_store_ownership` -> `ext:fnmatch`
+- import new: `mod:aurora_internal.aurora_store_ownership` -> `ext:json`
+- import new: `mod:aurora_internal.aurora_store_ownership` -> `ext:os`
+- import new: `mod:aurora_internal.aurora_store_ownership` -> `ext:pathlib`
+- import new: `mod:aurora_internal.aurora_store_ownership` -> `ext:threading`
+- import new: `mod:aurora_internal.aurora_store_ownership` -> `ext:time`
+- import new: `mod:aurora_internal.aurora_store_ownership` -> `ext:typing`
+- import new: `mod:aurora_internal.aurora_structural_pressure_steering` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.aurora_unformed_patterns` -> `mod:aurora_internal.aurora_store_ownership`
+- import new: `mod:aurora_internal.constraint_genealogy` -> `mod:aurora_internal.aurora_shared_helpers`
+- import new: `mod:aurora_internal.crystal_runtime` -> `ext:pathlib`
+- import new: `mod:aurora_internal.crystal_runtime` -> `mod:aurora_persistence_utils`
+- import new: `mod:aurora_internal.crystal_web` -> `ext:__future__`
+- import new: `mod:aurora_internal.crystal_web` -> `ext:json`
+- import new: `mod:aurora_internal.crystal_web` -> `ext:os`
+- import new: `mod:aurora_internal.crystal_web` -> `ext:re`
+- import new: `mod:aurora_internal.crystal_web` -> `ext:typing`
+- import new: `mod:aurora_internal.crystal_web` -> `mod:aurora_internal.crystal_maturity`
+- import new: `mod:aurora_internal.crystal_web` -> `mod:aurora_internal.crystal_store`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:__future__`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:argparse`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:hmac`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:http`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:json`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:os`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:threading`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:typing`
+- import new: `mod:aurora_internal.crystal_web_server` -> `ext:urllib`
+- import new: `mod:aurora_internal.crystal_web_server` -> `mod:aurora_internal.crystal_web`
+- import new: `mod:aurora_internal.crystal_web_server` -> `mod:aurora_internal.crystal_web_page`
+- import new: `mod:aurora_internal.crystal_web_server` -> `mod:aurora_internal.hub_panels`
+- import new: `mod:aurora_internal.desktop.__main__` -> `ext:__future__`
+- import new: `mod:aurora_internal.desktop.__main__` -> `ext:argparse`
+- import new: `mod:aurora_internal.desktop.__main__` -> `ext:json`
+- import new: `mod:aurora_internal.desktop.__main__` -> `ext:os`
+
+## 7. Diagnostic evidence
+
+Logging calls: 431 in base, 437 in head.
+- `mod:flutter_app.android.app.src.main.python.aurora_bridge`: 157 -> 163
+
+## 8. Focus areas
+
+### Interaction handling
+
+1 seed node(s); 69516 relationships around them in base, 76856 in head; 169 lost (not consolidated), 9187 new.
+- lost: `bus:_last_voice_gate` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke`
+- lost: `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context`
+- lost: `bus:_subsurface_projection` FEEDS `fn:aurora._build_live_subsurface_projection`
+- lost: `field:aurora_acm_bridge.StatusReceiver.last_status` FEEDS `fn:aurora_acm_bridge._wave_tick_cognitive`
+- lost: `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke`
+- lost: `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection`
+- lost: `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response` FEEDS `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response`
+- lost: `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output`
+- lost: `fn:aurora_acm_bridge.run` READS `field:aurora_acm_bridge.StatusReceiver.last_status`
+- lost: `fn:aurora_internal.aurora_clone_harvest._organ` FEEDS `fn:aurora_internal.aurora_clone_harvest._add_result`
+- lost: `fn:aurora_internal.aurora_clone_harvest.absorb_harvest` FEEDS `bus:_clone_harvest_absorb`
+- lost: `fn:aurora_internal.dual_strata.predictive_stager._load_queue` READS `store:predictive_frame_queue.json`
+- lost: `fn:aurora_internal.dual_strata.predictive_stager._save_queue` WRITES `store:predictive_frame_queue.json`
+- lost: `fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink` CALLS `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames`
+- lost: `fn:aurora_quantum_dream_substrate.CrystalEntanglementRegistry.propagate` USES_ORGAN `organ:genealogy`
+- lost: `fn:aurora_representational_address.RepresentationalRef.for_c1` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._projection_frontier` FEEDS `field:aurora_representational_resolution_base.RepresentationalResolutionEngine._active_stage_for_ref`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._structural_projection_candidates`
+- lost: `fn:aurora_representational_resolution.RepresentationalResolutionEngine.investigate_if_pressured` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates`
+- lost: `fn:aurora_representational_resolution.get_or_create_engine` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`
+- lost: `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_field_after_projection`
+- lost: `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.unresolved_field_candidates` FEEDS `fn:aurora_representational_resolution.RepresentationalResolutionEngine._stage_next_projection`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_late_surface_response` FEEDS `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_late_surface_response` WRITES `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge._store_relational_claim` FEEDS `store:relational_claims.jsonl`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` READS `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.get_late_surface_response` WRITES `field:flutter_app.android.app.src.main.python.aurora_bridge._late_surface_response`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` FEEDS `fn:aurora_internal.aurora_clone_harvest.absorb_harvest`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` WRITES `bus:_clone_harvest_absorb`
+- lost: `fn:tests.test_habitat_motivation_build717._drive_real_pressure` FEEDS `fn:aurora_representational_resolution_base.RepresentationalResolutionEngine.record_participation`
+- lost: `fn:tests.test_pf3_1_cooccurrence_hub_leak._build_fake_engine` FEEDS `fn:aurora_expression_perception.ExpressionPerceptionEngine._build_expression`
+- lost: `fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device` REFERENCES `store:genealogy/abilities.json`
+- lost: `mod:aurora-acm.native.aurora_acm_native` IMPORTS `ext:math`
+- lost: `mod:aurora_625_pressure_map` IMPORTS `ext:math`
+- lost: `mod:aurora_acm_bridge` IMPORTS `ext:os`
+- lost: `mod:aurora_behavioral_identity` IMPORTS `ext:collections`
+- lost: `mod:aurora_braid_wiring` IMPORTS `ext:time`
+- lost: `mod:aurora_checkpoint` IMPORTS `ext:pathlib`
+
+### Praxis
+
+447 seed node(s); 1564 relationships around them in base, 1654 in head; 8 lost (not consolidated), 105 new.
+- lost: `bus:_last_voice_gate` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke`
+- lost: `field:aurora_praxis_messenger.PraxisMessenger.cursor` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.online`
+- lost: `field:aurora_praxis_messenger.PraxisMessenger.cursor` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.unread_waiting`
+- lost: `field:aurora_praxis_messenger.PraxisMessenger.cursor` FEEDS `fn:aurora_praxis_messenger.validate_incoming_message`
+- lost: `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_error`
+- lost: `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_novel`
+- lost: `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke`
+- lost: `field:aurora_praxis_messenger.PraxisMessenger.systems` FEEDS `fn:aurora_praxis_messenger.PraxisMessenger._pairs`
+
+### Surface and subsurface coordination
+
+1083 seed node(s); 5531 relationships around them in base, 6235 in head; 23 lost (not consolidated), 841 new.
+- lost: `bus:_subsurface_projection` FEEDS `fn:aurora._build_live_subsurface_projection`
+- lost: `field:aurora_internal.dual_strata.strata_link.StrataLinkClient._claim_path` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch`
+- lost: `field:aurora_internal.dual_strata.strata_link.StrataLinkClient._claim_path` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role`
+- lost: `field:aurora_internal.dual_strata.strata_link.StrataLinkClient._claim_path` FEEDS `fn:aurora_internal.dual_strata.strata_link._atomic_write_json`
+- lost: `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.surface_id` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch`
+- lost: `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.surface_id` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role`
+- lost: `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.surface_id` FEEDS `fn:aurora_internal.dual_strata.strata_link._atomic_write_json`
+- lost: `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames` FEEDS `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.append`
+- lost: `fn:aurora_internal.dual_strata.predictive_stager._load_queue` READS `store:predictive_frame_queue.json`
+- lost: `fn:aurora_internal.dual_strata.predictive_stager._save_queue` WRITES `store:predictive_frame_queue.json`
+- lost: `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.pending` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch`
+- lost: `fn:aurora_internal.dual_strata.strata_link.DurableOutbox.pending` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role`
+- lost: `fn:aurora_internal.dual_strata.strata_link.StrataLinkClient.status` REFERENCES `store:up_outbox.json`
+- lost: `fn:aurora_internal.dual_strata.strata_link.collect_subsurface_downlink` CALLS `fn:aurora_internal.dual_strata.predictive_stager.PredictiveStager.pop_all_recent_frames`
+- lost: `fn:aurora_internal.dual_strata.strata_link.sign` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch`
+- lost: `fn:aurora_internal.dual_strata.strata_link.sign` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role`
+- lost: `fn:aurora_internal.dual_strata.strata_link.sign` FEEDS `fn:aurora_internal.dual_strata.strata_link._atomic_write_json`
+- lost: `fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device` REFERENCES `store:deep/er/crystals.json`
+- lost: `fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device` REFERENCES `store:empty_marker.json`
+- lost: `fn:tests.test_strata_state_transfer.test_state_preserving_migration_to_a_second_device` REFERENCES `store:genealogy/abilities.json`
+- lost: `store:client_state.json` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.epoch`
+- lost: `store:client_state.json` FEEDS `field:aurora_internal.dual_strata.strata_link.StrataLinkClient.role`
+- lost: `store:predictive_frame_queue.json` FEEDS `fn:aurora_internal.dual_strata.predictive_stager._load_queue`
+
+### State hand-offs (bus slots and pipeline signals)
+
+574 seed node(s); 2467 relationships around them in base, 2492 in head; 6 lost (not consolidated), 31 new.
+- lost: `bus:_last_voice_gate` FEEDS `field:aurora_praxis_messenger.PraxisMessenger.last_spoke`
+- lost: `bus:_open_curiosity_loops` FEEDS `fn:aurora_thought_formation.make_process_context`
+- lost: `bus:_subsurface_projection` FEEDS `fn:aurora._build_live_subsurface_projection`
+- lost: `fn:aurora._run_live_response_turn` READS `bus:_noncomp_output`
+- lost: `fn:aurora_internal.aurora_clone_harvest.absorb_harvest` FEEDS `bus:_clone_harvest_absorb`
+- lost: `fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize` WRITES `bus:_clone_harvest_absorb`
+

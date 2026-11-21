@@ -78,9 +78,10 @@ Created: March 2026
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_sedimemory.py')
 
 import hashlib
-import math
 import re
 import time
 import uuid
@@ -115,13 +116,7 @@ try:
         EnergyDistribution,
     )
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_sedimemory.py:115",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 115, "source_file": "aurora_sedimemory.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 115)
     from aurora_constraint_manifold_patched import (  # type: ignore
         Constraint,
         ConstraintVector,
@@ -351,13 +346,7 @@ class MemoryEvent:
                 A=float(getattr(envelope, 'agency_weight',    0.5)),
             )
         except (ManifoldViolation, AttributeError) as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_sedimemory.py:317",
-                exc=_aurora_boundary_exc,
-                context={"function": "from_envelope", "handler_line": 317, "source_file": "aurora_sedimemory.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'from_envelope', 317)
             cv = ConstraintVector(X=1.0, T=0.5, N=0.5, B=0.5, A=0.5)
 
         content: Dict[str, Any] = {}
@@ -2389,13 +2378,7 @@ class SediMemory:
                 reg._dominant_index[ch.dominant_slot_id].add(sig)
                 restored += 1
             except (KeyError, TypeError) as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_sedimemory.py:1955",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "load_channels", "handler_line": 1955, "source_file": "aurora_sedimemory.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'load_channels', 1955)
                 continue
         return restored
 
@@ -2446,6 +2429,10 @@ class SediMemory:
     # ------------------------------------------------------------------
     # STATS
     # ------------------------------------------------------------------
+
+    def fragment_count(self) -> int:
+        """Current active fragments in the canonical sediment basins."""
+        return int(self._column.stats().get("total_active_frags", 0) or 0)
 
     def stats(self) -> Dict[str, Any]:
         s = self._column.stats()

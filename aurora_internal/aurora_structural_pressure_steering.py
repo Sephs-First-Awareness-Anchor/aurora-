@@ -25,7 +25,8 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_structural_pressure_steering.py')
 
 import hashlib
 import json
@@ -188,8 +189,7 @@ _DIMENSION_TO_AXIS: Dict[str, str] = {
 }
 
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _generate_id(prefix: str) -> str:
@@ -241,13 +241,7 @@ class StructuralPressureSteering:
                     self._active_directives[spd.directive_id] = spd
                 self._directive_history = data.get("history", [])
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_structural_pressure_steering.py:242",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_load_state", "handler_line": 242, "source_file": "aurora_internal/aurora_structural_pressure_steering.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_load_state', 242)
                 pass
 
     def _save_state(self):

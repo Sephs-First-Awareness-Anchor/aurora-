@@ -47,14 +47,15 @@ Usage:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_axis_emergence.py')
 
 import json
 import math
 import os
 import time
 from itertools import combinations
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Set, Tuple
 
 _AXES = ("X", "T", "N", "B", "A")
 _ALL_BASE_CHANNELS = tuple(f"NC:{s}>{d}" for s in _AXES for d in _AXES)
@@ -187,13 +188,7 @@ class AxisEmergenceDetector:
                     channels.add(row_ch)
                     channels.add(col_ch)
                 except ValueError as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_axis_emergence.py:188",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "load_empty_virtual_channels", "handler_line": 188, "source_file": "aurora_internal/aurora_axis_emergence.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'load_empty_virtual_channels', 188)
                     pass
         return frozenset(channels)
 
@@ -242,22 +237,10 @@ class AxisEmergenceDetector:
                                 row = {ax: float(snap.get(ax, 0.0) or 0.0) for ax in _AXES}
                                 obs.append(row)
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_internal/aurora_axis_emergence.py:236",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_collect_observations", "handler_line": 236, "source_file": "aurora_internal/aurora_axis_emergence.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, '_collect_observations', 236)
                             pass
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_axis_emergence.py:238",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_collect_observations", "handler_line": 238, "source_file": "aurora_internal/aurora_axis_emergence.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_collect_observations', 238)
                 pass
 
         # Source 2: evo_625_pressure_map.json  (slot axis_pressure profiles)
@@ -277,13 +260,7 @@ class AxisEmergenceDetector:
                         row = {ax: float(ap.get(ax, 0.0) or 0.0) for ax in _AXES}
                         obs.append(row)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_axis_emergence.py:257",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_collect_observations", "handler_line": 257, "source_file": "aurora_internal/aurora_axis_emergence.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_collect_observations', 257)
                 pass
 
         return obs
@@ -377,13 +354,7 @@ class AxisEmergenceDetector:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_axis_emergence.py:350",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_compounds", "handler_line": 350, "source_file": "aurora_internal/aurora_axis_emergence.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_compounds', 350)
             return {}
 
     def _save_compounds(self, data: Dict[str, Any]) -> None:
@@ -393,13 +364,7 @@ class AxisEmergenceDetector:
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(data, fh, indent=2, sort_keys=True, ensure_ascii=True)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_axis_emergence.py:359",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_compounds", "handler_line": 359, "source_file": "aurora_internal/aurora_axis_emergence.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_save_compounds', 359)
             pass
 
     def _path(self, rel: str) -> str:
@@ -416,13 +381,7 @@ def empty_virtual_channels(repo_root: str) -> FrozenSet[str]:
     try:
         return AxisEmergenceDetector(repo_root).load_empty_virtual_channels()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_axis_emergence.py:375",
-            exc=_aurora_boundary_exc,
-            context={"function": "empty_virtual_channels", "handler_line": 375, "source_file": "aurora_internal/aurora_axis_emergence.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'empty_virtual_channels', 375)
         return frozenset()
 
 

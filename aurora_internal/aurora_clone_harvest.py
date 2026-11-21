@@ -716,7 +716,8 @@ def _organs() -> Dict[str, Tuple[str, str, Any]]:
 
 
 def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = None,
-                   state_dir: Optional[str] = None) -> Dict[str, Any]:
+                   state_dir: Optional[str] = None, field_lock=None, live_idle=None,
+                   stop_event=None) -> Dict[str, Any]:
     """Absorb every segment of a harvest she has not absorbed yet, streaming
     each in chunks of ABSORB_CHUNK records.  The returned record is the last
     segment absorbed (plus "segments": what happened to each)."""
@@ -737,8 +738,27 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
         return {"status": "unreadable", "error": f"{type(exc).__name__}: {exc}"}
 
     organs = _organs()
+    if field_lock is not None:
+        # The resident flushes lexical state once per segment, keeping the same
+        # evidence and promotion rules without repeatedly serializing the whole
+        # accumulated evidence bank for every 200 imported records.
+        name, key, _ = organs["candidate"]
+        organs["candidate"] = (name, key, lambda o, recs: o.absorb_clone_candidates(recs, persist=False))
     segments: List[Dict[str, Any]] = []
     state: Dict[str, Any] = {"header": None, "skip": True, "results": {}, "buffers": {}}
+
+    def _with_field(fn):
+        if field_lock is None:
+            return fn()
+        while True:
+            draining = stop_event is not None and stop_event.is_set()
+            if draining or live_idle is None or live_idle():
+                if field_lock.acquire(blocking=False):
+                    try:
+                        return fn()
+                    finally:
+                        field_lock.release()
+            time.sleep(.05)
 
     def _flush(kind: str) -> None:
         recs = state["buffers"].pop(kind, [])
@@ -751,7 +771,12 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
             total["status"] = "absent"
             return
         try:
-            _add_result(total, fn(organ, recs))
+            if field_lock is not None and kind == "motif":
+                chunk_id = str((state["header"] or {}).get("harvest_id", "")) + ":motif:" + _sha(recs)
+                _add_result(total, _with_field(lambda: organ.absorb_clone_motifs(
+                    recs, persist=False, harvest_chunk_id=chunk_id)))
+            else:
+                _add_result(total, _with_field(lambda: fn(organ, recs)))
         except Exception as exc:
             total["status"] = "error"
             total["error"] = f"{type(exc).__name__}: {exc}"
@@ -766,6 +791,14 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
             return
         for kind in list(state["buffers"]):
             _flush(kind)
+        if field_lock is not None and "candidates" in state["results"]:
+            lexical = _organ(systems, "lexical_grounding")
+            if lexical is not None:
+                _with_field(lambda: lexical.save())
+        if field_lock is not None and "motifs" in state["results"]:
+            grammar = _organ(systems, "grammar_engine")
+            if grammar is not None:
+                _with_field(lambda: grammar._lineage.save())
         results = state["results"]
         for name, key in (("paths", "reasoning_paths"), ("operations", "communication_emergence"),
                           ("candidates", "lexical_grounding"), ("motifs", "grammar_engine"),

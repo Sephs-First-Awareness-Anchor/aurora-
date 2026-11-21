@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import re
 import time
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
+from typing import Any, Dict, Iterable, List, Mapping, Set
 
 from aurora_internal.aurora_propositional_understanding import verdict as _verdict
 

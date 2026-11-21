@@ -14,11 +14,12 @@ The ecology may maintain world state, actors, unfinished situations and
 consequences.  Aurora remains the only system allowed to interpret those events
 into her own memory, identity, representations, genealogy and development.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List, Optional
 import json
 import time
 import uuid

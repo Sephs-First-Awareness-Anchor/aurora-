@@ -27,6 +27,8 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_dream_trainer.py')
 
 import os
 import json
@@ -209,13 +211,7 @@ def _parse_relational_probe_hint(code_hints: List[str]) -> Dict[str, str]:
         try:
             payload = json.loads(text[len("[REL_PROBE] "):])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:185",
-                exc=_aurora_boundary_exc,
-                context={"function": "_parse_relational_probe_hint", "handler_line": 185, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_parse_relational_probe_hint', 185)
             continue
         return {
             "left": str(payload.get("left", "") or "").strip(),
@@ -768,13 +764,7 @@ class FailPointLedger:
             try:
                 self._dps.record_failpoint_update(dimension, _prev_avg, rec.recent_avg)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:528",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "record_fail", "handler_line": 528, "source_file": "aurora_dream_trainer.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'record_fail', 528)
                 pass
         normalized_example = self._sanitize_example(example)
         if normalized_example:
@@ -794,13 +784,7 @@ class FailPointLedger:
                 try:
                     rec.examples.remove(rec.examples[duplicate_index])
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_dream_trainer.py:547",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "record_fail", "handler_line": 547, "source_file": "aurora_dream_trainer.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'record_fail', 547)
                     pass
             rec.examples.appendleft(normalized_example)
         self._total_fails += 1
@@ -818,13 +802,7 @@ class FailPointLedger:
                 persistence_key=f"fail:{dimension}",
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:564",
-                exc=_aurora_boundary_exc,
-                context={"function": "record_fail", "handler_line": 564, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'record_fail', 564)
             pass
         # AURORA DREAM SUBSTRATE... DIRECTIVE, Section 8: complement the
         # aggregate above with a rich, individually-preserved stream entry.
@@ -938,6 +916,9 @@ class FailPointLedger:
         try:
             os.makedirs(self.state_dir, exist_ok=True)
             path = os.path.join(self.state_dir, _FAIL_POINTS_FILE)
+            from aurora_internal.aurora_store_ownership import store_write_allowed
+            if not store_write_allowed(path):
+                return True
             # Safety: if in-memory state is empty but disk has data, merge before saving.
             # Guards against a startup where load() failed (corrupt JSON) so the ledger
             # was never populated -- we must not overwrite good disk data with zeros.
@@ -950,13 +931,7 @@ class FailPointLedger:
                         for _dim, _d in (_disk.get("records", {}) or {}).items():
                             self._records[_dim] = DimensionRecord.from_dict(_d)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_dream_trainer.py:632",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "save", "handler_line": 632, "source_file": "aurora_dream_trainer.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'save', 632)
                     pass
             tmp = path + ".tmp"
             data = {
@@ -983,13 +958,7 @@ class FailPointLedger:
                 pass
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:645",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 645, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 645)
             return False
 
     def load(self) -> bool:
@@ -1016,13 +985,7 @@ class FailPointLedger:
                 self._records[dim] = DimensionRecord.from_dict(d)
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:660",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 660, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 660)
             return False
 
 
@@ -1322,13 +1285,7 @@ class RetainedLearningBank:
                 existing.add(key)
                 injected += 1
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:922",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "bridge_to_memory", "handler_line": 922, "source_file": "aurora_dream_trainer.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'bridge_to_memory', 922)
                 continue
         return injected
 
@@ -1342,13 +1299,7 @@ class RetainedLearningBank:
                 json.dump(payload, handle, indent=2)
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:935",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 935, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 935)
             return False
 
     def load(self) -> bool:
@@ -1368,13 +1319,7 @@ class RetainedLearningBank:
                     self._records[key] = rec
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:954",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 954, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 954)
             return False
 
 
@@ -1488,13 +1433,7 @@ class SkillMemory:
             with open(self._path(), "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(entry) + "\n")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:1067",
-                exc=_aurora_boundary_exc,
-                context={"function": "_append", "handler_line": 1067, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_append', 1067)
             pass
 
     def get_skill_hints(
@@ -1572,23 +1511,11 @@ class SkillMemory:
                     try:
                         self._skills.append(json.loads(line))
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_dream_trainer.py:1144",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "load", "handler_line": 1144, "source_file": "aurora_dream_trainer.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'load', 1144)
                         continue
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:1147",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 1147, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 1147)
             return False
 
 
@@ -2115,13 +2042,7 @@ class LessonPlanEngine:
                 _pair_key = _AXIS_TO_I_STATE_PAIR.get(_dim_axis, "")
                 i_state_auth = I_STATE_AUTHORITY.get(_pair_key, {})
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:1673",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "generate_specs", "handler_line": 1673, "source_file": "aurora_dream_trainer.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'generate_specs', 1673)
                 i_state_auth = {}
 
             specs.append({
@@ -2185,13 +2106,7 @@ def classify_fail_dimensions(
                 ]
                 return scaled
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_dream_trainer.py:1736",
-            exc=_aurora_boundary_exc,
-            context={"function": "classify_fail_dimensions", "handler_line": 1736, "source_file": "aurora_dream_trainer.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'classify_fail_dimensions', 1736)
         pass
 
     results: List[Tuple[str, float]] = []
@@ -2275,13 +2190,7 @@ def classify_fail_dimensions(
         from aurora_telemetry import get_telemetry as _gt
         results = _gt().axis_weighted_fails(results)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_dream_trainer.py:1819",
-            exc=_aurora_boundary_exc,
-            context={"function": "classify_fail_dimensions", "handler_line": 1819, "source_file": "aurora_dream_trainer.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'classify_fail_dimensions', 1819)
         results.sort(key=lambda x: x[1], reverse=True)
 
     return results
@@ -2408,13 +2317,7 @@ class LearnedBehaviorApplicator:
                     )
                 injected += 1
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:1929",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "inject_into_oets", "handler_line": 1929, "source_file": "aurora_dream_trainer.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'inject_into_oets', 1929)
                 continue
 
         return injected
@@ -2614,13 +2517,7 @@ class DreamTrainer:
             })
             self._fail_count_since_flush += 1
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:2051",
-                exc=_aurora_boundary_exc,
-                context={"function": "record_sensory_tension", "handler_line": 2051, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'record_sensory_tension', 2051)
             pass
     def _relational_probe_spec_from_pair(
         self,
@@ -2982,13 +2879,7 @@ class DreamTrainer:
                     try:
                         autonomy.add_study_topic(topic)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_dream_trainer.py:2254",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "record_relational_probe_outcomes", "handler_line": 2254, "source_file": "aurora_dream_trainer.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'record_relational_probe_outcomes', 2254)
                         pass
             summary["failed"] += 1
 
@@ -3022,13 +2913,7 @@ class DreamTrainer:
                     snap["outlet"]  = float(report.get("outlet_push_fraction", snap["outlet"]))
                     snap["fossils"] = int(report.get("total_fossils", 0))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:2287",
-                exc=_aurora_boundary_exc,
-                context={"function": "_capture_evolution_snapshot", "handler_line": 2287, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_capture_evolution_snapshot', 2287)
             pass
         return snap
 
@@ -3125,13 +3010,7 @@ class DreamTrainer:
                 elif hasattr(genealogy, "inject_training_plateau_pressure"):
                     genealogy.inject_training_plateau_pressure(sev * 0.5, axis_hint=ax)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:2376",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_fail_dimension", "handler_line": 2376, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_fail_dimension', 2376)
             pass
 
     def record_corpus_fail_from_comparison(
@@ -3198,13 +3077,7 @@ class DreamTrainer:
                 for dim, _ in dims:
                     _hfd(dim)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:2442",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "record_corpus_fail_from_comparison", "handler_line": 2442, "source_file": "aurora_dream_trainer.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'record_corpus_fail_from_comparison', 2442)
                 pass
 
         return dims
@@ -3309,13 +3182,7 @@ class DreamTrainer:
                         mode=existence_mode.BOUNDED,
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:2530",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_witness_directed_training_samples", "handler_line": 2530, "source_file": "aurora_dream_trainer.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_witness_directed_training_samples', 2530)
                 pass
 
             if rid:
@@ -3331,13 +3198,7 @@ class DreamTrainer:
                         tags=["train_txt", "directed_training", "observer"],
                     )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_dream_trainer.py:2552",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_witness_directed_training_samples", "handler_line": 2552, "source_file": "aurora_dream_trainer.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_witness_directed_training_samples', 2552)
                     pass
             witnessed += 1
 
@@ -3406,13 +3267,7 @@ class DreamTrainer:
             try:
                 self.audit_chronic_weaknesses()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:2628",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "flush_lessons_to_simulation", "handler_line": 2628, "source_file": "aurora_dream_trainer.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'flush_lessons_to_simulation', 2628)
                 pass
 
         top_fails = self.ledger.get_top_fails(n=5)
@@ -3440,13 +3295,7 @@ class DreamTrainer:
                 if v_deltas or a_deltas:
                     sensory.evolve(pressure=1.5, visual_deltas=v_deltas, audio_deltas=a_deltas)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:2655",
-                exc=_aurora_boundary_exc,
-                context={"function": "flush_lessons_to_simulation", "handler_line": 2655, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'flush_lessons_to_simulation', 2655)
             pass
 
         # Apply per-axis timescale boost before slot selection so slow axes
@@ -3493,13 +3342,7 @@ class DreamTrainer:
                         _effective_adjusted[_dim] = max(0.05, 0.5 * (1.0 - max(0, _count - 3) * 0.08))
                 effectiveness = _effective_adjusted
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:2701",
-                exc=_aurora_boundary_exc,
-                context={"function": "flush_lessons_to_simulation", "handler_line": 2701, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'flush_lessons_to_simulation', 2701)
             pass
 
         specs = self.planner.generate_specs(
@@ -3515,13 +3358,7 @@ class DreamTrainer:
         try:
             queued = session.queue_avatar_specs(specs)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:2716",
-                exc=_aurora_boundary_exc,
-                context={"function": "flush_lessons_to_simulation", "handler_line": 2716, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'flush_lessons_to_simulation', 2716)
             pass
 
         self._fail_count_since_flush = 0
@@ -3576,13 +3413,7 @@ class DreamTrainer:
                         max(0.0, min(1.0, float(score or 0.0)))
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:2770",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "audit_chronic_weaknesses", "handler_line": 2770, "source_file": "aurora_dream_trainer.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'audit_chronic_weaknesses', 2770)
                 continue
 
         recorded: List[Tuple[str, float]] = []
@@ -3675,13 +3506,7 @@ class DreamTrainer:
         try:
             from foundational_contract import ExistenceMode as _EM
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:2862",
-                exc=_aurora_boundary_exc,
-                context={"function": "train_on_bundle", "handler_line": 2862, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'train_on_bundle', 2862)
             _EM = None  # type: ignore
 
         # Build a bundle-grounded avatar spec
@@ -3845,13 +3670,7 @@ class DreamTrainer:
                 oets=_oets,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:3007",
-                exc=_aurora_boundary_exc,
-                context={"function": "train_on_bundle", "handler_line": 3007, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'train_on_bundle', 3007)
             pass
 
         # Resolve this episode's staged directed-training samples now that
@@ -3947,13 +3766,7 @@ class DreamTrainer:
                 try:
                     self.retention.bridge_to_memory(memory, limit=4)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_dream_trainer.py:3077",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "record_pipeline_learning", "handler_line": 3077, "source_file": "aurora_dream_trainer.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'record_pipeline_learning', 3077)
                     pass
         self.retention.save()
         return True
@@ -4375,13 +4188,7 @@ class DreamTrainer:
         try:
             learnings = learner.what_have_i_learned()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:3163",
-                exc=_aurora_boundary_exc,
-                context={"function": "learned_summary", "handler_line": 3163, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'learned_summary', 3163)
             pass
         if not learnings:
             return "No confident learnings formed yet. Run /train or /corpus to accumulate experience."
@@ -4400,13 +4207,7 @@ class DreamTrainer:
             session = getattr(simulation, "session", None)
             return getattr(session, "learner", None)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:3181",
-                exc=_aurora_boundary_exc,
-                context={"function": "_get_learner", "handler_line": 3181, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_get_learner', 3181)
             return None
 
     def _get_oets(self, systems: Dict[str, Any]) -> Optional[Any]:
@@ -4414,13 +4215,7 @@ class DreamTrainer:
             perception = systems.get("perception")
             return getattr(perception, "oets", None)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:3188",
-                exc=_aurora_boundary_exc,
-                context={"function": "_get_oets", "handler_line": 3188, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_get_oets', 3188)
             return None
 
     def _promote_candidate_into_oets(self, candidate: Dict[str, Any], systems: Optional[Dict[str, Any]]) -> bool:
@@ -4572,26 +4367,14 @@ class DreamTrainer:
                 on_epoch=_on_epoch,
             )
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:3291",
-                exc=exc,
-                context={"function": "run_introspective_simulation", "handler_line": 3291, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), exc, 'run_introspective_simulation', 3291)
             return {"success": False, "reason": f"speed_run_failed: {exc}"}
 
         # Bridge any new learnings to OETS immediately
         try:
             self._bridge_learnings_to_oets(systems)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_dream_trainer.py:3297",
-                exc=_aurora_boundary_exc,
-                context={"function": "run_introspective_simulation", "handler_line": 3297, "source_file": "aurora_dream_trainer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run_introspective_simulation', 3297)
             pass
 
         run_result["success"] = True

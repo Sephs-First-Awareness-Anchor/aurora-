@@ -43,13 +43,13 @@ AUTHORS: Sunni (Sir) Morningstar and Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_leverage_relief.py')
 
 import json
 import os
 import time
-from collections import deque
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 _STATE_REL  = "aurora_state"
 _HINTS_REL  = "aurora_state/adapter_hints.json"
@@ -186,24 +186,12 @@ class LeverageReliefValve:
                             if ax in counts:
                                 counts[ax] += 1
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_internal/aurora_leverage_relief.py:187",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_scan_recent_experiences", "handler_line": 187, "source_file": "aurora_internal/aurora_leverage_relief.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_scan_recent_experiences', 187)
                         pass
                 if any(counts.values()):
                     return counts
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_leverage_relief.py:191",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_scan_recent_experiences", "handler_line": 191, "source_file": "aurora_internal/aurora_leverage_relief.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_scan_recent_experiences', 191)
                 pass
         # Fallback: pressure_experiences, excluding Gate-5 rejections
         exp_path = os.path.join(self.repo_root, _EXP_REL)
@@ -240,22 +228,10 @@ class LeverageReliefValve:
                         if f"_{ax}_axis" in pursuing or f"promote_{ax}" in pursuing:
                             counts[ax] += 1
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_leverage_relief.py:227",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_scan_recent_experiences", "handler_line": 227, "source_file": "aurora_internal/aurora_leverage_relief.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_scan_recent_experiences', 227)
                     pass
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_leverage_relief.py:229",
-                exc=_aurora_boundary_exc,
-                context={"function": "_scan_recent_experiences", "handler_line": 229, "source_file": "aurora_internal/aurora_leverage_relief.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_scan_recent_experiences', 229)
             pass
         return counts
 
@@ -296,13 +272,7 @@ class LeverageReliefValve:
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(hints, f, indent=2, sort_keys=True)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_leverage_relief.py:269",
-                exc=_aurora_boundary_exc,
-                context={"function": "_write_redirect", "handler_line": 269, "source_file": "aurora_internal/aurora_leverage_relief.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_write_redirect', 269)
             pass
 
     def _clear_redirect(self):
@@ -323,13 +293,7 @@ class LeverageReliefValve:
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(hints, f, indent=2, sort_keys=True)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_leverage_relief.py:289",
-                exc=_aurora_boundary_exc,
-                context={"function": "_clear_redirect", "handler_line": 289, "source_file": "aurora_internal/aurora_leverage_relief.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_clear_redirect', 289)
             pass
 
     def _route_snapshot(self) -> Dict[str, Any]:
@@ -341,13 +305,7 @@ class LeverageReliefValve:
                 data = json.load(handle)
             return data if isinstance(data, dict) else {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_leverage_relief.py:300",
-                exc=_aurora_boundary_exc,
-                context={"function": "_route_snapshot", "handler_line": 300, "source_file": "aurora_internal/aurora_leverage_relief.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_route_snapshot', 300)
             return {}
 
     def _log(self, msg: str):
@@ -357,13 +315,7 @@ class LeverageReliefValve:
             with open(path, "a", encoding="utf-8") as f:
                 f.write(f"[{ts}]  {msg}\n")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_leverage_relief.py:309",
-                exc=_aurora_boundary_exc,
-                context={"function": "_log", "handler_line": 309, "source_file": "aurora_internal/aurora_leverage_relief.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_log', 309)
             pass
 
 

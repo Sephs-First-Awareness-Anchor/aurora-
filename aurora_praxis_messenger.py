@@ -416,6 +416,15 @@ class PraxisMessenger:
         # Messages already read that sit beyond the shared cursor (another
         # contact's earlier message is still unread) -- never read twice.
         self.read_ahead: set = set()
+        from aurora_internal.desktop.common import read_json
+        self.delivery_path = self.root / "messenger_delivery.json"
+        delivery = read_json(self.delivery_path, {})
+        self.transport_cursor = int(delivery.get("transport_cursor", self.cursor))
+        self.inbox = dict(delivery.get("inbox", {}))
+        self.outbox = dict(delivery.get("outbox", {}))
+        self.failed_readings = dict(delivery.get("failed_readings", {}))
+        self.read_ahead = set(delivery.get("read_ahead", []))
+        self.pending.update(delivery.get("pending", {}))
         # She starts conversations herself when something of hers is
         # unresolved (aurora_praxis_initiative.py).
         try:
@@ -455,6 +464,53 @@ class PraxisMessenger:
         tmp.write_text(json.dumps({"after": self.cursor, "updated_at": time.time()}),
                        encoding="utf-8")
         tmp.replace(self.cursor_path)
+
+    def _save_delivery(self):
+        from aurora_internal.desktop.common import write_json
+        write_json(self.delivery_path, {"transport_cursor": self.transport_cursor, "inbox": self.inbox,
+                   "outbox": self.outbox, "failed_readings": self.failed_readings,
+                   "read_ahead": sorted(self.read_ahead), "pending": self.pending})
+
+    def _deliver_once(self, key):
+        entry = self.outbox[key]
+        try:
+            response = self.http("POST", "/social/send", entry["body"])
+        except Exception as exc:
+            response = {"error": f"{type(exc).__name__}: {exc}"}
+        if response and response.get("accepted"):
+            del self.outbox[key]
+            self._save_delivery()
+            return response
+        entry["retry_at"] = time.time() + 30
+        entry["last_error"] = str((response or {}).get("error", "no response"))[:300]
+        self._save_delivery()
+        return response
+
+    def _record_sent(self, entry):
+        pid, name, reply, src = entry["body"]["persona_id"], entry["name"], entry["body"]["text"], entry["src"]
+        self.counters["spoke"] += 1
+        self._log(pid, {"dir": "spoke", "reply_to": entry["body"]["in_reply_to"], "text": reply,
+                        "src": src, "at": time.time()})
+        self.last_spoke = {"to": name, "text": reply[:160], "src": src, "at": time.time()}
+        self.pending.pop(pid, None)
+        novel = [pair for pair in self._pairs(reply) if pair not in self.heard_pairs]
+        if novel:
+            self.counters["novel_phrasings"] = self.counters.get("novel_phrasings", 0) + 1
+            self.last_novel = {"to": name, "text": reply[:160], "pairs": novel[:3], "at": time.time()}
+        self._save_delivery()
+
+    def _retry_outbox(self):
+        outcomes = []
+        for key, entry in list(self.outbox.items()):
+            if time.time() < float(entry.get("retry_at", 0)):
+                continue
+            response = self._deliver_once(key)
+            sent = bool(response and response.get("accepted"))
+            if sent:
+                self._record_sent(entry)
+            outcomes.append({"seq": entry["body"]["in_reply_to"], "persona_id": entry["body"]["persona_id"],
+                             "reply": entry["body"]["text"], "sent": sent, "transport_retry": True})
+        return outcomes
 
     def _log(self, persona_id: str, record: Dict[str, Any]) -> None:
         safe = "".join(ch for ch in persona_id if ch.isalnum() or ch in "-_")
@@ -551,21 +607,17 @@ class PraxisMessenger:
             entry["attempts"] = int(entry.get("attempts", 0)) + 1
             entry["last_attempt"] = time.time()
             self.pending[pid] = entry
+            self._save_delivery()
             return outcome
-        response = self.http("POST", "/social/send", {
-            "persona_id": pid, "text": reply[:MAX_TEXT_CHARS], "in_reply_to": message["seq"]})
+        key = f"{pid}:{message['seq']}"
+        entry = {"body": {"persona_id": pid, "text": reply[:MAX_TEXT_CHARS], "in_reply_to": message["seq"]},
+                 "name": name, "src": src, "retry_at": 0}
+        self.outbox[key] = entry
+        self._save_delivery()  # compose once, persist before attempting delivery
+        response = self._deliver_once(key)
         outcome["sent"] = bool(response and response.get("accepted"))
         if outcome["sent"]:
-            self.counters["spoke"] += 1
-            self._log(pid, {"dir": "spoke", "reply_to": message["seq"], "text": reply,
-                            "src": src, "at": time.time()})
-            self.last_spoke = {"to": name, "text": reply[:160], "src": src, "at": time.time()}
-            self.pending.pop(pid, None)
-            novel = [pair for pair in self._pairs(reply) if pair not in self.heard_pairs]
-            if novel:
-                self.counters["novel_phrasings"] = self.counters.get("novel_phrasings", 0) + 1
-                self.last_novel = {"to": name, "text": reply[:160], "pairs": novel[:3],
-                                   "at": time.time()}
+            self._record_sent(entry)
         else:
             self.counters["errors"] += 1
             self.last_error = f"send refused: {(response or {}).get('error', 'no response')}"
@@ -580,16 +632,26 @@ class PraxisMessenger:
         # window first, so she never even looked.
         if self._paused.is_set():
             return []
+        retried = self._retry_outbox()
         try:
-            payload = self.http("GET", f"/social/pull?after={self.cursor}&limit={PULL_LIMIT}", None)
+            payload = self.http("GET", f"/social/pull?after={self.transport_cursor}&limit={PULL_LIMIT}", None)
         except Exception as exc:
             self.online, self.last_error = False, f"{type(exc).__name__}: {exc}"
-            return []
+            payload = None
         self.online = isinstance(payload, Mapping) and "messages" in payload
         self.last_pull_at = time.time()
-        if not self.online:
-            return []
-        outcomes: List[Dict[str, Any]] = []
+        if self.online:
+            for raw in payload.get("messages") or []:
+                seq = raw.get("seq") if isinstance(raw, Mapping) else None
+                if isinstance(seq, int) and seq > self.cursor and seq not in self.read_ahead:
+                    if len(self.inbox) >= 5000 and str(seq) not in self.inbox:
+                        self.last_error = "durable_inbox_full; transport cursor retained"
+                        break
+                    self.inbox[str(seq)] = dict(raw)
+                    self.transport_cursor = max(self.transport_cursor, seq)
+            self._save_delivery()
+        payload = {"messages": sorted(self.inbox.values(), key=lambda m: int(m.get("seq", 0)))}
+        outcomes: List[Dict[str, Any]] = list(retried)
         unread = [r for r in (payload.get("messages") or [])
                   if isinstance(r, Mapping) and isinstance(r.get("seq"), int) and r["seq"] > self.cursor
                   and r["seq"] not in getattr(self, "read_ahead", ())]
@@ -603,7 +665,7 @@ class PraxisMessenger:
         valid: List[Dict[str, Any]] = []
         self.read_ahead = {q for q in self.read_ahead if q > self.cursor}
         handled: set = set(self.read_ahead)
-        all_seqs: List[int] = []
+        all_seqs: List[int] = list(self.read_ahead)
         for raw in payload.get("messages") or []:
             seq = raw.get("seq") if isinstance(raw, Mapping) else None
             if not isinstance(seq, int) or seq <= self.cursor:
@@ -636,6 +698,9 @@ class PraxisMessenger:
 
         _advance()
         for group in sorted(groups.values(), key=lambda g: g[0]["seq"]):
+            failure = self.failed_readings.get(group[0]["persona_id"], {})
+            if failure.get("seq") == group[-1]["seq"] and time.time() < float(failure.get("retry_at", 0)):
+                continue
             if not self.live_idle():
                 break                            # Sunni is here; he comes first
             acquired = True
@@ -647,22 +712,30 @@ class PraxisMessenger:
             message = merge_backlog(group)
             try:
                 outcomes.append(self.handle_message(message))
+                self.failed_readings.pop(message["persona_id"], None)
                 if len(group) > 1:
                     self.counters["heard"] += len(group) - 1
                     self.counters["backlogs_read_together"] = self.counters.get("backlogs_read_together", 0) + 1
             except Exception as exc:
                 self.counters["errors"] += 1
                 self.last_error = f"turn failed: {type(exc).__name__}: {exc}"[:300]
+                self.failed_readings[message["persona_id"]] = {"seq": group[-1]["seq"], "retry_at": time.time() + 120}
+                self._save_delivery()
+                continue  # preserve the unread group, but let other contacts progress
             finally:
                 if self.field_lock is not None:
                     self.field_lock.release()
-            # Past a reading once handled (even if her turn failed), so one bad
-            # message can never wedge the loop.
+            # Only successful cognition consumes a reading. A composed reply
+            # awaiting transport is already durable and is never regenerated.
             handled.update(m["seq"] for m in group)
             self.read_ahead.update(m["seq"] for m in group)
             _advance()
             self.read_ahead = {q for q in self.read_ahead if q > self.cursor}
             self.unread_waiting = max(0, self.unread_waiting - len(group))
+        for seq in list(self.inbox):
+            if int(seq) <= self.cursor or int(seq) in self.read_ahead:
+                self.inbox.pop(seq)
+        self._save_delivery()
         outcomes.extend(self._reenter_pending())
         if self.initiative is not None:
             try:
@@ -688,6 +761,8 @@ class PraxisMessenger:
         outcomes: List[Dict[str, Any]] = []
         now = time.time()
         for pid, entry in list(self.pending.items()):
+            if any(e["body"]["persona_id"] == pid for e in self.outbox.values()):
+                continue  # transport retry must not trigger a new cognitive turn
             if int(entry.get("attempts", 0)) >= MAX_ATTEMPTS:
                 continue
             if now - float(entry.get("last_attempt", 0.0)) < REENTRY_AFTER_S:
@@ -704,7 +779,7 @@ class PraxisMessenger:
             except Exception as exc:
                 self.counters["errors"] += 1
                 self.last_error = f"turn failed: {type(exc).__name__}: {exc}"[:300]
-                entry["attempts"] = MAX_ATTEMPTS
+                entry["last_attempt"] = time.time()
             finally:
                 if self.field_lock is not None:
                     self.field_lock.release()
@@ -749,6 +824,8 @@ class PraxisMessenger:
                 "online": self.online, "paused": self._paused.is_set(),
                 "thread_alive": bool(self._thread and self._thread.is_alive()),
                 "cursor": self.cursor, "last_pull_at": self.last_pull_at,
+                "transport_cursor": self.transport_cursor, "durable_unread": len(self.inbox),
+                "outbox_pending": len(self.outbox), "failed_readings": dict(self.failed_readings),
                 "unread_waiting": int(getattr(self, "unread_waiting", 0) or 0),
                 "last_error": self.last_error, **self.counters,
                 "withheld_reasons": dict(self.withheld_reasons),

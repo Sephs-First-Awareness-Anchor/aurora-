@@ -18,6 +18,7 @@ are combined:
     aurora_daemon.py's own outer loop -- reused here rather than
     inventing a new interval.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import inspect
@@ -25,7 +26,6 @@ import os
 import shutil
 import sys
 import tempfile
-import time
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:

@@ -16,7 +16,6 @@ specific-phrasing-based, so this slipped through every one of them.
 import json
 import os
 import sys
-import tempfile
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANDROID_PY_DIR = os.path.join(REPO_ROOT, "flutter_app", "android", "app", "src", "main", "python")

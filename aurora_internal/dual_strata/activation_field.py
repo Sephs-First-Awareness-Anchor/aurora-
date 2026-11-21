@@ -18,13 +18,13 @@ before it is explicitly needed.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/activation_field.py')
 
 import json
 import os
 import re
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -129,13 +129,7 @@ class ActivationField:
                     try:
                         relations = oets_web.get_all_relations_for(concept)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_internal/dual_strata/activation_field.py:130",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "spread", "handler_line": 130, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'spread', 130)
                         relations = []
                     for rel in relations:
                         try:
@@ -156,13 +150,7 @@ class ActivationField:
                                 new_wave[neighbor] = neighbor_gain
                                 next_frontier.append((neighbor, neighbor_gain))
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora_internal/dual_strata/activation_field.py:150",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "spread", "handler_line": 150, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'spread', 150)
                             continue
                 frontier = next_frontier
                 if not frontier:
@@ -197,13 +185,7 @@ class ActivationField:
                             getattr(node, "emotional_valence", 0.0) or 0.0
                         )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/dual_strata/activation_field.py:184",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "spread", "handler_line": 184, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'spread', 184)
                     pass
 
             # Working memory stated facts
@@ -213,13 +195,7 @@ class ActivationField:
                     if fact:
                         entry["wm_fact"] = str(fact)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/dual_strata/activation_field.py:193",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "spread", "handler_line": 193, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'spread', 193)
                     pass
 
             # Core identity entity lookup
@@ -258,13 +234,7 @@ class ActivationField:
                             getattr(entity, "emotional_resonance", 0.0) or 0.0
                         )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/dual_strata/activation_field.py:211",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "spread", "handler_line": 211, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'spread', 211)
                     pass
 
             if entry:
@@ -407,6 +377,9 @@ def extract_seeds_from_systems(systems: Dict[str, Any]) -> Tuple[List[str], List
         to ActivationField.spread() as `seeds` and `sensory_recognitions`.
     """
     seeds: List[str] = []
+    # Transient associative hypotheses share the existing salience pathway.
+    # They never become promotion evidence or autobiographical observations.
+    seeds.extend(str(c) for c in systems.pop("_dream_association_seeds", [])[:80])
 
     # 1. Recent user utterances — what was just said
     wm = systems.get("working_memory")
@@ -417,13 +390,7 @@ def extract_seeds_from_systems(systems: Dict[str, Any]) -> Tuple[List[str], List
                 text = str(utt.get("text", "") if isinstance(utt, dict) else utt or "")
                 seeds.extend(_tokenize(text))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/activation_field.py:349",
-                exc=_aurora_boundary_exc,
-                context={"function": "extract_seeds_from_systems", "handler_line": 349, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'extract_seeds_from_systems', 349)
             pass
 
     # 2. Conscious frame — salient hypotheses and interpretation
@@ -439,13 +406,7 @@ def extract_seeds_from_systems(systems: Dict[str, Any]) -> Tuple[List[str], List
                 snap = json.loads(open(snap_path).read())
                 frame = snap.get("conscious_frame") or {}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/activation_field.py:364",
-                exc=_aurora_boundary_exc,
-                context={"function": "extract_seeds_from_systems", "handler_line": 364, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'extract_seeds_from_systems', 364)
             pass
 
     for hyp in list(frame.get("salient_hypotheses") or [])[:4]:
@@ -468,13 +429,7 @@ def extract_seeds_from_systems(systems: Dict[str, Any]) -> Tuple[List[str], List
                     if word and word not in _STOP_WORDS and len(word) >= 3:
                         sensory_recognitions.append(word)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/activation_field.py:386",
-                exc=_aurora_boundary_exc,
-                context={"function": "extract_seeds_from_systems", "handler_line": 386, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'extract_seeds_from_systems', 386)
             pass
 
     # 4. Active topic from working memory
@@ -487,13 +442,7 @@ def extract_seeds_from_systems(systems: Dict[str, Any]) -> Tuple[List[str], List
             )
             seeds.extend(_tokenize(topic))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/activation_field.py:398",
-                exc=_aurora_boundary_exc,
-                context={"function": "extract_seeds_from_systems", "handler_line": 398, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'extract_seeds_from_systems', 398)
             pass
 
     return seeds, sensory_recognitions
@@ -525,13 +474,7 @@ def _load_field(state_dir: Path) -> ActivationField:
         if path.exists():
             return ActivationField.from_dict(json.loads(path.read_text()) or {})
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/activation_field.py:429",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_field", "handler_line": 429, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_field', 429)
         pass
     return ActivationField()
 
@@ -545,13 +488,7 @@ def _save_field(afield: ActivationField, state_dir: Path) -> None:
             json.dump(afield.to_dict(), f, indent=2)
         os.replace(tmp, str(path))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/activation_field.py:442",
-            exc=_aurora_boundary_exc,
-            context={"function": "_save_field", "handler_line": 442, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_save_field', 442)
         pass
 
 
@@ -617,31 +554,13 @@ def run_activation_cycle(systems: Dict[str, Any]) -> Dict[str, Any]:
                             ):
                                 _research._integrate_result(_concept, _ir)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_internal/dual_strata/activation_field.py:507",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "run_activation_cycle", "handler_line": 507, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'run_activation_cycle', 507)
                         continue
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/activation_field.py:509",
-                exc=_aurora_boundary_exc,
-                context={"function": "run_activation_cycle", "handler_line": 509, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run_activation_cycle', 509)
             pass
 
         return data
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/activation_field.py:513",
-            exc=_aurora_boundary_exc,
-            context={"function": "run_activation_cycle", "handler_line": 513, "source_file": "aurora_internal/dual_strata/activation_field.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'run_activation_cycle', 513)
         return {}

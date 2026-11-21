@@ -13,7 +13,7 @@ Exercises the complete path:
 No Aurora daemon required — direct class instantiation.
 """
 
-import sys, math, json, tempfile, os
+import sys, json, tempfile, os
 sys.path.insert(0, ".")
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ Provenance is kept as a facet (`provenance:<label>`, content the label), at the 
 """
 from __future__ import annotations
 
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 # The bookkeeping prefixes of aurora.py::_PLACEHOLDER_DEFINITION_PREFIXES, plus the scaffold's own `foundational:` (a test keeps the two lists in step).
 PREFIXES = ("from_definition:", "from meaning:", "internal:", "learned:", "pending:", "research:", "context:", "foundational:")

@@ -9,7 +9,8 @@ while the raw purged details are packed into a restoreable archive folder.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_metabolic_distiller.py')
 
 import argparse
 import datetime as _dt
@@ -208,13 +209,7 @@ class CoherenceAnalyzer:
                 if value:
                     return float(value)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_metabolic_distiller.py:209",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_timestamp_from_payload", "handler_line": 209, "source_file": "aurora_metabolic_distiller.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_timestamp_from_payload', 209)
                 pass
         return 0.0
 
@@ -227,13 +222,7 @@ class CoherenceAnalyzer:
                 if value is not None:
                     scores.append(float(value))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_metabolic_distiller.py:221",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_worth_from_payload", "handler_line": 221, "source_file": "aurora_metabolic_distiller.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_worth_from_payload', 221)
                 pass
 
         consequence = payload.get("consequence")
@@ -241,13 +230,7 @@ class CoherenceAnalyzer:
             try:
                 scores.append(min(1.0, float(consequence.get("tension", 0.0) or 0.0)))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_metabolic_distiller.py:228",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_worth_from_payload", "handler_line": 228, "source_file": "aurora_metabolic_distiller.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_worth_from_payload', 228)
                 pass
 
         outcome = payload.get("outcome")
@@ -432,13 +415,7 @@ class TemporalCompressor:
             try:
                 payload: Any = json.loads(stripped)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_metabolic_distiller.py:412",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_ingest_purged_line", "handler_line": 412, "source_file": "aurora_metabolic_distiller.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_ingest_purged_line', 412)
                 payload = {"raw_line": stripped[:240]}
         else:
             payload = stripped[:240]
@@ -532,13 +509,7 @@ class MetabolicDistiller:
                 p.stat().st_size for p in self.state_dir.iterdir() if p.is_file()
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_metabolic_distiller.py:505",
-                exc=_aurora_boundary_exc,
-                context={"function": "trigger_snapshot", "handler_line": 505, "source_file": "aurora_metabolic_distiller.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'trigger_snapshot', 505)
             total_state_bytes = 0
 
         der_load = self._estimate_der_load()
@@ -911,13 +882,7 @@ class MetabolicDistiller:
             try:
                 counts[axis] = float(raw.get(axis, 0.0) or 0.0)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_metabolic_distiller.py:877",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_raw_axis_counts", "handler_line": 877, "source_file": "aurora_metabolic_distiller.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_raw_axis_counts', 877)
                 counts[axis] = 0.0
         if sum(counts.values()) <= 0.0:
             for axis in list(crystal.get("axes", []) or []):
@@ -1012,13 +977,7 @@ class MetabolicDistiller:
         try:
             data = json.loads(_LINEAGE_FILE.read_text())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_metabolic_distiller.py:971",
-                exc=_aurora_boundary_exc,
-                context={"function": "refresh_lineage_marker_values", "handler_line": 971, "source_file": "aurora_metabolic_distiller.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'refresh_lineage_marker_values', 971)
             return 0
         if not isinstance(data, dict):
             return 0
@@ -1106,13 +1065,7 @@ class MetabolicDistiller:
         try:
             data = json.loads(_LINEAGE_FILE.read_text())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_metabolic_distiller.py:1058",
-                exc=_aurora_boundary_exc,
-                context={"function": "_promote_lineage", "handler_line": 1058, "source_file": "aurora_metabolic_distiller.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_promote_lineage', 1058)
             return 0
         if not isinstance(data, dict):
             return 0
@@ -1199,13 +1152,7 @@ class MetabolicDistiller:
         try:
             data = json.loads(path.read_text())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_metabolic_distiller.py:1144",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_json_list", "handler_line": 1144, "source_file": "aurora_metabolic_distiller.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_json_list', 1144)
             return []
         if isinstance(data, list):
             return [item for item in data if isinstance(item, dict)]
@@ -1231,13 +1178,7 @@ class MetabolicDistiller:
             try:
                 payload = json.loads(line)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_metabolic_distiller.py:1169",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_estimate_low_worth_density", "handler_line": 1169, "source_file": "aurora_metabolic_distiller.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_estimate_low_worth_density', 1169)
                 continue
             features = self.analyzer.extract("pressure_experiences", payload)
             total += 1
@@ -1261,13 +1202,7 @@ class MetabolicDistiller:
                     if severities:
                         return sum(severities) / len(severities)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_metabolic_distiller.py:1192",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_estimate_der_load", "handler_line": 1192, "source_file": "aurora_metabolic_distiller.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_estimate_der_load', 1192)
                 pass
         return self._estimate_low_worth_density()
 

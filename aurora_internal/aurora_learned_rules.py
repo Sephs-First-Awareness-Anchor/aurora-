@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import re
 from collections import deque
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 
 # The roles her web already gives words (OETS node.role): a word told it is one is one.
 ROLE_NAMES = frozenset({"noun", "verb", "adjective", "adverb", "preposition", "pronoun", "determiner"})

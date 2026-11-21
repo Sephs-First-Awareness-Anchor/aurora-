@@ -9,7 +9,8 @@ Phases:
   3. Conversation turns — L0→L8 full pipeline via stdin
   4. Exploration cycles — autonomous reasoning
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_training_run.py')
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 
@@ -92,13 +93,7 @@ def run_phase(label, cmd, env=None, stdin_text=None, timeout=600):
         proc.kill()
         raise
     except subprocess.TimeoutExpired as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_training_run.py:93",
-            exc=_aurora_boundary_exc,
-            context={"function": "run_phase", "handler_line": 93, "source_file": "aurora_training_run.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'run_phase', 93)
         proc.kill()
 
     elapsed = time.time() - start
@@ -123,13 +118,7 @@ def read_state():
         with open(path) as f:
             return json.load(f)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_training_run.py:117",
-            exc=_aurora_boundary_exc,
-            context={"function": "read_state", "handler_line": 117, "source_file": "aurora_training_run.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'read_state', 117)
         return {}
 
 
@@ -143,13 +132,7 @@ def read_oets_stats():
             "relations": len(data.get("edges", {})),
         }
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_training_run.py:130",
-            exc=_aurora_boundary_exc,
-            context={"function": "read_oets_stats", "handler_line": 130, "source_file": "aurora_training_run.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'read_oets_stats', 130)
         return {}
 
 

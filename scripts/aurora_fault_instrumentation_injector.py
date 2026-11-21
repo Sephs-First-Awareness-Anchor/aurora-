@@ -17,17 +17,12 @@ two tools cannot drift apart) as the detection engine, that reproduces
 the zip's exact demonstrated call shape:
 
     except SomeError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:<file>:<line>",
-            exc=_aurora_boundary_exc,
-            context={"function": "<func>", "handler_line": <line>, "source_file": "<file>"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, "<func>", <line>)
         <original handler body, unchanged>
 
-plus a top-of-file import of `record_exception_from_locals` (aliased to
-`_aurora_record_exception_from_locals`) in every modified file.
+plus, in every modified file, a top-of-file import of `bind_fault_recorder`
+and one `_aurora_fault = _bind_fault_recorder(__name__, "<file>")` line.
+The record written is identical to the zip's original seven-line form.
 
 Uses `tokenize` (not naive text/regex splicing) to find the exact
 column of the colon that ends an `except` clause header, so multi-line
@@ -57,8 +52,13 @@ from aurora_internal.aurora_fault_audit import (  # noqa: E402
 
 IMPORT_LINE = (
     "from aurora_internal.aurora_runtime_faults import "
-    "record_exception_from_locals as _aurora_record_exception_from_locals"
+    "bind_fault_recorder as _bind_fault_recorder"
 )
+
+
+def _bind_line(rel_path: str) -> str:
+    """The one per-module line that names this file for every handler in it."""
+    return f"_aurora_fault = _bind_fault_recorder(__name__, {rel_path!r})"
 BOUNDARY_MARKER = "aurora-fault-boundary: intentional"
 
 
@@ -137,29 +137,21 @@ def _indent_of(line: str) -> str:
 
 
 def _build_injected_block(indent: str, exc_name: str, rel_path: str, target: Target) -> List[str]:
-    ctx = (
-        f'{{"function": "{target.function}", "handler_line": {target.lineno}, '
-        f'"source_file": "{rel_path}"}}'
-    )
-    return [
-        f"{indent}_aurora_record_exception_from_locals(",
-        f"{indent}    locals(),",
-        f"{indent}    module=__name__,",
-        f'{indent}    operation="exception_handler:{rel_path}:{target.lineno}",',
-        f"{indent}    exc={exc_name},",
-        f"{indent}    context={ctx},",
-        f"{indent})",
-    ]
+    # One line; bind_fault_recorder rebuilds the exact operation/context the
+    # seven-line form spelled out (exception_handler:<file>:<line>, and
+    # {"function", "handler_line", "source_file"} in that order).
+    return [f"{indent}_aurora_fault(locals(), {exc_name}, {target.function!r}, {target.lineno})"]
 
 
-def _insert_import(lines: List[str]) -> List[str]:
+def _insert_import(lines: List[str], rel_path: str = "") -> List[str]:
     if any(IMPORT_LINE in line for line in lines):
         return lines
+    header = [IMPORT_LINE, _bind_line(rel_path)]
     joined = "\n".join(lines)
     try:
         module = ast.parse(joined)
     except SyntaxError:
-        return lines[:1] + [IMPORT_LINE] + lines[1:]
+        return lines[:1] + header + lines[1:]
 
     insert_at = 0
     body = list(module.body)
@@ -176,7 +168,7 @@ def _insert_import(lines: List[str]) -> List[str]:
     while body and isinstance(body[0], ast.ImportFrom) and body[0].module == "__future__":
         insert_at = int(body[0].end_lineno or insert_at)
         body = body[1:]
-    return lines[:insert_at] + [IMPORT_LINE] + lines[insert_at:]
+    return lines[:insert_at] + header + lines[insert_at:]
 
 
 def instrument_file(path: Path, *, dry_run: bool = False) -> int:
@@ -237,7 +229,7 @@ def instrument_file(path: Path, *, dry_run: bool = False) -> int:
         lines.insert(row, insertion)
 
     new_source = "".join(lines)
-    new_lines = _insert_import(new_source.splitlines())
+    new_lines = _insert_import(new_source.splitlines(), rel_path)
     new_source = "\n".join(new_lines) + ("\n" if new_source.endswith("\n") else "")
 
     try:

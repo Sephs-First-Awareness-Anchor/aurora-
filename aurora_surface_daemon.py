@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_surface_daemon.py')
 
 import json
+import os
 import signal
 import threading
 import time
@@ -23,7 +25,7 @@ from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
 
 
 _BASE_DIR = Path(__file__).parent
-_STATE_DIR = _BASE_DIR / "aurora_state"
+_STATE_DIR = Path(os.environ.get("AURORA_STATE_DIR") or _BASE_DIR / "aurora_state").resolve()
 _QUEUE_FILE = _STATE_DIR / "surface_turn_queue.json"
 _RESULT_FILE = _STATE_DIR / "surface_turn_result.json"
 _STATUS_FILE = _STATE_DIR / "surface_daemon_status.json"
@@ -86,25 +88,13 @@ def _surface_sensory_vectors(systems: Dict[str, Any]) -> Dict[str, Any]:
             try:
                 cand_audio = list(owner._current_audio_vector() or [])
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_surface_daemon.py:80",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_surface_sensory_vectors", "handler_line": 80, "source_file": "aurora_surface_daemon.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_surface_sensory_vectors', 80)
                 cand_audio = []
         if not cand_visual and hasattr(owner, "_current_visual_vector"):
             try:
                 cand_visual = list(owner._current_visual_vector() or [])
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_surface_daemon.py:85",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_surface_sensory_vectors", "handler_line": 85, "source_file": "aurora_surface_daemon.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_surface_sensory_vectors', 85)
                 cand_visual = []
         if any(cand_audio) or any(cand_visual):
             audio_vec = cand_audio
@@ -127,13 +117,7 @@ def _surface_event_recent(event: Any, *, max_age_s: float = 45.0) -> bool:
     try:
         return event is not None and (time.time() - float(getattr(event, "timestamp", 0.0) or 0.0)) <= max_age_s
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_surface_daemon.py:107",
-            exc=_aurora_boundary_exc,
-            context={"function": "_surface_event_recent", "handler_line": 107, "source_file": "aurora_surface_daemon.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_surface_event_recent', 107)
         return False
 
 
@@ -146,13 +130,7 @@ def _ambient_audio_observation() -> str:
             return ""
         payload = json.loads(live_path.read_text())
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_surface_daemon.py:119",
-            exc=_aurora_boundary_exc,
-            context={"function": "_ambient_audio_observation", "handler_line": 119, "source_file": "aurora_surface_daemon.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_ambient_audio_observation', 119)
         return ""
 
     activity = str(payload.get("activity", "ambient") or "ambient").strip().lower()
@@ -193,13 +171,7 @@ def _surface_present_sensory_details(systems: Dict[str, Any]) -> Dict[str, Any]:
         try:
             context = dict(integration.get_sensory_context() or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:159",
-                exc=_aurora_boundary_exc,
-                context={"function": "_surface_present_sensory_details", "handler_line": 159, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_surface_present_sensory_details', 159)
             context = {}
     details["sensory_context"] = context
 
@@ -314,13 +286,7 @@ def _clear_camera_frame_cache() -> None:
         try:
             stale_path.unlink(missing_ok=True)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:273",
-                exc=_aurora_boundary_exc,
-                context={"function": "_clear_camera_frame_cache", "handler_line": 273, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_clear_camera_frame_cache', 273)
             pass
 
 
@@ -333,13 +299,7 @@ def _release_surface_camera(systems: Dict[str, Any]) -> None:
         if getattr(camera, "running", False) or getattr(camera, "cap", None) is not None:
             camera.close()
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_surface_daemon.py:285",
-            exc=_aurora_boundary_exc,
-            context={"function": "_release_surface_camera", "handler_line": 285, "source_file": "aurora_surface_daemon.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_release_surface_camera', 285)
         pass
 
 
@@ -350,13 +310,7 @@ def _write_surface_snapshot(systems: Dict[str, Any], *, trigger: str, flagged: b
         try:
             state = dict(sc.get_state() or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:295",
-                exc=_aurora_boundary_exc,
-                context={"function": "_write_surface_snapshot", "handler_line": 295, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_write_surface_snapshot', 295)
             state = {}
     if not state:
         try:
@@ -364,13 +318,7 @@ def _write_surface_snapshot(systems: Dict[str, Any], *, trigger: str, flagged: b
             if isinstance(persisted, dict):
                 state = persisted
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:302",
-                exc=_aurora_boundary_exc,
-                context={"function": "_write_surface_snapshot", "handler_line": 302, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_write_surface_snapshot', 302)
             state = {}
     details = _surface_present_sensory_details(systems)
     previous_snapshot = read_surface_snapshot(_STATE_DIR)
@@ -482,13 +430,7 @@ def _log(message: str) -> None:
         with _LOG_FILE.open("a", encoding="utf-8") as handle:
             handle.write(line + "\n")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_surface_daemon.py:413",
-            exc=_aurora_boundary_exc,
-            context={"function": "_log", "handler_line": 413, "source_file": "aurora_surface_daemon.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_log', 413)
         pass
 
 
@@ -497,13 +439,7 @@ def _read_json(path: Path, default: Any) -> Any:
         try:
             return json.loads(path.read_text())
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:421",
-                exc=_aurora_boundary_exc,
-                context={"function": "_read_json", "handler_line": 421, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_read_json', 421)
             pass
     return default
 
@@ -676,13 +612,7 @@ def _emit_continuity_packet(turn: Dict[str, Any], payload: Dict[str, Any], snaps
             source=str(turn.get("source", "surface_turn") or "surface_turn"),
         )
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_surface_daemon.py:593",
-            exc=_aurora_boundary_exc,
-            context={"function": "_emit_continuity_packet", "handler_line": 593, "source_file": "aurora_surface_daemon.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_emit_continuity_packet', 593)
         pass
 
 
@@ -714,13 +644,7 @@ def run() -> None:
             _sc_boot.start_session(f"surface_{int(time.time())}")
             _log("Surface sensory session started.")
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:624",
-                exc=exc,
-                context={"function": "run", "handler_line": 624, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), exc, 'run', 624)
             _log(f"Surface sensory session start failed: {exc}")
 
     _sie_boot = systems.get("sensory_integration")
@@ -735,13 +659,7 @@ def run() -> None:
             else:
                 _log("Surface mic listener unavailable.")
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:638",
-                exc=exc,
-                context={"function": "run", "handler_line": 638, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), exc, 'run', 638)
             _log(f"Surface mic listener start failed: {exc}")
 
     _hw_boot = systems.get("hardware")
@@ -755,13 +673,7 @@ def run() -> None:
                 f"mic={'on' if _caps.get('microphone_raw') or _caps.get('microphone_speech') else 'off'})."
             )
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:651",
-                exc=exc,
-                context={"function": "run", "handler_line": 651, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), exc, 'run', 651)
             _log(f"Surface hardware start failed: {exc}")
 
     def _camera_capture_loop() -> None:
@@ -817,13 +729,7 @@ def run() -> None:
                         if empty_reads in (1, 5, 15):
                             _log("Surface camera read empty (hardware returned no frame)")
             except Exception as exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_surface_daemon.py:706",
-                    exc=exc,
-                    context={"function": "_camera_capture_loop", "handler_line": 706, "source_file": "aurora_surface_daemon.py"},
-                )
+                _aurora_fault(locals(), exc, '_camera_capture_loop', 706)
                 msg = str(exc) or exc.__class__.__name__
                 if msg != last_error:
                     _log(f"Surface camera loop error: {msg}")
@@ -852,13 +758,7 @@ def run() -> None:
                 time.sleep(5.0)
                 continue
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:734",
-                exc=_aurora_boundary_exc,
-                context={"function": "run", "handler_line": 734, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run', 734)
             pass
 
         if now >= next_snapshot:
@@ -903,13 +803,7 @@ def run() -> None:
                     _surface_cv = ConstraintVector(X=0.8, T=0.4, N=0.2, B=0.1, A=0.05)
                     systems["_sedi_surface_frags"] = _sedi.surface_recall(_surface_cv, max_results=16)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_surface_daemon.py:758",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "run", "handler_line": 758, "source_file": "aurora_surface_daemon.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'run', 758)
                     systems["_sedi_surface_frags"] = []
 
             result = process_external_user_turn(
@@ -940,13 +834,7 @@ def run() -> None:
             _finish_turn(str(turn.get("id", "") or ""), result=payload)
             _write_json(_STATUS_FILE, _build_status(state_name="idle"))
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:787",
-                exc=exc,
-                context={"function": "run", "handler_line": 787, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), exc, 'run', 787)
             payload = {
                 "status": "error",
                 "id": str(turn.get("id", "") or ""),
@@ -962,13 +850,7 @@ def run() -> None:
         try:
             voice_listener.stop()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_surface_daemon.py:802",
-                exc=_aurora_boundary_exc,
-                context={"function": "run", "handler_line": 802, "source_file": "aurora_surface_daemon.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run', 802)
             pass
     _write_json(_STATUS_FILE, _build_status(state_name="stopped"))
     _log("Aurora surface daemon stopped.")

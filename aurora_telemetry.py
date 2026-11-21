@@ -26,10 +26,11 @@ Usage:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_telemetry.py')
 
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 
@@ -202,13 +203,7 @@ class TurnTelemetry:
                         from aurora_internal.constraint_genealogy import hint_fail_dimension
                         hint_fail_dimension(f"T_cascade:{dim}", ttl=30.0)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_telemetry.py:203",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "axis_weighted_fails", "handler_line": 203, "source_file": "aurora_telemetry.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'axis_weighted_fails', 203)
                         pass
 
         return sorted(merged.items(), key=lambda x: x[1], reverse=True)

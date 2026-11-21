@@ -61,12 +61,12 @@ PASSES:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'corpus_runner.py')
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import os
 import re
-import json
 import time
 import math
 import hashlib
@@ -355,13 +355,7 @@ def _reconstruct_linear_thread(
         try:
             roots = [next(iter(mapping.keys()))]
         except StopIteration as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:corpus_runner.py:356",
-                exc=_aurora_boundary_exc,
-                context={"function": "_reconstruct_linear_thread", "handler_line": 356, "source_file": "corpus_runner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_reconstruct_linear_thread', 356)
             return []
 
     def has_message(n: Dict[str, Any]) -> bool:
@@ -1590,13 +1584,7 @@ def sync_der_to_oets(systems: Dict[str, Any]) -> Dict[str, float]:
             perception.oets._active_pressures = dict(pressures)
         return pressures
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:corpus_runner.py:1544",
-            exc=_aurora_boundary_exc,
-            context={"function": "sync_der_to_oets", "handler_line": 1544, "source_file": "corpus_runner.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'sync_der_to_oets', 1544)
         pass
 
     # Fallback: read category_energy directly from DER and normalise
@@ -1615,13 +1603,7 @@ def sync_der_to_oets(systems: Dict[str, Any]) -> Dict[str, float]:
             perception.oets._active_pressures = dict(pressures)
         return pressures
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:corpus_runner.py:1562",
-            exc=_aurora_boundary_exc,
-            context={"function": "sync_der_to_oets", "handler_line": 1562, "source_file": "corpus_runner.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'sync_der_to_oets', 1562)
         pass
 
     return {}
@@ -1809,13 +1791,7 @@ def physics_absorb_truth(
                             strength=max(0.1, geom.constraint_significance),
                         )
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:corpus_runner.py:1749",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "physics_absorb_truth", "handler_line": 1749, "source_file": "corpus_runner.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'physics_absorb_truth', 1749)
                     pass
                 # EDIT (representational discovery): every encoding event is
                 # representational evidence — the full-vector profile through
@@ -1837,13 +1813,7 @@ def physics_absorb_truth(
                             _w_role, _w_val, w, _axes_o, _prof_o,
                             context_hash)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:corpus_runner.py:1770",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "physics_absorb_truth", "handler_line": 1770, "source_file": "corpus_runner.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'physics_absorb_truth', 1770)
                     pass
                 # EDIT (one-crystal doctrine): the word also joins its
                 # concept's EXISTING DPS crystal as a "word" facet — words
@@ -1869,13 +1839,7 @@ def physics_absorb_truth(
                                             geom.constraint_significance))
                                 break
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:corpus_runner.py:1836",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "physics_absorb_truth", "handler_line": 1836, "source_file": "corpus_runner.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'physics_absorb_truth', 1836)
                     pass
 
             # AURORA DIRECTIVE (Phase 2) causal-generation fix: this WARP
@@ -1934,39 +1898,21 @@ def physics_absorb_truth(
                                     _ap_x.get(ax, 0.5) or 0.5)
                                     for ax in ("X", "T", "N", "B", "A")}
                         except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:corpus_runner.py:1812",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "physics_absorb_truth", "handler_line": 1812, "source_file": "corpus_runner.py"},
-                            )
+                            _aurora_fault(locals(), _aurora_boundary_exc, 'physics_absorb_truth', 1812)
                             _pol_x = {}
                         from aurora_warp_protocol import axes_to_istates
                         _prof_x = axes_to_istates(_axes_x, _pol_x)
                         _dps_x.check_and_extend(
                             _prof_x, source="corpus_absorption")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:corpus_runner.py:1818",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "physics_absorb_truth", "handler_line": 1818, "source_file": "corpus_runner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'physics_absorb_truth', 1818)
                 pass
         # FIX-A009: persist vocabulary growth — without this every corpus
         # run's lexical gains evaporated at process exit.
         try:
             perception.lexicon.save()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:corpus_runner.py:1842",
-                exc=_aurora_boundary_exc,
-                context={"function": "physics_absorb_truth", "handler_line": 1842, "source_file": "corpus_runner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'physics_absorb_truth', 1842)
             pass
 
     return geom
@@ -2140,13 +2086,7 @@ def evolve_chain(systems: Dict[str, Any],
     try:
         from aurora_internal.aurora_evolution_chamber import ActionTrace
     except ImportError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:corpus_runner.py:2015",
-            exc=_aurora_boundary_exc,
-            context={"function": "evolve_chain", "handler_line": 2015, "source_file": "corpus_runner.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'evolve_chain', 2015)
         return
 
     # Build constraint set from truth geometry if available
@@ -2328,13 +2268,7 @@ def run_corpus_ingestion(
         if verbose:
             print("  [CORPUS] Fixed-path weld active: TrainingPulse + grammar observation")
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:corpus_runner.py:2196",
-            exc=_aurora_boundary_exc,
-            context={"function": "run_corpus_ingestion", "handler_line": 2196, "source_file": "corpus_runner.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'run_corpus_ingestion', 2196)
         _pulse = None
 
     _grammar_weld = systems.get("grammar_engine")
@@ -2351,13 +2285,7 @@ def run_corpus_ingestion(
                 clarity=max(0.0, min(1.0, float(clarity))),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:corpus_runner.py:2212",
-                exc=_aurora_boundary_exc,
-                context={"function": "_weld_observe", "handler_line": 2212, "source_file": "corpus_runner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_weld_observe', 2212)
             pass
 
     def _weld_pulse(text: str, cycles: int = 2, intensity: float = 0.6):
@@ -2367,13 +2295,7 @@ def run_corpus_ingestion(
         try:
             _pulse.energize(str(text or ""), "", cycles=cycles, intensity=intensity)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:corpus_runner.py:2221",
-                exc=_aurora_boundary_exc,
-                context={"function": "_weld_pulse", "handler_line": 2221, "source_file": "corpus_runner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_weld_pulse', 2221)
             pass
     # ── end weld ─────────────────────────────────────────────────────────────
 
@@ -2440,13 +2362,7 @@ def run_corpus_ingestion(
     try:
         from aurora_internal.aurora_sensory_crystal import build_audio_20d_from_der as _build_a20
     except ImportError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:corpus_runner.py:2287",
-            exc=_aurora_boundary_exc,
-            context={"function": "run_corpus_ingestion", "handler_line": 2287, "source_file": "corpus_runner.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'run_corpus_ingestion', 2287)
         _build_a20 = None
     _STOPWORDS = {
         "the", "and", "for", "are", "but", "not", "you", "all", "can", "was",
@@ -2493,13 +2409,7 @@ def run_corpus_ingestion(
                 )
                 _crystal._register_concept_visual(w, f"seed:{w}")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:corpus_runner.py:2333",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_feed_crystal_visual_and_audio", "handler_line": 2333, "source_file": "corpus_runner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_feed_crystal_visual_and_audio', 2333)
                 pass
 
         # --- Audio: synthesize from DER axis pressures (once per message) ---
@@ -2527,13 +2437,7 @@ def run_corpus_ingestion(
                 for w in content_words:
                     _crystal._register_concept_audio(w, f"der:corpus")
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:corpus_runner.py:2360",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_feed_crystal_visual_and_audio", "handler_line": 2360, "source_file": "corpus_runner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_feed_crystal_visual_and_audio', 2360)
                 pass
 
     def witness(tag: str, content: str, source: str,
@@ -2614,13 +2518,7 @@ def run_corpus_ingestion(
                     print(f"  [WARP-DPS] concepts promoted={len(_pr)} "
                           f"dissolved={len(_di)}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:corpus_runner.py:2440",
-                exc=_aurora_boundary_exc,
-                context={"function": "run_cadence", "handler_line": 2440, "source_file": "corpus_runner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run_cadence', 2440)
             pass
         # EDIT (representational discovery + the COMMIT FEEDBACK LOOP):
         # promotion is commitment — active tables swap, lexicon concept
@@ -2647,13 +2545,7 @@ def run_corpus_ingestion(
                                 "degrees": _comp.parameters.get("degrees", {}),
                             })
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:corpus_runner.py:2466",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "run_cadence", "handler_line": 2466, "source_file": "corpus_runner.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'run_cadence', 2466)
                         pass
                     if verbose:
                         print(f"  [WARP-REPR] representation COMMITTED: "
@@ -2662,13 +2554,7 @@ def run_corpus_ingestion(
                 if verbose and _rd:
                     print(f"  [WARP-REPR] representations dissolved={len(_rd)}")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:corpus_runner.py:2474",
-                exc=_aurora_boundary_exc,
-                context={"function": "run_cadence", "handler_line": 2474, "source_file": "corpus_runner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run_cadence', 2474)
             pass
         if geom is not None:
             _last_geom = geom
@@ -2699,13 +2585,7 @@ def run_corpus_ingestion(
                         print(f"  [CRYSTAL] Promoted {len(_promoted)} concept(s) "
                               f"this cycle")
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:corpus_runner.py:2504",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "run_cadence", "handler_line": 2504, "source_file": "corpus_runner.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'run_cadence', 2504)
                     pass
             if verbose:
                 vocab = systems["perception"].lexicon.size
@@ -2769,13 +2649,7 @@ def run_corpus_ingestion(
                     persistence_key="curriculum_stall",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:corpus_runner.py:2567",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "run_cadence", "handler_line": 2567, "source_file": "corpus_runner.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'run_cadence', 2567)
                 pass
             absorption_field.plateau_detector.reset_stall()
 
@@ -2857,13 +2731,7 @@ def run_corpus_ingestion(
                     try:
                         _crystal.save()
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:corpus_runner.py:2648",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "pass_observer", "handler_line": 2648, "source_file": "corpus_runner.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'pass_observer', 2648)
                         pass
 
             if verbose and counter % 500 == 0:
@@ -2997,13 +2865,7 @@ def run_corpus_ingestion(
                         if int(_gp or 0) < 8:
                             _floor = unlock_min * 0.6
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:corpus_runner.py:2780",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "pass_responder", "handler_line": 2780, "source_file": "corpus_runner.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, 'pass_responder', 2780)
                         pass
                     _weld_observe(content, resp.content,
                                   success=_gf >= _floor, clarity=_gf)
@@ -3239,13 +3101,7 @@ def run_corpus_ingestion(
             _disk_count = len(
                 _j.load(open(_lex_save_path)).get("entries", {}))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:corpus_runner.py:3014",
-                exc=_aurora_boundary_exc,
-                context={"function": "run_corpus_ingestion", "handler_line": 3014, "source_file": "corpus_runner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run_corpus_ingestion', 3014)
             pass
         if _perc.lexicon.size >= _disk_count:
             _perc.save_lexicon()
@@ -3267,13 +3123,7 @@ def run_corpus_ingestion(
                           f"({len(getattr(_lin, '_motifs', {}) or {})} patterns, "
                           f"{_promoted_n} promoted)")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:corpus_runner.py:3035",
-                exc=_aurora_boundary_exc,
-                context={"function": "run_corpus_ingestion", "handler_line": 3035, "source_file": "corpus_runner.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run_corpus_ingestion', 3035)
             pass
         print("  [CORPUS] Ingestion complete.\n")
 

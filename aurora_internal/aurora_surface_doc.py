@@ -21,7 +21,8 @@ Public API
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_surface_doc.py')
 
 import json
 import os
@@ -75,13 +76,7 @@ def _load_registry() -> Dict[str, Dict[str, Any]]:
         from aurora_internal.aurora_evolved_surfaces import _SURFACE_REGISTRY  # type: ignore
         return dict(_SURFACE_REGISTRY)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_surface_doc.py:76",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_registry", "handler_line": 76, "source_file": "aurora_internal/aurora_surface_doc.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_registry', 76)
         return {}
 
 
@@ -100,22 +95,10 @@ def _load_pressure_log(max_entries: int = 2000) -> List[Dict[str, Any]]:
                     try:
                         entries.append(json.loads(line))
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_internal/aurora_surface_doc.py:94",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_load_pressure_log", "handler_line": 94, "source_file": "aurora_internal/aurora_surface_doc.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_load_pressure_log', 94)
                         pass
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_surface_doc.py:96",
-            exc=_aurora_boundary_exc,
-            context={"function": "_load_pressure_log", "handler_line": 96, "source_file": "aurora_internal/aurora_surface_doc.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_load_pressure_log', 96)
         pass
     return entries[-max_entries:]
 
@@ -132,13 +115,7 @@ def _parse_signature(sig: str) -> Dict[str, int]:
             try:
                 counts[ax.strip()] = int(float(n.strip()))
             except ValueError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_surface_doc.py:112",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_parse_signature", "handler_line": 112, "source_file": "aurora_internal/aurora_surface_doc.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_parse_signature', 112)
                 pass
         elif part and part in _AXIS_NAMES:
             counts[part] = 1

@@ -25,10 +25,9 @@ from __future__ import annotations
 import collections
 import json
 import os
-import math
 import threading
-from dataclasses import dataclass, field as dc_field
-from typing import Dict, Iterator, List, Optional
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 # ── Axis / dimension mappings ────────────────────────────────────────────────
 _AXIS_STR_TO_INT: Dict[str, int] = {"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}
@@ -86,7 +85,7 @@ class NoncompProfile:
     Live pressure tracker for one of the 125 noncomp positions.
     Data from the corresponding JSON file is loaded lazily.
     """
-    __slots__ = ("key", "_loaded", "_pressure", "_tension", "_slots", "_file")
+    __slots__ = ("key", "_loaded", "_pressure", "_tension", "_slots", "_semantic_summary", "_file")
 
     def __init__(self, key: _ProfileKey, file_rel: str) -> None:
         self.key       = key
@@ -94,6 +93,7 @@ class NoncompProfile:
         self._pressure = 0.0  # current constraint pressure
         self._tension  = 0.5  # distance from equilibrium (0=at rest, 1=max)
         self._slots: List[dict] = []
+        self._semantic_summary = ""
         self._file = os.path.join(_DATA_DIR, file_rel)
 
     def _ensure_loaded(self) -> None:
@@ -103,9 +103,15 @@ class NoncompProfile:
             with open(self._file, "r", encoding="utf-8") as fh:
                 data = json.load(fh)
             self._slots = data.get("slots", [])
+            self._semantic_summary = str(data.get("nc_semantic_summary", "") or "")
             self._loaded = True
         except Exception:
             self._loaded = False
+
+    def semantic_summary(self) -> str:
+        """Generalized semantic ancestry for this NonComp, loaded lazily."""
+        self._ensure_loaded()
+        return self._semantic_summary
 
     def mean_pressure(self) -> float:
         return self._pressure
@@ -119,8 +125,11 @@ class NoncompProfile:
         self._tension = abs(self._pressure - 0.1)
 
     def decay(self, rate: float = 0.15) -> None:
-        self._pressure = max(0.0, self._pressure * (1.0 - rate))
-        self._tension  = abs(self._pressure - 0.1)
+        # Resolution releases excess activation toward the field's declared
+        # equilibrium; it does not invent a lower arbitrary resting state.
+        if self._pressure > REFERENCE_AXIS_PRESSURE:
+            self._pressure = REFERENCE_AXIS_PRESSURE + (self._pressure - REFERENCE_AXIS_PRESSURE) * (1.0 - rate)
+        self._tension = abs(self._pressure - REFERENCE_AXIS_PRESSURE)
 
 
 class NoncompField:
@@ -336,13 +345,33 @@ class NoncompField:
         return [p for p in self._profiles if p.key.nc_law_c == p.key.nc_target]
 
     def reset_pressure_topology(self, understanding: dict) -> None:
+        """Receiver consequence relieves only the represented NonComp region.
+
+        Unscoped internal calls retain the historical all-field fallback.
+        Deep Memory can redistribute the live baseline, but never convert a
+        successful resolution into pressure *below* the field's physical
+        reference. A local success must not relieve unrelated axes.
+        """
         resolved = float((understanding or {}).get("resolved_accuracy", 0.5) or 0.5)
-        decay_rate = 0.10 + 0.20 * resolved  # resolved understanding → stronger decay
+        decay_rate = 0.10 + 0.20 * resolved
+        regions = [
+            item for item in (understanding or {}).get("resolved_noncomp_regions", []) or []
+            if isinstance(item, dict) and str(item.get("nc_name") or "")
+        ]
         with self._lock:
-            for prof in self._profiles:
+            selected = ({str(item["nc_name"]) for item in regions}
+                        if regions else None)
+            profiles = (self._profiles if selected is None else
+                        [prof for prof in self._profiles if prof.key.nc_name in selected])
+            for prof in profiles:
                 prof.decay(decay_rate)
-            for ax_int in self._axis_p:
-                self._axis_p[ax_int] = max(0.5 * self._baseline[ax_int], self._axis_p[ax_int] * (1.0 - decay_rate))
+            axes = (set(self._axis_p) if selected is None else
+                    {ax for prof in profiles for ax in
+                     (prof.key.nc_law_c, prof.key.nc_target)})
+            for ax_int in axes:
+                floor = max(REFERENCE_AXIS_PRESSURE, self._baseline[ax_int])
+                self._axis_p[ax_int] = floor + max(
+                    0.0, self._axis_p[ax_int] - floor) * (1.0 - decay_rate)
 
     def status(self) -> dict:
         diag_live = sum(1 for p in self.diagonal_profiles() if p._pressure > 0.05)

@@ -1,6 +1,5 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 import sys
-import json
 sys.path.append('.')
 from aurora import dual_question_pipeline
 

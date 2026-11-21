@@ -30,7 +30,8 @@ writes to, per the directive's "all strategy shifts logged against the
 Phase 3 shadow comparison."
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/semantic_intention_bridge.py')
 
 import json
 import os
@@ -223,11 +224,5 @@ class SemanticIntentionBridge:
             with open(self._shadow_log_path, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(entry, sort_keys=True) + "\n")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/semantic_intention_bridge.py:224",
-                exc=_aurora_boundary_exc,
-                context={"function": "_log_shift", "handler_line": 224, "source_file": "aurora_internal/dual_strata/semantic_intention_bridge.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_log_shift', 224)
             pass

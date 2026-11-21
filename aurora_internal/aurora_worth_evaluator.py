@@ -85,7 +85,7 @@ import math
 import random
 from collections import deque
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum
 from typing import Deque, Dict, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------

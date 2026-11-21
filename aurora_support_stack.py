@@ -4,7 +4,8 @@ AURORA SUPPORT STACK (Consolidated Facade)
 =========================================
 Consolidates non-core support modules used by canonical runtime layers.
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_support_stack.py')
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 # Parser
@@ -28,13 +29,7 @@ try:
     from aurora_governance_persistence_gateway import AuroraStateSnapshot
     from aurora_persistence_utils import DeviceAwareness, RcloneInterface, DriveSync
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_support_stack.py:29",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 29, "source_file": "aurora_support_stack.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 29)
     AuroraStateSnapshot = None
     DeviceAwareness     = None
     RcloneInterface     = None
@@ -48,13 +43,7 @@ try:
         RelationType,
     )
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_support_stack.py:42",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 42, "source_file": "aurora_support_stack.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 42)
     OntologicalScaffoldingEngine = None
     ResearchResult = None
     RelationType = None
@@ -66,13 +55,7 @@ try:
         LSVMetrics,
     )
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_support_stack.py:53",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 53, "source_file": "aurora_support_stack.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 53)
     ExpressionEvolutionOrchestra = None
     LSVMetrics = None
 
@@ -83,13 +66,7 @@ try:
         RelationalDelta,
     )
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_support_stack.py:63",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 63, "source_file": "aurora_support_stack.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 63)
     RelationalComparisonEngine = None
     RelationalDelta = None
 
@@ -97,13 +74,7 @@ except Exception as _aurora_boundary_exc:
 try:
     from aurora_noncomp_manifold_compiler import *  # noqa: F401,F403
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_support_stack.py:70",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 70, "source_file": "aurora_support_stack.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 70)
     pass
 
 __all__ = [

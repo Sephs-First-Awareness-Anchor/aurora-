@@ -11,12 +11,13 @@ use in dialogue.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_live_lineage_journal.py')
 
 import json
 import os
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 
 def _safe_axis(raw: Any) -> str:
@@ -52,13 +53,7 @@ class LiveLineageJournal:
             with open(self.storage_path, "r", encoding="utf-8") as handle:
                 payload = dict(json.load(handle) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_live_lineage_journal.py:53",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load", "handler_line": 53, "source_file": "aurora_internal/aurora_live_lineage_journal.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load', 53)
             return
         self._storage_mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
         self.events = list(payload.get("events", []) or [])
@@ -70,13 +65,7 @@ class LiveLineageJournal:
         try:
             st = os.stat(self.storage_path)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_live_lineage_journal.py:64",
-                exc=_aurora_boundary_exc,
-                context={"function": "_reload_if_changed", "handler_line": 64, "source_file": "aurora_internal/aurora_live_lineage_journal.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_reload_if_changed', 64)
             return
         current = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
         if current > int(self._storage_mtime_ns or 0):
@@ -89,6 +78,9 @@ class LiveLineageJournal:
             from aurora_internal.aurora_turn_persistence import batch_defer
             if batch_defer(self):
                 return True
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self.storage_path):
+            return True
         try:
             os.makedirs(os.path.dirname(self.storage_path) or ".", exist_ok=True)
             payload = {
@@ -104,23 +96,11 @@ class LiveLineageJournal:
                 st = os.stat(self.storage_path)
                 self._storage_mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_live_lineage_journal.py:85",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "save", "handler_line": 85, "source_file": "aurora_internal/aurora_live_lineage_journal.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'save', 85)
                 self._storage_mtime_ns = 0
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_live_lineage_journal.py:88",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 88, "source_file": "aurora_internal/aurora_live_lineage_journal.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 88)
             return False
 
     def flush_write_batch(self) -> bool:

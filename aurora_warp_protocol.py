@@ -51,7 +51,8 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_warp_protocol.py')
 
 import hashlib
 import math
@@ -585,13 +586,7 @@ class WarpGenerator:
         try:
             return _resolve_nc_name(law, dim, target)
         except KeyError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_warp_protocol.py:586",
-                exc=_aurora_boundary_exc,
-                context={"function": "_resolve_link_nc_name", "handler_line": 586, "source_file": "aurora_warp_protocol.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_resolve_link_nc_name', 586)
             return None
 
     def _search_genealogy(
@@ -915,13 +910,7 @@ class WarpCapable:
         try:
             from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector
         except ImportError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_warp_protocol.py:909",
-                exc=_aurora_boundary_exc,
-                context={"function": "_sediment_warp_traversal", "handler_line": 909, "source_file": "aurora_warp_protocol.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_sediment_warp_traversal', 909)
             from aurora_constraint_manifold_patched import ConstraintVector  # type: ignore
         from foundational_contract import ExistenceMode
 
@@ -935,13 +924,7 @@ class WarpCapable:
                 A=axes_5d.get("A", 0.5),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_warp_protocol.py:922",
-                exc=_aurora_boundary_exc,
-                context={"function": "_sediment_warp_traversal", "handler_line": 922, "source_file": "aurora_warp_protocol.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_sediment_warp_traversal', 922)
             return  # manifold rejected an out-of-band profile — don't force it
 
         try:
@@ -960,13 +943,7 @@ class WarpCapable:
                 existence_mode=ExistenceMode.AGENTIC,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_warp_protocol.py:940",
-                exc=_aurora_boundary_exc,
-                context={"function": "_sediment_warp_traversal", "handler_line": 940, "source_file": "aurora_warp_protocol.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_sediment_warp_traversal', 940)
             pass  # SediMemory ingestion is best-effort; never break Warp lifecycle on it
 
     # ── public interface ──────────────────────────────────────────────────────
@@ -1054,13 +1031,7 @@ class WarpCapable:
                     heat = float(ledger.heat_contribution())
                     score = score * max(0.0, 1.0 - heat)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_warp_protocol.py:1027",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "evaluate_warp_trials", "handler_line": 1027, "source_file": "aurora_warp_protocol.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'evaluate_warp_trials', 1027)
                     pass
 
             comp.trial_score_ema = 0.7 * comp.trial_score_ema + 0.3 * score
@@ -1405,13 +1376,7 @@ class WarpField:
                 decision.action_taken = True
                 decision.resolved = True
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_warp_protocol.py:1359",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_route", "handler_line": 1359, "source_file": "aurora_warp_protocol.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_route', 1359)
                 decision.notes = f"handler for '{pathway}' raised exception"
             return
 
@@ -1449,13 +1414,7 @@ class WarpField:
             else:
                 decision.notes = "gap below persistence threshold — monitoring"
         except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_warp_protocol.py:1396",
-                exc=exc,
-                context={"function": "_route_to_warp_capable", "handler_line": 1396, "source_file": "aurora_warp_protocol.py"},
-            )
+            _aurora_fault(locals(), exc, '_route_to_warp_capable', 1396)
             decision.notes = f"warp_capable error: {exc}"
 
     def flush_deferred(self) -> List[WarpDecision]:
@@ -1626,13 +1585,7 @@ def _warp_excepthook(
             persistence_key=exc_type.__name__,
         ))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_warp_protocol.py:1564",
-            exc=_aurora_boundary_exc,
-            context={"function": "_warp_excepthook", "handler_line": 1564, "source_file": "aurora_warp_protocol.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_warp_excepthook', 1564)
         pass
     if original_hook is not None:
         original_hook(exc_type, exc_value, exc_tb)
@@ -1688,25 +1641,13 @@ def seal_warp(warp_field: Optional[WarpField] = None) -> None:
                 ),
             ))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_warp_protocol.py:1619",
-                exc=_aurora_boundary_exc,
-                context={"function": "_thread_warp_hook", "handler_line": 1619, "source_file": "aurora_warp_protocol.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_thread_warp_hook', 1619)
             pass
         if _prev_thread_hook is not None:
             try:
                 _prev_thread_hook(args)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_warp_protocol.py:1624",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_thread_warp_hook", "handler_line": 1624, "source_file": "aurora_warp_protocol.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_thread_warp_hook', 1624)
                 pass
 
     _threading.excepthook = _thread_warp_hook

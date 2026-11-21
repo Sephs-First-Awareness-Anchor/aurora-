@@ -44,7 +44,8 @@ Generalizes ToroidalCirculationLayer's flow machinery
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/topology_tracker.py')
 
 import json
 import math
@@ -52,7 +53,7 @@ import os
 import threading
 import time
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from aurora_internal.dual_strata.topology_frame import AXES, TopologyFrame
@@ -397,17 +398,14 @@ class TopologyTracker:
                 if scale in windows:
                     self._windows[scale] = _FlowWindow.from_state(scale, windows[scale])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/topology_tracker.py:398",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load", "handler_line": 398, "source_file": "aurora_internal/dual_strata/topology_tracker.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load', 398)
             pass
 
     def save(self) -> bool:
         if not self._path:
+            return False
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self._path):
             return False
         with self._lock:
             if not self._dirty:
@@ -427,13 +425,7 @@ class TopologyTracker:
                 self._dirty = False
                 return True
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/dual_strata/topology_tracker.py:421",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "save", "handler_line": 421, "source_file": "aurora_internal/dual_strata/topology_tracker.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'save', 421)
                 return False
 
     # ── observation ──

@@ -75,15 +75,15 @@ INTEGRATION WITH aurora_runtime.py
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_primitive_extractor.py')
 
 import json
 import math
-import os
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Deque, Dict, FrozenSet, List, Optional, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple
 
 # =============================================================================
 # AXIS CONSTANTS
@@ -108,8 +108,7 @@ _AXIS_SHORT: Dict[str, str] = {
 }
 
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _norm(vec: Dict[str, float]) -> Dict[str, float]:
@@ -1103,25 +1102,13 @@ if __name__ == "__main__":
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_internal/aurora_primitive_extractor.py:1104",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 1104, "source_file": "aurora_internal/aurora_primitive_extractor.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 1104)
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_internal/aurora_primitive_extractor.py:1109",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 1109, "source_file": "aurora_internal/aurora_primitive_extractor.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 1109)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

@@ -270,4 +270,7 @@ dependencies {
     // needed for the detection itself -- only the resulting bounding
     // box crosses the bridge.
     implementation "com.google.mlkit:face-detection:16.1.6"
+
+    // Plain JVM unit tests for her presence line's motion (PresenceMotionTest).
+    testImplementation "junit:junit:4.13.2"
 }

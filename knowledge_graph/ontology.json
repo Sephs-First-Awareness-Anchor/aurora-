@@ -1,0 +1,603 @@
+{
+  "areas": [
+    {
+      "id": "phone_python",
+      "name": "Phone Python bridge (Chaquopy)",
+      "prefix": "flutter_app/android/app/src/main/python/"
+    },
+    {
+      "id": "phone_native",
+      "name": "Phone native layer (Kotlin)",
+      "prefix": "flutter_app/android/"
+    },
+    {
+      "id": "phone_ui",
+      "name": "Phone app (Flutter, Dart)",
+      "prefix": "flutter_app/"
+    },
+    {
+      "id": "acm",
+      "name": "ACM kernel (Rust)",
+      "prefix": "aurora-acm/"
+    },
+    {
+      "id": "android_src",
+      "name": "Android and other native sources",
+      "prefix": "src/"
+    },
+    {
+      "id": "scripts",
+      "name": "Maintenance, audit and run scripts",
+      "prefix": "scripts/"
+    },
+    {
+      "id": "tests",
+      "name": "Test suite",
+      "prefix": "tests/"
+    },
+    {
+      "id": "deploy",
+      "name": "Deployment",
+      "prefix": "deploy/"
+    },
+    {
+      "id": "workflows",
+      "name": "CI workflows",
+      "prefix": ".github/"
+    }
+  ],
+  "axis_literal_min_distinct": 4,
+  "boundaries": [
+    {
+      "module": "aurora_internal.aurora_leverage_scalar",
+      "public": [
+        "BandPosition",
+        "PhaseNudge",
+        "band_position",
+        "LeverageBiasEngine"
+      ],
+      "rule": "Leverage scalar privacy boundary: only band_position and PhaseNudge deltas cross out"
+    }
+  ],
+  "bus_receivers": [
+    "systems",
+    "_systems"
+  ],
+  "chaquopy_python_roots": [
+    "flutter_app/android/app/src/main/python"
+  ],
+  "composite_min_binding": 3,
+  "constraint_axes": [
+    {
+      "adjective": "Existential",
+      "istate": "IS/ISNT",
+      "name": "Existence",
+      "name_tokens": [
+        "existence",
+        "existential"
+      ],
+      "poles": [
+        "Admissible",
+        "Inadmissible"
+      ],
+      "symbol": "X"
+    },
+    {
+      "adjective": "Temporal",
+      "istate": "CAN/CANT",
+      "name": "Temporal",
+      "name_tokens": [
+        "temporal"
+      ],
+      "poles": [
+        "Propagating",
+        "Stalled"
+      ],
+      "symbol": "T"
+    },
+    {
+      "adjective": "Energetic",
+      "istate": "DO/DONT",
+      "name": "Energy",
+      "name_tokens": [
+        "energy",
+        "energetic"
+      ],
+      "poles": [
+        "Sufficient",
+        "Insufficient"
+      ],
+      "symbol": "N"
+    },
+    {
+      "adjective": "Boundary",
+      "istate": "SAW/SAUNT",
+      "name": "Boundary",
+      "name_tokens": [
+        "boundary"
+      ],
+      "poles": [
+        "Contained",
+        "Dissolved"
+      ],
+      "symbol": "B"
+    },
+    {
+      "adjective": "Agentive",
+      "istate": "DID/DIDNT",
+      "name": "Agency",
+      "name_tokens": [
+        "agency",
+        "agentive"
+      ],
+      "poles": [
+        "Corrective",
+        "Drifting"
+      ],
+      "symbol": "A"
+    }
+  ],
+  "domain_fallback": {
+    "android_native": "phone",
+    "tooling": "desktop"
+  },
+  "domains": [
+    {
+      "id": "phone",
+      "name": "Phone app (Flutter, Kotlin, Chaquopy Python)",
+      "prefixes": [
+        "flutter_app/"
+      ]
+    },
+    {
+      "id": "acm",
+      "name": "ACM kernel (Rust)",
+      "prefixes": [
+        "aurora-acm/"
+      ]
+    },
+    {
+      "id": "android_native",
+      "name": "Android native sources",
+      "prefixes": [
+        "src/"
+      ]
+    },
+    {
+      "id": "tooling",
+      "name": "Scripts, tests, deployment and CI",
+      "prefixes": [
+        "scripts/",
+        "tests/",
+        "deploy/",
+        ".github/",
+        "tools/"
+      ]
+    },
+    {
+      "id": "desktop",
+      "name": "Desktop runtime (Python)",
+      "prefixes": [
+        "aurora_internal/",
+        "aurora_manifold_directory/"
+      ],
+      "root_python": true
+    }
+  ],
+  "exclude_dirs": [
+    ".git",
+    "__pycache__",
+    "node_modules",
+    "build",
+    ".dart_tool",
+    ".gradle",
+    "target",
+    "aurora_state",
+    "aurora_state_test",
+    "aurora_logs",
+    "vector_data",
+    ".venv",
+    "venv",
+    "knowledge_graph",
+    ".pytest_cache",
+    ".mypy_cache"
+  ],
+  "forbidden_imports": [
+    {
+      "module": "crystal_engine_v3",
+      "rule": "FIX-I002",
+      "use_instead": "crystal_engine_v3_cleaned"
+    }
+  ],
+  "http_client_calls": [
+    "_request",
+    "request",
+    "urlopen",
+    "get",
+    "post",
+    "put",
+    "delete",
+    "_get",
+    "_post"
+  ],
+  "istate_pairs": [
+    "IS/ISNT",
+    "CAN/CANT",
+    "DO/DONT",
+    "SAW/SAUNT",
+    "DID/DIDNT"
+  ],
+  "layer_ownership_doc": "docs/LAYER_MODULE_OWNERSHIP.md",
+  "layers": [
+    {
+      "id": "L0",
+      "modules": [
+        "foundational_contract.py"
+      ],
+      "name": "Foundational Contract"
+    },
+    {
+      "id": "L1",
+      "modules": [
+        "aurora_ivm.py"
+      ],
+      "name": "IVM Lattice"
+    },
+    {
+      "id": "L2",
+      "modules": [
+        "aurora_i_state_beings.py"
+      ],
+      "name": "I-State Beings"
+    },
+    {
+      "id": "L3",
+      "modules": [
+        "aurora_dimensional_systems.py"
+      ],
+      "name": "Dimensional Systems"
+    },
+    {
+      "id": "L4",
+      "modules": [
+        "aurora_consciousness_engine.py"
+      ],
+      "name": "Consciousness Engine"
+    },
+    {
+      "id": "L5",
+      "modules": [
+        "aurora_expression_perception.py"
+      ],
+      "name": "Expression & Perception"
+    },
+    {
+      "id": "L6",
+      "modules": [
+        "aurora_behavioral_identity.py"
+      ],
+      "name": "Behavioral Identity"
+    },
+    {
+      "id": "L7",
+      "modules": [
+        "aurora_simulation_engine.py"
+      ],
+      "name": "Simulation Engine"
+    },
+    {
+      "id": "L8",
+      "modules": [
+        "aurora_governance_persistence_gateway.py"
+      ],
+      "name": "Governance & Persistence Gateway"
+    },
+    {
+      "id": "ORCH",
+      "modules": [
+        "aurora.py"
+      ],
+      "name": "Orchestrator"
+    }
+  ],
+  "manifold_directory": "aurora_manifold_directory",
+  "noncomp_channels": 25,
+  "noncomp_dimensions": [
+    "POLARITY",
+    "MAGNITUDE",
+    "OPERATOR",
+    "COST",
+    "DIFFERENCE"
+  ],
+  "noncomp_interaction_slots": 625,
+  "ownership_mapping": "docs/module_ownership.json",
+  "persistence_inventory": "PERSISTENCE_INVENTORY.md",
+  "registry_files": [
+    "known_fixes_registry.md",
+    "docs/REGISTRY_ADDITIONS_*.md"
+  ],
+  "runtimes": [
+    {
+      "entrypoints": [
+        "fn:aurora.boot_aurora",
+        "fn:aurora.process_external_user_turn",
+        "mod:aurora_daemon",
+        "mod:run_aurora",
+        "mod:aurora_runtime"
+      ],
+      "id": "desktop",
+      "name": "Desktop / laptop runtime"
+    },
+    {
+      "entrypoints": [
+        "fn:flutter_app.android.app.src.main.python.aurora_bridge.initialize"
+      ],
+      "id": "phone",
+      "name": "Phone (Flutter + Kotlin + Chaquopy)"
+    },
+    {
+      "entrypoints": [],
+      "id": "acm",
+      "name": "ACM kernel (Rust, bare metal)"
+    }
+  ],
+  "sequences": [
+    {
+      "id": "reentry_loop",
+      "min_distinct": 3,
+      "name": "Re-entry loop",
+      "stages": [
+        "STATE",
+        "EXPRESSION",
+        "RE-ENTRY",
+        "RECONCILIATION",
+        "UNDERSTANDING"
+      ]
+    },
+    {
+      "id": "quasiarch_lattice",
+      "min_distinct": 3,
+      "name": "QuasiArch observer lattice",
+      "stages": [
+        "Base",
+        "Composite",
+        "Higher-Order",
+        "Quasicrystal"
+      ]
+    }
+  ],
+  "signal_receivers": [
+    "pipeline_state"
+  ],
+  "signal_seed_functions": {
+    "aurora._extract_pipeline_signals": "signals"
+  },
+  "spawn_calls": {
+    "Process": "process",
+    "Thread": "thread",
+    "Timer": "timer",
+    "call_at": "call_later",
+    "call_later": "call_later",
+    "call_soon": "call_later",
+    "call_soon_threadsafe": "call_later",
+    "create_task": "task",
+    "ensure_future": "task",
+    "enter": "scheduler",
+    "enterabs": "scheduler",
+    "register": "atexit",
+    "run_in_executor": "executor",
+    "signal": "signal",
+    "start_new_thread": "thread",
+    "submit": "executor"
+  },
+  "spawn_receivers": {
+    "enter": [],
+    "enterabs": [],
+    "register": [
+      "atexit"
+    ],
+    "signal": [
+      "signal"
+    ]
+  },
+  "subsystems": [
+    {
+      "id": "sedimemory",
+      "name": "SediMemory",
+      "patterns": [
+        "sedimemory",
+        "sediment"
+      ]
+    },
+    {
+      "id": "noncomp",
+      "name": "Non-Comp physics",
+      "patterns": [
+        "noncomp",
+        "non_comp"
+      ]
+    },
+    {
+      "id": "leverage_scalar",
+      "name": "Leverage scalar",
+      "patterns": [
+        "leverage"
+      ]
+    },
+    {
+      "id": "quasiarch",
+      "name": "QuasiArch observer",
+      "patterns": [
+        "quasiarch",
+        "quasicrystal"
+      ]
+    },
+    {
+      "id": "crystal",
+      "name": "Crystals",
+      "patterns": [
+        "crystal"
+      ]
+    },
+    {
+      "id": "genealogy",
+      "name": "Constraint genealogy",
+      "patterns": [
+        "genealogy",
+        "lineage",
+        "ancestry"
+      ]
+    },
+    {
+      "id": "warp",
+      "name": "Warp field",
+      "patterns": [
+        "(^|_)warp"
+      ]
+    },
+    {
+      "id": "praxis",
+      "name": "Praxis",
+      "patterns": [
+        "praxis"
+      ]
+    },
+    {
+      "id": "dream",
+      "name": "Dream substrate",
+      "patterns": [
+        "dream"
+      ]
+    },
+    {
+      "id": "istate",
+      "name": "I-State system",
+      "patterns": [
+        "i_?state"
+      ]
+    },
+    {
+      "id": "oets",
+      "name": "OETS ontology web",
+      "patterns": [
+        "oets",
+        "ontolog"
+      ]
+    },
+    {
+      "id": "icc",
+      "name": "ICC ledger",
+      "patterns": [
+        "(^|_)icc(_|$)"
+      ]
+    },
+    {
+      "id": "rcec",
+      "name": "RCEC",
+      "patterns": [
+        "rcec"
+      ]
+    },
+    {
+      "id": "possibility_selves",
+      "name": "Possibility selves",
+      "patterns": [
+        "possibility"
+      ]
+    },
+    {
+      "id": "habitat",
+      "name": "Habitat",
+      "patterns": [
+        "habitat"
+      ]
+    },
+    {
+      "id": "dual_strata",
+      "name": "Dual strata",
+      "patterns": [
+        "strata",
+        "subsurface"
+      ]
+    },
+    {
+      "id": "manifold",
+      "name": "Constraint manifold",
+      "patterns": [
+        "manifold"
+      ]
+    },
+    {
+      "id": "waveform",
+      "name": "Waveform pressure",
+      "patterns": [
+        "waveform",
+        "pressure"
+      ]
+    },
+    {
+      "id": "toroidal",
+      "name": "Toroidal circulation",
+      "patterns": [
+        "toroid"
+      ]
+    },
+    {
+      "id": "evolution",
+      "name": "Evolution chamber",
+      "patterns": [
+        "evolution",
+        "evolv"
+      ]
+    },
+    {
+      "id": "language",
+      "name": "Language faculty",
+      "patterns": [
+        "language",
+        "lexic",
+        "grammar",
+        "vocabular"
+      ]
+    },
+    {
+      "id": "voice",
+      "name": "Voice",
+      "patterns": [
+        "voice",
+        "speech"
+      ]
+    },
+    {
+      "id": "vision",
+      "name": "Vision",
+      "patterns": [
+        "vision",
+        "image"
+      ]
+    },
+    {
+      "id": "curiosity",
+      "name": "Curiosity",
+      "patterns": [
+        "curiosity"
+      ]
+    },
+    {
+      "id": "persistence",
+      "name": "Persistence",
+      "patterns": [
+        "persist",
+        "checkpoint"
+      ]
+    },
+    {
+      "id": "telemetry",
+      "name": "Telemetry",
+      "patterns": [
+        "telemetry",
+        "diag"
+      ]
+    }
+  ]
+}

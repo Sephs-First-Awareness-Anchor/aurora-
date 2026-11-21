@@ -40,7 +40,7 @@ import math
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from aurora_persistence_utils import atomic_write_json
 from aurora_warp_protocol import CoverageGap, WarpCapable, WarpComponent, istates_to_axes
@@ -1487,6 +1487,9 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
 
     def _append_history(self, cycle: Mapping[str, Any]) -> None:
         if not self.persist:
+            return
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self.history_path):
             return
         try:
             line = json.dumps(dict(cycle or {}), sort_keys=True, default=str)

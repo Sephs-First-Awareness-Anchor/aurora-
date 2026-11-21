@@ -29,7 +29,8 @@ used to generate training pressure. The only new logic here is:
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_semantic_probe_battery.py')
 
 import hashlib
 import json
@@ -68,8 +69,7 @@ _HEDGE_THRESHOLD = 0.34               # ~1 marker hit on the shared detector
 _BOUNDARY_CALIBRATION_THRESHOLD = 0.45
 
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _hash_text(text: str) -> str:
@@ -123,13 +123,7 @@ def _excluded_hash_set(probes_path: str = PROBES_PATH) -> set:
     try:
         mtime = os.path.getmtime(probes_path)
     except OSError as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_semantic_probe_battery.py:124",
-            exc=_aurora_boundary_exc,
-            context={"function": "_excluded_hash_set", "handler_line": 124, "source_file": "aurora_internal/aurora_semantic_probe_battery.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_excluded_hash_set', 124)
         return set()
     if _exclusion_cache is not None and _exclusion_cache[0] == mtime:
         return _exclusion_cache[1]
@@ -142,13 +136,7 @@ def _excluded_hash_set(probes_path: str = PROBES_PATH) -> set:
         _exclusion_cache = (mtime, hashes)
         return hashes
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_semantic_probe_battery.py:136",
-            exc=_aurora_boundary_exc,
-            context={"function": "_excluded_hash_set", "handler_line": 136, "source_file": "aurora_internal/aurora_semantic_probe_battery.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_excluded_hash_set', 136)
         return set()
 
 
@@ -162,13 +150,7 @@ def is_seed_excluded(text: str, probes_path: str = PROBES_PATH) -> bool:
             return False
         return _hash_text(text) in _excluded_hash_set(probes_path)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_semantic_probe_battery.py:149",
-            exc=_aurora_boundary_exc,
-            context={"function": "is_seed_excluded", "handler_line": 149, "source_file": "aurora_internal/aurora_semantic_probe_battery.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'is_seed_excluded', 149)
         return False
 
 
@@ -649,13 +631,7 @@ def run_probe(
             messages.append(("assistant", response_text))
             transcript.append({"role": "assistant", "text": response_text})
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_semantic_probe_battery.py:609",
-            exc=exc,
-            context={"function": "run_probe", "handler_line": 609, "source_file": "aurora_internal/aurora_semantic_probe_battery.py"},
-        )
+        _aurora_fault(locals(), exc, 'run_probe', 609)
         return ProbeResult(
             probe_id=probe.probe_id,
             dimension=probe.dimension,
@@ -677,13 +653,7 @@ def run_probe(
         score = rubric_engine.score_conversation(probe.probe_id, messages)
         dimension_scores = dict(score.dimension_scores)
     except Exception as exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_semantic_probe_battery.py:630",
-            exc=exc,
-            context={"function": "run_probe", "handler_line": 630, "source_file": "aurora_internal/aurora_semantic_probe_battery.py"},
-        )
+        _aurora_fault(locals(), exc, 'run_probe', 630)
         return ProbeResult(
             probe_id=probe.probe_id,
             dimension=probe.dimension,
@@ -701,13 +671,7 @@ def run_probe(
         try:
             relevance_fraction = relevance_scorer(last_user_turn, last_response_text)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_semantic_probe_battery.py:647",
-                exc=_aurora_boundary_exc,
-                context={"function": "run_probe", "handler_line": 647, "source_file": "aurora_internal/aurora_semantic_probe_battery.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'run_probe', 647)
             relevance_fraction = None
 
     return ProbeResult(

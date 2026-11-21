@@ -78,15 +78,13 @@ Created: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_i_state_beings.py')
 import os
 import time
-import math
-import hashlib
-from typing import Dict, List, Any, Optional, Tuple, FrozenSet
+from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
-from collections import deque, defaultdict
-from enum import Enum
+from collections import deque
 
 from foundational_contract import (
     FoundationalContract,
@@ -122,13 +120,7 @@ try:
     )
     CONSTRAINT_MANIFOLD_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_i_state_beings.py:122",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 122, "source_file": "aurora_i_state_beings.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 122)
     CONSTRAINT_MANIFOLD_AVAILABLE = False
     ConstraintVector  = None  # type: ignore
     ManifoldViolation = Exception  # type: ignore
@@ -1047,13 +1039,7 @@ class IStateCollective:
             )
             return cv, axis_net
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_i_state_beings.py:662",
-                exc=_aurora_boundary_exc,
-                context={"function": "_synthesize_constraint_vector", "handler_line": 662, "source_file": "aurora_i_state_beings.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_synthesize_constraint_vector', 662)
             return None, axis_net
 
     def _analyze_axes(self, responses: Dict[str, BeingResponse]
@@ -1240,13 +1226,7 @@ def verify_beings() -> Dict[str, Any]:
         collective.process_raw("impossible", "test", {'is_coherent': False})
         check("Incoherent input rejected", False, "no exception")
     except OntologicalViolation as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_i_state_beings.py:848",
-            exc=_aurora_boundary_exc,
-            context={"function": "verify_beings", "handler_line": 848, "source_file": "aurora_i_state_beings.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'verify_beings', 848)
         check("Incoherent input rejected", True)
 
     # 13. Background tick

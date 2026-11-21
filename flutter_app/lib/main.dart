@@ -3,9 +3,12 @@ import 'screens/home_screen.dart';
 import 'screens/hub_screen.dart';
 import 'screens/habitat_space_screen.dart';
 import 'screens/habitat_self_screen.dart';
+import 'widgets/ui_diagnostics.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Any failure the app can catch is shown on screen (ui_diagnostics.dart).
+  UiDiagnostics.install();
   runApp(const AuroraApp());
 }
 
@@ -24,6 +27,7 @@ class AuroraApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0D0D0F),
       ),
       home: const _AppShell(),
+      builder: (context, child) => UiDiagnosticsOverlay(child: child ?? const SizedBox.shrink()),
     );
   }
 }

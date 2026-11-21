@@ -102,6 +102,8 @@ Created: February 2026
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_ivm.py')
 import os
 import math
 import math
@@ -110,6 +112,7 @@ import hashlib
 import numpy as np
 from typing import Dict, List, Any, Optional, Tuple, Set, FrozenSet
 from dataclasses import dataclass, field
+from aurora_internal.aurora_shared_helpers import DictRecord
 from collections import defaultdict
 from enum import Enum, IntEnum
 
@@ -136,13 +139,7 @@ try:
     )
     CONSTRAINT_MANIFOLD_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_ivm.py:137",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 137, "source_file": "aurora_ivm.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 137)
     CONSTRAINT_MANIFOLD_AVAILABLE = False
     # Stubs so the rest of the file can import cleanly
     class RecursionLevel(IntEnum):  # type: ignore
@@ -794,13 +791,7 @@ class IVMCoordinate:
                 A=displacements[4]
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_ivm.py:788",
-                exc=_aurora_boundary_exc,
-                context={"function": "to_constraint_vector", "handler_line": 788, "source_file": "aurora_ivm.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'to_constraint_vector', 788)
             return None
 
     def to_dict(self) -> Dict:
@@ -956,13 +947,7 @@ class IVMNode:
             try:
                 return ConstraintVector(X=X, T=T, N=N, B=B, A=A)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_ivm.py:943",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "compute_constraint_vector", "handler_line": 943, "source_file": "aurora_ivm.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'compute_constraint_vector', 943)
                 return None
         else:
             # Fall back to coordinate-based computation
@@ -1735,13 +1720,7 @@ class IVMLattice:
             }
             return stats
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_ivm.py:1563",
-                exc=_aurora_boundary_exc,
-                context={"function": "get_constraint_field_stats", "handler_line": 1563, "source_file": "aurora_ivm.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'get_constraint_field_stats', 1563)
             return {'available': True, 'error': 'stats computation failed'}
 
     def update_all_constraint_vectors(self):
@@ -1990,7 +1969,7 @@ class HeatLevel(Enum):
 # ============================================================================
 
 @dataclass
-class ContradictionRecord:
+class ContradictionRecord(DictRecord):
     """A stored contradiction as a first-class object."""
     contradiction_id: str
     claim_a:         str
@@ -2001,24 +1980,6 @@ class ContradictionRecord:
     resolution_note: str = ""
     created_at:      float = field(default_factory=time.time)
     resolved_at:     float = 0.0
-
-    def to_dict(self) -> Dict:
-        return {
-            "contradiction_id": self.contradiction_id,
-            "claim_a": self.claim_a,
-            "claim_b": self.claim_b,
-            "source_a": self.source_a,
-            "source_b": self.source_b,
-            "status": self.status,
-            "resolution_note": self.resolution_note,
-            "created_at": self.created_at,
-            "resolved_at": self.resolved_at,
-        }
-
-    @classmethod
-    def from_dict(cls, d: Dict) -> 'ContradictionRecord':
-        return cls(**{k: v for k, v in d.items()
-                      if k in cls.__dataclass_fields__})
 
 
 class ContradictionLedger:
@@ -2108,13 +2069,7 @@ class ContradictionLedger:
                 os.fsync(f.fileno())
             os.replace(tmp, self.STATE_PATH)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_ivm.py:1914",
-                exc=_aurora_boundary_exc,
-                context={"function": "_auto_save", "handler_line": 1914, "source_file": "aurora_ivm.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_auto_save', 1914)
             pass
 
     def save(self):
@@ -2130,13 +2085,7 @@ class ContradictionLedger:
             for cid, rd in data.get("records", {}).items():
                 self._records[cid] = ContradictionRecord.from_dict(rd)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_ivm.py:1929",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 1929, "source_file": "aurora_ivm.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 1929)
             pass
 
     def status_summary(self) -> Dict:
@@ -2264,13 +2213,7 @@ def verify_ivm() -> Dict[str, Any]:
         lattice.assert_claim(ref_id, 'I_DID')
         check("REFERENCE I_DID raises violation", False, "no exception raised")
     except OntologicalViolation as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_ivm.py:2056",
-            exc=_aurora_boundary_exc,
-            context={"function": "verify_ivm", "handler_line": 2056, "source_file": "aurora_ivm.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'verify_ivm', 2056)
         check("REFERENCE I_DID raises violation", True)
 
     # ──────────────────────────────────────────────────────────────────
@@ -2284,13 +2227,7 @@ def verify_ivm() -> Dict[str, Any]:
         )
         check("Incoherent entity rejected", False, "no exception raised")
     except OntologicalViolation as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_ivm.py:2069",
-            exc=_aurora_boundary_exc,
-            context={"function": "verify_ivm", "handler_line": 2069, "source_file": "aurora_ivm.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'verify_ivm', 2069)
         check("Incoherent entity rejected", True)
 
     # ──────────────────────────────────────────────────────────────────
@@ -2633,25 +2570,13 @@ if __name__ == '__main__':
 try:
     import inspect as _aurora_native_inspect
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_ivm.py:2411",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 2411, "source_file": "aurora_ivm.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2411)
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_ivm.py:2416",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 2416, "source_file": "aurora_ivm.py"},
-    )
+    _aurora_fault(locals(), _aurora_boundary_exc, '<module>', 2416)
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None

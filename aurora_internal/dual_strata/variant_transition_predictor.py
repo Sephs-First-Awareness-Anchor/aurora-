@@ -24,12 +24,14 @@ threading positive/negative back in -- is deferred, same posture as
 this session's other Phase 4-6 deferrals).
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/variant_transition_predictor.py')
 
 import json
 import os
 import time
 from dataclasses import dataclass
+from aurora_internal.aurora_shared_helpers import DictRecord
 from typing import Any, Dict, List, Optional, Tuple
 
 SCHEMA_VERSION = 1
@@ -39,7 +41,7 @@ DEFAULT_PREDICTION_LIMIT = 5
 
 
 @dataclass
-class TransitionRecord:
+class TransitionRecord(DictRecord):
     from_variant_id: str
     to_variant_id: str
     observation_count: int = 0
@@ -54,17 +56,6 @@ class TransitionRecord:
         if total <= 0:
             return 0.5  # neutral prior, no evidence yet -- matches the
         return round(self.outcome_positive / total, 4)  # convention used throughout MTSL
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "from_variant_id": self.from_variant_id,
-            "to_variant_id": self.to_variant_id,
-            "observation_count": self.observation_count,
-            "outcome_positive": self.outcome_positive,
-            "outcome_negative": self.outcome_negative,
-            "first_seen": self.first_seen,
-            "last_seen": self.last_seen,
-        }
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "TransitionRecord":
@@ -125,13 +116,7 @@ class VariantTransitionPredictor:
                 if rec.from_variant_id and rec.to_variant_id:
                     self._transitions[(rec.from_variant_id, rec.to_variant_id)] = rec
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/variant_transition_predictor.py:125",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load", "handler_line": 125, "source_file": "aurora_internal/dual_strata/variant_transition_predictor.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load', 125)
             pass
 
     def save(self) -> bool:
@@ -154,13 +139,7 @@ class VariantTransitionPredictor:
             self._dirty = False
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/variant_transition_predictor.py:147",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 147, "source_file": "aurora_internal/dual_strata/variant_transition_predictor.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 147)
             return False
 
     def observe(self, variant_id: Optional[str], *, positive: Optional[bool] = None) -> Optional[TransitionRecord]:

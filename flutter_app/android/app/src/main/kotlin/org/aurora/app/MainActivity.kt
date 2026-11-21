@@ -11,6 +11,8 @@ import android.graphics.ImageFormat
 import android.graphics.Rect
 import android.graphics.YuvImage
 import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.audiofx.Visualizer
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.net.Uri
@@ -144,6 +146,13 @@ class MainActivity : FlutterActivity() {
     // ── TTS ──────────────────────────────────────────────────────────────────
     private var tts: TextToSpeech? = null
     private var ttsReady = false
+    // Her voice on the presence line (surface restructure 4b): each
+    // utterance plays on this audio session, and a Visualizer on it reads
+    // her actual waveform for OverlayService's line.
+    private var ttsSessionId = 0
+    private var voiceVisualizer: Visualizer? = null
+    private var voiceVisualizerTried = false
+    private val faceJournalExecutor = Executors.newSingleThreadExecutor()
 
     // ── STT ──────────────────────────────────────────────────────────────────
     private var speechRecognizer: SpeechRecognizer? = null
@@ -280,6 +289,26 @@ class MainActivity : FlutterActivity() {
                     "startListening" -> { startNativeStt(); result.success(null) }
                     "stopListening"  -> { speechRecognizer?.stopListening(); result.success(null) }
                     "speak"          -> { nativeSpeak(call.argument<String>("text") ?: ""); result.success(null) }
+                    // She feels her own face: a settled change of expression
+                    // goes to her surface journal.  Any failure comes back
+                    // as {"ok": false, "error": ...} for the app to show.
+                    "recordFaceExpression" -> {
+                        val json = call.argument<String>("json") ?: "{}"
+                        faceJournalExecutor.execute {
+                            val out = try {
+                                if (!com.chaquo.python.Python.isStarted()) {
+                                    JSONObject().put("ok", true).put("skipped", "python_not_started").toString()
+                                } else {
+                                    com.chaquo.python.Python.getInstance().getModule("aurora_bridge")
+                                        .callAttr("record_face_expression", json).toString()
+                                }
+                            } catch (e: Throwable) {
+                                JSONObject().put("ok", false)
+                                    .put("error", "${e.javaClass.simpleName}: ${e.message}").toString()
+                            }
+                            runOnUiThread { result.success(out) }
+                        }
+                    }
                     "stopSpeaking"   -> { tts?.stop(); result.success(null) }
                     "captureVision"  -> {
                         AuroraService.eventSink?.success(
@@ -320,6 +349,12 @@ class MainActivity : FlutterActivity() {
                     }
                     "getLiveTurnDiagnostics" -> {
                         AuroraService.callPythonString("get_live_turn_diagnostics") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    // Who holds her field and for how long (phone fix, Build 980).
+                    "getFieldStatus" -> {
+                        AuroraService.callPythonString("get_field_status") { json ->
                             runOnUiThread { result.success(json) }
                         }
                     }
@@ -554,8 +589,18 @@ class MainActivity : FlutterActivity() {
                 tts?.language = Locale.US
                 tts?.setSpeechRate(0.9f)
                 ttsReady = true
+                try {
+                    ttsSessionId = (getSystemService(AUDIO_SERVICE) as AudioManager).generateAudioSessionId()
+                } catch (e: Throwable) {
+                    NativeFaults.report("her voice (audio session)", e)
+                }
+                setupVoiceVisualizer()
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(utteranceId: String?) {}
+                    override fun onStart(utteranceId: String?) {
+                        try { voiceVisualizer?.setEnabled(true) } catch (e: Throwable) {
+                            NativeFaults.report("her voice reader (start)", e)
+                        }
+                    }
                     override fun onDone(utteranceId: String?) {
                         // Repair Q: conversation-active window ends when
                         // she finishes speaking (if listening restarts
@@ -564,6 +609,7 @@ class MainActivity : FlutterActivity() {
                         // redundant rebinding in that case, correct and
                         // simple either way).
                         switchCamera(front = false)
+                        try { voiceVisualizer?.setEnabled(false) } catch (_: Throwable) {}
                         runOnUiThread {
                             AuroraService.eventSink?.success(
                                 JSONObject().put("source","tts").put("type","done").toString()
@@ -574,6 +620,7 @@ class MainActivity : FlutterActivity() {
                     override fun onError(utteranceId: String?) {}
                     // Fires for each spoken word/range — minSdk 26 guarantees this is called.
                     override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
+                        PresenceVoice.word()
                         runOnUiThread {
                             AuroraService.eventSink?.success(
                                 JSONObject().put("source","tts").put("type","word").toString()
@@ -621,10 +668,40 @@ class MainActivity : FlutterActivity() {
         try { File(filesDir, "aurora_state/last_app_stage.txt").delete() } catch (_: Throwable) {}
     }
 
+    /**
+     * A Visualizer on her TTS audio session reads her actual voice waveform
+     * for the presence line.  It needs the microphone permission; without
+     * it, or on a device that refuses it, the line follows each word's
+     * timing instead, and the refusal is shown on screen once.
+     */
+    private fun setupVoiceVisualizer() {
+        if (voiceVisualizer != null || voiceVisualizerTried || ttsSessionId == 0) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) return
+        voiceVisualizerTried = true
+        try {
+            val v = Visualizer(ttsSessionId)
+            val range = Visualizer.getCaptureSizeRange()
+            v.setCaptureSize(256.coerceIn(range[0], range[1]))
+            v.setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
+                override fun onWaveFormDataCapture(visualizer: Visualizer?, waveform: ByteArray?, samplingRate: Int) {
+                    if (waveform != null) PresenceVoice.pushWaveform(waveform)
+                }
+                override fun onFftDataCapture(visualizer: Visualizer?, fft: ByteArray?, samplingRate: Int) {}
+            }, Visualizer.getMaxCaptureRate() / 2, true, false)
+            voiceVisualizer = v
+        } catch (e: Throwable) {
+            NativeFaults.report("her voice reader (the line follows her words instead)", e)
+        }
+    }
+
     private fun nativeSpeak(text: String) {
         if (!ttsReady || text.isEmpty()) return
+        setupVoiceVisualizer()
         markAppStage("nativeSpeak: about to call tts.speak(\"${text.take(60)}\")")
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
+        val params = Bundle()
+        if (ttsSessionId != 0) params.putInt(TextToSpeech.Engine.KEY_PARAM_SESSION_ID, ttsSessionId)
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, params, UUID.randomUUID().toString())
         markAppStage("nativeSpeak: tts.speak() call returned")
     }
 
@@ -902,6 +979,12 @@ class MainActivity : FlutterActivity() {
                 }
                 if (read <= 0) continue
 
+                // Her hearing on the presence line: the level of what she
+                // hears, nothing more.
+                var energy = 0.0
+                for (i in 0 until read) { val x = chunk[i].toDouble(); energy += x * x }
+                PresenceVoice.hear((kotlin.math.sqrt(energy / read) / 32768.0 * 6.0).coerceIn(0.0, 1.0))
+
                 val now = System.currentTimeMillis()
                 if (now - lastAudioPushMs < AUDIO_PUSH_INTERVAL_MS) continue
                 lastAudioPushMs = now
@@ -972,6 +1055,9 @@ class MainActivity : FlutterActivity() {
         speechRecognizer = null
         tts?.shutdown()
         tts = null
+        try { voiceVisualizer?.release() } catch (_: Throwable) {}
+        voiceVisualizer = null
+        faceJournalExecutor.shutdown()
         try { unregisterReceiver(overlayReceiver) } catch (_: Exception) {}
     }
 }

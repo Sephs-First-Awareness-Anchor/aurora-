@@ -78,6 +78,12 @@ jobs:
         working-directory: flutter_app
         run: flutter pub get
 
+      # Her face's motion (springs, dead-band, caps, settle gate) is pure Dart,
+      # so it is checked here before the APK is built.
+      - name: Test her face's motion
+        working-directory: flutter_app
+        run: flutter test test/face_motion_test.dart
+
       - name: Clean Flutter build
         working-directory: flutter_app
         run: flutter clean
@@ -91,6 +97,18 @@ jobs:
         run: |
           flutter build apk --release -v
           cp build/app/outputs/flutter-apk/app-release.apk ../aurora-release.apk
+
+      # Her presence line's motion is plain Kotlin; the Flutter build above
+      # generates gradlew, so its JVM unit test runs once the APK exists.
+      - name: Test her presence line's motion
+        working-directory: flutter_app/android
+        env:
+          RELEASE_STORE_PASS: ${{ secrets.RELEASE_STORE_PASS }}
+          RELEASE_KEY_ALIAS:  ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASS:   ${{ secrets.RELEASE_KEY_PASS }}
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:testReleaseUnitTest --tests org.aurora.app.PresenceMotionTest
 
       - name: List output for verification
         run: ls -lh *.apk

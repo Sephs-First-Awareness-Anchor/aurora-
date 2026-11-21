@@ -52,16 +52,16 @@ DOCTRINE:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_ontological_scaffolding.py')
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import time
 import math
 import hashlib
 import random
-import json
 import re
-from enum import Enum, IntEnum, auto
+from enum import Enum, IntEnum
 from typing import Dict, List, Any, Optional, Tuple, Set, Callable
 from dataclasses import dataclass, field
 from collections import defaultdict, deque
@@ -88,8 +88,7 @@ from foundational_contract import (
 # SHARED UTILITIES
 # ============================================================================
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 
 def _generate_id(prefix: str) -> str:
@@ -2026,13 +2025,7 @@ class ResearchStudyMode:
             try:
                 role = infer_word_role(word)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_ontological_scaffolding.py:1342",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "teach_concept", "handler_line": 1342, "source_file": "aurora_internal/aurora_ontological_scaffolding.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'teach_concept', 1342)
                 role = "noun"
             self.web.add_node(word, role, 0.0, meaning="waiting_for_teaching")
 
@@ -2186,13 +2179,7 @@ class ResearchStudyMode:
             try:
                 return self._fetch_definition(word)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_ontological_scaffolding.py:1495",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_research_word", "handler_line": 1495, "source_file": "aurora_internal/aurora_ontological_scaffolding.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_research_word', 1495)
                 pass
 
         # Fallback: internal inference only
@@ -2283,13 +2270,7 @@ class ResearchStudyMode:
                         from aurora_expression_perception import infer_word_role
                         role = infer_word_role(raw)
                     except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_internal/aurora_ontological_scaffolding.py:1585",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_integrate_result", "handler_line": 1585, "source_file": "aurora_internal/aurora_ontological_scaffolding.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_integrate_result', 1585)
                         role = "noun"
                     self.web.add_node(raw, role, 0.0,
                                       meaning=f"from_definition:{word}")
@@ -2654,6 +2635,13 @@ class OntologicalScaffoldingEngine:
 
             self.web.add_node(word, role, valence, meaning, lineage)
 
+        # Build 725: LexicalMemory already carries earned/seeded exact NonComp
+        # coordinates. Preserve those coordinates in OETS rather than replacing
+        # them with the coarse role-derived fallback used for otherwise-unbound
+        # nodes. The same reconciliation is called again after OETS persistence
+        # load, because load_web() reconstructs the web after this seed pass.
+        self.reconcile_noncomp_ids_from_lexicon(lexical_entries)
+
         # Initial relation inference: connect words that share categories
         categories = self.web._semantic_categories
         for category, words in categories.items():
@@ -2673,6 +2661,26 @@ class OntologicalScaffoldingEngine:
         self.cluster_engine.discover_clusters()
 
         self._initialized = True
+
+    def reconcile_noncomp_ids_from_lexicon(self, lexical_entries: Dict[str, Any]) -> int:
+        """Restore exact lexical NonComp identity after OETS rehydration.
+
+        This does not infer or assign new meaning. It only conserves coordinates
+        LexicalMemory already owns for nodes that already exist in the OETS web.
+        """
+        changed = 0
+        for word, entry in (lexical_entries or {}).items():
+            lexical_noncomp_id = getattr(entry, "noncomp_id", None)
+            if not lexical_noncomp_id:
+                continue
+            node = self.web.nodes.get(word)
+            if node is None:
+                continue
+            exact_id = str(lexical_noncomp_id)
+            if str(getattr(node, "noncomp_id", "") or "") != exact_id:
+                node.noncomp_id = exact_id
+                changed += 1
+        return changed
 
     def _seed_foundational_relations(self):
         """Seed core ontological relations that Aurora should know from the start."""
@@ -2881,17 +2889,14 @@ class OntologicalScaffoldingEngine:
             except Exception:
                 _study_dir = "aurora_state"
             log_path = os.path.join(str(_study_dir), "study_log.jsonl")
+            from aurora_internal.aurora_store_ownership import store_write_allowed
+            if not store_write_allowed(log_path):
+                return
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
             with open(log_path, 'a') as f:
                 f.write(_j.dumps(event.to_dict()) + "\n")
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_ontological_scaffolding.py:2165",
-                exc=_aurora_boundary_exc,
-                context={"function": "log_study_event", "handler_line": 2165, "source_file": "aurora_internal/aurora_ontological_scaffolding.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'log_study_event', 2165)
             pass
 
     def set_announce_thresholds(self, min_connections: int = 3,

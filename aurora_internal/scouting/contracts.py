@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field, asdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Legacy wire compatibility only. Scouts are prohibited from populating these.
 RESPONSE_RELATIONSHIP_KINDS = (

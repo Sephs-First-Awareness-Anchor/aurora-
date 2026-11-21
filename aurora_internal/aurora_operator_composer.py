@@ -48,14 +48,14 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_operator_composer.py')
 
 import hashlib
 import json
 import os
 import re
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from itertools import combinations
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -157,26 +157,14 @@ class OperatorComposer:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {"operations": [], "latent_operations": []}
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_operator_composer.py:158",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_descriptor_state", "handler_line": 158, "source_file": "aurora_internal/aurora_operator_composer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_descriptor_state', 158)
             return {"operations": [], "latent_operations": []}
 
     def _current_latent_count(self) -> int:
         try:
             return len(self._load_descriptor_state().get("latent_operations", []) or [])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_operator_composer.py:164",
-                exc=_aurora_boundary_exc,
-                context={"function": "_current_latent_count", "handler_line": 164, "source_file": "aurora_internal/aurora_operator_composer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_current_latent_count', 164)
             return 0
 
     def _load_coupling_shapes(self) -> List[str]:
@@ -189,13 +177,7 @@ class OperatorComposer:
             adoptions = list(experiments.get("adoptions", []) or [])
             return [str(a.get("shape", "") or "") for a in adoptions if a.get("shape")]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_operator_composer.py:176",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_coupling_shapes", "handler_line": 176, "source_file": "aurora_internal/aurora_operator_composer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_coupling_shapes', 176)
             return []
 
     # ------------------------------------------------------------------
@@ -254,13 +236,7 @@ class OperatorComposer:
                 })
             return candidates
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_operator_composer.py:234",
-                exc=_aurora_boundary_exc,
-                context={"function": "find_candidates", "handler_line": 234, "source_file": "aurora_internal/aurora_operator_composer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'find_candidates', 234)
             return []
 
     # ------------------------------------------------------------------
@@ -282,13 +258,7 @@ class OperatorComposer:
                 return True
             return history.trajectory != WorthTrajectory.FALLING
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_operator_composer.py:255",
-                exc=_aurora_boundary_exc,
-                context={"function": "_parent_trajectory_ok", "handler_line": 255, "source_file": "aurora_internal/aurora_operator_composer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_parent_trajectory_ok', 255)
             return True
 
     def _both_parents_promoted(self, op_a: Dict[str, Any], op_b: Dict[str, Any], promoted_ids: Set[str]) -> bool:
@@ -395,13 +365,7 @@ class OperatorComposer:
                 self._persist(accepted)
             return accepted
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_operator_composer.py:361",
-                exc=_aurora_boundary_exc,
-                context={"function": "compose_tick", "handler_line": 361, "source_file": "aurora_internal/aurora_operator_composer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'compose_tick', 361)
             return []
 
     def _persist(self, composites: List[ComposedOperator]) -> bool:
@@ -418,13 +382,7 @@ class OperatorComposer:
             with PERSISTENCE_LOCK:
                 return atomic_write_json(Path(self._descriptor_path), state, indent=2)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_operator_composer.py:377",
-                exc=_aurora_boundary_exc,
-                context={"function": "_persist", "handler_line": 377, "source_file": "aurora_internal/aurora_operator_composer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_persist', 377)
             return False
 
     def summary(self) -> Dict[str, Any]:
@@ -436,13 +394,7 @@ class OperatorComposer:
                 "latent_pool_ceiling": self._boot_latent_count + LATENT_POOL_CEILING_MARGIN,
             }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_operator_composer.py:388",
-                exc=_aurora_boundary_exc,
-                context={"function": "summary", "handler_line": 388, "source_file": "aurora_internal/aurora_operator_composer.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'summary', 388)
             return {"boot_latent_count": 0, "current_latent_count": 0, "latent_pool_ceiling": 0}
 
 

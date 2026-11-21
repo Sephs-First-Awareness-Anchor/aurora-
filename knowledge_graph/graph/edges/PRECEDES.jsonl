@@ -1,0 +1,15 @@
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "concept:quasiarch_lattice/Base", "target": "concept:quasiarch_lattice/Composite", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "concept:quasiarch_lattice/Composite", "target": "concept:quasiarch_lattice/Higher-Order", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "concept:quasiarch_lattice/Higher-Order", "target": "concept:quasiarch_lattice/Quasicrystal", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "concept:reentry_loop/EXPRESSION", "target": "concept:reentry_loop/RE-ENTRY", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "concept:reentry_loop/RE-ENTRY", "target": "concept:reentry_loop/RECONCILIATION", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "concept:reentry_loop/RECONCILIATION", "target": "concept:reentry_loop/UNDERSTANDING", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "concept:reentry_loop/STATE", "target": "concept:reentry_loop/EXPRESSION", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "layer:L0", "target": "layer:L1", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "layer:L1", "target": "layer:L2", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "layer:L2", "target": "layer:L3", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "layer:L3", "target": "layer:L4", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "layer:L4", "target": "layer:L5", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "layer:L5", "target": "layer:L6", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "layer:L6", "target": "layer:L7", "type": "PRECEDES", "weight": 1}
+{"basis": ["declared"], "confidence": 1.0, "evidence": [], "evidence_count": 0, "provenance": ["ontology"], "source": "layer:L7", "target": "layer:L8", "type": "PRECEDES", "weight": 1}

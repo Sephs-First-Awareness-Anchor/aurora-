@@ -23,7 +23,7 @@ import re
 import threading
 import time
 from collections import defaultdict, deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Tuple
 
@@ -647,7 +647,8 @@ class UniversalFunctionLineage:
         self.manifest_path = Path(manifest_path).resolve() if manifest_path else (
             self.repo_root / "aurora_internal" / "universal_function_lineage.json"
         )
-        self.constraint_index_path = self.repo_root / "aurora_internal" / "universal_function_constraints.json"
+        self.constraint_index_path = (self.manifest_path.with_name("universal_function_constraints.json")
+                                      if manifest_path else self.repo_root / "aurora_internal" / "universal_function_constraints.json")
         self.include_lambdas = bool(include_lambdas)
         self.persist = bool(persist)
         self._lock = threading.RLock()

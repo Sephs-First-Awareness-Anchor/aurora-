@@ -16,7 +16,6 @@ from _DIMENSION_TO_BEHAVIOR; classroom lessons were the one path that
 bypassed it. The fix adds a public behavior_modes_for_dimension()
 accessor and wires it into the classroom's queued spec.
 """
-import time
 
 from aurora_internal.aurora_specialized_avatar_synthesizer import (
     behavior_modes_for_dimension,

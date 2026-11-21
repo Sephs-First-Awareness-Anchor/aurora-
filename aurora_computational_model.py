@@ -60,7 +60,8 @@ subsystems can call cpm.advance(), cpm.apply_istate(), cpm.snapshot() etc.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_computational_model.py')
 from typing import Any, Dict, List, Optional
 
 from aurora_constraint_head import ConstraintHead, HeadPosition
@@ -184,13 +185,7 @@ class CPMSession:
         try:
             tape_size = len(self._registry._nodes)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_computational_model.py:185",
-                exc=_aurora_boundary_exc,
-                context={"function": "snapshot", "handler_line": 185, "source_file": "aurora_computational_model.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'snapshot', 185)
             pass
         return {
             'address':         pos.bucket if pos else None,

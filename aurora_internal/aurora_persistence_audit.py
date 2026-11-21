@@ -15,7 +15,8 @@ the restoration decision itself, only its own record of it.
 
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_persistence_audit.py')
 import json
 import os
 import time
@@ -52,11 +53,5 @@ def log_reversion(state_dir, store, discarded, kept, reason, extra=None):
             f.write(json.dumps(record) + "\n")
         return True
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_persistence_audit.py:53",
-            exc=_aurora_boundary_exc,
-            context={"function": "log_reversion", "handler_line": 53, "source_file": "aurora_internal/aurora_persistence_audit.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, 'log_reversion', 53)
         return False

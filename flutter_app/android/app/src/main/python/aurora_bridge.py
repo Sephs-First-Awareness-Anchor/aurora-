@@ -137,12 +137,25 @@ class _FieldLock:
     def __init__(self) -> None:
         self._inner = threading.Lock()
         self.last_released = 0.0
+        # Who holds the field and since when -- diagnostics only, so a turn
+        # that waited too long can say what it was waiting behind.
+        self.holder = ""
+        self.held_since = 0.0
+
+    def _took(self) -> None:
+        self.holder = threading.current_thread().name
+        self.held_since = time.time()
 
     def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
-        return self._inner.acquire(blocking, timeout)
+        got = self._inner.acquire(blocking, timeout)
+        if got:
+            self._took()
+        return got
 
     def release(self) -> None:
         self.last_released = time.time()
+        self.holder = ""
+        self.held_since = 0.0
         self._inner.release()
 
     def locked(self) -> bool:
@@ -150,6 +163,7 @@ class _FieldLock:
 
     def __enter__(self) -> bool:
         self._inner.acquire()
+        self._took()
         return True
 
     def __exit__(self, *exc) -> None:
@@ -157,6 +171,104 @@ class _FieldLock:
 
 
 _lock          = _FieldLock()
+
+# A live turn waiting for the field.  While one waits, no background source
+# starts anything new (see _background_breathing_room), so the present is
+# never queued behind a second background pass after the first one ends.
+_present_waiting: int = 0
+_present_waiting_lock = threading.Lock()
+
+
+# Surface restructure 3: a paired phone whose first pairing home has received
+# and verified runs as her surface.  Her growth work (curiosity, dreams,
+# historical replay, the learning probe, evolution, Scout, Praxis) runs at
+# home; her deep stores are home's and read-only here.  An unpaired phone,
+# or one still migrating, stays the whole mind: it is then the only copy.
+_surface_only = False
+_deferred_to_home: list = []
+
+
+def _defer_to_home(organ: str) -> None:
+    if organ not in _deferred_to_home:
+        _deferred_to_home.append(organ)
+    if _systems is not None:
+        _systems["_deferred_to_home"] = list(_deferred_to_home)
+
+
+def _capture_present_for_move() -> None:
+    from aurora_internal.dual_strata.surface_working_state import capture
+    _dir = _strata_state_dir or "aurora_state"
+    with _lock:
+        with _late_surface_response_lock:
+            capture(_systems, _dir, app_state={"late_responses": list(_late_surface_responses)})
+
+
+def _restore_present_for_move() -> None:
+    from aurora_internal.dual_strata.surface_working_state import restore
+    _dir = _strata_state_dir or "aurora_state"
+    with _lock:
+        restored = restore(_systems, _dir)
+        with _late_surface_response_lock:
+            _late_surface_responses[:] = restored.get("late_responses", [])
+
+
+def _hub_message_loop() -> None:
+    """Sir typed to her at the desktop hub while this device holds her
+    (hub_route).  Each message is a turn she lives here, through the same
+    handle_message as any other; whatever she says goes home with it."""
+    import time as _t
+    from aurora_internal.dual_strata import strata_link as _sl_hub
+    from aurora_internal.dual_strata.hub_route import answer_pending
+    while True:
+        _t.sleep(3.0)
+        client = _sl_hub._CLIENT
+        if client is None or _systems is None:
+            continue
+        if client.role != "active" or not client.surface_ready:
+            continue
+        try:
+            answer_pending(_strata_state_dir, handle_message, client.outbox)
+        except Exception as _hub_exc:
+            log.warning("Message from the desk not delivered to her: %s", _hub_exc)
+
+
+def is_surface_only() -> bool:
+    return bool(_surface_only)
+
+
+def _ask_home(kind: str, payload: "dict | None" = None) -> dict:
+    """On a surface, growth work is asked of home rather than run here."""
+    try:
+        from aurora_internal.dual_strata.strata_link import request_home
+        return request_home(_strata_state_dir, kind, payload)
+    except Exception as exc:
+        return {"ok": False, "error": f"{type(exc).__name__}: {exc}"[:200]}
+
+
+def _present_is_waiting() -> bool:
+    return _present_waiting > 0
+
+
+class _PresentClaim:
+    """Take the field for a live turn, announcing the wait while it lasts.
+
+    Same lock, same serialisation as ``with _lock``; the only addition is
+    that background sources can see a turn is waiting and hold back.
+    """
+
+    def __enter__(self) -> bool:
+        global _present_waiting
+        with _present_waiting_lock:
+            _present_waiting += 1
+        try:
+            _lock.acquire()
+        finally:
+            with _present_waiting_lock:
+                _present_waiting -= 1
+        return True
+
+    def __exit__(self, *exc) -> None:
+        _lock.release()
 _boot_completed_at: float = 0.0
 # Background pacing (phone overload fix, 2026-11-07).  Every background
 # source -- historical replay, Praxis bridge, messenger and her reach-outs,
@@ -267,6 +379,10 @@ _CAMERA_ATTEND_RE = re.compile(
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
+# get_axis_state() reads her live state at most this often; the app polls
+# every second and the overlay every two, so one reading serves both.
+_AXIS_LIVE_MIN_INTERVAL_S: float = 0.9
+_axis_live_read_at: float = 0.0
 
 # Hardware body — battery, motion, light — pushed from Kotlin SensorManager.
 # Aurora perceives these as her own physical substrate: battery = energy, motion = movement, etc.
@@ -434,6 +550,7 @@ _TURN_ADMISSION_TIMEOUT_S: float = 180.0
 # diagnostically distinct from Aurora genuinely speaking unprompted, even
 # though both are delivered to Flutter through the same poll transport.
 _late_surface_response: str = ""
+_late_surface_responses = []
 _late_surface_response_lock = threading.Lock()
 
 
@@ -442,7 +559,7 @@ def _store_late_surface_response(turn_id: str, text: str) -> None:
     if not text:
         return
     with _late_surface_response_lock:
-        _late_surface_response = text
+        _late_surface_responses.append({"turn_id": turn_id, "text": text})
     log.info("Late surface response stored for %s (%d chars)", turn_id, len(text))
 
 
@@ -452,8 +569,7 @@ def get_late_surface_response() -> str:
     that finished deciding after the Surface wait already timed out."""
     global _late_surface_response
     with _late_surface_response_lock:
-        val = _late_surface_response
-        _late_surface_response = ""
+        val = _late_surface_responses.pop(0)["text"] if _late_surface_responses else ""
     return val
 
 
@@ -1432,6 +1548,8 @@ def run_evolutionary_burst(n_generations: int = 5) -> str:
     Returns JSON summary of all generations run.
     """
     import json as _json
+    if _surface_only:
+        return _json.dumps({"at_home": True, **_ask_home("evo_cycle", {"generations": int(n_generations)})})
     if _evo_sim is None or _concept_registry is None:
         return _json.dumps({"error": "evolutionary sim not initialized"})
     if _systems is None:
@@ -1727,7 +1845,9 @@ def _start_curiosity_engine(systems: dict) -> None:
         from aurora_tool_mind import ToolChoiceObserver  # type: ignore
 
         dim = systems.get("dimensional")
-        pressure_src = getattr(dim, "pressure_vec", None) if dim else None
+        # The engine reads pressure through ``_current_pressure_vec()``; the
+        # dimensional system itself is that source (it has no pressure_vec).
+        pressure_src = dim if (dim is not None and hasattr(dim, "_current_pressure_vec")) else None
         field_map_raw = getattr(dim, "field_map", None) if dim else None
         field_map = getattr(field_map_raw, "field_map", None) or field_map_raw
 
@@ -1814,6 +1934,8 @@ _MOBILE_HEALTH_DEGRADED = (
     "genealogy", "recursive_causal_waveform", "sensory_crystal", "dimensional",
 )
 _MOBILE_HEALTH_OPTIONAL_SYSTEMS_KEYS = ("hardware", "sensory_integration")
+# What boot_aurora(runtime_profile="surface") leaves to home.
+_SURFACE_AT_HOME = ("genealogy",)
 
 
 # Directive 3.21 (Communication Architecture Repair Directive): the checks
@@ -1909,6 +2031,11 @@ def get_mobile_developmental_health() -> str:
 
     fatal_missing = _classify_missing(_MOBILE_HEALTH_FATAL, systems)
     degraded_missing = _classify_missing(_MOBILE_HEALTH_DEGRADED, systems)
+    at_home: list = []
+    if _surface_only:
+        # Organs the surface profile leaves to home are at home, not degraded.
+        at_home = [k for k in degraded_missing if k in _SURFACE_AT_HOME] + list(_deferred_to_home)
+        degraded_missing = [k for k in degraded_missing if k not in _SURFACE_AT_HOME]
 
     optional_status = {
         # aurora.py never stores anything under "_curiosity_engine" --
@@ -1932,19 +2059,27 @@ def get_mobile_developmental_health() -> str:
         "sensory_bridges": any(bool(systems.get(k)) for k in _MOBILE_HEALTH_OPTIONAL_SYSTEMS_KEYS),
     }
 
+    judged = optional_status
+    if _surface_only:
+        judged = {k: v for k, v in optional_status.items()
+                  if k not in ("curiosity", "dream_substrate_boot_attempted", "evolutionary_chamber")}
     if fatal_missing:
         overall = "fatal"
-    elif degraded_missing or not all(optional_status.values()):
+    elif degraded_missing or not all(judged.values()):
         overall = "degraded"
     else:
         overall = "healthy"
 
-    return _json.dumps({
+    out = {
         "overall": overall,
         "fatal_missing": fatal_missing,
         "degraded_missing": degraded_missing,
         "optional_status": optional_status,
-    })
+        "profile": "surface" if _surface_only else "whole",
+    }
+    if _surface_only:
+        out["at_home"] = sorted(set(at_home))
+    return _json.dumps(out)
 
 
 def record_boot_health() -> str:
@@ -2222,9 +2357,9 @@ def habitat_reset() -> str:
     """Full reset -- human-only, Hub-triggered (spec section 32)."""
     import json as _json
     if _habitat is None:
-        return json.dumps({"error": "habitat_not_initialized"})
+        return _json.dumps({"error": "habitat_not_initialized"})
     _habitat.reset()
-    return json.dumps({"success": True})
+    return _json.dumps({"success": True})
 
 
 def _messenger_waiting() -> bool:
@@ -2243,6 +2378,66 @@ def _messenger_live_idle() -> bool:
     return _historical_experience_live_idle(yield_to_messenger=False)
 
 
+_clone_absorption_running = threading.Event()
+
+
+def _clone_absorption_live_idle() -> bool:
+    """The clone harvest takes the field only when no live turn is waiting
+    and the background has its breathing room."""
+    return _systems is not None and not _present_is_waiting() and _background_breathing_room()
+
+
+def _start_clone_absorption(state_dir: str) -> None:
+    """Absorb the bundled clone harvest in the background, in chunks, never
+    holding the field across a live turn."""
+    if _clone_absorption_running.is_set():
+        return
+    _clone_absorption_running.set()
+
+    def _absorb() -> None:
+        try:
+            from aurora_internal.aurora_clone_harvest import absorb_harvest
+            if _systems is not None:
+                _systems["_clone_harvest_absorb"] = {"status": "absorbing_idle_batches"}
+            result = absorb_harvest(_systems, state_dir=state_dir,
+                                    field_lock=_lock, live_idle=_clone_absorption_live_idle)
+        except Exception as exc:
+            result = {"status": "error", "error": f"{type(exc).__name__}: {exc}"[:300]}
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:_start_clone_absorption",
+                exc=exc,
+                context={"function": "_start_clone_absorption",
+                         "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+        finally:
+            _clone_absorption_running.clear()
+        if _systems is not None:
+            _systems["_clone_harvest_absorb"] = result
+        log.info("Clone harvest: %s", {k: result.get(k) for k in ("status", "harvest_id", "clones", "episodes", "error")})
+
+    threading.Thread(target=_absorb, daemon=True, name="clone_harvest_absorption").start()
+
+
+def get_field_status() -> str:
+    """Who holds her field right now and for how long, whether a live turn
+    is waiting for it, and where boot is.  Shown on the Hub so a turn that
+    sits at surface_queued says what it is waiting behind."""
+    import json as _json_fs
+    held_since = float(getattr(_lock, "held_since", 0.0) or 0.0)
+    absorb = (_systems or {}).get("_clone_harvest_absorb") if _systems is not None else None
+    return _json_fs.dumps({
+        "held": bool(_lock.locked()),
+        "holder": str(getattr(_lock, "holder", "") or ""),
+        "held_s": round(time.time() - held_since, 1) if held_since else 0.0,
+        "present_waiting": int(_present_waiting),
+        "boot_stage": str(_boot_state.get("stage", "")),
+        "boot_finished": bool(_boot_state.get("finished", False)),
+        "clone_harvest": (absorb or {}).get("status", "") if isinstance(absorb, dict) else "",
+        "surface_only": bool(_surface_only),
+    }, default=str)
+
+
 def _historical_experience_live_idle(yield_to_messenger: bool = True) -> bool:
     """True only when the live app path is not currently claiming the field.
 
@@ -2251,6 +2446,10 @@ def _historical_experience_live_idle(yield_to_messenger: bool = True) -> bool:
     worker from repeatedly getting in front of an actively conversing user.
     """
     if _systems is None:
+        return False
+    if _clone_absorption_running.is_set():
+        # Her history stream follows the clone harvest, so it already knows
+        # which conversations her clones lived.
         return False
     if _curiosity_session_active.is_set() or _go_play_active.is_set():
         return False
@@ -2273,6 +2472,8 @@ def _background_breathing_room(now: float = 0.0, *, yield_to_messenger: bool = T
     (phone fix, 2026-11-08: the faster loops always took the quiet window
     first and the messenger starved)."""
     now = now or time.time()
+    if _present_is_waiting():
+        return False
     if yield_to_messenger and _messenger_waiting():
         return False
     if _boot_completed_at <= 0.0 or now - _boot_completed_at < BOOT_SETTLE_S:
@@ -2407,6 +2608,17 @@ def get_strata_link_status() -> str:
         return _json.dumps({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
 
 
+def _send_first_pairing(client) -> None:
+    """Her whole mind goes home for the first pairing.  Only the copy is
+    taken under the field lock; sending the copy does not hold up a turn."""
+    try:
+        result = client.migrate(snapshot_guard=lambda: _lock)
+        if not result.get("ok"):
+            log.warning("First pairing not sent yet: %s", result.get("error"))
+    except Exception as exc:
+        log.warning("First pairing not sent: %s", exc)
+
+
 def configure_strata_link(pairing: str) -> str:
     """Store the pairing line from the Subsurface device and (re)start the
     link.  Pairing is the explicit act that asks for active-Surface ownership."""
@@ -2416,8 +2628,23 @@ def configure_strata_link(pairing: str) -> str:
         _dir = _strata_state_dir or "aurora_state"
         result = _sl.configure_surface(_dir, pairing)
         if result.get("ok"):
+            name_path = _sl.link_dir(_dir) / "device_name.txt"
+            if not name_path.exists():
+                # What home and her own move tool call this device; Sir can
+                # rename it by editing this one line.
+                name_path.write_text("phone", encoding="utf-8")
             _sl.stop_strata_link_client()
-            _sl.start_strata_link_client_if_configured(_dir)
+            client = _sl.start_strata_link_client_if_configured(_dir)
+            from aurora_internal.dual_strata.strata_migration import load_receipt
+            if not _surface_only and load_receipt(_dir) is None and client is not None:
+                # This phone has lived as the whole mind: its first pairing
+                # sends that home now, in the background, to be staged and
+                # compared there.  Nothing at home or here changes until Sir
+                # applies it at home; the link then picks up the receipt by
+                # itself and this phone is her surface from its next start.
+                result["next_step"] = "first_pairing_started"
+                threading.Thread(target=_send_first_pairing, args=(client,), daemon=True,
+                                 name="aurora_first_pairing").start()
         return _json.dumps({**result, **_sl.strata_link_client_status()}, default=str)
     except Exception as exc:
         return _json.dumps({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"})
@@ -2430,6 +2657,9 @@ def strata_link_transfer(action: str, token: str = "") -> str:
     action "handoff_checkpoint"   checkpoint it for the next Surface device (returns the token)
     action "handoff_claim"        become the Surface with the checkpointed state (needs token)
     action "verify"               how this device's state stands against the Subsurface's
+    action "first_pairing"        send this whole mind home to be staged and compared (3d)
+    action "first_pairing_status" how it stands at home; a matching receipt makes this
+                                  phone her surface from its next start
     Runs through the already-running link client, so it cannot race the sync loop."""
     import json as _json
     try:
@@ -2438,16 +2668,38 @@ def strata_link_transfer(action: str, token: str = "") -> str:
         client = _sl.start_strata_link_client_if_configured(_dir)
         if client is None:
             return _json.dumps({"ok": False, "error": "not paired with a Subsurface device"})
-        if action == "seed":
-            result = client.push_state("seed")
-        elif action == "handoff_checkpoint":
-            result = client.push_state("handoff")
-        elif action == "handoff_claim":
-            result = client.pull_handoff(token)
-        elif action == "verify":
-            result = client.verify_sync()
-        else:
-            result = {"ok": False, "error": f"unknown action: {action}"}
+        if action == "first_pairing":
+            # Only the copy is taken under the field lock (as at pairing).
+            return _json.dumps(client.migrate(snapshot_guard=lambda: _lock), default=str)
+        if action == "first_pairing_status":
+            return _json.dumps(client.check_migration(), default=str)
+        with _lock:
+            if action == "seed":
+                result = client.push_state("seed")
+            elif action == "handoff_checkpoint":
+                from aurora_internal.dual_strata.surface_working_state import capture
+                with _late_surface_response_lock:
+                    capture(_systems, _dir, app_state={"late_responses": list(_late_surface_responses)})
+                result = client.push_state("handoff")
+            elif action == "handoff_claim":
+                def install_surface():
+                    from aurora_internal.dual_strata.surface_working_state import restore
+                    restored = restore(_systems, _dir)
+                    with _late_surface_response_lock:
+                        _late_surface_responses[:] = restored.get("late_responses", [])
+                result = client.pull_handoff(token, restore_callback=install_surface)
+                if result.get("ok"):
+                    (_sl.link_dir(_dir) / "surface_frozen").unlink(missing_ok=True)
+            elif action == "handoff_cancel":
+                result = client.cancel_handoff(token)
+            elif action == "verify":
+                result = client.verify_sync()
+            elif action == "first_pairing":
+                result = client.migrate()
+            elif action == "first_pairing_status":
+                result = client.check_migration()
+            else:
+                result = {"ok": False, "error": f"unknown action: {action}"}
         return _json.dumps(result, default=str)
     except Exception as exc:
         return _json.dumps({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
@@ -2488,6 +2740,7 @@ def initialize(state_dir: str = "") -> str:
     _boot_state.update({"stage": "initialize() entered", "finished": False, "aborted": ""})
     global _strata_state_dir
     _strata_state_dir = state_dir if state_dir else "aurora_state"
+    os.environ["AURORA_STATE_DIR"] = os.path.abspath(_strata_state_dir)
     _praxis_start_errors.update({"bridge": "", "messenger": ""})
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis, _praxis_messenger
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
@@ -2527,6 +2780,44 @@ def initialize(state_dir: str = "") -> str:
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
+    global _surface_only
+    _surface_only = False
+    _deferred_to_home.clear()
+    try:
+        from aurora_internal.dual_strata.strata_migration import surface_only_ready
+        _surface_only = surface_only_ready(_strata_state_dir)
+    except Exception as _so_exc:
+        log.warning("Surface profile check failed; staying the whole mind: %s", _so_exc)
+    if _surface_only:
+        # What home has grown since this surface last started comes into the
+        # read-only copies now, before the gate is armed and before any organ
+        # loads a store, so the surface wakes as the same mind home is.
+        try:
+            from aurora_internal.dual_strata.home_growth import install_pending_growth
+            _growth = install_pending_growth(os.path.abspath(_strata_state_dir))
+            if _growth.get("installed") or _growth.get("error"):
+                log.info("Home's growth installed on the surface: %s", _growth)
+        except Exception as _growth_exc:
+            log.warning("Home's growth not installed this start: %s", _growth_exc)
+        from aurora_internal.aurora_store_ownership import enable_surface_only
+        enable_surface_only(os.path.abspath(_strata_state_dir))
+        _evo_sim = None
+        _defer_to_home("evolutionary_sim")
+        # One inquiry across both strata: her lenses run here, offline too;
+        # what they cannot settle is carried home, and home's experiments come
+        # back here to be lived.
+        try:
+            import aurora_representational_resolution as _rr
+            from aurora_internal.dual_strata.inquiry_tiers import SurfaceInquiryTier
+            _rr.set_home_tier(SurfaceInquiryTier(os.path.abspath(_strata_state_dir)))
+        except Exception as _tier_exc:
+            log.warning("Shared inquiry not joined to home: %s", _tier_exc)
+    else:
+        try:
+            import aurora_representational_resolution as _rr
+            _rr.set_home_tier(None)
+        except Exception:
+            pass
     # Prevent _ensure_runtime_dependencies() from running subprocess pip-install,
     # which crashes Chaquopy's Android Python.
     os.environ["AURORA_SKIP_DEP_INSTALL"] = "1"
@@ -2557,6 +2848,8 @@ def initialize(state_dir: str = "") -> str:
         kwargs: dict = {"verbose": True}
         if state_dir:
             kwargs["state_dir"] = state_dir
+        if _surface_only:
+            kwargs["runtime_profile"] = "surface"
         _mark_boot_stage("about to call boot_aurora()")
         _real_stdout = sys.stdout
         try:
@@ -2688,7 +2981,10 @@ def initialize(state_dir: str = "") -> str:
         # battery-friendly) and pauses automatically the moment a user turn
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
         _mark_boot_stage("starting curiosity engine")
-        _start_curiosity_engine(_systems)
+        if _surface_only:
+            _defer_to_home("curiosity")
+        else:
+            _start_curiosity_engine(_systems)
 
         # Snapshot source file mtimes so Aurora can detect when her creator
         # has modified her code between turns — the relational awareness that
@@ -2728,19 +3024,22 @@ def initialize(state_dir: str = "") -> str:
         # SediMemory/genealogy/Dream/perception/DCE/CERS/consciousness
         # engine/WorkingMemory.
         _mark_boot_stage("starting subsurface presence runtime")
-        try:
-            from aurora_internal.dual_strata.subsurface_presence_runtime import start_subsurface_presence_runtime
-            _presence_state_dir = state_dir if state_dir else "aurora_state"
-            start_subsurface_presence_runtime(_systems, state_dir=_presence_state_dir)
-        except Exception as _pr_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:presence_runtime",
-                exc=_pr_exc,
-                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-            )
-            log.warning("SubsurfacePresenceRuntime failed to start: %s", _pr_exc)
+        if _surface_only:
+            _defer_to_home("subsurface_presence_runtime")
+        else:
+            try:
+                from aurora_internal.dual_strata.subsurface_presence_runtime import start_subsurface_presence_runtime
+                _presence_state_dir = state_dir if state_dir else "aurora_state"
+                start_subsurface_presence_runtime(_systems, state_dir=_presence_state_dir)
+            except Exception as _pr_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:presence_runtime",
+                    exc=_pr_exc,
+                    context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
+                log.warning("SubsurfacePresenceRuntime failed to start: %s", _pr_exc)
 
         # FIX-A118: if this device has been paired with a Subsurface host,
         # start carrying her continuity feed to it.  Started right after the
@@ -2753,6 +3052,14 @@ def initialize(state_dir: str = "") -> str:
             _strata_client = start_strata_link_client_if_configured(_strata_state_dir)
             if _strata_client is not None:
                 _systems["strata_link"] = _strata_client
+                # 3c: when home carries out a move she asked for, this device
+                # captures or restores her present the same way the manual
+                # checkpoint and claim do.
+                _strata_client.capture_for_move = _capture_present_for_move
+                _strata_client.restore_for_move = _restore_present_for_move
+                # Sir at the desktop hub reaches her here while she is here.
+                threading.Thread(target=_hub_message_loop, daemon=True,
+                                 name="aurora_hub_messages").start()
         except Exception as _sl_exc:
             log.warning("Strata link failed to start: %s", _sl_exc)
 
@@ -2762,17 +3069,20 @@ def initialize(state_dir: str = "") -> str:
         # response-fit dispatch) would queue up with nothing ever
         # claiming and processing them on the Android path.
         _mark_boot_stage("starting scout worker")
-        try:
-            _start_scout_worker(state_dir)
-        except Exception as _sw_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:scout_worker",
-                exc=_sw_exc,
-                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-            )
-            log.warning("Scout worker failed to start: %s", _sw_exc)
+        if _surface_only:
+            _defer_to_home("scout")
+        else:
+            try:
+                _start_scout_worker(state_dir)
+            except Exception as _sw_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:scout_worker",
+                    exc=_sw_exc,
+                    context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
+                log.warning("Scout worker failed to start: %s", _sw_exc)
 
         # Aurora Build 712 (App Developmental Habitat): instantiate the
         # Habitat runtime against this already-booted Aurora's own
@@ -2811,40 +3121,47 @@ def initialize(state_dir: str = "") -> str:
         # organ's own rules, before her history stream starts (so the stream
         # already knows which conversations the clones lived).
         _mark_boot_stage("absorbing clone harvest")
-        try:
-            from aurora_internal.aurora_clone_harvest import absorb_harvest
-            with _lock:
-                _clone_absorb = absorb_harvest(_systems, state_dir=(state_dir if state_dir else "aurora_state"))
-            _systems["_clone_harvest_absorb"] = _clone_absorb
-            log.info("Clone harvest: %s", {k: _clone_absorb.get(k) for k in ("status", "harvest_id", "clones", "episodes")})
-        except Exception as _clone_exc:
-            log.warning("Clone harvest absorption failed: %s", _clone_exc)
+        if _surface_only:
+            _defer_to_home("clone_harvest")
+        else:
+            # Phone fix (Sir, 2026-11-19, Build 980): this used to run the
+            # whole absorption under the field lock inside boot.  A harvest
+            # not yet absorbed held the field for many minutes, so her first
+            # turns sat at surface_queued and nothing reached her face.  It
+            # now absorbs in its own thread in small chunks, taking the field
+            # only when no live turn waits and the background has breathing
+            # room -- the same path her desktop home uses.  Her history
+            # stream still waits for it (see _historical_experience_live_idle).
+            _start_clone_absorption(state_dir if state_dir else "aurora_state")
 
         _mark_boot_stage("starting historical experience environment")
-        try:
-            from aurora_historical_experience_environment import start_historical_experience_environment
-            _hist_state_dir = state_dir if state_dir else "aurora_state"
-            _hist_archive = os.path.join(_hist_state_dir, "experiential_baseline_v1.zip")
-            _historical_experience = start_historical_experience_environment(
-                _systems,
-                state_dir=_hist_state_dir,
-                archive_path=_hist_archive,
-                field_lock=_lock,
-                live_idle=_historical_experience_live_idle,
-                initial_delay_s=8.0,
-            )
-            _systems["historical_experience"] = _historical_experience
-            log.info("Historical experience environment: %s", _historical_experience.status())
-        except Exception as _hist_exc:
-            _historical_experience = None
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:historical_experience",
-                exc=_hist_exc,
-                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-            )
-            log.warning("Historical experience environment failed to start: %s", _hist_exc)
+        if _surface_only:
+            _defer_to_home("historical_experience")
+        else:
+            try:
+                from aurora_historical_experience_environment import start_historical_experience_environment
+                _hist_state_dir = state_dir if state_dir else "aurora_state"
+                _hist_archive = os.path.join(_hist_state_dir, "experiential_baseline_v1.zip")
+                _historical_experience = start_historical_experience_environment(
+                    _systems,
+                    state_dir=_hist_state_dir,
+                    archive_path=_hist_archive,
+                    field_lock=_lock,
+                    live_idle=_historical_experience_live_idle,
+                    initial_delay_s=8.0,
+                )
+                _systems["historical_experience"] = _historical_experience
+                log.info("Historical experience environment: %s", _historical_experience.status())
+            except Exception as _hist_exc:
+                _historical_experience = None
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:historical_experience",
+                    exc=_hist_exc,
+                    context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
+                log.warning("Historical experience environment failed to start: %s", _hist_exc)
 
         # Praxis bridge: the Aurora-side half of the external experiential
         # environment.  Started after historical experience for the same
@@ -2854,77 +3171,83 @@ def initialize(state_dir: str = "") -> str:
         # live synthesis.  An unreachable server is harmless: the bridge
         # reports offline and pulls nothing.
         _mark_boot_stage("starting praxis bridge")
-        try:
-            from aurora_praxis_bridge import start_praxis_bridge
-            _praxis_state_dir = state_dir if state_dir else "aurora_state"
-            _praxis = start_praxis_bridge(
-                _systems,
-                state_dir=_praxis_state_dir,
-                endpoint=_praxis_endpoint(_praxis_state_dir),
-                field_lock=_lock,
-                live_idle=_praxis_live_idle,
-            )
-            if _praxis is not None:
-                _systems["praxis_bridge"] = _praxis
-                log.info("Praxis bridge: %s", _praxis.status())
-            else:
-                # FIX-A117: the bridge module owns why its start failed.
-                try:
-                    from aurora_praxis_bridge import start_record as _praxis_start_record
-                    _praxis_start_errors["bridge"] = str(
-                        _praxis_start_record().get("error") or "start returned no bridge")
-                except Exception:
-                    _praxis_start_errors["bridge"] = "start returned no bridge"
-                log.warning("Praxis bridge did not start: %s", _praxis_start_errors["bridge"])
-        except Exception as _praxis_exc:
-            _praxis = None
-            _praxis_start_errors["bridge"] = f"{type(_praxis_exc).__name__}: {_praxis_exc}"
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:praxis",
-                exc=_praxis_exc,
-                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-            )
-            log.warning("Praxis bridge failed to start: %s", _praxis_exc)
+        if _surface_only:
+            _defer_to_home("praxis_bridge")
+        else:
+            try:
+                from aurora_praxis_bridge import start_praxis_bridge
+                _praxis_state_dir = state_dir if state_dir else "aurora_state"
+                _praxis = start_praxis_bridge(
+                    _systems,
+                    state_dir=_praxis_state_dir,
+                    endpoint=_praxis_endpoint(_praxis_state_dir),
+                    field_lock=_lock,
+                    live_idle=_praxis_live_idle,
+                )
+                if _praxis is not None:
+                    _systems["praxis_bridge"] = _praxis
+                    log.info("Praxis bridge: %s", _praxis.status())
+                else:
+                    # FIX-A117: the bridge module owns why its start failed.
+                    try:
+                        from aurora_praxis_bridge import start_record as _praxis_start_record
+                        _praxis_start_errors["bridge"] = str(
+                            _praxis_start_record().get("error") or "start returned no bridge")
+                    except Exception:
+                        _praxis_start_errors["bridge"] = "start returned no bridge"
+                    log.warning("Praxis bridge did not start: %s", _praxis_start_errors["bridge"])
+            except Exception as _praxis_exc:
+                _praxis = None
+                _praxis_start_errors["bridge"] = f"{type(_praxis_exc).__name__}: {_praxis_exc}"
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:praxis",
+                    exc=_praxis_exc,
+                    context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
+                log.warning("Praxis bridge failed to start: %s", _praxis_exc)
 
         # Praxis messenger: same server, same idle predicate, same lock.
         _mark_boot_stage("starting praxis messenger")
-        try:
-            from aurora_praxis_messenger import start_praxis_messenger
-            _messenger_state_dir = state_dir if state_dir else "aurora_state"
-            _praxis_messenger = start_praxis_messenger(
-                _systems,
-                state_dir=_messenger_state_dir,
-                endpoint=_praxis_endpoint(_messenger_state_dir),
-                field_lock=_lock,
-                live_idle=_messenger_live_idle,
-            )
-            _systems["praxis_messenger"] = _praxis_messenger
-            log.info("Praxis messenger: %s", _praxis_messenger.status())
-            # Weekly learning probe: the same 20 fresh questions, compared
-            # week to week (aurora_learning_probe.py).  Same idle predicate
-            # and non-blocking lock.
+        if _surface_only:
+            _defer_to_home("praxis_messenger")
+        else:
             try:
-                from aurora_learning_probe import LearningProbe
-                _learning_probe = LearningProbe(
-                    _systems, state_dir=_messenger_state_dir,
-                    field_lock=_lock, live_idle=_praxis_live_idle)
-                _learning_probe.start()
-                _systems["learning_probe"] = _learning_probe
-            except Exception as _probe_exc:
-                log.warning("Learning probe failed to start: %s", _probe_exc)
-        except Exception as _messenger_exc:
-            _praxis_messenger = None
-            _praxis_start_errors["messenger"] = f"{type(_messenger_exc).__name__}: {_messenger_exc}"
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:praxis_messenger",
-                exc=_messenger_exc,
-                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-            )
-            log.warning("Praxis messenger failed to start: %s", _messenger_exc)
+                from aurora_praxis_messenger import start_praxis_messenger
+                _messenger_state_dir = state_dir if state_dir else "aurora_state"
+                _praxis_messenger = start_praxis_messenger(
+                    _systems,
+                    state_dir=_messenger_state_dir,
+                    endpoint=_praxis_endpoint(_messenger_state_dir),
+                    field_lock=_lock,
+                    live_idle=_messenger_live_idle,
+                )
+                _systems["praxis_messenger"] = _praxis_messenger
+                log.info("Praxis messenger: %s", _praxis_messenger.status())
+                # Weekly learning probe: the same 20 fresh questions, compared
+                # week to week (aurora_learning_probe.py).  Same idle predicate
+                # and non-blocking lock.
+                try:
+                    from aurora_learning_probe import LearningProbe
+                    _learning_probe = LearningProbe(
+                        _systems, state_dir=_messenger_state_dir,
+                        field_lock=_lock, live_idle=_praxis_live_idle)
+                    _learning_probe.start()
+                    _systems["learning_probe"] = _learning_probe
+                except Exception as _probe_exc:
+                    log.warning("Learning probe failed to start: %s", _probe_exc)
+            except Exception as _messenger_exc:
+                _praxis_messenger = None
+                _praxis_start_errors["messenger"] = f"{type(_messenger_exc).__name__}: {_messenger_exc}"
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:praxis_messenger",
+                    exc=_messenger_exc,
+                    context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
+                log.warning("Praxis messenger failed to start: %s", _messenger_exc)
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
@@ -4555,6 +4878,10 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
 
     # ── Voice command: curiosity session ─────────────────────────────────────
     n_cyc, dur_s = _parse_curiosity_cmd(text)
+    if (n_cyc is not None or dur_s is not None) and _surface_only:
+        _asked = _ask_home("curiosity_cycle", {"cycles": n_cyc, "duration_s": dur_s})
+        return ("I'll take that up at home." if _asked.get("ok")
+                else "I can't reach home to start that right now.")
     if n_cyc is not None or dur_s is not None:
         if _curiosity_session_active.is_set():
             return "I'm already mid-session — I'll report when I finish."
@@ -4620,6 +4947,9 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
             _capability_learning_mode    = False
             _capability_learning_context = {}
             _pending_capability_gap      = {}
+            # The gap is answered; the curiosity engine reads it from the
+            # shared systems dict, so clear it there too.
+            _systems.pop("_pending_capability_gap", None)
             skill_acknowledged = True
             # Retrospective: before/after temporal deposit — one of the most
             # significant growth events in Aurora's field.
@@ -4963,8 +5293,9 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
             _admission_started = _tp_hm.perf_counter()
             try:
                 if _lock.locked():
-                    _record_turn_state(_turn_id, "surface_queued")
-                with _lock:
+                    _record_turn_state(_turn_id, "surface_queued",
+                                       field_holder=str(getattr(_lock, "holder", "") or ""))
+                with _PresentClaim():
                     _systems["_current_turn_id"] = _turn_id
                     _record_turn_state(
                         _turn_id, "surface_processing",
@@ -5410,7 +5741,15 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         if not _admitted:
             with _box_lock:
                 _box_state["delivered"] = True
-            _record_turn_state(_turn_id, "transport_failure", error="turn_admission_timeout")
+            # Nothing failed in transport: the field was busy the whole time.
+            # The turn is still queued and its answer arrives as a late
+            # completion; say what it waited behind.
+            _held_since = float(getattr(_lock, "held_since", 0.0) or 0.0)
+            _record_turn_state(
+                _turn_id, "timeout", error="turn_admission_timeout",
+                field_holder=str(getattr(_lock, "holder", "") or ""),
+                field_held_s=round(time.time() - _held_since, 1) if _held_since else None,
+            )
             return ""
 
         _surface_arrived = _box_event.wait(_SURFACE_WAIT_TIMEOUT_S)
@@ -6876,6 +7215,12 @@ def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) ->
         "gap_domain":  _pending_capability_gap["gap_domain"],
         "asked_at":    _t.time(),
     }
+    # The curiosity engine pursues an unresolved inability from
+    # systems["_pending_capability_gap"] (aurora_curiosity_engine.py), but the
+    # gap only ever lived in this module's global, so that pursuit never ran.
+    # Share the same dict, so the engine's _investigated mark is seen here.
+    if _systems is not None:
+        _systems["_pending_capability_gap"] = _pending_capability_gap
     log.info(
         "Capability gap registered: domain=%r task=%r pre_A=%.2f post_A=%.2f",
         _pending_capability_gap["gap_domain"],
@@ -8115,8 +8460,11 @@ def _store_relational_claim(text: str, entity_type: str, entity_label: str) -> N
             "pos":          bool(_POS_WORDS & words),
             "content":      [w for w in words if len(w) > 4][:20],
         }
-        with open(os.path.join(state_dir, "relational_claims.jsonl"),
-                  "a", encoding="utf-8") as f:
+        _claims_path = os.path.join(state_dir, "relational_claims.jsonl")
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(_claims_path):
+            return  # home keeps her claims history; the turn itself goes home
+        with open(_claims_path, "a", encoding="utf-8") as f:
             f.write(_json.dumps(entry) + "\n")
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -8517,8 +8865,20 @@ def get_axis_state() -> str:
     Called from OverlayService.kt every 2 s via Chaquopy.
     """
     import json as _json
+    global _axis_live_read_at
+    now = time.time()
+    if now - _axis_live_read_at >= _AXIS_LIVE_MIN_INTERVAL_S:
+        _axis_live_read_at = now
+        _refresh_axis_state_from_systems()
     with _axis_state_lock:
-        return _json.dumps(_last_axis_state)
+        out = dict(_last_axis_state)
+    # What she is attending to (camera, audio, screen or none), so her
+    # eyes can follow it.  Read only; nothing here chooses it for her.
+    try:
+        out["attention"] = _current_attention_modality() or ""
+    except Exception:
+        out["attention"] = ""
+    return _json.dumps(out)
 
 
 def provide_hardware_sensors(json_str: str) -> None:
@@ -8685,35 +9045,65 @@ def get_concept_crystal_state() -> str:
     return _json.dumps({"stats": stats, "top_nodes": top_nodes})
 
 
+def _live_pressure_axes() -> Optional[dict]:
+    """Her live pressure, read from the dimensional system each time it is asked.
+
+    DimensionalSystems has no ``pressure_vec`` attribute; the live reading is
+    its ``_current_pressure_vec()`` method (manifold aggregate plus the load of
+    whatever is active right now).  It is called every poll so the face moves
+    with her between turns, not only after one.  A turn can be reshaping the
+    crystals while the poll runs; that read is simply skipped and the next
+    poll catches up, with no fault recorded, because nothing failed.
+    """
+    if _systems is None:
+        return None
+    dim = _systems.get("dimensional")
+    reader = getattr(dim, "_current_pressure_vec", None) if dim is not None else None
+    if not callable(reader):
+        return None
+    try:
+        pv = reader()
+    except RuntimeError:
+        return None
+    if pv is None:
+        return None
+    out: dict = {}
+    for k in ("X", "T", "N", "B", "A"):
+        v = pv.get(k) if isinstance(pv, dict) else getattr(pv, k, None)
+        if v is None:
+            return None
+        out[k] = round(float(v), 4)
+    return out
+
+
 def _refresh_axis_state_from_systems() -> None:
-    """Pull current axis values from systems into the overlay cache."""
+    """Bring the face's live reading up to date.
+
+    X/T/N/B/A stay her expressed activation (written after each turn from
+    ``_prev_axis_activation``, Repair P).  Pressure is a separate live channel
+    under ``"pressure"`` so the face can show strain and relief as they happen
+    without overwriting what she last expressed.  The identity field's
+    per-axis pressure is the fallback when the dimensional reading is not
+    available.
+    """
     if _systems is None:
         return
     try:
-        axes: dict = {}
-        # Priority 1: dimensional system pressure vector
-        dim = _systems.get("dimensional")
-        if dim is not None:
-            pv = getattr(dim, "pressure_vec", None)
-            if isinstance(pv, dict):
-                axes = pv
-            elif pv is not None and hasattr(pv, "__iter__"):
-                for k, v in zip(["X", "T", "N", "B", "A"], pv):
-                    axes[k] = float(v)
-        # Priority 2: identity field axis_activation
-        if not axes:
+        pressure = _live_pressure_axes()
+        if pressure is None:
             ifield = _systems.get("identity_field")
-            if ifield is not None:
-                aa = getattr(ifield, "axis_activation", None)
-                if isinstance(aa, dict):
-                    axes = aa
-                elif aa is not None and hasattr(aa, "__iter__"):
-                    for k, v in zip(["X", "T", "N", "B", "A"], aa):
-                        axes[k] = float(v)
-        if axes:
-            with _axis_state_lock:
+            reader = getattr(ifield, "axis_pressure", None) if ifield is not None else None
+            if callable(reader):
+                pressure = {k: round(float(reader(i)), 4) for i, k in enumerate(("X", "T", "N", "B", "A"))}
+        activation = _systems.get("_prev_axis_activation")
+        with _axis_state_lock:
+            if isinstance(activation, dict) and activation:
                 for k in ("X", "T", "N", "B", "A"):
-                    _last_axis_state[k] = float(axes.get(k, 0.5))
+                    if k in activation:
+                        _last_axis_state[k] = float(activation[k])
+            if pressure:
+                _last_axis_state["pressure"] = pressure
+                _last_axis_state["pressure_at"] = round(time.time(), 3)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -8722,7 +9112,6 @@ def _refresh_axis_state_from_systems() -> None:
             exc=_aurora_boundary_exc,
             context={"function": "_refresh_axis_state_from_systems", "handler_line": 6537, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
         )
-        pass
 
 
 _EVO_BURST_CMD = re.compile(
@@ -9519,7 +9908,7 @@ def _self_monitor_loop() -> None:
             try:
                 from aurora_internal.aurora_turn_persistence import (
                     any_due as _any_due, flush_due as _flush_due)
-                if _any_due() and _lock.acquire(blocking=False):
+                if _any_due() and not _present_is_waiting() and _lock.acquire(blocking=False):
                     try:
                         _flush_due()
                     finally:
@@ -10523,6 +10912,79 @@ def get_face_state() -> str:
     import json as _json
     with _last_face_observation_lock:
         return _json.dumps(_last_face_observation)
+
+
+FACE_EXPRESSION_JOURNAL = "face_expression_journal.jsonl"
+_FACE_JOURNAL_KEEP = 2000
+_face_journal_lock = threading.Lock()
+
+
+def _face_journal_path() -> str:
+    state_dir = str((_systems or {}).get("state_dir") or _strata_state_dir or "aurora_state")
+    os.makedirs(state_dir, exist_ok=True)
+    return os.path.join(state_dir, FACE_EXPRESSION_JOURNAL)
+
+
+def record_face_expression(json_str: str) -> str:
+    """She feels her own face (surface restructure 4, Sir's adjustment).
+
+    The face is drawn every frame, but only a meaningful change of
+    expression comes here: one whose targets moved past the dead-band and
+    then settled.  It is kept with the state it came from in
+    face_expression_journal.jsonl (a surface-present store, so it travels
+    with her on a move), and offered to her concept crystal as a
+    self-observation at the axis coordinate it came from.  Frames never
+    come here, so her history is not filled with near-identical ones.
+
+    Returns JSON {"ok": true} or {"ok": false, "error": ...}; the face
+    shows any error on screen.
+    """
+    import json as _json
+    if _systems is None:
+        # Not booted yet: she isn't here to feel it, and there is no state
+        # directory to keep it in.  Nothing failed.
+        return _json.dumps({"ok": True, "skipped": "not_booted"})
+    try:
+        data = _json.loads(str(json_str or "{}"))
+        if not isinstance(data, dict):
+            return _json.dumps({"ok": False, "error": "expected a JSON object"})
+        axes = {k: float(data.get("axes", {}).get(k, 0.5)) for k in ("X", "T", "N", "B", "A")}
+        face = {str(k): round(float(v), 4) for k, v in dict(data.get("face") or {}).items()}
+        row = {
+            "at": round(time.time(), 3),
+            "axes": {k: round(v, 4) for k, v in axes.items()},
+            "pressure": {str(k): round(float(v), 4) for k, v in dict(data.get("pressure") or {}).items()},
+            "face": face,
+            "speaking": bool(data.get("speaking", False)),
+            "attention": str(data.get("attention") or "")[:24],
+        }
+        path = _face_journal_path()
+        with _face_journal_lock:
+            with open(path, "a", encoding="utf-8") as handle:
+                handle.write(_json.dumps(row, sort_keys=True) + "\n")
+            try:
+                if os.path.getsize(path) > 1_500_000:
+                    with open(path, "r", encoding="utf-8") as handle:
+                        lines = handle.readlines()[-_FACE_JOURNAL_KEEP:]
+                    tmp = path + ".tmp"
+                    with open(tmp, "w", encoding="utf-8") as handle:
+                        handle.writelines(lines)
+                    os.replace(tmp, path)
+            except OSError:
+                pass
+        if _concept_registry is not None and face:
+            ref = "face:" + ",".join(f"{k}{v:+.1f}" for k, v in sorted(face.items())[:6])
+            _concept_registry.observe_sensory(axes, "self_obs", ref, face)
+        return _json.dumps({"ok": True})
+    except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:record_face_expression",
+            exc=exc,
+            context={"function": "record_face_expression", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
+        return _json.dumps({"ok": False, "error": f"{type(exc).__name__}: {exc}"[:300]})
 
 
 def _estimate_pitch_autocorr(samples, sample_rate: int):
@@ -12479,6 +12941,8 @@ def get_gauntlet_status() -> str:
 def trigger_curiosity_cycle(n_cycles: int = 5) -> str:
     """Run N curiosity cycles immediately in a background thread."""
     import json as _j
+    if _surface_only:
+        return _j.dumps({"status": "asked_home", **_ask_home("curiosity_cycle", {"cycles": int(n_cycles)})})
     if _curiosity_session_active.is_set():
         return _j.dumps({"status": "already_active"})
     _run_curiosity_session(n_cycles=max(1, int(n_cycles)), duration_s=None)
@@ -12488,6 +12952,8 @@ def trigger_curiosity_cycle(n_cycles: int = 5) -> str:
 def trigger_evo_cycle(ticks: int = 20) -> str:
     """Run N EvolutionaryChamber ticks with live axis geometry."""
     import json as _j
+    if _surface_only:
+        return _j.dumps({"status": "asked_home", **_ask_home("evo_cycle", {"ticks": int(ticks)})})
     if _systems is None:
         return _j.dumps({"status": "error"})
     def _go():

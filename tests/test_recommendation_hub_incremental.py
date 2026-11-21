@@ -5,7 +5,6 @@ and gives exactly the answers the old full-file scans gave."""
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import sys
 import time

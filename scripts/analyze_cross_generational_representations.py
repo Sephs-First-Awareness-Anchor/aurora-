@@ -6,6 +6,7 @@ collision families contain distinctions grounded in stored operational effects,
 local semantic identity, and intact genealogy structure.  It never calls
 observe(), PairStats.update(), promotion, or any persistence writer.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,7 @@ import os
 import sys
 import tempfile
 from collections import Counter, defaultdict
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO_ROOT not in sys.path:

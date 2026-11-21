@@ -45,7 +45,7 @@ from __future__ import annotations
 import math
 import re
 import time
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 AXES = ("X", "T", "N", "B", "A")
 ASSERTION_SOURCE = "assertion"

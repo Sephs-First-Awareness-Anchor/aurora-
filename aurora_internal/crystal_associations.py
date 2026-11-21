@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 VERSION = 1
 

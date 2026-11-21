@@ -1,0 +1,36 @@
+name: Desktop embodiment
+
+on:
+  pull_request:
+    paths:
+      - '*.py'
+      - 'aurora_internal/**'
+      - 'flutter_app/android/app/src/main/python/aurora_bridge.py'
+      - 'scripts/windows/**'
+      - 'requirements-desktop.txt'
+      - 'tests/**'
+      - '.github/workflows/desktop-embodiment.yml'
+  workflow_dispatch:
+
+jobs:
+  windows-integration:
+    runs-on: windows-latest
+    env:
+      AURORA_SKIP_DEP_INSTALL: '1'
+      AURORA_SKIP_HARDWARE_IMPORTS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-core.txt pytest psutil
+      - name: Validate Windows command syntax
+        shell: pwsh
+        run: |
+          Get-ChildItem scripts/windows/*.ps1 | ForEach-Object {
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$parseErrors) | Out-Null
+            if ($parseErrors) { throw ($parseErrors | Out-String) }
+          }
+      - name: Verify resident communication and continuity
+        run: python -m pytest -q tests/test_desktop_embodiment.py tests/test_hosted_acm.py tests/test_strata_state_transfer.py tests/test_praxis_messenger.py tests/test_clone_harvest.py tests/test_dream_entanglement_evidence_boundary.py

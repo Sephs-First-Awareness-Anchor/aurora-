@@ -18,7 +18,7 @@ said earns it.  Reads only; changes nothing.  Isolated: imports only the associa
 from __future__ import annotations
 
 import math
-from typing import Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Dict, Iterable, Mapping, Optional, Tuple
 
 from aurora_internal.crystal_associations import AssociationStore
 

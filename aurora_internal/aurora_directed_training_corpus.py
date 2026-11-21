@@ -12,11 +12,11 @@ specs by:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_directed_training_corpus.py')
 
 import json
 import os
-import random
 import re
 from pathlib import Path
 from typing import Dict, List
@@ -159,13 +159,7 @@ class DirectedTrainingCorpusBridge:
             with self.cache_path.open("r", encoding="utf-8") as handle:
                 payload = json.load(handle)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_directed_training_corpus.py:138",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_cache", "handler_line": 138, "source_file": "aurora_internal/aurora_directed_training_corpus.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_cache', 138)
             return False
         # If the source corpus is present, the cache must match its current
         # signature or we rebuild fresh. If the source is absent (train.txt
@@ -194,13 +188,7 @@ class DirectedTrainingCorpusBridge:
             with self.cache_path.open("w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_directed_training_corpus.py:166",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_cache", "handler_line": 166, "source_file": "aurora_internal/aurora_directed_training_corpus.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_save_cache', 166)
             pass
 
     def _build_cache(self) -> None:

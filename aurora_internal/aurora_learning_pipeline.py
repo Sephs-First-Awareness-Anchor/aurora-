@@ -16,9 +16,9 @@ knowledge and preserves the before/after evidence needed by those authorities.
 """
 
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_learning_pipeline.py')
 
-import math
 import hashlib
 import json
 import re
@@ -236,13 +236,7 @@ class LearningDeltaLedger:
                 if str(item or "").strip()
             ][-200:]
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_learning_pipeline.py:236",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load", "handler_line": 236, "source_file": "aurora_internal/aurora_learning_pipeline.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load', 236)
             self.records = []
             self.replayed_ids = []
 

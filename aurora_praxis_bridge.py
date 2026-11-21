@@ -70,6 +70,22 @@ Praxis never pushes.  This bridge pulls, and only while `live_idle()` says the
 live path is not claiming the field -- the same discipline
 HistoricalExperienceEnvironment already establishes.  When Sunni is talking to
 her, the environment waits.
+
+Discovery is not intake.  The /hello handshake only asks who is on the other
+end; it reads nothing into her and never touches the field, so it runs on its
+own clock and is not held behind `live_idle()`.  Before this, a busy or
+settling field kept the bridge from ever asking, and a Praxis that was up read
+as "offline" for as long as the field stayed busy.  Only the pull -- the one
+inbound channel -- waits for capacity.
+
+SHARED STATE
+============
+
+The bridge keeps the same `systems` dict the organism runs on, as the
+messenger, the initiative and the learning probe do.  It writes exactly one
+bus slot, `systems["_praxis_context"]` (current environmental context only),
+and that slot is only visible to her own organs if it lands in the dict they
+read.
 """
 from __future__ import annotations
 
@@ -380,7 +396,12 @@ class PraxisBridge:
         pull_limit: int = DEFAULT_PULL_LIMIT,
         timeout_s: float = 6.0,
     ) -> None:
-        self.systems: Dict[str, Any] = dict(systems or {})
+        # Keep her own systems dict, not a copy: `_witness` writes
+        # `_praxis_context` for her organs to inspect, and a private copy taken
+        # at start meant that write never reached them.  A non-dict mapping
+        # (tests, read-only views) is still copied so the bridge can write.
+        self.systems: Dict[str, Any] = (
+            systems if isinstance(systems, dict) else dict(systems or {}))
         self.root = Path(str(state_dir)) / "praxis"
         self.root.mkdir(parents=True, exist_ok=True)
         self.endpoint = str(endpoint).rstrip("/")
@@ -1142,11 +1163,28 @@ class PraxisBridge:
     def resume(self) -> None:
         self._paused.clear()
 
+    def rebind_systems(self, systems: Mapping[str, Any]) -> bool:
+        """Point the bridge at a newly booted organism.
+
+        The bridge is a process-wide singleton.  If her runtime is booted a
+        second time in the same process (a recreated service), the existing
+        bridge must witness into the new `systems`, not the one it was born
+        with.  Returns True when the binding changed."""
+        if systems is None or systems is self.systems:
+            return False
+        with self._lock:
+            self.systems = (systems if isinstance(systems, dict)
+                            else dict(systems or {}))
+        return True
+
     def _run(self) -> None:
         while not self._stop.is_set():
             try:
-                if not self._paused.is_set() and self._capacity() \
-                        and self._channel_open():
+                # Discovery first, on its own: the handshake is a network
+                # question that never touches the field, so it is not held
+                # behind capacity.  Only the pull waits for an idle field.
+                if not self._paused.is_set() and self._channel_open() \
+                        and self._capacity():
                     if self.field_lock is not None:
                         acquired = self.field_lock.acquire(blocking=False)
                         if acquired:
@@ -1244,6 +1282,9 @@ def start_praxis_bridge(
 ) -> Optional[PraxisBridge]:
     global _bridge
     if _bridge is not None:
+        # A second boot in the same process hands over a new organism; the
+        # running bridge follows it instead of feeding the old one.
+        _bridge.rebind_systems(systems)
         return _bridge
     _set_start_record("starting")
     try:

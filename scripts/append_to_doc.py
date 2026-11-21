@@ -1,6 +1,5 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 import sys
-import os
 
 def append_to_file(filename, content):
     with open(filename, 'a') as f:

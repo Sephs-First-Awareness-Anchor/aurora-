@@ -93,11 +93,19 @@ def test_outbox_state_channel_keeps_only_the_latest(tmp_path):
         ("continuity", {"n": 1}), ("projection", {"v": 2})]
 
 
-def test_outbox_overflow_is_counted_not_silent(tmp_path):
+def test_outbox_never_evicts_a_lived_event_past_its_budget(tmp_path):
+    # Surface restructure 3f: past the budget new events are kept compact
+    # (sensory detail left out), counted, and the condition is raised.
     box = sl.DurableOutbox(tmp_path / "o.json", max_records=3)
     for n in range(5):
-        box.append("continuity", "event", {"n": n})
-    assert box.stats() == {"pending": 3, "next_seq": 6, "overflow_dropped": 2}
+        box.append("continuity", "event", {"n": n, "visual_description": "a room"})
+    stats = box.stats()
+    assert (stats["pending"], stats["next_seq"], stats["overflow_dropped"]) == (5, 6, 0)
+    assert stats["compacted"] == 2 and stats["condition"] == "storage_low"
+    kept = box.pending()
+    assert [r["payload"]["n"] for r in kept] == [0, 1, 2, 3, 4]
+    assert "visual_description" in kept[0]["payload"] and not kept[0]["payload"].get("compact")
+    assert "visual_description" not in kept[4]["payload"] and kept[4]["payload"]["compact"] is True
 
 
 def test_outbox_dedupe_id_queues_once(tmp_path):
@@ -135,7 +143,8 @@ def test_a_long_disconnect_loses_nothing_and_keeps_order(rig):
         ids.append(_live_turn(rig["phone"], n))
         assert rig["client"].sync_once() is False
     assert rig["client"].status()["status"] == "offline"
-    assert rig["client"].outbox.stats() == {"pending": 60, "next_seq": 61, "overflow_dropped": 0}
+    assert {k: rig["client"].outbox.stats()[k] for k in ("pending", "next_seq", "overflow_dropped")} == {
+        "pending": 60, "next_seq": 61, "overflow_dropped": 0}
     assert read_and_clear_continuity_packets(rig["laptop"]) == []
 
     rig["wire"].down = False
@@ -192,8 +201,15 @@ def test_only_the_owner_is_applied_and_a_claim_raises_the_epoch(rig):
     assert second.outbox.stats()["pending"] == 1
     assert len(read_and_clear_continuity_packets(rig["laptop"])) == 1   # the phone's only
 
-    # An explicit claim moves ownership and raises the epoch.
+    # Pairing or an explicit claim cannot discard an existing surface's state.
     second.request_claim()
+    second.sync_once()
+    assert (second.role, second.epoch) == ("standby", 1)
+    assert second.last_error == "checkpoint_handoff_required"
+    (rig["phone"] / "surface_working_state.json").write_text('{"present": "state"}')
+    checkpoint = rig["client"].push_state("handoff")
+    assert checkpoint["ok"]
+    assert second.pull_handoff(checkpoint["token"])["ok"]
     second.sync_once()
     assert (second.role, second.epoch) == ("active", 2)
     assert second.outbox.stats()["pending"] == 0
@@ -272,7 +288,9 @@ def test_projection_is_delivered_once_and_only_when_it_changes(rig):
     rig["client"].sync_once()                           # carries the ack
     assert rig["server"].status()["down_outbox"]["pending"] == 0
     assert rig["client"].sync_once() is False           # unchanged: nothing to send
-    assert rig["client"].counters["received"] == 1
+    # The projection once, and (3c) where she can go, once.
+    assert rig["client"].counters["received"] == 2
+    assert sl.read_known_devices(rig["phone"])
 
     projection.write_text(json.dumps({"dominant_axis": "N", "pressure": 0.7}))
     assert rig["client"].sync_once() is True

@@ -22,6 +22,8 @@ Every operator it uses is registered into the five-constraint genealogy.
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_understanding_contract.py')
 
 import copy
 import hashlib
@@ -61,13 +63,7 @@ def _clip01(value: Any, default: float = 0.0) -> float:
     try:
         return max(0.0, min(1.0, float(value or 0.0)))
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_understanding_contract.py:58",
-            exc=_aurora_boundary_exc,
-            context={"function": "_clip01", "handler_line": 58, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_clip01', 58)
         return max(0.0, min(1.0, float(default or 0.0)))
 
 
@@ -183,13 +179,7 @@ def _hash_payload(payload: Dict[str, Any]) -> str:
     try:
         blob = json.dumps(payload, sort_keys=True, ensure_ascii=True)
     except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_understanding_contract.py:84",
-            exc=_aurora_boundary_exc,
-            context={"function": "_hash_payload", "handler_line": 84, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-        )
+        _aurora_fault(locals(), _aurora_boundary_exc, '_hash_payload', 84)
         blob = repr(payload)
     return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:12]
 
@@ -458,13 +448,7 @@ class RuntimeUnderstandingContract:
             with open(self.storage_path, "r", encoding="utf-8") as handle:
                 raw = dict(json.load(handle) or {})
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:342",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load", "handler_line": 342, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load', 342)
             return
         default = self._default_state()
         for key, value in raw.items():
@@ -495,13 +479,7 @@ class RuntimeUnderstandingContract:
             payload["history"] = list(payload.get("history", []) or [])[-MAX_HISTORY:]
             return bool(atomic_write_json(Path(self.storage_path), payload, indent=2, default=str))
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:367",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 367, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 367)
             return False
 
     def record_structural_gap(self, decision: Any) -> None:
@@ -527,13 +505,7 @@ class RuntimeUnderstandingContract:
         try:
             self.save()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:392",
-                exc=_aurora_boundary_exc,
-                context={"function": "record_structural_gap", "handler_line": 392, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'record_structural_gap', 392)
             pass
 
     def clone_ephemeral(self, *, label: str = "simulation") -> "RuntimeUnderstandingContract":
@@ -791,13 +763,7 @@ class RuntimeUnderstandingContract:
                 genealogy.abilities[profile.id] = _augment_ability_profile_with_origin(profile)
             self._abilities_registered = True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:649",
-                exc=_aurora_boundary_exc,
-                context={"function": "register_genealogy", "handler_line": 649, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'register_genealogy', 649)
             pass
 
     def _history_append(self, entry: Dict[str, Any]) -> None:
@@ -950,13 +916,7 @@ class RuntimeUnderstandingContract:
             if merged:
                 meaning_state["dominant_meaning_form"] = dict(merged[0])
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:801",
-                exc=_aurora_boundary_exc,
-                context={"function": "_apply_genealogy_relief_boost", "handler_line": 801, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_apply_genealogy_relief_boost', 801)
             pass
         return meaning_state
 
@@ -1177,24 +1137,12 @@ class RuntimeUnderstandingContract:
             try:
                 active_topic = str(getattr(working_memory, "current_topic", "") or "").strip()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1021",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1021, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1021)
                 active_topic = ""
             try:
                 resolved = working_memory.resolve_concept_meaning(user_text, understood) or {}
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1025",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1025, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1025)
                 resolved = {}
             if isinstance(resolved, dict):
                 active_meaning = {
@@ -1207,13 +1155,7 @@ class RuntimeUnderstandingContract:
             try:
                 frame_resolution = working_memory.resolve_semantic_frame(user_text, understood) or {}
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1037",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1037, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1037)
                 frame_resolution = {}
             if isinstance(frame_resolution, dict):
                 active_frame = dict(frame_resolution.get("frame", {}) or {})
@@ -1239,25 +1181,13 @@ class RuntimeUnderstandingContract:
                         }
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1062",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1062, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1062)
                 concepts = []
             try:
                 claim_resolution = dict(getattr(working_memory, "last_claim_resolution", {}) or {})
                 focus_claim = dict(claim_resolution.get("focus_claim", {}) or {})
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1067",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1067, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1067)
                 focus_claim = {}
             try:
                 recent_claims = list(getattr(working_memory, "recent_claims", []) or [])[-6:]
@@ -1270,13 +1200,7 @@ class RuntimeUnderstandingContract:
                         4,
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1079",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1079, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1079)
                 relation_weights = {}
             try:
                 for frame in list(getattr(working_memory, "semantic_frames", []) or [])[-8:]:
@@ -1291,26 +1215,14 @@ class RuntimeUnderstandingContract:
                         }
                     )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1093",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1093, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1093)
                 semantic_frames = []
             try:
                 readdress_resolution = dict(
                     getattr(working_memory, "last_session_readdress_resolution", {}) or {}
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1099",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1099, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1099)
                 readdress_resolution = {}
             if readdress_resolution.get("matched"):
                 matched_utterance = dict(readdress_resolution.get("matched_utterance", {}) or {})
@@ -1345,13 +1257,7 @@ class RuntimeUnderstandingContract:
                 try:
                     recent_utterances = list(getattr(working_memory, "recent_user_utterances", []) or [])[:3]
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1133",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_derive_meaning_state", "handler_line": 1133, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1133)
                     recent_utterances = []
                 comparisons: List[float] = []
                 for utterance in recent_utterances:
@@ -1490,13 +1396,7 @@ class RuntimeUnderstandingContract:
                     hits = sum(1 for k in aged_anchors if k in current_all_terms)
                     anchor_continuity = hits / float(len(aged_anchors))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1271",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_meaning_state", "handler_line": 1271, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_meaning_state', 1271)
                 anchor_continuity = 0.0
 
         # frame_continuity is the max of lexical overlap and anchor survival,
@@ -1552,26 +1452,14 @@ class RuntimeUnderstandingContract:
             try:
                 user_bucket = dict(getattr(working_memory, "stated_facts", {}).get("user", {}) or {})
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1326",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_perspective_state", "handler_line": 1326, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_perspective_state', 1326)
                 user_bucket = {}
             try:
                 behavior_request = str(
                     getattr(working_memory, "last_behavior_alignment_request", {}).get("requested_behavior", "") or ""
                 ).strip()
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1332",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_perspective_state", "handler_line": 1332, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_perspective_state', 1332)
                 behavior_request = ""
 
         goals: List[str] = []
@@ -1649,13 +1537,7 @@ class RuntimeUnderstandingContract:
                 if getattr(working_memory, "claim_conflicts", None):
                     claim_clarity = max(0.0, claim_clarity - min(0.25, len(working_memory.claim_conflicts) * 0.06))
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1409",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_boundary_state", "handler_line": 1409, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_boundary_state', 1409)
                 pass
 
         ambiguity = 1.0 - _mean(
@@ -1690,13 +1572,7 @@ class RuntimeUnderstandingContract:
                 if relief.get("resolved"):
                     contradiction_cost *= 0.35
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1443",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_derive_cost_state", "handler_line": 1443, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_derive_cost_state', 1443)
                 contradiction_cost = 0.0
 
         coherence_cost = 1.0 - _clip01(pipeline_state.get("coherence", 0.62), 0.62)
@@ -2297,13 +2173,7 @@ class RuntimeUnderstandingContract:
                         issues.append("proposition_contradiction_density")
                         preferred_repair = preferred_repair or "claim"
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1972",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "audit_candidate_response", "handler_line": 1972, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, 'audit_candidate_response', 1972)
                     pass
 
             # 3. Long-horizon anchor survival: if anchor pool exists but no aged anchors
@@ -2321,13 +2191,7 @@ class RuntimeUnderstandingContract:
                         issues.append("long_horizon_anchor_dropout")
                         preferred_repair = preferred_repair or "semantic_frame"
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:1989",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "audit_candidate_response", "handler_line": 1989, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'audit_candidate_response', 1989)
                 pass
 
         verification_needed = bool(active_meaning.get("verification_needed")) and bool(issues)
@@ -2402,13 +2266,7 @@ class RuntimeUnderstandingContract:
                 notes=dict(notes or {}),
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:2063",
-                exc=_aurora_boundary_exc,
-                context={"function": "_record_genealogy_event", "handler_line": 2063, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_record_genealogy_event', 2063)
             pass
 
     def _record_pre_outcome_fail_if_applicable(
@@ -2965,6 +2823,8 @@ class RuntimeUnderstandingContract:
         *,
         constraint_state: Optional[Dict[str, Any]] = None,
         session_id: str = "",
+        allow_understanding: bool = True,
+        resolution_context: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """
         Enforce the mandatory Reflection re-entry sequence before Understanding.
@@ -3017,6 +2877,14 @@ class RuntimeUnderstandingContract:
             result["reflection_step"] = "RECONCILIATION_FAILED"
             return result
 
+        if not allow_understanding:
+            # Reconciliation is a valid immediate self-observation, but it is
+            # not evidence that communication resolved in the receiver. Keep
+            # the representation live until next-turn consequence validates it.
+            result["reflection_step"] = "RECONCILED_PENDING_RECEIVER"
+            result["reconciled"] = True
+            return result
+
         # ── STEP 5: UNDERSTANDING ── field at equilibrium; all noncomp manifolds coherent
         result["reflection_step"] = "UNDERSTANDING"
         understanding = self._emit_understanding(
@@ -3024,6 +2892,7 @@ class RuntimeUnderstandingContract:
             reentry=reentry,
             tension=tension,
             session_id=session_id,
+            resolution_context=resolution_context,
         )
         result["reached_understanding"] = True
         result["understanding"] = understanding
@@ -3198,13 +3067,7 @@ class RuntimeUnderstandingContract:
             try:
                 tension_bus.register_tension(flags, state_snapshot)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:2581",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_flag_tension", "handler_line": 2581, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_flag_tension', 2581)
                 pass
 
     def _emit_understanding(
@@ -3214,6 +3077,7 @@ class RuntimeUnderstandingContract:
         reentry: Dict[str, Any],
         tension: Dict[str, float],
         session_id: str = "",
+        resolution_context: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """
         UNDERSTANDING step: emit the resolved field state.
@@ -3229,6 +3093,15 @@ class RuntimeUnderstandingContract:
             "resolved_boundary_ambiguity": float(self.state.get("B", {}).get("ambiguity", 0.0) or 0.0),
             "tension_at_resolution": dict(tension),
             "reentry_delta": dict(reentry),
+            # Exact locally-participating semantic regions from the response
+            # whose receiver consequence just validated this Understanding.
+            # The pressure field uses these identities to discharge locally
+            # instead of treating one resolved expression as proof that the
+            # entire 78,125-position manifold reached equilibrium.
+            "resolved_noncomp_regions": [
+                dict(item) for item in list(resolution_context or [])
+                if isinstance(item, dict) and str(item.get("nc_name") or "")
+            ],
             "prior_state_time_index": int(state_snapshot.get("time_index", 0) or 0),
             "crystal_level": "understanding",
             "law": "AURORA_COGNITIVE_PHYSICS §7 Understanding — field at equilibrium across all noncomp manifolds",
@@ -3390,13 +3263,7 @@ class RuntimeUnderstandingContract:
                     getattr(obj, method)(*args)
                     cascade_record["dispatches"].append(f"{target_key}.{method}:ok")
                 except Exception as exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_understanding_contract.py:2646",
-                        exc=exc,
-                        context={"function": "_soft", "handler_line": 2646, "source_file": "aurora_internal/aurora_understanding_contract.py"},
-                    )
+                    _aurora_fault(locals(), exc, '_soft', 2646)
                     cascade_record["dispatches"].append(f"{target_key}.{method}:err:{exc}")
             else:
                 cascade_record["dispatches"].append(f"{target_key}.{method}:not_found")

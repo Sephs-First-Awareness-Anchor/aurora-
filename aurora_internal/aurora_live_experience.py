@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import re
 import time
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from aurora_internal.aurora_lexical_crystals import LexicalCrystals
 from aurora_internal.aurora_representation_crystals import HypothesisCrystals, RepresentationCrystals

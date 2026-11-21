@@ -89,3 +89,6 @@ __pycache__/
 .vscode/
 .idea/
 aurora_state/genealogy/events.jsonl
+
+# knowledge graph exports, derivable with build --formats all
+knowledge_graph/exports/

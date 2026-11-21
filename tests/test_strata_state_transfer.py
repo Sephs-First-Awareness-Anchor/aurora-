@@ -181,6 +181,7 @@ def test_state_preserving_migration_to_a_second_device(rig):
     phone, phone2, laptop = rig["phone"], rig["phone2"], rig["laptop"]
     old, new = rig["client_for"](phone), rig["client_for"](phone2)
     old.sync_once()
+    _write(phone, "surface_working_state.json", b'{"working_memory": "the current frame"}')
     epoch_before = rig["server"].status()["epoch"]
     checkpoint = old.push_state("handoff", chunk_bytes=500)
     assert checkpoint["ok"] and checkpoint["token"]
@@ -195,12 +196,13 @@ def test_state_preserving_migration_to_a_second_device(rig):
     wrong = new.pull_handoff("not-the-token")
     assert not wrong["ok"]
 
-    _write(phone2, "lexicon.json", b'{"words": ["fence"]}')       # already identical: not re-pulled
+    _write(phone2, "lexicon.json", b'local durable state remains local')
     moved = new.pull_handoff(checkpoint["token"], chunk_bytes=500)
     assert moved["ok"], moved
-    for rel in ("genealogy/abilities.json", "lexicon.json", "deep/er/crystals.json", "empty_marker.json"):
-        assert _same(phone, phone2, rel), rel
-    assert moved["reused_local"] == 1
+    assert _same(phone, phone2, "surface_working_state.json")
+    assert not (phone2 / "genealogy/abilities.json").exists()
+    assert (phone2 / "lexicon.json").read_bytes() == b'local durable state remains local'
+    assert moved["reused_local"] == 0
     assert not (phone2 / "surface_continuity_feed.json").exists()
     status = rig["server"].status()
     assert status["epoch"] == epoch_before + 1 and status["handoff_pending"] is False
@@ -213,17 +215,40 @@ def test_state_preserving_migration_to_a_second_device(rig):
     assert new.role == "active"
 
 
-def test_an_expired_checkpoint_no_longer_blocks_a_claim(rig, monkeypatch):
+def test_an_expired_checkpoint_does_not_allow_stateless_takeover(rig, monkeypatch):
     old, new = rig["client_for"](rig["phone"]), rig["client_for"](rig["phone2"])
     old.sync_once()
-    assert old.push_state("handoff")["ok"]
+    _write(rig["phone"], "surface_working_state.json", b'{"present": "state"}')
+    checkpoint = old.push_state("handoff")
+    assert checkpoint["ok"]
     state = rig["server"]._load_state()
     state["handoff"]["at"] -= sl.HANDOFF_TTL_S + 5
     sl._atomic_write_json(rig["server"]._state_path, state)
     new.request_claim()
     new.sync_once()
-    assert new.role == "active"
-    assert rig["server"].status()["handoff_pending"] is False
+    assert new.role == "standby"
+    assert "handoff_expired" in new.last_error
+    assert rig["server"].status()["handoff_pending"] is True
+    assert old.cancel_handoff(checkpoint["token"])["ok"]
+    assert rig["server"].surface_ready(old.surface_id)
+    assert not (sl.link_dir(rig["phone"]) / "surface_frozen").exists()
+
+
+def test_live_restore_failure_keeps_destination_fenced_and_source_can_recover(rig):
+    old, new = rig["client_for"](rig["phone"]), rig["client_for"](rig["phone2"])
+    old.sync_once()
+    _write(rig["phone"], "surface_working_state.json", b'{"present":"state"}')
+    checkpoint = old.push_state("handoff")
+    def failed_restore():
+        raise ValueError("destination binding missing")
+    result = new.pull_handoff(checkpoint["token"], restore_callback=failed_restore)
+    assert not result["ok"] and "binding missing" in result["error"]
+    assert not rig["server"].surface_ready(new.surface_id)
+    assert not new.cancel_handoff(checkpoint["token"])["ok"]
+    assert old.cancel_handoff(checkpoint["token"])["ok"]
+    assert rig["server"].surface_ready(old.surface_id)
+    new.sync_once()
+    assert new.role == "standby"
 
 
 # ------------------------------------------------------------------ sensory channels

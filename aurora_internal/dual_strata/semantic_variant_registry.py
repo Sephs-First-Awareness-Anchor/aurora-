@@ -39,7 +39,8 @@ weights and lifecycle counts are this implementation's first pass,
 about the thresholds.
 """
 from __future__ import annotations
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/dual_strata/semantic_variant_registry.py')
 
 import json
 import os
@@ -349,13 +350,7 @@ class SemanticVariantRegistry:
                     k: list(v) for k, v in (raw.get("index", {}) or {}).items()
                 }
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:350",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load_index", "handler_line": 350, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_load_index', 350)
             pass
 
     def save_index(self) -> bool:
@@ -377,13 +372,7 @@ class SemanticVariantRegistry:
             self._dirty = False
             return True
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:371",
-                exc=_aurora_boundary_exc,
-                context={"function": "save_index", "handler_line": 371, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save_index', 371)
             return False
 
     def _index_upsert(self, variant: SemanticVariant) -> None:
@@ -415,13 +404,7 @@ class SemanticVariantRegistry:
                 try:
                     variant = SemanticVariant.from_dict(json.loads(f.content))
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:402",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_read_variant", "handler_line": 402, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_read_variant', 402)
                     return None
                 if variant.variant_id not in self._seen_this_boot:
                     variant.restart_survivals += 1
@@ -458,24 +441,12 @@ class SemanticVariantRegistry:
                 parent.connections.get(crystal.crystal_id, 0.0), variant.confidence,
             )
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:438",
-                exc=_aurora_boundary_exc,
-                context={"function": "_write_variant", "handler_line": 438, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_write_variant', 438)
             pass
         try:
             crystal.evolve()
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:442",
-                exc=_aurora_boundary_exc,
-                context={"function": "_write_variant", "handler_line": 442, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, '_write_variant', 442)
             pass
         self._seen_this_boot.add(variant.variant_id)
 

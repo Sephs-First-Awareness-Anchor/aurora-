@@ -19,7 +19,8 @@ DOCTRINE:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
-from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_runtime_faults import bind_fault_recorder as _bind_fault_recorder
+_aurora_fault = _bind_fault_recorder(__name__, 'aurora_internal/aurora_language_state.py')
 
 import os
 import re
@@ -32,15 +33,14 @@ import threading
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field, asdict
 from collections import defaultdict, deque
-from enum import Enum, auto
+from enum import Enum
 
 
 # ============================================================================
 # SHARED UTILITIES
 # ============================================================================
 
-def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, v))
+from aurora_internal.aurora_shared_helpers import clamp as _clamp
 
 def _gen_id(prefix: str) -> str:
     return f"{prefix}_{hashlib.md5(f'{time.time()}{random.random()}'.encode()).hexdigest()[:10]}"
@@ -305,13 +305,7 @@ class LanguageStateVector:
                 _os.fsync(f.fileno())
             _os.replace(tmp, self.STATE_PATH)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_language_state.py:306",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 306, "source_file": "aurora_internal/aurora_language_state.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 306)
             pass
 
     def load(self):
@@ -326,13 +320,7 @@ class LanguageStateVector:
             self._tier_index = data.get("tier_index", self._tier_index)
             self._evolution_cycles = data.get("evolution_cycles", 0)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_language_state.py:320",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 320, "source_file": "aurora_internal/aurora_language_state.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 320)
             pass
 
     def status(self) -> Dict:
@@ -1711,13 +1699,7 @@ class TemplateRecord:
                     source="lsv_template",
                 )
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_language_state.py:1701",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "update_fitness", "handler_line": 1701, "source_file": "aurora_internal/aurora_language_state.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'update_fitness', 1701)
                 pass
 
     def reproduce(self) -> "TemplateRecord":
@@ -1839,13 +1821,7 @@ class TemplateEvolutionEngine:
                 with open(path) as f:
                     data = json.load(f)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_language_state.py:1822",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_load_actual_response_entries", "handler_line": 1822, "source_file": "aurora_internal/aurora_language_state.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, '_load_actual_response_entries', 1822)
                 continue
 
             if isinstance(data, dict):
@@ -2022,13 +1998,7 @@ class TemplateEvolutionEngine:
                 os.fsync(f.fileno())
             os.replace(tmp, self.STATE_PATH)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_language_state.py:1998",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 1998, "source_file": "aurora_internal/aurora_language_state.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 1998)
             pass
 
     def load(self):
@@ -2045,13 +2015,7 @@ class TemplateEvolutionEngine:
                     if k in TemplateRecord.__dataclass_fields__
                 })
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_language_state.py:2014",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 2014, "source_file": "aurora_internal/aurora_language_state.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 2014)
             pass
 
 
@@ -2216,13 +2180,7 @@ class LexicalConvergenceModule:
                 os.fsync(f.fileno())
             os.replace(tmp, self.STATE_PATH)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_language_state.py:2178",
-                exc=_aurora_boundary_exc,
-                context={"function": "save", "handler_line": 2178, "source_file": "aurora_internal/aurora_language_state.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'save', 2178)
             pass
 
     def load(self):
@@ -2238,13 +2196,7 @@ class LexicalConvergenceModule:
                     if k in PhrasePrint.__dataclass_fields__
                 })
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_language_state.py:2193",
-                exc=_aurora_boundary_exc,
-                context={"function": "load", "handler_line": 2193, "source_file": "aurora_internal/aurora_language_state.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'load', 2193)
             pass
 
 
@@ -2492,13 +2444,7 @@ class ExpressionEvolutionOrchestra:
                     try:
                         intent.constraints.remove(key)
                     except ValueError as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora_internal/aurora_language_state.py:2440",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_apply_reflection_bias", "handler_line": 2440, "source_file": "aurora_internal/aurora_language_state.py"},
-                        )
+                        _aurora_fault(locals(), _aurora_boundary_exc, '_apply_reflection_bias', 2440)
                         pass
 
     def _enrich_concepts_from_oets(self, intent: "IntentObject",
@@ -2568,13 +2514,7 @@ class ExpressionEvolutionOrchestra:
                                 enriched.append(rel_name)
                                 seen.add(rel_name)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_language_state.py:2509",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_enrich_concepts_from_oets", "handler_line": 2509, "source_file": "aurora_internal/aurora_language_state.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_enrich_concepts_from_oets', 2509)
                     pass
 
             # ── QuasiArch crystal relations ───────────────────────────────
@@ -2591,13 +2531,7 @@ class ExpressionEvolutionOrchestra:
                                     enriched.append(fname)
                                     seen.add(fname)
                 except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_internal/aurora_language_state.py:2525",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_enrich_concepts_from_oets", "handler_line": 2525, "source_file": "aurora_internal/aurora_language_state.py"},
-                    )
+                    _aurora_fault(locals(), _aurora_boundary_exc, '_enrich_concepts_from_oets', 2525)
                     pass
 
         intent.supporting_concepts = enriched[:14]
@@ -2625,13 +2559,7 @@ class ExpressionEvolutionOrchestra:
             try:
                 self._enrich_concepts_from_oets(intent, assembly_data)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_language_state.py:2552",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_output", "handler_line": 2552, "source_file": "aurora_internal/aurora_language_state.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process_output', 2552)
                 pass
 
         # Reflection bias: inject boost signals from prior failed renders so the
@@ -2639,13 +2567,7 @@ class ExpressionEvolutionOrchestra:
         try:
             self._apply_reflection_bias(intent)
         except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_internal/aurora_language_state.py:2559",
-                exc=_aurora_boundary_exc,
-                context={"function": "process_output", "handler_line": 2559, "source_file": "aurora_internal/aurora_language_state.py"},
-            )
+            _aurora_fault(locals(), _aurora_boundary_exc, 'process_output', 2559)
             pass
 
         # Pass B: Compile to speech candidates
@@ -2676,13 +2598,7 @@ class ExpressionEvolutionOrchestra:
                     final_text   = suggestion["applied_text"]
                     grammar_hint = suggestion
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_internal/aurora_language_state.py:2589",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_output", "handler_line": 2589, "source_file": "aurora_internal/aurora_language_state.py"},
-                )
+                _aurora_fault(locals(), _aurora_boundary_exc, 'process_output', 2589)
                 pass
 
         reflection = self.reflect_output(

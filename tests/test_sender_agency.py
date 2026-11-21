@@ -9,7 +9,6 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 import os
 import sys
-from types import SimpleNamespace
 
 import pytest
 

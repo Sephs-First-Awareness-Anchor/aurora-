@@ -335,7 +335,8 @@ def test_turn_failure_is_reported_not_swallowed(tmp_path):
     messenger.pull_once()
     status = messenger.status()
     assert status["errors"] == 1 and "phone ran out of patience" in status["last_error"]
-    assert status["cursor"] == 1
+    assert status["cursor"] == 0
+    assert status["durable_unread"] == 1 and status["transport_cursor"] == 1
 
 
 # ---------------------------------------------------------------------------
