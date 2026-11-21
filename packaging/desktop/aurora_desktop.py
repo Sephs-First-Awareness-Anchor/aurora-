@@ -445,7 +445,7 @@ def run_gui(state_dir: Path):
                 from PySide6.QtGui import QDesktopServices
                 QDesktopServices.openUrl(QUrl("https://tailscale.com/download"))
             return
-        host = vpn["address"]
+        host = vpn["ipv4"] or vpn["address"]
         answer = QMessageBox.question(
             window, "Pair phone over private network",
             "Desktop private VPN address: " + host + "\\n\\n"
