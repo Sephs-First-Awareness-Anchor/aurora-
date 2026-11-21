@@ -86,7 +86,7 @@ class ScreenObserverService : AccessibilityService() {
 
         private fun walk(node: AccessibilityNodeInfo?, depth: Int,
                          kept: ArrayList<AccessibilityNodeInfo>, arr: JSONArray) {
-            if (node == null || kept.size >= MAX_NODES) return
+            if (node == null || node.isPassword || kept.size >= MAX_NODES) return
             val text = node.text?.toString()?.trim() ?: ""
             val desc = node.contentDescription?.toString()?.trim() ?: ""
             val viewId = node.viewIdResourceName ?: ""
@@ -148,11 +148,12 @@ class ScreenObserverService : AccessibilityService() {
         fun act(frame: Long, index: Int, action: String, text: String): String {
             val svc = instance ?: return fail("screen_hands_not_enabled")
             if (!AuroraService.screenSensingOn) return fail("screen_sensing_off")
-            val current = synchronized(frameLock) { frameId }
-            if (frame != current) return fail("stale")
-            val node = synchronized(frameLock) { frameNodes.getOrNull(index) }
-                ?: return fail("no_such_node")
-            node.refresh()
+            val node = synchronized(frameLock) {
+                if (frame != frameId) return fail("stale")
+                frameNodes.getOrNull(index)
+            } ?: return fail("no_such_node")
+            if (!node.refresh() || !node.isVisibleToUser || node.isPassword ||
+                svc.rootInActiveWindow?.windowId != node.windowId) return fail("stale")
             lastSelfActMs = System.currentTimeMillis()
             val done = when (action) {
                 "tap" -> {
@@ -235,7 +236,8 @@ class ScreenObserverService : AccessibilityService() {
          * branches, and the synchronous-throw catch block. */
         fun captureScreenshot(transition: String, onDone: () -> Unit = {}) {
             val svc = instance
-            if (svc == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            if (svc == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.R ||
+                !AuroraService.screenSensingOn || svc.passwordFocused()) {
                 onDone()
                 return
             }
@@ -246,6 +248,11 @@ class ScreenObserverService : AccessibilityService() {
                     object : AccessibilityService.TakeScreenshotCallback {
                         override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
                             try {
+                                if (!AuroraService.screenSensingOn || svc.passwordFocused()) {
+                                    result.hardwareBuffer.close()
+                                    onDone()
+                                    return
+                                }
                                 val hwBitmap = Bitmap.wrapHardwareBuffer(
                                     result.hardwareBuffer, result.colorSpace
                                 )
@@ -338,10 +345,19 @@ class ScreenObserverService : AccessibilityService() {
 
     private var lastEventMs = 0L
 
+    private fun passwordFocused(): Boolean {
+        val root = rootInActiveWindow ?: return true
+        return root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.isPassword == true
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
-        // Screen sensing switched off on the Hub's control panel.
-        if (!AuroraService.screenSensingOn) return
+        synchronized(frameLock) {
+            frameId += 1
+            frameNodes = emptyList()
+        }
+        if (!AuroraService.screenSensingOn || event.isPassword ||
+            event.source?.isPassword == true || passwordFocused()) return
         val now = System.currentTimeMillis()
         // A press or a typed change is a moment, not ambience: it is never
         // throttled away, because it may be Sir showing her a step.
@@ -390,7 +406,7 @@ class ScreenObserverService : AccessibilityService() {
         out: LinkedHashSet<String>,
         limit: Int
     ) {
-        if (node == null || out.size >= limit) return
+        if (node == null || node.isPassword || out.size >= limit) return
         addText(out, node.text?.toString())
         addText(out, node.contentDescription?.toString())
         for (i in 0 until node.childCount) {
