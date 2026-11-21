@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import deque
 import os
 import tempfile
 from typing import Any, Dict, Iterable, List, Mapping, Optional
@@ -134,7 +135,24 @@ class FacetBook:
                 d = self.degree(concept, kind, key)
                 if d > 0.0 or include_uncounted:
                     ev = entry["evidence"]
-                    rows.append({"key": key, "content": entry["content"], "degree": d, "contexts": len(ev),
+                    # Preserve a bounded witness to the circumstances and later corrections in
+                    # this SAME ordinary concept facet.  The source event remains authoritative;
+                    # this is a compact, revisit-able view, not another memory system.
+                    positive, negative = deque(maxlen=3), deque(maxlen=3)
+                    for ref, evidence in ev.items():
+                        if evidence["basis"] not in COUNTED_BASES:
+                            continue
+                        (positive if evidence["polarity"] > 0 else negative).append((ref, evidence))
+                    selected = list(positive) + list(negative)
+                    occasions = [
+                        {"ref": ref, "source": e["source"], "basis": e["basis"],
+                         "polarity": e["polarity"], "occurrence_class": e["occurrence_class"],
+                         "context": e["context"], "consequence": e["consequence"],
+                         "ancestry": list(e.get("ancestry") or [])[:12]}
+                        for ref, e in selected
+                    ]
+                    rows.append({"key": key, "content": entry["content"], "degree": d,
+                                 "contexts": len(ev), "occasions": occasions,
                                  "uncounted": sum(1 for e in ev.values() if e["basis"] not in COUNTED_BASES)})
             rows.sort(key=lambda r: (-r["degree"], r["key"]))
             if rows:
@@ -315,14 +333,21 @@ def place_cycle(book: FacetBook, cycle: Mapping[str, Any], *, occurrence_class: 
 
 def apply_to_crystals(book: FacetBook, concept_index: Mapping[str, str], crystals: Mapping[str, Any], per_kind: int = 8, dry_run: bool = True) -> Dict[str, Any]:
     """Write each concept's counted entries into its existing crystal as one facet per kind (role `fk:<kind>`), strongest per_kind each.  Only counted
-    entries are written; a facet that exists is merged into (the stronger confidence wins), never replaced; no crystal is created.  `dry_run`
+    entries are written; existing keys are refreshed from newly qualified evidence, even when confidence falls. No crystal is created. `dry_run`
     (default) changes nothing and reports what would change."""
     touched = facets = entries = 0
     for concept, cid in concept_index.items():
         crystal = crystals.get(cid)
         if crystal is None:
             continue
-        kinds = book.facets_for(concept, top=per_kind)
+        # Include fully contradicted (degree=0) entries when they previously
+        # had counted evidence: the SAME materialized facet must be allowed to
+        # lose all confidence. Held-only/dreamed evidence never earns a facet.
+        kinds = {
+            kind: counted[:per_kind]
+            for kind, rows in book.facets_for(concept, include_uncounted=True).items()
+            if (counted := [r for r in rows if r["contexts"] > r["uncounted"]])
+        }
         if not kinds:
             continue
         touched += 1
@@ -332,7 +357,9 @@ def apply_to_crystals(book: FacetBook, concept_index: Mapping[str, str], crystal
             if dry_run:
                 continue
             role = f"fk:{kind}"
-            content = {"entries": [{"key": r["key"], "content": r["content"], "degree": round(r["degree"], 6), "contexts": r["contexts"]} for r in rows]}
+            content = {"entries": [{"key": r["key"], "content": r["content"],
+                                    "degree": round(r["degree"], 6), "contexts": r["contexts"],
+                                    "occasions": r.get("occasions", [])} for r in rows]}
             conf = max(r["degree"] for r in rows)
             existing = next((f for f in crystal.facets.values() if f.role == role), None)
             if existing is None:
@@ -340,12 +367,74 @@ def apply_to_crystals(book: FacetBook, concept_index: Mapping[str, str], crystal
             else:
                 merged = {r["key"]: r for r in (existing.content or {}).get("entries", [])}
                 for r in content["entries"]:
-                    old = merged.get(r["key"])
-                    if old is None or r["degree"] >= old.get("degree", 0.0):
-                        merged[r["key"]] = r
-                existing.content = {"entries": sorted(merged.values(), key=lambda r: (-r["degree"], r["key"]))}
-                existing.confidence = max(float(existing.confidence), conf)
+                    # The same claim can lose support as her lived evidence develops.
+                    # Never preserve a stale higher degree merely because it was seen first.
+                    merged[r["key"]] = r
+                merged_rows = sorted(merged.values(), key=lambda r: (-r["degree"], r["key"]))[:per_kind]
+                existing.content = {"entries": merged_rows}
+                existing.confidence = max((float(r["degree"]) for r in merged_rows), default=0.0)
     return {"crystals_touched": touched, "facets": facets, "entries": entries, "dry_run": bool(dry_run)}
+
+
+def recall_contextual_facets(systems: Mapping[str, Any], heard: str, *, max_entries: int = 6) -> List[Dict[str, Any]]:
+    """Read qualified context directly from existing fk:* facets on ordinary crystals.
+
+    No new crystal, facet kind, database, or evidence vote is created by recall.
+    A context/episode is not a conclusion; consumers retain its provenance.
+    """
+    import re
+    text = str(heard or "").lower()
+    terms = {w for w in re.findall(r"[a-z][a-z']{2,}", text)}
+    if not terms or not isinstance(systems, Mapping):
+        return []
+    registry = systems.get("_concept_crystal_registry")
+    if registry is None:
+        return []
+    # This index already maps known concepts to their canonical ordinary crystals.
+    dps = systems.get("dimensional")
+    idx = getattr(dps, "concept_index", None)
+    if not isinstance(idx, Mapping):
+        return []
+    out: List[Dict[str, Any]] = []
+    kinds = {"episode_ref", "context", "condition", "cause", "effect", "relation",
+             "comparison", "evidence", "contradiction", "uncertainty"}
+    for concept in sorted(terms):
+        # This is the existing canonical/alias index. No scan, new crystal,
+        # or representation-type-specific registry is needed on a live turn.
+        cid = idx.get(concept)
+        if not cid:
+            continue
+        crystal = registry.crystal_by_id(cid) if cid else None
+        if crystal is None:
+            continue
+        for facet in getattr(crystal, "facets", {}).values():
+            role = str(getattr(facet, "role", ""))
+            if not role.startswith("fk:") or role[3:] not in kinds:
+                continue
+            content = getattr(facet, "content", {}) or {}
+            if not isinstance(content, Mapping):
+                continue
+            for entry in content.get("entries", []) or []:
+                if not isinstance(entry, Mapping):
+                    continue
+                degree = float(entry.get("degree", 0) or 0)
+                occasions = list(entry.get("occasions") or [])
+                if degree <= 0 and not occasions:
+                    continue
+                # Corrected-away claims may be recalled as HISTORY, but no
+                # longer count as current, supported knowledge.
+                out.append({
+                    "concept": concept, "kind": role[3:], "key": entry.get("key"),
+                    "content": entry.get("content"), "degree": degree,
+                    "supported": degree > 0.0,
+                    "contexts": int(entry.get("contexts", 0) or 0),
+                    "occasions": occasions,
+                    "facet_role": role,
+                })
+                if len(out) >= max_entries:
+                    return out
+    return out
+
 
 
 HELD_KINDS = ("lexicon", "definition", "emotion")
