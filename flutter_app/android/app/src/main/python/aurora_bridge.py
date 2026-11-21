@@ -5121,10 +5121,30 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         # ── Skill learning: Turn B — user is instructing how to do the task ──
         # Fires before fidelity so the skill is fully ingested first.
         skill_acknowledged = False
+        _being_shown = None
         if _capability_learning_mode and _systems:
+            # On the phone, what he says while her attention is on the screen
+            # is looked for there and done, one thing he named at a time
+            # (aurora_screen_apprenticeship).  While he is still showing her,
+            # the request stays open and her attention stays on the screen.
+            _appr_b = _screen_apprentice()
+            if _appr_b is not None and _appr_b.wants_to_hear():
+                try:
+                    _being_shown = _appr_b.hear(text)
+                except Exception as _hear_e:
+                    log.warning("screen apprenticeship hear failed: %s", _hear_e)
+                    _being_shown = None
+        if _being_shown and _being_shown.get("watching"):
+            _set_sensory_attention("screen", turns=_ATTENTION_TURNS)
+            skill_acknowledged = True
+        elif _capability_learning_mode and _systems:
             # Save context before clearing — needed for the retrospective deposit
             _saved_learning_ctx = dict(_capability_learning_context)
-            _ingest_skill_procedure(text, _capability_learning_context)
+            # What she was shown across several turns is one procedure.
+            _procedure_text = text
+            if _being_shown and _being_shown.get("finished") and _being_shown.get("instructions"):
+                _procedure_text = "\n".join(str(i) for i in _being_shown["instructions"])
+            _ingest_skill_procedure(_procedure_text, _capability_learning_context)
             _capability_learning_mode    = False
             _capability_learning_context = {}
             _pending_capability_gap      = {}
@@ -5695,6 +5715,15 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                 # the identity field can express the need and learning mode is armed.
                 # Only fires when not already in learning mode and not after a skill-
                 # acknowledged turn (which just ingested the procedure).
+                # A phone request she started and could not finish is a
+                # capability gap by what happened: the app opened, the rest
+                # meant nothing she could find (aurora_screen_apprenticeship).
+                _phone_goal = _systems.pop("_phone_goal_open", None) if _systems else None
+                if _phone_goal and not skill_acknowledged and not _capability_learning_mode:
+                    with _axis_state_lock:
+                        _axis_post_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    _register_capability_gap(text, _axis_pre_synthesis, _axis_post_synthesis,
+                                             gap_domain="device_action")
                 if not skill_acknowledged and not _capability_learning_mode and _systems:
                     with _axis_state_lock:
                         _axis_post_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
@@ -7367,7 +7396,18 @@ def _detect_capability_gap(
     )
 
 
-def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) -> None:
+def _screen_apprentice():
+    """Her apprenticeship on the phone screen (aurora_screen_apprenticeship),
+    or None where she has no hands on a screen."""
+    try:
+        from aurora_internal.aurora_screen_apprenticeship import get_apprenticeship
+        return get_apprenticeship(_systems)
+    except Exception:
+        return None
+
+
+def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict,
+                             gap_domain: Optional[str] = None) -> None:
     """
     Record the capability failure, spike the identity field with the
     blocked-agency profile, and arm the learning mode.
@@ -7386,7 +7426,10 @@ def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) ->
         "task_text":   task_text[:300],
         "axis_pre":    dict(axis_pre),
         "axis_post":   dict(axis_post),
-        "gap_domain":  _classify_gap_domain(axis_post),
+        # A request she began on the phone and could not finish is a device
+        # action by what happened (aurora_screen_apprenticeship), whatever
+        # the axis profile alone would classify it as.
+        "gap_domain":  gap_domain or _classify_gap_domain(axis_post),
         "ts":          _t.time(),
     }
     _capability_learning_mode    = True
@@ -11801,6 +11844,13 @@ def provide_screen_observation(payload_json: str) -> None:
         import time as _time
 
         payload = _json.loads(str(payload_json or "{}"))
+        # Sir's own presses while he is showing her are steps he is showing.
+        _appr_o = _screen_apprentice()
+        if _appr_o is not None:
+            try:
+                _appr_o.observe_event(payload)
+            except Exception as _obs_e:
+                log.debug("screen apprenticeship observe failed: %s", _obs_e)
         visible = [
             " ".join(str(item).split()).strip()
             for item in list(payload.get("visible_text") or [])

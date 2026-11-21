@@ -30932,23 +30932,92 @@ def _dispatch_user_directive(
     It reads only:
       - parsed['entities']  — named targets extracted by UtteranceParser
       - the tool registry's own semantic maps (e.g. _APP_NAME_MAP)
+      - what she has learned on the phone by being shown
+        (aurora_screen_apprenticeship) -- never a list of apps or buttons
     The pipeline itself stays free of domain knowledge; each tool owns its
     own resolution logic.
 
+    When opening an app was only part of what he asked ("open Spotify and
+    play my liked playlist"), the rest is matched against what she has
+    learned.  If she knows it, she does it, step by step against what she
+    sees.  If she does not, the unfinished part stays open
+    (systems["_phone_goal_open"]) with her attention on the screen, and the
+    turn falls through to her own reasoning, so what she says about it
+    emerges there rather than from here.
+
     Returns a human-readable result string, or None if no tool matched.
     """
+    # Authors: Sunni (Sir) Morningstar & Cael Devo (phone apprenticeship)
     entities = list(parsed.get("entities") or [])
-    if not entities:
-        return None
+    apprentice = None
+    try:
+        from aurora_internal.aurora_screen_apprenticeship import get_apprenticeship
+        apprentice = get_apprenticeship(systems)
+    except Exception as _ap_e:
+        _aurora_fault(locals(), _ap_e, '_dispatch_user_directive', 30923)
+        apprentice = None
+
+    def _readout(label: str, outcome: Dict[str, Any]) -> str:
+        did = [str(d) for d in list(outcome.get("did") or []) if str(d).strip()]
+        line = f"{label}: " + " \u2192 ".join(did) if did else label
+        if outcome.get("state") == "stopped":
+            line += f" (stopped at step {int(outcome.get('reached', 0)) + 1} of {int(outcome.get('of', 0))})"
+        return line
+
+    def _held_open(outcome: Dict[str, Any], did_text: str = "") -> None:
+        systems["_phone_goal_open"] = {"text": str(user_text)[:300],
+                                       "unknown": list(outcome.get("unknown") or []),
+                                       "package": str(outcome.get("package") or ""),
+                                       "did": did_text, "at": time.time()}
+        try:
+            _seed_abstained_gap(user_text, systems)
+        except Exception as _sg_e:
+            _aurora_fault(locals(), _sg_e, '_dispatch_user_directive', 30923)
+
+    words = re.findall(r"[a-z0-9']+", str(user_text or "").lower())
     try:
         from aurora_internal.tool_registry import call as _tool_call, _resolve_app_package
         for entity in entities:
             pkg = _resolve_app_package(entity)
-            if pkg:
-                result = _tool_call("mobile_launch_app", package=entity, systems=systems)
-                if result.success:
-                    return result.data
+            if not pkg:
+                continue
+            result = _tool_call("mobile_launch_app", package=entity, systems=systems)
+            if not result.success:
                 return f"I tried to open {entity} but: {result.note}"
+            if apprentice is None:
+                return result.data
+            # The words that named the app, and the word that opened it,
+            # were answered by opening it; the rest of the request is left.
+            consumed = [t.lower() for e in entities for t in re.findall(r"[A-Za-z0-9']+", str(e))]
+            ent_tokens = [t.lower() for t in re.findall(r"[A-Za-z0-9']+", str(entity))]
+            for i in range(len(words)):
+                if ent_tokens and words[i:i + len(ent_tokens)] == ent_tokens and i > 0:
+                    consumed.append(words[i - 1])
+                    break
+            outcome = apprentice.take_request(user_text, launched_package=pkg, consumed_words=consumed)
+            state = outcome.get("state")
+            if state == "done":
+                return f"{result.data}\n{_readout(entity, outcome)}"
+            if state == "stopped":
+                _held_open(outcome, result.data)
+                return f"{result.data}\n{_readout(entity, outcome)}"
+            if state == "open":
+                _held_open(outcome, result.data)
+                return None
+            return result.data
+        if apprentice is not None:
+            # No app named: what is in front of her may be where it is done.
+            outcome = apprentice.take_request(user_text)
+            state = outcome.get("state")
+            label = str(outcome.get("package") or "").rsplit(".", 1)[-1] or "phone"
+            if state == "done":
+                return _readout(label, outcome)
+            if state == "stopped":
+                _held_open(outcome)
+                return _readout(label, outcome)
+            if state == "open":
+                _held_open(outcome)
+                return None
     except Exception as _de:
         _aurora_fault(locals(), _de, '_dispatch_user_directive', 23196)
         pass

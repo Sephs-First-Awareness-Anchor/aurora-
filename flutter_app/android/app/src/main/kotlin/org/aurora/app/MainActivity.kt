@@ -282,6 +282,7 @@ class MainActivity : FlutterActivity() {
                     "hasOverlayPermission"     -> result.success(hasOverlayPermission())
                     "requestOverlayPermission" -> { requestOverlayPermission(); result.success(null) }
                     "hasScreenObserverPermission" -> result.success(hasScreenObserverPermission())
+                    "getPhoneHandsState" -> result.success(PhoneHands.permissionState(applicationContext))
                     "requestScreenObserverPermission" -> { requestScreenObserverPermission(); result.success(null) }
                     "consumeOverlayTap" -> {
                         val had = pendingSummon; pendingSummon = false; result.success(had)
@@ -573,6 +574,10 @@ class MainActivity : FlutterActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             need(Manifest.permission.POST_NOTIFICATIONS))
             perms.add(Manifest.permission.POST_NOTIFICATIONS)
+        // Her phone hands (texts, calls, contacts, call log, location): asked
+        // once, with the rest.  A refusal stays refused; Android does not
+        // ask again, and the tool says which permission is missing.
+        for (p in PhoneHands.runtimePermissions()) if (need(p)) perms.add(p)
         if (perms.isNotEmpty()) ActivityCompat.requestPermissions(this, perms.toTypedArray(), PERM_REQUEST)
     }
 
@@ -1001,6 +1006,10 @@ class MainActivity : FlutterActivity() {
                     break
                 }
                 if (read <= 0) continue
+
+                // Every read, unbroken, for tools that need a stretch of
+                // sound (song recognition, PhoneHands.recordClip).
+                HearingBuffer.feed(chunk, read, sampleRate)
 
                 // Her hearing on the presence line: the level of what she
                 // hears, nothing more.
