@@ -130,11 +130,20 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
         if sm is None:
             consciousness = systems.get('consciousness')
             sm = getattr(consciousness, 'sedimemory', None) if consciousness else None
-        if sm is not None:
+        # The ordinary concept and resolution facets are another source of
+        # the SAME memory process, not a specialized memory crystal or process.
+        from aurora_internal.aurora_live_experience import crystal_context_for_turn
+        crystal_view = crystal_context_for_turn(systems, user_text)
+        crystal_count = len(crystal_view["facets"]) + len(crystal_view["representations"])
+        crystal_axes = sorted({
+            a for item in crystal_view["representations"]
+            for a in str(item.get("path") or "").split(">") if a in ("X", "T", "N", "B", "A")
+        })
+        if sm is not None or crystal_count:
             # Attempt live recall using the user_text as query seed
             _sedi_topic = str(user_text or "")[:120]
             _recalled_strata = []
-            if _sedi_topic and hasattr(sm, 'recall_semantic'):
+            if _sedi_topic and sm is not None and hasattr(sm, 'recall_semantic'):
                 try:
                     _recalled_strata = list(sm.recall_semantic(
                         _sedi_topic,
@@ -145,22 +154,26 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
                     _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 131)
                     pass
             _sedi_context = (
-                f"recalled:{len(_recalled_strata)}_strata" if _recalled_strata
-                else "sedi_ambient"
+                f"recalled:{len(_recalled_strata)}_strata; crystal_facets:{crystal_count}"
+                if _recalled_strata or crystal_count else "sedi_ambient"
             )
-            _sedi_relevance = min(0.85, 0.55 + len(_recalled_strata) * 0.07)
+            _sedi_relevance = min(0.85, 0.55 + (len(_recalled_strata) + crystal_count) * 0.07)
             contexts.append(make_process_context(
                 process_id=f"turn_memory_{tick}",
                 process_type="memory",
                 what_triggered_it="user_turn",
                 what_it_is_operating_on=_sedi_context,
                 self_relevance=_sedi_relevance,
-                axis_signature=["X", "T"],
+                axis_signature=list(dict.fromkeys(["X", "T"] + crystal_axes)),
                 tick=tick,
             ))
             # Store recalled strata in systems for downstream use
             if _recalled_strata:
                 systems['_braid_sedi_recall'] = _recalled_strata
+            if crystal_count:
+                systems['_braid_crystal_recall'] = crystal_view
+            else:
+                systems.pop('_braid_crystal_recall', None)
     except Exception as _aurora_boundary_exc:
         _aurora_fault(locals(), _aurora_boundary_exc, '_build_turn_process_contexts', 150)
         pass
