@@ -133,3 +133,61 @@ def test_fully_contradicted_lived_evidence_zeros_existing_facet_without_erasing_
     assert facet.confidence == 0.0
     assert len(facet.content["entries"][0]["occasions"]) == 2
     assert len(dps.crystals) == 1
+
+
+def test_existing_thought_braid_memory_process_consumes_the_same_crystal_context(monkeypatch):
+    from aurora_braid_wiring import _build_turn_process_contexts
+    import sys
+    dps, registry = _runtime()
+    book = F.FacetBook()
+    book.add("lantern", "condition", "power", {"other": "battery"},
+             ref="observed:1", basis="observed", source="conversation",
+             context={"session": "day1"})
+    F.apply_to_crystals(book, {"lantern": dps.concept_index["lantern"]},
+                        dps.crystals, dry_run=False)
+    systems = {"dimensional": dps, "_concept_crystal_registry": registry}
+    monkeypatch.setitem(sys.modules, "aurora_thought_formation",
+                        SimpleNamespace(make_process_context=lambda **kwargs: kwargs))
+    contexts = _build_turn_process_contexts(systems, 7, "lantern")
+    memory = [v for v in contexts if v.get("process_type") == "memory"]
+    assert memory and "crystal_facets:1" in memory[0]["what_it_is_operating_on"]
+    assert systems["_braid_crystal_recall"]["facets"][0]["concept"] == "lantern"
+
+
+def test_confluence_uses_same_context_to_qualify_existing_grounded_knowledge(monkeypatch):
+    from aurora_internal import aurora_confluence as C
+    dps, registry = _runtime()
+    book = F.FacetBook()
+    book.add("lantern", "condition", "power", {"other": "battery"},
+             ref="observed:1", basis="observed", source="conversation")
+    F.apply_to_crystals(book, {"lantern": dps.concept_index["lantern"]},
+                        dps.crystals, dry_run=False)
+    systems = {"dimensional": dps, "_concept_crystal_registry": registry}
+    monkeypatch.setattr(C, "_gate", lambda: SimpleNamespace(
+        _relational_form=lambda _: {"subject": "lantern", "relation": "", "obj": "battery"}))
+    monkeypatch.setattr(C, "knowledge", lambda *a, **kw: [{
+        "source": "lantern", "target": "battery", "strength": 0.5, "axis": "X",
+        "lex": {"agent": "lantern", "action": "requires", "object": "battery"},
+    }])
+    contribution = C.gather(systems, "lantern", {"slots": 3, "reach": 2})
+    assert contribution["crystal_context"]["facets"]
+    assert contribution["knowledge"][0]["crystal_context"][0]["facet_role"] == "fk:condition"
+    assert contribution["knowledge"][0]["strength"] == 0.5  # salience is not factual proof
+
+
+def test_existing_working_memory_lookback_reads_crystal_history_without_redeposit():
+    from aurora_working_memory import WorkingMemory
+    dps, registry = _runtime()
+    book = F.FacetBook()
+    book.add("lantern", "episode_ref", "turn1",
+             {"id": "turn1", "summary": "I repaired the lantern."},
+             ref="conv:turn1:heard:lantern", basis="told",
+             source="conversation", context={"turn_id": "turn1"})
+    F.apply_to_crystals(book, {"lantern": dps.concept_index["lantern"]},
+                        dps.crystals, dry_run=False)
+    systems = {"dimensional": dps, "_concept_crystal_registry": registry}
+    before = json.dumps(registry.crystal_by_id(dps.concept_index["lantern"]).to_dict(), sort_keys=True)
+    WorkingMemory().answer_from_context_carryover("What did I say about the lantern?", systems=systems)
+    assert systems["_last_recalled_crystal_context"]["facets"][0]["kind"] == "episode_ref"
+    after = json.dumps(registry.crystal_by_id(dps.concept_index["lantern"]).to_dict(), sort_keys=True)
+    assert before == after
