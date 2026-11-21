@@ -1579,6 +1579,17 @@ class _HubScreenState extends State<HubScreen> {
     final firstPair   = (_stats['strata_link_first_pairing'] as String?) ?? '';
     final device      = (_stats['strata_link_device_name'] as String?) ?? '';
     final error       = (_stats['strata_link_error'] as String?) ?? '';
+    final endpoint    = (_stats['strata_link_endpoint'] as String?) ?? '';
+    final host        = Uri.tryParse(endpoint)?.host.toLowerCase() ?? '';
+    final octets      = host.split('.');
+    final first       = octets.isNotEmpty ? int.tryParse(octets[0]) : null;
+    final second      = octets.length > 1 ? int.tryParse(octets[1]) : null;
+    final viaVpn      = host.endsWith('.ts.net') ||
+        (octets.length == 4 && first == 100 &&
+         second != null && second >= 64 && second <= 127);
+    final remoteRoute = unpaired ? 'not configured' :
+        viaVpn ? 'private VPN address configured (works across networks when connected)' :
+        'home-network address only: this pairing will not work on cellular';
     final paired      = _stats['surface_only'] == true;
     final unpaired    = status == 'not_configured';
 
@@ -1633,6 +1644,18 @@ class _HubScreenState extends State<HubScreen> {
             valueColor: pending > 0 ? _amber : _text),
         if (!unpaired) _statRow("Home's last word", _ago(homeWord)),
         _statRow('Pairing', pairing, valueColor: paired ? _green : _text),
+        if (!unpaired)
+          _statRow('Remote connectivity', remoteRoute,
+              valueColor: viaVpn ? _green : _amber),
+        if (!unpaired && viaVpn)
+          const Padding(
+            padding: EdgeInsets.only(top: 5, bottom: 7),
+            child: Text(
+              'Keep the private VPN active on both devices. The desktop must remain awake and online. '
+              'Switch to cellular to verify the connection before leaving home.',
+              style: TextStyle(color: _textDim, fontSize: 11),
+            ),
+          ),
         if (device.isNotEmpty) _statRow('This device', device),
         const SizedBox(height: 10),
         Wrap(spacing: 8, runSpacing: 8, children: [
