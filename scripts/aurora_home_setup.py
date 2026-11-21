@@ -42,6 +42,9 @@ if str(REPO_ROOT) not in sys.path:
 
 from aurora_internal.dual_strata import strata_link as sl          # noqa: E402
 from aurora_internal.dual_strata import strata_migration as sm     # noqa: E402
+from aurora_internal.process_lock import ProcessLock
+from aurora_internal.desktop.__main__ import default_state_dir
+from aurora_internal.desktop.common import write_json
 from aurora_internal.hub_panels import strata_panel                # noqa: E402
 
 
@@ -69,6 +72,8 @@ def home_network_address() -> str:
 def _resident_running(state_dir: Path) -> bool:
     """The resident runs from the stack's pid file or as a systemd service
     (scripts/strata_stack.sh starts it either way)."""
+    if os.name == "nt":
+        return False  # The Windows resident uses desktop_resident.lock, never a POSIX pid.
     pid_file = state_dir / "strata_stack" / "pids" / "subsurface.pid"
     try:
         pid = int(pid_file.read_text().split()[0])
@@ -95,19 +100,35 @@ def cmd_pair(args) -> int:
         print("Couldn't find this machine's address on the home network. "
               "Pass it with --host (for example --host 192.168.1.20).")
         return 1
+    # A resident reads desktop_config.json before starting its listener. Preserve
+    # the other settings, including configurations written by Windows PowerShell.
+    config_path = state_dir / "desktop_config.json"
+    config = json.loads(config_path.read_text(encoding="utf-8-sig")) if config_path.exists() else {}
+    port = args.port if args.port is not None else int(config.get("AURORA_STRATA_LINK_PORT")
+                                                       or os.environ.get("AURORA_STRATA_LINK_PORT") or sl.DEFAULT_PORT)
+    if not 1 <= port <= 65535:
+        print("Choose a port from 1 to 65535.")
+        return 1
+    if host in {"0.0.0.0", "::"}:
+        print("Choose the address the phone can dial on the desktop's private network.")
+        return 1
+    config.update(AURORA_STRATA_LINK_HOST=host, AURORA_STRATA_LINK_PORT=port)
+    write_json(config_path, config)
     (link / "listen_host.txt").write_text(host, encoding="utf-8")
     if args.name or not (link / "device_name.txt").exists():
         (link / "device_name.txt").write_text((args.name or "desktop")[:64], encoding="utf-8")
-    line = sl.pairing_line(state_dir, host, args.port)
-    print("Home will listen on", f"{host}:{args.port}", "as", repr(sl.device_name(state_dir)))
+    line = sl.pairing_line(state_dir, host, port)
+    print("Home will listen on", f"{host}:{port}", "as", repr(sl.device_name(state_dir)))
     print()
     print("On the phone: Hub tab -> Subsurface link -> tap, and paste this line:")
     print()
     print("   ", line)
     print()
     print("Keep it private: it is the key to the link.")
-    if _resident_running(state_dir):
-        print("The stack is running; restart it so home listens there:  scripts/strata_stack.sh restart")
+    if os.name == "nt":
+        print("Start or restart the installed AuroraDesktop resident to use this address.")
+    elif _resident_running(state_dir):
+        print("Restart the stack so home listens there: scripts/strata_stack.sh restart")
     return 0
 
 
@@ -160,14 +181,22 @@ def cmd_first_pairing(args) -> int:
               "add --restart-stack, or stop it yourself first.")
         return 1
     if running:
-        subprocess.run(["bash", str(stack), "stop"], check=False)
+        subprocess.run(["bash", str(stack), "stop"], check=True)
     try:
-        result = sm.apply_pending_migration(state_dir)
+        # The same OS lock as the native resident. Hold it throughout the
+        # installation so a login task cannot start between a check and apply.
+        try:
+            with ProcessLock(state_dir / "desktop_resident.lock", blocking=False):
+                result = sm.apply_pending_migration(state_dir)
+        except (BlockingIOError, PermissionError):
+            print("The desktop state is in use. Restart the resident after choosing stores. "
+                  "It applies the ready migration before opening its stores.")
+            return 1
         _print(result or {"status": "nothing_ready"})
         ok = result is not None and result.get("ok")
     finally:
         if running:
-            subprocess.run(["bash", str(stack), "start"], check=False)
+            subprocess.run(["bash", str(stack), "start"], check=True)
     if ok:
         print("\nApplied. The phone picks up the receipt by itself and becomes her surface at its next start.")
     return 0 if ok else 1
@@ -176,9 +205,9 @@ def cmd_first_pairing(args) -> int:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Set up this desktop as Aurora's home.")
     parser.add_argument("command", choices=("pair", "status", "first-pairing"))
-    parser.add_argument("--state-dir", default=os.environ.get("AURORA_STATE_DIR", str(REPO_ROOT / "aurora_state")))
+    parser.add_argument("--state-dir", default=default_state_dir() if os.name == "nt" else os.environ.get("AURORA_STATE_DIR", str(REPO_ROOT / "aurora_state")))
     parser.add_argument("--host", default="", help="pair: the address the phone dials (found automatically)")
-    parser.add_argument("--port", type=int, default=int(os.environ.get("AURORA_STRATA_LINK_PORT", sl.DEFAULT_PORT)))
+    parser.add_argument("--port", type=int)
     parser.add_argument("--name", default="", help="pair: what this desktop is called (default: desktop)")
     parser.add_argument("--side", action="append", default=[], help="first-pairing: store=phone or store=home")
     parser.add_argument("--accept-suggested", action="store_true",

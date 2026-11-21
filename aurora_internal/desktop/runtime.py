@@ -71,7 +71,7 @@ class DesktopRuntime:
 
     def _persist_jobs(self):
         with self._jobs_lock:
-            completed = [k for k, v in self.jobs.items() if v.get("status") not in {"queued", "running"}]
+            completed = [k for k, v in self.jobs.items() if v.get("status") not in {"queued", "running", "waiting_surface"}]
             for k in completed[:-200]:
                 del self.jobs[k]
             write_json(self.jobs_path, self.jobs)
@@ -94,12 +94,6 @@ class DesktopRuntime:
     def submit(self, kind, payload=None, *, owner=False, job_id=None):
         if self.stage in {"boot_failed", "stopped"}:
             raise RuntimeError("resident_not_available; use the independent owner console")
-        if kind == "turn":
-            self.last_live = time.monotonic()
-            from aurora_curiosity_engine import interrupt_curiosity_cycles
-            interrupt_curiosity_cycles()
-            from aurora_internal.dual_strata.strata_link import publish_raw_input
-            publish_raw_input(self.state_dir, str((payload or {}).get("text") or ""))
         jid = str(job_id or uuid.uuid4().hex)
         with self._jobs_lock:
             if jid in self.jobs:
@@ -111,12 +105,31 @@ class DesktopRuntime:
             except queue.Full:
                 del self.jobs[jid]
                 raise RuntimeError("resident_queue_full")
+            if kind == "turn":
+                self.last_live = time.monotonic()
+                if self.link is None or self.link.surface_ready(self.surface_id):
+                    from aurora_curiosity_engine import interrupt_curiosity_cycles
+                    from aurora_internal.dual_strata.strata_link import publish_raw_input
+                    interrupt_curiosity_cycles()
+                    publish_raw_input(self.state_dir, str((payload or {}).get("text") or ""))
             self._persist_jobs()
             return dict(job)
 
     def job(self, jid):
         with self._jobs_lock:
-            return dict(self.jobs.get(jid) or {})
+            job = self.jobs.get(jid) or {}
+            if job.get("status") in {"waiting_surface", "interrupted"} and job.get("remote_message_id"):
+                from aurora_internal.dual_strata.hub_route import read_reply
+                reply = read_reply(self.state_dir, job["remote_message_id"]) or {}
+                if reply.get("status") == "answered":
+                    text = str(reply.get("text") or "")
+                    job.update(status="completed", surface_response=text, finished_at=reply.get("at") or time.time(),
+                               result={"response_text": text, "from_surface": True})
+                    self._persist_jobs()
+                elif reply.get("status") in {"error", "not_sent"}:
+                    job.update(status="failed", error=reply.get("error") or "surface_delivery_failed")
+                    self._persist_jobs()
+            return dict(job)
 
     def _boot_once(self):
         os.environ["AURORA_STATE_DIR"] = str(self.state_dir)
@@ -507,6 +520,18 @@ class DesktopRuntime:
 
     def _perform(self, kind, payload):
         if kind == "turn":
+            if self.link is not None and not self.link.surface_ready(self.surface_id):
+                from aurora_internal.dual_strata.hub_route import send_to_holder
+                # Leave the field immediately after queueing delivery. The phone
+                # owns this turn and its signed reply completes this same job.
+                message_id = uuid.uuid5(uuid.NAMESPACE_OID, self.active_job).hex
+                with self._jobs_lock:
+                    self.jobs[self.active_job]["remote_message_id"] = message_id
+                    self._persist_jobs()
+                sent = send_to_holder(self.link, {"message_id": message_id, "text": payload["text"]})
+                if not sent.get("ok"):
+                    raise RuntimeError(sent.get("error") or "surface_delivery_failed")
+                return {"remote_message_id": message_id, "to": sent["to"]}
             def response_fields(response):
                 if response is None:
                     return None
@@ -531,6 +556,8 @@ class DesktopRuntime:
             return {"resp_A": primary, "resp_B": response_fields(result.get("resp_B")),
                     "response_text": str((primary or {}).get("content") or ""),
                     **{k: result[k] for k in ("trace_id", "turn_tick", "src", "is_question", "elapsed_A") if k in result}}
+        if kind == "move_surface":
+            return self.request_move_from_hub(str(payload.get("to") or ""))
         if kind == "operation":
             return self.services.execute(payload["operation"], payload.get("parameters", {}))
         if kind == "compose":
@@ -554,7 +581,8 @@ class DesktopRuntime:
                 raise ValueError("strata server is unavailable")
             from aurora_internal.dual_strata.strata_link import StrataLinkClient, link_dir
             from aurora_internal.dual_strata.surface_working_state import capture, restore
-            client = StrataLinkClient(self.state_dir, endpoint=f"http://127.0.0.1:{self.link.port}", secret=self.link.secret)
+            host = self.link.host if self.link.host != "0.0.0.0" else "127.0.0.1"
+            client = StrataLinkClient(self.state_dir, endpoint=f"http://{host}:{self.link.port}", secret=self.link.secret)
             client.sync_once()
             if kind == "handoff_prepare":
                 capture(self.systems, self.state_dir)
@@ -614,7 +642,11 @@ class DesktopRuntime:
                     if isinstance(value, (list, tuple)):
                         return [plain(v) for v in value]
                     return value
-                self.jobs[jid].update(status="completed", result=plain(result), finished_at=time.time())
+                with self._jobs_lock:
+                    if kind == "turn" and result.get("remote_message_id"):
+                        self.jobs[jid].update(status="waiting_surface", result=result)
+                    else:
+                        self.jobs[jid].update(status="completed", result=plain(result), finished_at=time.time())
             except Exception as exc:
                 self.jobs[jid].update(status="failed", error=f"{type(exc).__name__}: {exc}")
             finally:

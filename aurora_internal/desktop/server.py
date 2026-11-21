@@ -123,7 +123,7 @@ def make_server(runtime, *, port=8790, token=None):
                             raise ValueError("command required")
                         return self.send(200, shell_command(cmd, cwd=str(runtime.state_dir)))
                     allowed = {"operation", "compose", "demo_begin", "demo_finish", "demo_verify", "refresh", "sensor_control",
-                               "clone_absorb", "save", "handoff_prepare", "handoff_claim", "handoff_cancel"}
+                               "clone_absorb", "save", "handoff_prepare", "handoff_claim", "handoff_cancel", "move_surface"}
                     if action not in allowed:
                         raise ValueError("unknown owner action")
                     return self.send(202, runtime.submit(action, data.get("payload", {}), owner=True,

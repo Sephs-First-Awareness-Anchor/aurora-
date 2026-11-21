@@ -40,7 +40,7 @@ MESSAGES_FILENAME = "hub_messages.jsonl"           # on the holder
 ANSWERED_FILENAME = "hub_messages_answered.json"   # on the holder
 REPLIES_FILENAME = "hub_replies.json"              # at home
 KEEP_REPLIES = 50
-MAX_TEXT = 4000
+MAX_TEXT = 16000
 
 
 def _link(state_dir: Any) -> Path:
@@ -116,8 +116,13 @@ def record_reply(state_dir: Any, message_id: str, row: Mapping[str, Any]) -> Non
     merged.update(dict(row))
     data[str(message_id)] = merged
     if len(data) > KEEP_REPLIES:
-        for key in sorted(data, key=lambda k: float((data[k] or {}).get("at", 0.0) or 0.0))[:-KEEP_REPLIES]:
-            data.pop(key, None)
+        jobs = _read_json(Path(str(state_dir)) / "desktop_jobs.json", {}) or {}
+        waiting = {j.get("remote_message_id") for j in jobs.values()
+                   if j.get("status") in {"running", "interrupted", "waiting_surface"}}
+        oldest = sorted(data, key=lambda k: float((data[k] or {}).get("at", 0.0) or 0.0))
+        for key in oldest[:-KEEP_REPLIES]:
+            if key not in waiting:
+                data.pop(key, None)
     _write_json(path, data)
 
 
@@ -128,20 +133,23 @@ def send_to_holder(server: Any, payload: Mapping[str, Any]) -> Dict[str, Any]:
     text = str(payload.get("text") or "")[:MAX_TEXT]
     if not message_id or not text:
         return {"ok": False, "error": "message_id_and_text_required"}
-    state = server._load_state()
-    owner = str(state.get("owner") or "")
-    if not owner or owner == server.home_surface_id:
-        result = {"ok": False, "error": "she_is_here", "status": "not_sent"}
-    elif not server.downlink_enabled():
-        result = {"ok": False, "error": "home_not_yet_holding_her", "status": "not_sent"}
-    else:
-        server.outbox.append("hub_message", "event",
-                             {"message_id": message_id, "text": text, "to": owner, "at": time.time()},
-                             dedupe_id=f"hub:{message_id}")
-        result = {"ok": True, "status": "sent", "to": owner,
-                  "to_name": str((state.get("names") or {}).get(owner) or owner)}
-    record_reply(server.state_dir, message_id, {"at": time.time(), **result})
-    return result
+    with server._lock:
+        state = server._load_state()
+        owner = str(state.get("owner") or "")
+        if state.get("handoff"):
+            result = {"ok": False, "error": "surface_handoff_in_progress", "status": "not_sent"}
+        elif not owner or owner == server.home_surface_id:
+            result = {"ok": False, "error": "she_is_here", "status": "not_sent"}
+        elif not server.downlink_enabled():
+            result = {"ok": False, "error": "home_not_yet_holding_her", "status": "not_sent"}
+        else:
+            server.outbox.append("hub_message", "event",
+                                 {"message_id": message_id, "text": text, "to": owner, "at": time.time()},
+                                 dedupe_id=f"hub:{message_id}")
+            result = {"ok": True, "status": "sent", "to": owner,
+                      "to_name": str((state.get("names") or {}).get(owner) or owner)}
+        record_reply(server.state_dir, message_id, {"at": time.time(), **result})
+        return result
 
 
 # -- the holder (phone) -----------------------------------------------------------
