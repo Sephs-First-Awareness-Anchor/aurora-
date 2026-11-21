@@ -126,3 +126,25 @@ def test_comparison_is_journalled_once_per_question_per_turn(tmp_path):
 def test_shadow_journal_is_a_journal_for_one_state():
     from aurora_internal.aurora_store_ownership import classify, JOURNAL
     assert classify(tr.SHADOW_JOURNAL_NAME) == JOURNAL
+
+
+def test_interleaved_turns_keep_their_own_read_and_journal(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    barrier = Barrier(2)
+    @tr.scoped_turn
+    def simulate_turn(directory, text):
+        systems = {"state_dir": directory}
+        read = tr.form_turn_read(systems, text)
+        barrier.wait(timeout=5)
+        assert tr.current_read(text) is read
+        tr.route("is_question", text, False, lambda r: r.is_question)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        submitted = [pool.submit(simulate_turn, tmp_path / name, text)
+                     for name, text in (("home", "How are you feeling?"), ("clone", "Sunni is tired."))]
+        for future in submitted:
+            future.result()
+    for name, text in (("home", "How are you feeling?"), ("clone", "Sunni is tired.")):
+        lines = (tmp_path / name / tr.SHADOW_JOURNAL_NAME).read_text().splitlines()
+        assert len(lines) == 1
+        assert json.loads(lines[0])["key"] == tr.text_key(text)

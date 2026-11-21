@@ -31714,6 +31714,7 @@ def _get_or_create_curiosity_engine(systems: Dict[str, Any]) -> Optional[Any]:
         return None
 
 
+@_aurora_turn_read.scoped_turn
 def _run_live_response_turn(
     systems: Dict[str, Any],
     user_text: str,
@@ -34480,7 +34481,9 @@ def _process_external_user_turn_impl(
 
 
 
-def process_external_user_turn(systems: Dict[str, Any], user_text: str, **kwargs: Any) -> Dict[str, Any]:
+def process_external_user_turn(systems: Dict[str, Any], user_text: str, *,
+                               on_surface_ready: Optional[Callable[[Any], None]] = None,
+                               **kwargs: Any) -> Dict[str, Any]:
     """Canonical public bridge into Aurora's live response engine (see the impl below).
 
     Live turns feed the same resolution ledger and representation exchange that
@@ -34512,7 +34515,7 @@ def process_external_user_turn(systems: Dict[str, Any], user_text: str, **kwargs
                 live.observe_user_event(systems, str(user_text), session_id=session)
         except Exception:
             live = None
-        result = _process_external_user_turn_impl(systems, user_text, **kwargs)
+        result = _process_external_user_turn_impl(systems, user_text, on_surface_ready=on_surface_ready, **kwargs)
         try:
             if live is not None:
                 live.observe_reply_event(systems, live.reply_text_of(result), session_id=session)

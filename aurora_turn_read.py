@@ -80,6 +80,8 @@ import json
 import os
 import re
 import threading
+from contextvars import ContextVar
+from functools import wraps
 import time
 from collections import deque
 from dataclasses import dataclass, field, asdict
@@ -292,11 +294,26 @@ def read_from(
 # ---------------------------------------------------------------------------
 
 _lock = threading.RLock()
-_current: Optional[TurnRead] = None
-_current_systems_id: Optional[int] = None
-_turn_record: Dict[str, Any] = {}
+# The desktop, phone and experimental organisms may evaluate overlapping turns.
+# Bind the read and its journal destination to the execution context that formed it.
+_active = ContextVar("aurora_turn_read", default=None)
 _recent: Deque[Dict[str, Any]] = deque(maxlen=_RECENT_LIMIT)
 _totals: Dict[str, Dict[str, int]] = {}
+
+
+def scoped_turn(function):
+    """Flush even on early return or failure, then restore any outer turn."""
+    @wraps(function)
+    def call(*args, **kwargs):
+        token = _active.set(None)
+        try:
+            return function(*args, **kwargs)
+        finally:
+            try:
+                _flush()
+            finally:
+                _active.reset(token)
+    return call
 
 
 def form_turn_read(
@@ -308,11 +325,7 @@ def form_turn_read(
     """Called once at the top of a live turn.  Reads the message through her
     NonComp interpreter (the turn's only interpret call for this text; the
     later input guidance reuses it) and makes that read the turn's router."""
-    global _current, _current_systems_id
-    _flush(systems)
-    with _lock:
-        _current = None
-        _current_systems_id = None
+    _flush()
     if not str(text or "").strip():
         return None
     try:
@@ -336,11 +349,8 @@ def form_turn_read(
             noncomp = {}
 
     read = read_from(text, parsed, noncomp, systems=systems)
-    with _lock:
-        _current = read
-        _current_systems_id = id(systems) if isinstance(systems, dict) else None
-        _turn_record.clear()
-        _turn_record.update({"at": read.formed_at, "key": read.key, "read": read.to_dict(), "calls": []})
+    record = {"at": read.formed_at, "key": read.key, "read": read.to_dict(), "calls": []}
+    _active.set((read, systems, noncomp, record))
     if isinstance(systems, dict):
         systems["_turn_read"] = read
         systems["_turn_read_interpretation"] = {"key": read.key, "summary": dict(noncomp)} if noncomp else {}
@@ -349,10 +359,10 @@ def form_turn_read(
 
 def current_read(text: Any = None) -> Optional[TurnRead]:
     """The turn's read, if it is the read of ``text`` (or any text when None)."""
-    with _lock:
-        read = _current
-    if read is None:
+    active = _active.get()
+    if active is None:
         return None
+    read = active[0]
     if text is not None and text_key(text) != read.key:
         return None
     return read
@@ -364,9 +374,9 @@ def reuse_interpretation(systems: Optional[Dict[str, Any]], text: Any) -> Option
     sediment and records worth; twice would double both)."""
     if not isinstance(systems, dict):
         return None
-    held = systems.get("_turn_read_interpretation") or {}
-    if held and held.get("key") == text_key(text) and held.get("summary"):
-        return dict(held["summary"])
+    active = _active.get()
+    if active and active[1] is systems and active[0].key == text_key(text) and active[2]:
+        return dict(active[2])
     return None
 
 
@@ -400,7 +410,9 @@ def _note(kind: str, text: Any, lexical: Any, mine: Any, *, used: str) -> None:
             tot["agree"] += 1
         else:
             tot["disagree"] += 1
-        if mine is not None and text_key(text) == _turn_record.get("key"):
+        active = _active.get()
+        if mine is not None and active is not None and text_key(text) == active[0].key:
+            _turn_record = active[3]
             # one line per routing question per turn (callers ask repeatedly)
             seen = {(c["kind"]) for c in _turn_record.get("calls", [])}
             if kind not in seen:
@@ -423,15 +435,17 @@ def reset_shadow() -> None:
     with _lock:
         _totals.clear()
         _recent.clear()
-        _turn_record.clear()
+        _active.set(None)
 
 
-def _flush(systems: Optional[Dict[str, Any]]) -> None:
-    """Append the finished turn's comparison to her shadow journal."""
-    with _lock:
-        record = dict(_turn_record) if _turn_record.get("calls") else {}
-        _turn_record.clear()
-    if not record or not isinstance(systems, dict):
+def _flush() -> None:
+    """Append this turn to the state that originally supplied the read."""
+    active = _active.get()
+    _active.set(None)
+    if active is None:
+        return
+    _, systems, _, record = active
+    if not record["calls"] or not isinstance(systems, dict):
         return
     state_dir = systems.get("state_dir")
     if not state_dir:
@@ -452,4 +466,4 @@ def _flush(systems: Optional[Dict[str, Any]]) -> None:
 
 def flush_turn(systems: Optional[Dict[str, Any]]) -> None:
     """Public end-of-turn flush (the next form_turn_read also flushes)."""
-    _flush(systems)
+    _flush()
