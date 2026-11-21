@@ -16367,6 +16367,75 @@
    "exercises": [
     "aurora.py"
    ]
+  },
+  ".github/workflows/pr264-final-knowledge-graph.yml": {
+   "domain": "repo",
+   "subsystem": "ci",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "yaml",
+   "basis": "location",
+   "duties": null
+  },
+  ".github/workflows/pr264-full-regression.yml": {
+   "domain": "repo",
+   "subsystem": "ci",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "yaml",
+   "basis": "location",
+   "duties": null
+  },
+  ".github/workflows/pr264-stabilization.yml": {
+   "domain": "repo",
+   "subsystem": "ci",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "yaml",
+   "basis": "location",
+   "duties": null
+  },
+  "scripts/aurora_pr264_finalize_manifest.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null
+  },
+  "scripts/aurora_pr264_shard.py": {
+   "domain": "desktop",
+   "subsystem": "tooling",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null
+  },
+  "tests/test_desktop_praxis_home_boot.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/desktop/runtime.py"
+   ]
   }
  },
  "graph_evidence": {
