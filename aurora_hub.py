@@ -7244,6 +7244,11 @@ def _build_ui():
         if gate:
             out.append((f"  store gate: {gate.get('writes_declined', 0)} writes left to home"
                         f" across {gate.get('stores_declined', 0)} stores", ""))
+            prov = gate.get("provisional") or {}
+            out.append((f"  kept provisionally until home has it: {gate.get('writes_provisional', 0)} writes"
+                        f" across {gate.get('stores_provisional', 0)} stores"
+                        f" ({int(prov.get('bytes', 0) or 0) // 1024} KB of"
+                        f" {int(prov.get('budget_bytes', 0) or 0) // (1024 * 1024)} MB)", ""))
         return out
 
     def refresh_strata():

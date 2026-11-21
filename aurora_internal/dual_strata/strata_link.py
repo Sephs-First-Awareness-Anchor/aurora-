@@ -574,6 +574,11 @@ def collect_subsurface_downlink(state_dir: Any, outbox: DurableOutbox, memo: Dic
     except Exception:
         pass
     try:
+        from aurora_internal.dual_strata.anticipatory_facets import relay_down as _views_down
+        queued += _views_down(state_dir, outbox, memo)
+    except Exception:
+        pass
+    try:
         from aurora_internal.aurora_screen_apprenticeship import relay_down as _skills_down
         queued += _skills_down(state_dir, outbox, memo)
     except Exception:
@@ -640,6 +645,9 @@ def apply_downlink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
     if channel == "home_inquiry" and isinstance(payload, dict):
         from aurora_internal.dual_strata.inquiry_tiers import receive_down
         return receive_down(state_dir, payload)
+    if channel == "facet_view" and isinstance(payload, dict):
+        from aurora_internal.dual_strata.anticipatory_facets import receive_down as _views_receive
+        return _views_receive(state_dir, payload)
     if channel == "home_skills" and isinstance(payload, dict):
         from aurora_internal.aurora_screen_apprenticeship import receive_down as _skills_receive
         return _skills_receive(state_dir, payload)
@@ -1686,13 +1694,21 @@ class StrataLinkClient:
                 from aurora_internal.aurora_store_ownership import moves_with_her
                 rel_paths = sorted({FILENAME, *moves_with_her(self.state_dir)})
                 manifest = st.snapshot_state(self.state_dir, snap, rel_paths=rel_paths)
-            elif snapshot_guard is not None:
-                # Only the copy needs her held still (e.g. the app's field
-                # lock); the transfer of the copy that follows does not.
-                with snapshot_guard():
-                    manifest = st.snapshot_state(self.state_dir, snap)
             else:
-                manifest = st.snapshot_state(self.state_dir, snap)
+                # A whole-state seed or first-pairing carries her canonical
+                # stores, never her provisional view of them: that view is
+                # this device's lived interpretation awaiting home's
+                # integration, not a store home may adopt as its own.
+                from aurora_internal.aurora_store_ownership import PROVISIONAL_DIRNAME
+                whole = [rel for rel in st.list_transferable(self.state_dir)
+                         if not rel.startswith(PROVISIONAL_DIRNAME + "/")]
+                if snapshot_guard is not None:
+                    # Only the copy needs her held still (e.g. the app's field
+                    # lock); the transfer of the copy that follows does not.
+                    with snapshot_guard():
+                        manifest = st.snapshot_state(self.state_dir, snap, rel_paths=whole, strict=False)
+                else:
+                    manifest = st.snapshot_state(self.state_dir, snap, rel_paths=whole, strict=False)
             if not manifest:
                 return {"ok": False, "error": "nothing to transfer"}
             digest = st.manifest_digest(manifest)

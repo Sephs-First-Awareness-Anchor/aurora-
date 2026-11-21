@@ -325,7 +325,10 @@ class StrategicHorizonLayer:
 
     def _journal(self, assessment: StrategicAssessment) -> None:
         try:
-            path = Path(self._log_path)
+            from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+            path = store_write_path(Path(self._log_path), APPEND)
+            if path is None:
+                return
             with PERSISTENCE_LOCK:
                 _ensure_parent(path)
                 with open(path, "a", encoding="utf-8") as fh:

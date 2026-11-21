@@ -110,6 +110,20 @@ def ensure_runtime(systems: Any, state_dir: Optional[str] = None) -> Tuple[Any, 
 
 
 
+def _with_home_views(systems: Any, heard: str, facets: list, max_entries: int) -> list:
+    """On a surface-only device, home's read of the same crystals for what she
+    is hearing (anticipatory_facets) sits beside her own facets, marked as
+    home's view.  One small cached file read; nothing waits for home."""
+    if systems.get("runtime_profile") != "surface" and not systems.get("_surface_only"):
+        return facets
+    try:
+        from aurora_internal.dual_strata.anticipatory_facets import merge_home_views, valid_views_for
+        views = valid_views_for(systems.get("state_dir") or "aurora_state", heard)
+        return merge_home_views(facets, views, heard, max_entries=max_entries) if views else facets
+    except Exception:
+        return facets
+
+
 def crystal_context_for_turn(systems: Any, heard: str, *, max_entries: int = 6) -> Dict[str, Any]:
     """A bounded read of Aurora's EXISTING crystal facets for cognition and recall.
 
@@ -128,6 +142,7 @@ def crystal_context_for_turn(systems: Any, heard: str, *, max_entries: int = 6) 
         return cached["view"]
     from aurora_internal.crystal_facets import recall_contextual_facets
     facets = recall_contextual_facets(systems, heard, max_entries=max_entries)
+    facets = _with_home_views(systems, heard, facets, max_entries)
     representations = []
     crystal_store = getattr(exchange, "_crystals", None)
     if crystal_store is not None:

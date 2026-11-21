@@ -158,7 +158,7 @@ def _strata_extras(link: str, srv: Mapping[str, Any], now: float) -> Dict[str, A
                          for m in (srv.get("moves") or [])[-5:] if isinstance(m, dict)],
         "first_pairing": {names.get(str(k)) or str(k): {f: v.get(f) for f in ("status", "at", "tail_open")} for k, v in dict(srv.get("first_pairing") or {}).items() if isinstance(v, dict)},
         "shared_inquiry": {"questions": len(questions), "handed_down": sum(1 for q in questions.values() if isinstance(q, dict) and q.get("handed_down"))},
-        "store_gate": None if not isinstance(gate, dict) else {k: gate.get(k) for k in ("at", "surface_only", "stores_declined", "writes_declined")},
+        "store_gate": None if not isinstance(gate, dict) else {k: gate.get(k) for k in ("at", "surface_only", "stores_declined", "writes_declined", "stores_provisional", "writes_provisional", "provisional")},
         "last_growth_install": growth if isinstance(growth, dict) else None,
         "listening": ({k: listen.get(k) for k in ("host", "port", "reachable_from_network")} if isinstance(listen := _read(os.path.join(link, "listen.json")), dict) else None),
     }

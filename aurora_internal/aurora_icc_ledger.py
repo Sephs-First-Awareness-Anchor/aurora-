@@ -299,7 +299,13 @@ class ICCLedger:
 
     def _write_entry(self, entry: ICCEntry) -> bool:
         try:
-            path = Path(self._ledger_path)
+            # On a surface-only device the chain grows in her provisional
+            # view, laid back onto the canonical chain at her next start
+            # while that chain is still the one it grew from.
+            from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+            path = store_write_path(Path(self._ledger_path), APPEND)
+            if path is None:
+                return True
             with PERSISTENCE_LOCK:
                 _ensure_parent(path)
                 with open(path, "a", encoding="utf-8") as fh:
@@ -313,7 +319,10 @@ class ICCLedger:
 
     def _log_violation(self, reason: str, detail: Dict[str, Any]) -> None:
         try:
-            path = Path(self._violations_path)
+            from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+            path = store_write_path(Path(self._violations_path), APPEND)
+            if path is None:
+                return
             with PERSISTENCE_LOCK:
                 _ensure_parent(path)
                 with open(path, "a", encoding="utf-8") as fh:
