@@ -13,7 +13,9 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
+import time
 import sys
 import urllib.error
 import urllib.request
@@ -110,11 +112,15 @@ def run_gui(state_dir: Path):
     from PySide6.QtCore import QTimer, QUrl, Qt
     from PySide6.QtGui import QAction
     from PySide6.QtWidgets import (
-        QApplication, QInputDialog, QMainWindow, QMessageBox, QToolBar,
-        QVBoxLayout, QWidget, QLabel)
+        QApplication, QComboBox, QDialog, QFormLayout, QInputDialog,
+        QMainWindow, QMessageBox, QScrollArea, QToolBar,
+        QVBoxLayout, QWidget, QLabel, QPushButton)
     from PySide6.QtWebEngineWidgets import QWebEngineView
     from aurora_internal.desktop.server import owner_token
     from scripts.aurora_home_setup import home_network_address
+    from aurora_internal.dual_strata import strata_migration as migration
+    from aurora_internal.hub_panels import strata_panel
+    from aurora_internal.desktop.common import read_json
 
     state_dir.mkdir(parents=True, exist_ok=True)
     app = QApplication(sys.argv[:1])
@@ -139,14 +145,212 @@ def run_gui(state_dir: Path):
     open_action.triggered.connect(show_hub)
     toolbar.addAction(open_action)
 
-    reconnect = {"after_stop": False, "started": False, "loaded": False}
+    reconnect = {"after_stop": False, "started": False, "loaded": False,
+                 "backup_pending": False, "backup_in_progress": False}
+    seen_migrations = set()
+    def report_pending():
+        pending = migration.load_pending(state_dir)
+        if pending and pending.get("status") in ("awaiting_choice", "ready"):
+            pair_review.setText("Review first pairing •")
+            mid = str(pending.get("migration_id") or "")
+            if mid and mid not in seen_migrations:
+                seen_migrations.add(mid)
+                QMessageBox.information(window, "Aurora's first pairing",
+                    "A phone has sent its existing history to the desktop. "
+                    "Review each store before Aurora installs anything. "
+                    "Select 'Review first pairing' in the toolbar.")
+        else:
+            pair_review.setText("Review first pairing")
+
+    def restart_after_save():
+        if _probe(state_dir) is None:
+            reconnect["after_stop"] = False
+            reconnect["started"] = False
+            reconnect["loaded"] = False
+        else:
+            _stop_resident(state_dir)
+            reconnect["after_stop"] = True
+            reconnect["started"] = True
+
+    def first_pairing():
+        pending = migration.load_pending(state_dir)
+        if not pending:
+            QMessageBox.information(window, "First pairing",
+                "No phone migration is waiting. Use 'Pair phone' first, "
+                "then reopen this screen once the phone uploads its history.")
+            return
+        if pending.get("status") == "applied":
+            QMessageBox.information(window, "First pairing", "History was already migrated and verified.")
+            return
+        if pending.get("status") == "failed":
+            QMessageBox.warning(window, "First pairing", str(pending.get("error") or "Migration failed"))
+            return
+        dialog = QDialog(window)
+        dialog.setWindowTitle("Review Aurora's first pairing")
+        dialog.resize(810, 580)
+        layout = QVBoxLayout(dialog)
+        summary = QLabel(
+            "Review the staged phone history. Histories are unioned, present state travels "
+            "with her Surface, and conflicting developmental stores require your explicit "
+            "selection. A suggestion is not an automatic decision.")
+        summary.setWordWrap(True)
+        layout.addWidget(summary)
+        report = pending.get("report") or {}
+        counts = report.get("counts") or {}
+        layout.addWidget(QLabel("Changes: " + ", ".join(f"{k}: {v}" for k, v in counts.items())))
+        scroll = QScrollArea(dialog)
+        scroll.setWidgetResizable(True)
+        content = QWidget()
+        form = QFormLayout(content)
+        chosen = dict(pending.get("choices") or {})
+        decisions = {}
+        for rel in report.get("choices_needed") or []:
+            details = (report.get("stores") or {}).get(rel) or {}
+            combo = QComboBox(dialog)
+            suggestion = details.get("suggested", "phone")
+            combo.addItem("Choose a side (suggested: " + suggestion + ")", "")
+            combo.addItem("Use phone's store", "phone")
+            combo.addItem("Keep desktop's store", "home")
+            found = combo.findData(chosen.get(rel, ""))
+            if found > 0:
+                combo.setCurrentIndex(found)
+            phone = details.get("phone") or {}
+            home = details.get("home") or {}
+            label = QLabel(
+                rel + "\nPhone: " + str(phone.get("records", 0)) +
+                " records · Desktop: " + str(home.get("records", 0)) + " records")
+            label.setWordWrap(True)
+            form.addRow(label, combo)
+            decisions[rel] = combo
+        if not decisions:
+            form.addRow(QLabel(
+                "No conflicts require manual selection. The staged change still needs your approval."))
+        scroll.setWidget(content)
+        layout.addWidget(scroll)
+        apply_button = QPushButton("Save choices and restart to install verified state", dialog)
+        layout.addWidget(apply_button)
+
+        def apply():
+            selected = {name: combo.currentData() for name, combo in decisions.items()}
+            missing = [name for name, side in selected.items() if not side]
+            if missing:
+                QMessageBox.warning(dialog, "Choose a side", "Choose phone or desktop for all " +
+                    str(len(missing)) + " conflicting stores before installing.")
+                return
+            confirm = QMessageBox.question(
+                dialog, "Apply Aurora's first pairing?",
+                "This will gracefully restart Aurora's resident, preserve migration archives, "
+                "and install the verified state before opening her stores. "
+                "Keep your earlier phone and desktop checkpoints until you confirm continuity.")
+            if confirm != QMessageBox.StandardButton.Yes:
+                return
+            if selected:
+                result = migration.choose(state_dir, selected)
+                if not result.get("ok") or result.get("missing"):
+                    QMessageBox.warning(dialog, "Migration choices", str(result))
+                    return
+            elif pending.get("status") != "ready":
+                QMessageBox.warning(dialog, "Migration not ready", "The snapshot is still being staged.")
+                return
+            try:
+                restart_after_save()
+            except Exception as exc:
+                QMessageBox.warning(dialog, "Resident restart", str(exc))
+                return
+            dialog.accept()
+            status.setText("Applying first pairing on Aurora's next cold start...")
+
+        apply_button.clicked.connect(apply)
+        dialog.exec()
+
+    review_action = QAction("Review first pairing", window)
+    review_action.triggered.connect(first_pairing)
+    toolbar.addAction(review_action)
+    pair_review = review_action
+
+    def connection_info():
+        pending = migration.load_pending(state_dir) or {}
+        panel = strata_panel(str(state_dir))
+        data = {
+            "resident": "online" if _probe(state_dir) is not None else "not responding",
+            "paired": panel.get("paired"),
+            "listening": panel.get("listening"),
+            "holder": panel.get("holder"),
+            "devices": panel.get("devices"),
+            "move": panel.get("move"),
+            "first_pairing": {k: pending.get(k) for k in
+                              ("status", "migration_id", "error") if k in pending},
+            "downlink_enabled": panel.get("downlink_enabled"),
+        }
+        QMessageBox.information(window, "Aurora: devices and connection",
+            json.dumps(data, indent=2, default=str)[:7000] +
+            "\n\nUse Presence → Move Surface in Aurora's Hub to move her.")
+
+    connection_action = QAction("Connection status", window)
+    connection_action.triggered.connect(connection_info)
+    toolbar.addAction(connection_action)
+
+    def backup_state():
+        if reconnect["backup_in_progress"] or reconnect["backup_pending"]:
+            return
+        confirm = QMessageBox.question(window, "Back up Aurora's history",
+            "Aurora will gracefully stop, make a complete cold backup of her desktop "
+            "state, and then restart. Do not close her app during the backup.")
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        reconnect["backup_pending"] = True
+        try:
+            if _probe(state_dir) is not None:
+                _stop_resident(state_dir)
+                reconnect["after_stop"] = True
+                reconnect["started"] = True
+        except Exception as exc:
+            reconnect["backup_pending"] = False
+            QMessageBox.warning(window, "Backup", str(exc))
+
+    backup_action = QAction("Back up history", window)
+    backup_action.triggered.connect(backup_state)
+    toolbar.addAction(backup_action)
+
+    def cold_backup():
+        from datetime import datetime
+        import threading
+        reconnect["backup_pending"] = False
+        reconnect["backup_in_progress"] = True
+        status.setText("Backing up Aurora's saved history...")
+        target = state_dir.parent / ("backup-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+        def copy():
+            from aurora_internal.process_lock import ProcessLock
+            try:
+                with ProcessLock(state_dir / "desktop_resident.lock", blocking=False):
+                    shutil.copytree(state_dir, target, ignore=shutil.ignore_patterns("desktop_resident.lock"))
+                result = f"Verified cold-state copy completed: {target}"
+            except Exception as exc:
+                result = f"Backup failed: {type(exc).__name__}: {exc}"
+            # Worker passes only plain data through the Qt event polling loop.
+            reconnect["backup_result"] = result
+            reconnect["backup_in_progress"] = False
+            reconnect["started"] = False
+        threading.Thread(target=copy, name="aurora-cold-backup", daemon=False).start()
+
     def ready_tick():
+        if reconnect.get("backup_result"):
+            message = reconnect.pop("backup_result")
+            QMessageBox.information(window, "Aurora backup", message)
+        if reconnect["backup_in_progress"]:
+            status.setText("Backing up Aurora's saved history...")
+            return
+        if reconnect["backup_pending"] and _probe(state_dir) is None and _resident_free(state_dir):
+            reconnect["after_stop"] = False
+            cold_backup()
+            return
         if _probe(state_dir) is not None:
             status.setText("Aurora resident connected")
             reconnect["started"] = True
             if not reconnect["loaded"]:
                 reconnect["loaded"] = True
                 show_hub()
+            report_pending()
             return
         reconnect["loaded"] = False
         if reconnect["after_stop"]:
@@ -203,7 +407,7 @@ def run_gui(state_dir: Path):
     pair_action.triggered.connect(pair_phone)
     toolbar.addAction(pair_action)
     timer = QTimer(window)
-    timer.setInterval(1200)
+    timer.setInterval(1500)
     timer.timeout.connect(ready_tick)
     timer.start()
     window.show()
