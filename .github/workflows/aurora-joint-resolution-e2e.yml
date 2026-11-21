@@ -1,0 +1,77 @@
+name: Aurora live joint-resolution A/B trial (disposable state)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/aurora_joint_resolution_e2e_probe.py'
+      - '.github/workflows/aurora-joint-resolution-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-ab:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    env:
+      AURORA_SKIP_DEP_INSTALL: '1'
+      AURORA_SKIP_HARDWARE_IMPORTS: '1'
+      PYTHONHASHSEED: '0'
+      PYTHONPATH: '.:flutter_app/android/app/src/main/python'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Aurora core runtime requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-core.txt psutil
+      - name: Baseline Aurora full turns (copy of state, unchanged resolution)
+        run: |
+          mkdir -p exp/joint_live
+          timeout 480 python scripts/aurora_joint_resolution_e2e_probe.py --arm baseline --out exp/joint_live/baseline.json
+      - name: Joint Aurora full turns (copy of state, experimental temporary projection)
+        if: always()
+        run: |
+          mkdir -p exp/joint_live
+          timeout 480 python scripts/aurora_joint_resolution_e2e_probe.py --arm joint --out exp/joint_live/joint.json
+      - name: Compare delivered responses and native evidence
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('exp/joint_live')
+          a=root/'baseline.json'
+          b=root/'joint.json'
+          if not a.exists() or not b.exists():
+              print('INCOMPLETE: at least one live run did not produce a result')
+              raise SystemExit(1)
+          base=json.loads(a.read_text())
+          joint=json.loads(b.read_text())
+          bt=base.get('turns',[])
+          jt=joint.get('turns',[])
+          pairs=list(zip(bt,jt))
+          same=sum(x.get('reply')==y.get('reply') for x,y in pairs)
+          engaged=joint.get('instrumentation',{})
+          conclusion=('NOT EXECUTED' if base.get('status')!='ok' or joint.get('status')!='ok'
+                  else 'NO NATURAL JOINT CANDIDATE' if not engaged.get('joint_candidates_built')
+                  else 'JOINT PROPOSALS NOT CONSUMED' if not engaged.get('joint_candidates_staged')
+                  else 'JOINT CONSUMED, BENEFIT NOT YET PROVEN')
+          result={'baseline_status':base.get('status'),'joint_status':joint.get('status'),
+                  'turns_compared':len(pairs),'identical_delivered_responses':same,
+                  'different_delivered_responses':len(pairs)-same,
+                  'native_instrumentation':engaged,'conclusion':conclusion,
+                  'interpretation':'Differences, if any, require independent consequence/quality adjudication; the script never asserts better understanding from a text difference.'}
+          (root/'comparison.json').write_text(json.dumps(result,indent=2))
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Upload both observed turn traces and comparison
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aurora-joint-resolution-live-ab
+          path: exp/joint_live/*.json
+          retention-days: 14
