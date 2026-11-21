@@ -67,6 +67,20 @@ def content_key(*parts: Any) -> str:
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
 
 
+# Directive V2: the parts of an occasion's context that describe the SITUATION it happened in (what world, which
+# domain, what it was about, the tone, a stated condition).  Identity and clock fields (session, turn, tick, time) say
+# WHICH occasion it was, not under what circumstances, so they never split a condition.
+CONDITION_KEYS = ("world", "domain", "topic", "tone", "condition", "when")
+CONDITIONS_KEPT = 4
+
+
+def condition_of(context: Any) -> Dict[str, Any]:
+    """The situational part of an occasion's context ({} when it recorded none)."""
+    if not isinstance(context, Mapping):
+        return {}
+    return {k: context[k] for k in CONDITION_KEYS if context.get(k) not in (None, "", [], {})}
+
+
 def _clamp(v: float) -> float:
     return max(0.0, min(1.0, float(v)))
 
@@ -125,8 +139,47 @@ class FacetBook:
                 out[kind] = sorted(rows, key=lambda r: r["key"])
         return out
 
-    def facets_for(self, concept: str, top: Optional[int] = None, include_uncounted: bool = False) -> Dict[str, List[Dict[str, Any]]]:
-        """kind -> entries, strongest first.  `top` only limits how many are returned per kind."""
+    def contradicted(self, concept: str, kind: str, key: str) -> bool:
+        """Does any counted occasion stand AGAINST this entry?"""
+        entry = self._e.get(str(concept), {}).get(kind, {}).get(str(key))
+        return bool(entry) and any(e["basis"] in COUNTED_BASES and e["polarity"] < 0 for e in entry["evidence"].values())
+
+    def conditions_of(self, concept: str, kind: str, key: str, limit: int = CONDITIONS_KEPT) -> List[Dict[str, Any]]:
+        """Directive V2: the situations an entry was met in, kept apart.  Its counted occasions grouped by the
+        situational part of their context (`condition_of`); each group gets its own degree by the same rule as the
+        entry, so evidence against it in one situation lowers that situation only.  Each group keeps references to
+        its first and latest occasion.  Occasions with no situational context form the group whose `when` is {}.
+        Most-supported first, at most `limit`."""
+        entry = self._e.get(str(concept), {}).get(kind, {}).get(str(key))
+        if not entry:
+            return []
+        groups: Dict[str, Dict[str, Any]] = {}
+        for ref in sorted(entry["evidence"]):
+            e = entry["evidence"][ref]
+            if e["basis"] not in COUNTED_BASES:
+                continue
+            when = condition_of(e.get("context"))
+            sig = json.dumps(when, sort_keys=True, default=str)
+            g = groups.setdefault(sig, {"when": when, "for": 0, "against": 0, "miss_for": 1.0, "miss_against": 1.0, "refs": []})
+            w = 1.0 - (1.0 - e["strength"] * e["confidence"]) ** e["weight"]
+            if e["polarity"] > 0:
+                g["for"] += 1
+                g["miss_for"] *= 1.0 - w
+            else:
+                g["against"] += 1
+                g["miss_against"] *= 1.0 - w
+            g["refs"].append(ref)
+        out = []
+        for g in groups.values():
+            out.append({"when": g["when"], "degree": round((1.0 - g["miss_for"]) * g["miss_against"], 6), "for": g["for"],
+                        "against": g["against"], "first": g["refs"][0], "latest": g["refs"][-1]})
+        out.sort(key=lambda r: (-r["degree"], -(r["for"] + r["against"]), json.dumps(r["when"], sort_keys=True, default=str)))
+        return out[:limit]
+
+    def facets_for(self, concept: str, top: Optional[int] = None, include_uncounted: bool = False,
+                   with_conditions: bool = False) -> Dict[str, List[Dict[str, Any]]]:
+        """kind -> entries, strongest first.  `top` only limits how many are returned per kind.  `with_conditions`
+        adds each entry's situations (`conditions_of`)."""
         out: Dict[str, List[Dict[str, Any]]] = {}
         for kind, entries in self._e.get(str(concept), {}).items():
             rows = []
@@ -134,8 +187,11 @@ class FacetBook:
                 d = self.degree(concept, kind, key)
                 if d > 0.0 or include_uncounted:
                     ev = entry["evidence"]
-                    rows.append({"key": key, "content": entry["content"], "degree": d, "contexts": len(ev),
-                                 "uncounted": sum(1 for e in ev.values() if e["basis"] not in COUNTED_BASES)})
+                    row = {"key": key, "content": entry["content"], "degree": d, "contexts": len(ev),
+                           "uncounted": sum(1 for e in ev.values() if e["basis"] not in COUNTED_BASES)}
+                    if with_conditions:
+                        row["conditions"] = self.conditions_of(concept, kind, key)
+                    rows.append(row)
             rows.sort(key=lambda r: (-r["degree"], r["key"]))
             if rows:
                 out[kind] = rows[:top] if top else rows
@@ -313,39 +369,68 @@ def place_cycle(book: FacetBook, cycle: Mapping[str, Any], *, occurrence_class: 
 
 # ---- the one writer to live crystals -----------------------------------------------------------------------------------------------------------
 
+def _projected(r: Mapping[str, Any]) -> Dict[str, Any]:
+    return {"key": r["key"], "content": r["content"], "degree": round(r["degree"], 6), "contexts": r["contexts"],
+            "conditions": list(r.get("conditions") or [])}
+
+
 def apply_to_crystals(book: FacetBook, concept_index: Mapping[str, str], crystals: Mapping[str, Any], per_kind: int = 8, dry_run: bool = True) -> Dict[str, Any]:
-    """Write each concept's counted entries into its existing crystal as one facet per kind (role `fk:<kind>`), strongest per_kind each.  Only counted
-    entries are written; a facet that exists is merged into (the stronger confidence wins), never replaced; no crystal is created.  `dry_run`
-    (default) changes nothing and reports what would change."""
-    touched = facets = entries = 0
+    """Write each concept's counted entries into its existing crystal as one facet per kind (role `fk:<kind>`), strongest per_kind each, each entry with
+    the situations it was met in (`FacetBook.conditions_of`).  Only counted entries are written; no crystal is created.  `dry_run` (default) changes
+    nothing and reports what would change.
+
+    The facet is a VIEW of the book.  An entry the book holds is refreshed: the stronger degree is kept as before (a store that keeps only its latest
+    records must not make a crystal forget what it earned), EXCEPT when counted evidence now stands against the entry -- then the degree is what
+    the evidence says now, even when that is lower (directive V2: a superseded high degree is never kept after a contradiction; the evidence itself
+    stays in its stores).  Situations are always refreshed, so a contradiction met in one situation lowers that situation and leaves the others
+    standing.  An entry already in the facet whose evidence the book no longer holds at all is kept as it was and marked `source_present: False`;
+    it no longer lends the facet confidence.  The facet's confidence is its strongest entry the book still holds.  Running the pass again over the
+    same stores gives the same facet (idempotent)."""
+    touched = facets = entries = lowered = 0
     for concept, cid in concept_index.items():
         crystal = crystals.get(cid)
         if crystal is None:
             continue
-        kinds = book.facets_for(concept, top=per_kind)
-        if not kinds:
+        everything = book.facets_for(concept, with_conditions=True)
+        if not everything:
             continue
         touched += 1
-        for kind, rows in kinds.items():
+        for kind, all_rows in everything.items():
+            rows = all_rows[:per_kind]
             facets += 1
             entries += len(rows)
-            if dry_run:
-                continue
             role = f"fk:{kind}"
-            content = {"entries": [{"key": r["key"], "content": r["content"], "degree": round(r["degree"], 6), "contexts": r["contexts"]} for r in rows]}
-            conf = max(r["degree"] for r in rows)
             existing = next((f for f in crystal.facets.values() if f.role == role), None)
+            fresh = {r["key"]: _projected(r) for r in all_rows}
+            if dry_run:
+                if existing is not None:
+                    lowered += sum(1 for r in (existing.content or {}).get("entries", [])
+                                   if r.get("key") in fresh and book.contradicted(concept, kind, r["key"])
+                                   and fresh[r["key"]]["degree"] < float(r.get("degree", 0.0) or 0.0))
+                continue
+            content = {"entries": [fresh[r["key"]] for r in rows]}
             if existing is None:
-                crystal.add_facet(role, content, confidence=conf)
-            else:
-                merged = {r["key"]: r for r in (existing.content or {}).get("entries", [])}
-                for r in content["entries"]:
-                    old = merged.get(r["key"])
-                    if old is None or r["degree"] >= old.get("degree", 0.0):
-                        merged[r["key"]] = r
-                existing.content = {"entries": sorted(merged.values(), key=lambda r: (-r["degree"], r["key"]))}
-                existing.confidence = max(float(existing.confidence), conf)
-    return {"crystals_touched": touched, "facets": facets, "entries": entries, "dry_run": bool(dry_run)}
+                crystal.add_facet(role, content, confidence=max(r["degree"] for r in rows))
+                continue
+            merged = {r["key"]: dict(r) for r in content["entries"]}
+            for r in (existing.content or {}).get("entries", []):
+                k = r.get("key")
+                if k not in merged:
+                    if k in fresh:                   # still evidenced but no longer among the strongest: kept, refreshed
+                        merged[k] = dict(fresh[k])
+                    else:                            # the book holds nothing for it now: kept as it was, said so
+                        merged[k] = dict(r, source_present=False)
+                        continue
+                if not book.contradicted(concept, kind, k):
+                    merged[k]["degree"] = max(float(merged[k]["degree"]), float(r.get("degree", 0.0) or 0.0))
+            for k, r in merged.items():
+                old = next((o for o in (existing.content or {}).get("entries", []) if o.get("key") == k), None)
+                if old is not None and r.get("source_present", True) and r["degree"] < float(old.get("degree", 0.0) or 0.0):
+                    lowered += 1
+            existing.content = {"entries": sorted(merged.values(), key=lambda r: (-float(r.get("degree", 0.0) or 0.0), str(r.get("key"))))}
+            live = [float(r["degree"]) for r in merged.values() if r.get("source_present", True)]
+            existing.confidence = max(live) if live else 0.0
+    return {"crystals_touched": touched, "facets": facets, "entries": entries, "lowered": lowered, "dry_run": bool(dry_run)}
 
 
 HELD_KINDS = ("lexicon", "definition", "emotion")

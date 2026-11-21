@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import re
 from collections import deque
-from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 # The roles her web already gives words (OETS node.role): a word told it is one is one.
 ROLE_NAMES = frozenset({"noun", "verb", "adjective", "adverb", "preposition", "pronoun", "determiner"})
@@ -110,7 +110,7 @@ def _order_verdicts_scan(web: Any) -> Dict[Tuple[str, str], str]:
     """{(earlier, later): "held" | "denied" | "contested"} for every order she was told, including
     the ones told NOT to be so (which are not edges, but are not nothing)."""
     out: Dict[Tuple[str, str], str] = {}
-    rank = {"held": 3, "contested": 2, "denied": 1}
+    rank = {"held": 3, "contested": 2, "conditional": 2, "denied": 1}     # conditional: held one way only under some conditions
     for rel in list(getattr(web, "relations", {}).values()):
         a = getattr(rel, "assertion", None)
         if not a:
@@ -395,10 +395,20 @@ def _fact_shape(toks: Sequence[str]) -> Dict[str, str]:
     subject, verb, rest = toks[1], toks[2], toks[3:]
     if subject in closed or verb in ("not", "n't") or subject in ("you", "i", "we", "it", "he", "she", "they"):
         return {}
+    # Directive V2: "does devlin like rain WHEN it is cold?" -- the condition asked under is not the object
+    cond: List[str] = []
+    lead = next((i for i, t in enumerate(rest) if t in _CONDITION_LEADS), -1)
+    if lead > 0:
+        rest, cond = rest[:lead], [t for t in rest[lead + 1:]]
     obj = _tail_word(rest)
     if not obj or obj in closed or obj == subject:
         return {}
-    return {"ask": "fact", "subject": subject, "verb": verb, "object": obj}
+    shape = {"ask": "fact", "subject": subject, "verb": verb, "object": obj}
+    if toks[0] == "did":
+        shape["tense"] = "past"            # asked how it was: what she held then is part of the answer's ground
+    if cond:
+        shape["when"] = " ".join(cond)
+    return shape
 
 
 def _closed_words() -> frozenset:
@@ -640,6 +650,45 @@ def _derive_kind(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
     return [_kind_item(thing, kind, reach[kind])] if kind in reach else []
 
 
+_CONDITION_LEADS = frozenset({"when", "whenever", "if"})
+
+
+def _condition_matching(st_conditions: Sequence[Mapping[str, Any]], asked: str) -> Optional[Mapping[str, Any]]:
+    """The recorded condition the question's condition names: the one sharing the most content words (its object
+    word must be among them, so "when it is cold" never picks "when it is warm")."""
+    from aurora_internal.aurora_propositional_understanding import condition_words
+    words = {w for w in re.findall(r"[a-z']+", str(asked or "").lower())}
+    best, score = None, 0
+    for c in st_conditions:
+        if not c.get("key"):
+            continue
+        obj = str(dict(c.get("when") or {}).get("obj") or "").lower()
+        mine = set(re.findall(r"[a-z']+", condition_words(c.get("when")).lower()))
+        neg_q, neg_c = bool(words & {"not", "isn't", "isnt", "aren't", "arent"}), bool(dict(c.get("when") or {}).get("negated"))
+        if obj and obj in words and neg_q == neg_c and len(mine & words) > score:
+            best, score = c, len(mine & words)
+    return best
+
+
+def _recalled_belief_item(rel: Any, lemma: str, subject: str, obj: str, rec: Optional[Mapping[str, Any]]) -> List[Dict[str, Any]]:
+    """Directive V2: when what she holds now came from a revision of what she held before, the earlier belief is
+    offered beside the answer -- as what she held THEN, from the held-after recorded at that time (never
+    reconstructed).  Not asked for, on the temporal axis: her own clause budget decides whether it is voiced."""
+    from aurora_internal.aurora_propositional_understanding import _voice_predicate
+    if not rec or not rec.get("revised"):
+        return []
+    then_v = str((rec.get("before_revision") or {}).get("verdict") or "")
+    if then_v not in ("held", "denied"):
+        return []                       # what she held before was not a held belief (or was not captured): nothing to recall as one
+    plain = _voice_predicate(rel, speaker_now="", self_now="", predicate=lemma,
+                             p={"n": 1, "denied": 1 if then_v == "denied" else 0, "surface": lemma, "modal": {}})
+    return [{"source": subject, "kind": "related_to", "target": obj, "strength": 1.1, "axis": "T",
+             "learned_from": "recollection", "asked": False, "derived": ["recalled"], "basis": "recalled",
+             "recollection": rec,
+             "lex": {"agent": "I", "action": "thought", "object": f"that {plain['agent']} {plain['action']} {plain['object']}",
+                     "predicate": "think", "n": "1", "denied": "False"}}]
+
+
 def _derive_fact(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
     """"Does devlin like rain?" from what she was told along devlin -> rain: yes (as it was said), no (it was
     denied), not sure (told and denied), and "I do not know" when she holds things about devlin but not that.
@@ -675,13 +724,35 @@ def _derive_fact(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
                              "predicate": "suppose", "n": "1", "denied": "False"}}]
         item_base = {"source": subject, "kind": "related_to", "target": obj, "strength": 1.5, "axis": "X",
                      "learned_from": "inference", "asked": True, "derived": ["told"]}
+        # Directive V2: what she held then and holds now about this, read from the record (never written by asking).
+        from aurora_internal.aurora_experiential_recall import compact, recollect_predicate
+        rec = recollect_predicate(rel, lemma)
+        if rec and (rec.get("revised") or len(rec["now"]["conditions"]) > 1):
+            item_base["recollection"] = compact(rec)
+        # asked how it WAS: what she held before her understanding changed is offered beside the answer
+        recalled = _recalled_belief_item(rel, lemma, subject, obj, rec) if shape.get("tense") == "past" else []
+        conds = list(st.get("conditions") or [])
+        if shape.get("when") or st["verdict"] == "conditional":
+            # Directive V2: what she holds depends on the condition.  Asked under a condition she holds something
+            # about, she answers under that one; asked under none (or one she was never told about), she gives
+            # each condition she does know, so nothing is made universal and no situation is invented.
+            asked_c = _condition_matching(conds, shape.get("when", "")) if shape.get("when") else None
+            picks = [asked_c] if asked_c is not None else [c for c in conds if c.get("key")][:3]
+            items = []
+            for c in picks:
+                lex = lexicalize_assertion(rel, speaker_now="", self_now="", predicate=lemma, condition=c["key"])
+                if lex:
+                    items.append(dict(item_base, lex=lex, derived=["told", "conditional"], condition=c["key"],
+                                      strength=1.5 if asked_c is not None else 1.4))
+            if items:
+                return items + recalled
         if st["verdict"] == "contested":
             return [dict(item_base, derived=["contradicted"], basis="contested",
                          lex={"agent": "I", "action": "am not sure", "object": f"if {subject} {lemma if is_plural(subject) else lemma + 's'} {obj}",
                               "predicate": "know", "n": "1", "denied": "False"})]
         lex = lexicalize_assertion(rel, speaker_now="", self_now="", predicate=lemma)
         if lex:
-            return [dict(item_base, lex=lex)]
+            return [dict(item_base, lex=lex)] + recalled
     if not about_subject:
         return []
     return [{"source": "aurora", "kind": "related_to", "target": subject, "strength": 1.2, "axis": "X",
