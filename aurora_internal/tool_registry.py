@@ -1674,10 +1674,11 @@ def _mobile_music_identify(
     import base64
     import tempfile
 
-    if not _is_termux() and not audio_file:
+    on_app = _is_chaquopy_android()
+    if not on_app and not _is_termux() and not audio_file:
         return ToolResult(
             "mobile_music_identify", "", False,
-            "not on Termux and no audio_file provided"
+            "not running on Android/Termux and no audio_file provided"
         )
 
     api_key = os.environ.get(_AUDD_API_KEY_ENV, "")
@@ -1686,6 +1687,19 @@ def _mobile_music_identify(
     # ── Acquire audio ────────────────────────────────────────────────────────
     tmp_audio: Optional[str] = None
     audio_path = audio_file or ""
+
+    if not audio_path and on_app:
+        # In the app: the last stretch of what she hears (or a short
+        # recording of the app's own when her hearing is off), as a WAV
+        # (PhoneHands.recordClip).
+        try:
+            clip = _phone_hands("recordClip", int(duration_s))
+        except Exception as exc:
+            _aurora_fault(locals(), exc, '_mobile_music_identify', 0)
+            return ToolResult("mobile_music_identify", "", False, f"phone hands unavailable: {exc}")
+        if not clip.get("ok"):
+            return ToolResult("mobile_music_identify", "", False, str(clip.get("error") or "record failed"))
+        audio_path = tmp_audio = str((clip.get("data") or {}).get("path") or "")
 
     if not audio_path:
         import tempfile as _tf
@@ -1755,7 +1769,7 @@ def _mobile_music_identify(
         if not ap.exists() or ap.stat().st_size < 1024:
             return ToolResult(
                 "mobile_music_identify", "", False,
-                "audio capture too small or missing — check mic permission in Termux:API"
+                "audio capture too small or missing — check the microphone permission"
             )
 
         # ── Send to AudD ─────────────────────────────────────────────────────

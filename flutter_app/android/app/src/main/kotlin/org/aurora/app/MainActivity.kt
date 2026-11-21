@@ -1007,6 +1007,10 @@ class MainActivity : FlutterActivity() {
                 }
                 if (read <= 0) continue
 
+                // Every read, unbroken, for tools that need a stretch of
+                // sound (song recognition, PhoneHands.recordClip).
+                HearingBuffer.feed(chunk, read, sampleRate)
+
                 // Her hearing on the presence line: the level of what she
                 // hears, nothing more.
                 var energy = 0.0

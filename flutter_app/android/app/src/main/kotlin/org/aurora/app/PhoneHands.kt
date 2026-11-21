@@ -31,6 +31,9 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.location.Location
 import android.location.LocationManager
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
@@ -49,6 +52,10 @@ import android.telephony.SmsManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -420,5 +427,125 @@ object PhoneHands {
         } catch (e: Exception) {
             fail("battery_failed:" + (e.message ?: e.javaClass.simpleName))
         }
+    }
+
+    // ── Listening for a song ────────────────────────────────────────────────
+    //
+    // Song recognition needs a few seconds of unbroken sound.  When her
+    // hearing is already on (MainActivity's ambient capture feeds
+    // HearingBuffer every read), the clip is the last ``seconds`` of what she
+    // heard after waiting that long, so no second recorder competes for the
+    // microphone.  When it is off, a short recording of its own is made.
+    // Either way the clip is a 16-bit mono WAV in the app's cache; the caller
+    // deletes it.
+    @JvmStatic
+    fun recordClip(ctx: Context, seconds: Int): String {
+        if (!granted(ctx, Manifest.permission.RECORD_AUDIO)) return needs(Manifest.permission.RECORD_AUDIO)
+        val secs = seconds.coerceIn(3, 30)
+        return try {
+            var source = "her_hearing"
+            var rate = HearingBuffer.sampleRate
+            var pcm: ShortArray? = null
+            if (HearingBuffer.isFed()) {
+                Thread.sleep(secs * 1000L)
+                pcm = HearingBuffer.last(secs)
+            }
+            if (pcm == null) {
+                source = "own_recording"
+                rate = 16_000
+                pcm = recordOwn(rate, secs) ?: return fail("microphone_unavailable")
+            }
+            val file = File(ctx.cacheDir, "aurora_song_${System.currentTimeMillis()}.wav")
+            writeWav(file, pcm, rate)
+            ok(JSONObject().put("path", file.absolutePath).put("seconds", pcm.size.toDouble() / rate)
+                .put("source", source))
+        } catch (e: Exception) {
+            fail("record_failed:" + (e.message ?: e.javaClass.simpleName))
+        }
+    }
+
+    @SuppressLint("MissingPermission")  // checked by recordClip
+    private fun recordOwn(rate: Int, secs: Int): ShortArray? {
+        val min = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        if (min <= 0) return null
+        val rec = try {
+            AudioRecord(MediaRecorder.AudioSource.MIC, rate, AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT, min * 2)
+        } catch (e: Exception) { return null }
+        if (rec.state != AudioRecord.STATE_INITIALIZED) { rec.release(); return null }
+        val out = ShortArray(rate * secs)
+        var at = 0
+        try {
+            rec.startRecording()
+            val chunk = ShortArray(min)
+            while (at < out.size) {
+                val n = rec.read(chunk, 0, minOf(chunk.size, out.size - at))
+                if (n <= 0) break
+                System.arraycopy(chunk, 0, out, at, n)
+                at += n
+            }
+        } finally {
+            try { rec.stop() } catch (_: Exception) {}
+            rec.release()
+        }
+        return if (at > rate) out.copyOf(at) else null
+    }
+
+    private fun writeWav(file: File, pcm: ShortArray, rate: Int) {
+        val data = pcm.size * 2
+        val bb = ByteBuffer.allocate(44 + data).order(ByteOrder.LITTLE_ENDIAN)
+        bb.put("RIFF".toByteArray()).putInt(36 + data).put("WAVE".toByteArray())
+        bb.put("fmt ".toByteArray()).putInt(16).putShort(1).putShort(1).putInt(rate)
+            .putInt(rate * 2).putShort(2).putShort(16)
+        bb.put("data".toByteArray()).putInt(data)
+        for (v in pcm) bb.putShort(v)
+        FileOutputStream(file).use { it.write(bb.array()) }
+    }
+}
+
+// What she has heard in the last little while, unbroken, for a tool that
+// needs a stretch of sound (song recognition).  MainActivity's ambient
+// capture feeds every read here; nothing here listens on its own.
+object HearingBuffer {
+    private const val KEEP_SECONDS = 32
+    private val lock = Any()
+    @Volatile var sampleRate: Int = 16_000
+        private set
+    private var ring = ShortArray(16_000 * KEEP_SECONDS)
+    private var write = 0
+    private var filled = 0
+    @Volatile private var lastFedMs = 0L
+
+    @JvmStatic
+    fun feed(chunk: ShortArray, count: Int, rate: Int) {
+        if (count <= 0) return
+        synchronized(lock) {
+            if (rate != sampleRate || ring.size != rate * KEEP_SECONDS) {
+                sampleRate = rate
+                ring = ShortArray(rate * KEEP_SECONDS)
+                write = 0
+                filled = 0
+            }
+            for (i in 0 until count) {
+                ring[write] = chunk[i]
+                write = (write + 1) % ring.size
+            }
+            filled = minOf(ring.size, filled + count)
+            lastFedMs = System.currentTimeMillis()
+        }
+    }
+
+    fun isFed(): Boolean = System.currentTimeMillis() - lastFedMs < 1_500L
+
+    fun last(seconds: Int): ShortArray? = synchronized(lock) {
+        val want = minOf(filled, sampleRate * seconds)
+        if (want < sampleRate || System.currentTimeMillis() - lastFedMs > 1_500L) return@synchronized null
+        val out = ShortArray(want)
+        var start = (write - want + ring.size) % ring.size
+        for (i in 0 until want) {
+            out[i] = ring[start]
+            start = (start + 1) % ring.size
+        }
+        out
     }
 }
