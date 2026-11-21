@@ -46,7 +46,7 @@ import logging
 import random
 import threading
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 log = logging.getLogger("aurora.quantum_dream")
 
@@ -610,6 +610,7 @@ _dream_stop   = threading.Event()
 def start_dream_substrate(
     systems: Dict[str, Any],
     cycle_interval_s: float = 600.0,
+    may_run: Optional[Callable[[], bool]] = None,
 ) -> None:
     """
     Start the quantum dream substrate as a background daemon thread.
@@ -617,6 +618,9 @@ def start_dream_substrate(
     cycle_interval_s: seconds between full dream cycles (default 10 min).
     Dreams run only during curiosity-engine idle periods — the first sleep
     is 60 s to let the curiosity engine get established first.
+    may_run, when given and False, holds the next cycle and asks again a
+    minute later (the phone's growth-while-charging pacing); the cycle is
+    spaced, never skipped.  None keeps the old behaviour.
     """
     global _substrate, _dream_thread, _dream_stop
 
@@ -631,6 +635,15 @@ def start_dream_substrate(
         # Initial delay: let boot settle and curiosity engine get its first ticks
         time.sleep(60.0)
         while not _dream_stop.is_set():
+            if may_run is not None:
+                try:
+                    allowed = bool(may_run())
+                except Exception as exc:
+                    log.warning("quantum_dream: may_run failed: %s", exc)
+                    allowed = True
+                if not allowed:
+                    _dream_stop.wait(60.0)
+                    continue
             try:
                 _substrate.run_dream_cycle(systems)
             except Exception as exc:

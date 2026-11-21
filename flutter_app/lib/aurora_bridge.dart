@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Dart wrapper around the Kotlin MethodChannel / EventChannel that talks to
@@ -271,7 +272,65 @@ class AuroraBridge {
     final json = await _channel.invokeMethod<String>('getFieldStatus') ?? '{}';
     try {
       final decoded = jsonDecode(json);
-      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      if (decoded is Map) {
+        final status = Map<String, dynamic>.from(decoded);
+        fieldBusy.value = status['held'] == true;
+        return status;
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  /// Whether her field was held at the last field read.  Space and Self
+  /// draw at a lighter pace while it is (restructure 6); nothing here
+  /// changes what she does, only how often the screens ask.
+  static final ValueNotifier<bool> fieldBusy = ValueNotifier<bool>(false);
+
+  /// Which tab of the app shell is on screen (main.dart sets it).  The
+  /// shell keeps every tab alive in an IndexedStack, so a screen that
+  /// polls her reads this and asks nothing while it is out of sight.
+  static const int tabFace  = 0;
+  static const int tabSpace = 1;
+  static const int tabSelf  = 2;
+  static const int tabHub   = 3;
+  static final ValueNotifier<int> visibleTab = ValueNotifier<int>(tabFace);
+  static bool isTabShown(int tab) => visibleTab.value == tab;
+
+  /// The surface control panel (restructure 6): the phone's resources Sir
+  /// lends her -- presence line, listening, camera and screen sensing,
+  /// voice, and whether her growth waits for the charger until the phone is
+  /// paired.  {"controls": {...}, "growth": {...}} from get_surface_controls.
+  static Future<Map<String, dynamic>> getSurfaceControls() async {
+    final json = await _channel.invokeMethod<String>('getSurfaceControls') ?? '{}';
+    return _takeControls(json);
+  }
+
+  static Future<Map<String, dynamic>> setSurfaceControl(String name, bool value) async {
+    final json = await _channel.invokeMethod<String>(
+        'setSurfaceControl', {'name': name, 'value': value}) ?? '{}';
+    return _takeControls(json);
+  }
+
+  /// The controls as last read, shared by the Hub (which switches them) and
+  /// the home screen (which listens, speaks and shows her line by them).
+  /// A control not read yet counts as on: today's behaviour.
+  static final ValueNotifier<Map<String, bool>> surfaceControls =
+      ValueNotifier<Map<String, bool>>(const <String, bool>{});
+
+  static bool control(String name) => surfaceControls.value[name] ?? true;
+
+  static Map<String, dynamic> _takeControls(String json) {
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is Map) {
+        final answer = Map<String, dynamic>.from(decoded);
+        final c = answer['controls'];
+        if (c is Map) {
+          surfaceControls.value =
+              c.map<String, bool>((k, v) => MapEntry('$k', v == true));
+        }
+        return answer;
+      }
     } catch (_) {}
     return {};
   }

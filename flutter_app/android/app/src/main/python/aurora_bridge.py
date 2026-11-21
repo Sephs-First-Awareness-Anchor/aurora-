@@ -236,6 +236,113 @@ def is_surface_only() -> bool:
     return bool(_surface_only)
 
 
+# ── Surface control panel (surface restructure 6, Sir 2026-11-21) ─────────
+# The phone's own resources, which Sir controls from the Hub: her presence
+# line, what she senses (microphone, camera, screen), her voice, and whether
+# her growth work waits for the charger until the phone is paired.  None of
+# these decides anything for her: they say what this device lends her.
+# Kept in surface_sensory_controls.json, which is this device's own
+# (surface_present in aurora_store_ownership) and does not move with her.
+_SURFACE_CONTROL_DEFAULTS = {
+    "presence_line": True,
+    "listening": True,
+    "camera_sensing": True,
+    "screen_sensing": True,
+    "voice": True,
+    "growth_while_charging_only": True,
+}
+_SURFACE_CONTROLS_FILE = "surface_sensory_controls.json"
+_surface_controls: dict = dict(_SURFACE_CONTROL_DEFAULTS)
+_surface_controls_lock = threading.Lock()
+
+
+def _surface_controls_path() -> str:
+    return os.path.join(_strata_state_dir or "aurora_state", _SURFACE_CONTROLS_FILE)
+
+
+def _load_surface_controls() -> None:
+    import json as _json_sc
+    loaded: dict = {}
+    try:
+        with open(_surface_controls_path(), "r", encoding="utf-8") as fh:
+            raw = _json_sc.load(fh)
+        if isinstance(raw, dict):
+            loaded = {k: bool(raw[k]) for k in _SURFACE_CONTROL_DEFAULTS if k in raw}
+    except FileNotFoundError:
+        pass
+    except Exception as _sc_exc:
+        log.warning("Surface controls unreadable; using defaults: %s", _sc_exc)
+    with _surface_controls_lock:
+        _surface_controls.clear()
+        _surface_controls.update(_SURFACE_CONTROL_DEFAULTS)
+        _surface_controls.update(loaded)
+
+
+def surface_control(name: str) -> bool:
+    with _surface_controls_lock:
+        return bool(_surface_controls.get(name, _SURFACE_CONTROL_DEFAULTS.get(name, True)))
+
+
+def _growth_waits_for_charging() -> bool:
+    """True while an unpaired phone holds her growth work for the charger.
+
+    Her turns, face, voice, senses, conversations and own initiative never
+    wait.  A paired surface runs no growth here at all, so this is off there.
+    When the charger state has not arrived from the phone yet, nothing waits:
+    the gate holds only on a reading, never on a guess."""
+    if _surface_only or not surface_control("growth_while_charging_only"):
+        return False
+    charging = _hardware_sensors.get("charging")
+    if charging is None:
+        return False
+    return not bool(charging)
+
+
+def _growth_status() -> dict:
+    charging = _hardware_sensors.get("charging")
+    return {
+        "waits_for_charging": _growth_waits_for_charging(),
+        "control_on": surface_control("growth_while_charging_only"),
+        "charging": None if charging is None else bool(charging),
+        "paired_surface": bool(_surface_only),
+    }
+
+
+def get_surface_controls() -> str:
+    import json as _json_sc
+    with _surface_controls_lock:
+        controls = dict(_surface_controls)
+    return _json_sc.dumps({"controls": controls, "growth": _growth_status()}, default=str)
+
+
+def set_surface_control(name: str, value: bool) -> str:
+    """Sir turns one of the phone's resources on or off from the Hub."""
+    import json as _json_sc
+    name = str(name or "")
+    if name not in _SURFACE_CONTROL_DEFAULTS:
+        return _json_sc.dumps({"ok": False, "error": f"unknown control: {name}"})
+    with _surface_controls_lock:
+        _surface_controls[name] = bool(value)
+        snapshot = dict(_surface_controls)
+    try:
+        path = _surface_controls_path()
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            _json_sc.dump(snapshot, fh)
+        os.replace(tmp, path)
+    except Exception as _sc_exc:
+        return _json_sc.dumps({"ok": False, "error": f"{type(_sc_exc).__name__}: {_sc_exc}"[:200],
+                               "controls": snapshot})
+    return _json_sc.dumps({"ok": True, "controls": snapshot, "growth": _growth_status()}, default=str)
+
+
+def set_surface_control_cmd(command: str) -> str:
+    """One-string form for the Kotlin bridge: "name:on" or "name:off"."""
+    name, _, value = str(command or "").partition(":")
+    return set_surface_control(name.strip(), value.strip().lower() in ("on", "true", "1"))
+
+
 def _ask_home(kind: str, payload: "dict | None" = None) -> dict:
     """On a surface, growth work is asked of home rather than run here."""
     try:
@@ -1863,7 +1970,8 @@ def _start_curiosity_engine(systems: dict) -> None:
         systems["_curiosity_engine"] = engine
         # 90 s idle interval — generous on mobile to conserve battery while
         # still giving Aurora regular autonomous exploration windows.
-        start_curiosity_background(engine, tick_interval_s=90.0)
+        start_curiosity_background(engine, tick_interval_s=90.0,
+                                   may_run=lambda: not _growth_waits_for_charging())
         log.info("Curiosity engine started (90 s idle cycle)")
     except Exception as exc:
         log.warning("Curiosity engine unavailable: %s", exc)
@@ -1877,7 +1985,8 @@ def _start_curiosity_engine(systems: dict) -> None:
         from aurora_quantum_dream_substrate import (  # type: ignore
             start_dream_substrate,
         )
-        start_dream_substrate(systems, cycle_interval_s=600.0)
+        start_dream_substrate(systems, cycle_interval_s=600.0,
+                              may_run=lambda: not _growth_waits_for_charging())
         _dream_substrate_boot_ok = True
         log.info("Quantum dream substrate started (600 s cycles)")
     except Exception as exc:
@@ -2435,6 +2544,7 @@ def get_field_status() -> str:
         "boot_finished": bool(_boot_state.get("finished", False)),
         "clone_harvest": (absorb or {}).get("status", "") if isinstance(absorb, dict) else "",
         "surface_only": bool(_surface_only),
+        "growth": _growth_status(),
     }, default=str)
 
 
@@ -2519,7 +2629,18 @@ def resume_historical_experience() -> str:
 def _praxis_live_idle() -> bool:
     """Praxis yields to the present on exactly the same terms as historical
     experience.  Delegating rather than copying keeps one definition of
-    "the live path is not claiming the field" for every background source."""
+    "the live path is not claiming the field" for every background source.
+    Praxis and the learning probe are growth work, so on an unpaired phone
+    they also wait for the charger when Sir has that on."""
+    if _growth_waits_for_charging():
+        return False
+    return _historical_experience_live_idle()
+
+
+def _history_stream_live_idle() -> bool:
+    """Her history stream: the shared idle terms, and growth's charger wait."""
+    if _growth_waits_for_charging():
+        return False
     return _historical_experience_live_idle()
 
 
@@ -2780,6 +2901,7 @@ def initialize(state_dir: str = "") -> str:
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
+    _load_surface_controls()
     global _surface_only
     _surface_only = False
     _deferred_to_home.clear()
@@ -3147,7 +3269,7 @@ def initialize(state_dir: str = "") -> str:
                     state_dir=_hist_state_dir,
                     archive_path=_hist_archive,
                     field_lock=_lock,
-                    live_idle=_historical_experience_live_idle,
+                    live_idle=_history_stream_live_idle,
                     initial_delay_s=8.0,
                 )
                 _systems["historical_experience"] = _historical_experience
@@ -9919,7 +10041,8 @@ def _self_monitor_loop() -> None:
             # grow crystal structures from compressed constraint-physics evolution.
             # Only fires when not in an active user turn (lock not held).
             if _tick % 5 == 0 and _evo_sim is not None and _concept_registry is not None:
-                if _background_breathing_room() and _lock.acquire(blocking=False):
+                if (not _growth_waits_for_charging() and _background_breathing_room()
+                        and _lock.acquire(blocking=False)):
                     try:
                         with _axis_state_lock:
                             _evo_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
@@ -12322,8 +12445,19 @@ def get_cognitive_stats() -> str:
             stats["strata_link_received"] = int(_sl.get("received", 0) or 0)
             stats["strata_link_rtt_ms"] = float(_sl.get("rtt_ms", 0.0) or 0.0)
             stats["strata_link_error"] = str(_sl.get("last_error", "") or "")[:200]
+            # Surface Hub link card (restructure 6): where she is and how home
+            # last answered, read from the link client as it stands.
+            stats["strata_link_role"] = str(_sl.get("role", "") or "")
+            stats["strata_link_away"] = bool(_sl.get("away", False))
+            stats["strata_link_surface_ready"] = bool(_sl.get("surface_ready", False))
+            stats["strata_link_last_sync_at"] = float(_sl.get("last_sync_at", 0.0) or 0.0)
+            stats["strata_link_home_confirmed_at"] = float(_sl.get("home_last_confirmed_at", 0.0) or 0.0)
+            _fp = _sl.get("first_pairing") or {}
+            stats["strata_link_first_pairing"] = str(_fp.get("status", "") or "") if isinstance(_fp, dict) else ""
+            stats["strata_link_device_name"] = str(_sl.get("device_name", "") or "")
         except Exception:
             stats["strata_link_status"] = "error"
+        stats["surface_only"] = bool(_surface_only)
 
         # ── Praxis messenger ──────────────────────────────────────────────
         # Her DMs with other AI models.  Counts plus the last thing she
