@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STATE_DIR="${AURORA_STATE_DIR:-$HOME/.local/share/aurora/state}"
 PYTHON="${AURORA_BOOTSTRAP_PYTHON:-python3}"
+"$PYTHON" -c 'import sys; assert (3, 11) <= sys.version_info[:2] <= (3, 12), "Use Python 3.11 or 3.12 for this pinned Aurora runtime"'
 UNIT_NAME="aurora-desktop.service"
 UNIT_DIR="$HOME/.config/systemd/user"
 
@@ -33,6 +34,10 @@ fi
 # Never import or overwrite checked-in / older device state automatically.
 mkdir -p "$STATE_DIR"
 chmod 700 "$STATE_DIR"
+mkdir -p "$HOME/.config/aurora"
+# Keep the shell control script aligned when an owner selects a custom state dir.
+printf '%s\n' "$STATE_DIR" > "$HOME/.config/aurora/resident-state-dir"
+chmod 600 "$HOME/.config/aurora/resident-state-dir"
 if [[ ! -x "$ROOT/.venv/bin/python" ]]; then
   "$PYTHON" -m venv "$ROOT/.venv"
 fi
@@ -62,6 +67,28 @@ PY
 systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY DBUS_SESSION_BUS_ADDRESS XDG_RUNTIME_DIR 2>/dev/null || true
 systemctl --user daemon-reload
 systemctl --user enable --now "$UNIT_NAME"
+
+# A desktop launcher, not a second cognitive process or state store.
+"$ROOT/.venv/bin/python" - "$ROOT" "$HOME/.local/share/applications/aurora.desktop" <<'PY'
+import pathlib, sys
+root, target = map(pathlib.Path, sys.argv[1:])
+target.parent.mkdir(parents=True, exist_ok=True)
+def quote(path):
+    return '"' + str(path.resolve()).replace('\\', '\\\\').replace('"', '\\"').replace('%', '%%') + '"'
+target.write_text(
+    "[Desktop Entry]\n"
+    "Type=Application\n"
+    "Name=Aurora\n"
+    "GenericName=Aurora Desktop Hub\n"
+    "Comment=Open Aurora's resident desktop presence and owner console\n"
+    "Exec=/usr/bin/env bash " + quote(root / 'scripts/linux/desktop.sh') + " open\n"
+    "Icon=applications-science\n"
+    "Terminal=false\n"
+    "Categories=Utility;Science;\n"
+    "StartupNotify=true\n",
+    encoding='utf-8')
+PY
+
 echo "Aurora unified resident installed: $UNIT_NAME"
 echo "Authoritative state: $STATE_DIR"
 echo "Check: systemctl --user status $UNIT_NAME"
