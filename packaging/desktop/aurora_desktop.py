@@ -62,8 +62,17 @@ def _probe(state_dir: Path):
 
 
 def _start_resident(state_dir: Path):
-    """Best effort launch; the existing POSIX/Windows lock rejects duplicates."""
+    """Launch one resident; optionally inhibit Linux idle sleep for remote Surface."""
     command = _backend_command(state_dir)
+    from aurora_internal.desktop.common import read_json
+    config = read_json(state_dir / "desktop_config.json", {})
+    if os.name != "nt" and config.get("AURORA_KEEP_HOME_AWAKE"):
+        inhibit = shutil.which("systemd-inhibit")
+        if not inhibit:
+            raise RuntimeError("Remote availability needs systemd-inhibit or a power-settings exception.")
+        command = [inhibit, "--what=idle:sleep", "--mode=block",
+                   "--who=Aurora", "--why=Keep the phone Surface connected",
+                   *command]
     kw = {"stdin": subprocess.DEVNULL, "stdout": subprocess.DEVNULL,
           "stderr": subprocess.DEVNULL, "cwd": str(SOURCE_ROOT),
           "close_fds": True}
@@ -346,6 +355,33 @@ def run_gui(state_dir: Path):
     connection_action.triggered.connect(connection_info)
     toolbar.addAction(connection_action)
 
+    power_action = QAction("Keep home awake", window)
+    power_action.setCheckable(True)
+    power_action.setChecked(bool(read_json(state_dir / "desktop_config.json", {}).get("AURORA_KEEP_HOME_AWAKE")))
+    def set_power_hold(enabled):
+        confirm = QMessageBox.question(window, "Change Aurora's power availability?",
+            ("Aurora will request that your computer stay awake for remote pairing. "
+             "This increases battery use.\n\n" if enabled else
+             "Aurora will let the OS sleep normally. Remote communication will "
+             "pause whenever the computer sleeps.\n\n") +
+            "Restart Aurora's resident to apply this setting?")
+        if confirm != QMessageBox.StandardButton.Yes:
+            power_action.blockSignals(True)
+            power_action.setChecked(not enabled)
+            power_action.blockSignals(False)
+            return
+        from aurora_internal.desktop.common import write_json
+        path = state_dir / "desktop_config.json"
+        config = read_json(path, {})
+        config["AURORA_KEEP_HOME_AWAKE"] = bool(enabled)
+        write_json(path, config)
+        try:
+            restart_after_save()
+        except Exception as exc:
+            QMessageBox.warning(window, "Power availability", str(exc))
+    power_action.toggled.connect(set_power_hold)
+    toolbar.addAction(power_action)
+
     def backup_state():
         if reconnect["backup_in_progress"] or reconnect["backup_pending"]:
             return
@@ -452,11 +488,21 @@ def run_gui(state_dir: Path):
             "The phone must have its own Tailscale connection to the same Tailnet. "
             "This keeps her link routed through the VPN on home Wi-Fi or cellular, "
             "while the desktop is powered and connected.\n\n"
+            "Aurora will also request that the OS prevent idle sleep while "
+            "her resident runs. This uses more power, especially on battery. "
+            "Closing the lid can still trigger sleep depending on OS settings.\n\n"
             "Create her pairing link using this private VPN address?")
         if answer != QMessageBox.StandardButton.Yes:
             return
         try:
             pairing = _pair(state_dir, host)
+            from aurora_internal.desktop.common import write_json
+            config_path = state_dir / "desktop_config.json"
+            config = read_json(config_path, {})
+            # Remote availability is explicitly requested in the same dialog.
+            # Keep the desktop awake through the resident rather than Qt.
+            config["AURORA_KEEP_HOME_AWAKE"] = True
+            write_json(config_path, config)
             if _probe(state_dir) is not None:
                 _stop_resident(state_dir)
                 reconnect["after_stop"] = True
