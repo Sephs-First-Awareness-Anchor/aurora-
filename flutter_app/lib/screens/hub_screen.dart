@@ -142,15 +142,27 @@ class _AuroraPhoneConnectionGuideState
       if (!mounted) return;
       if (data['ok'] == true) {
         final route = (data['route'] ?? 'direct').toString();
+        final active = data['ready'] == true;
+        final migrated = data['migration_complete'] == true;
         setState(() {
-          _tested = true;
-          _feedback = route == 'relay'
-              ? 'Encrypted internet relay confirmed by a signed exchange. '
-                'Aurora can reach home away from local Wi-Fi. '
-                'If prompted, review her first-pairing history on the desktop.'
-              : 'Signed local connection confirmed. Turn off phone Wi-Fi, '
-                'keep mobile data on, and test again to verify the encrypted '
-                'internet relay rather than only the local link.';
+          _tested = active;
+          _feedback = !active
+              ? 'Signed connection succeeded via $route, but this phone '
+                'is not yet the active Surface (role: ${data['role'] ?? 'unknown'}). '
+                'The network link alone cannot deliver her turns. '
+                'Check the desktop\'s Surface holder and first-pairing review. '
+                '${data['error'] ?? ''}'
+              : !migrated
+              ? 'Signed $route connection and active Surface confirmed. '
+                'The first history migration has not yet been accepted. '
+                'Until you review and apply it on the desktop, the phone '
+                'still runs her full local profile. Restart the phone app '
+                'once the migration receipt is accepted.'
+              : route == 'relay'
+              ? 'Encrypted internet relay, active Surface, and migrated '
+                'profile confirmed. Her desktop Subsurface is reachable.'
+              : 'Active Surface and signed local link confirmed. Turn off '
+                'phone Wi-Fi and test again to verify remote relay access.';
         });
       } else {
         setState(() => _feedback =
@@ -1009,7 +1021,7 @@ class _HubScreenState extends State<HubScreen> {
     final detail = status == 'not_configured'
         ? 'not paired · tap to pair'
         : '${status.replaceAll('_', ' ')} · $sent up · $received down'
-          '${pending > 0 ? ' · $pending waiting' : ''}'
+          '${pending > 0 ? ' · $pending updates queued' : ''}'
           '${dropped > 0 ? ' · $dropped dropped' : ''}'
           '${status == 'online' ? ' · ${rtt}ms' : ''}'
           '${status == 'offline' && error.isNotEmpty ? ' · $error' : ''}';
@@ -1900,7 +1912,7 @@ class _HubScreenState extends State<HubScreen> {
     final String homeLine;
     if (unpaired) {
       homeLine = 'no home paired';
-    } else if (status == 'online') {
+    } else if (status == 'online' || status == 'standby') {
       homeLine = 'reachable · last answered ${_ago(lastSync)}';
     } else {
       homeLine = 'out of reach · last answered ${_ago(lastSync)}'
@@ -1915,7 +1927,7 @@ class _HubScreenState extends State<HubScreen> {
     } else if (firstPair.isNotEmpty) {
       pairing = 'first pairing: ${firstPair.replaceAll('_', ' ')}';
     } else {
-      pairing = 'linked, first pairing not started';
+      pairing = 'link saved; initial history transfer still pending';
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1923,10 +1935,18 @@ class _HubScreenState extends State<HubScreen> {
       _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _statRow('Where she is', where, valueColor: whereColor),
         _statRow('Home', homeLine,
-            valueColor: status == 'online' ? _green : (unpaired ? _textDim : _amber)),
+            valueColor: (status == 'online' || status == 'standby') ? _green : (unpaired ? _textDim : _amber)),
         if (away) _statRow('Away for', _span(lastSync), valueColor: _amber),
-        if (!unpaired) _statRow('Turns waiting to go home', '$pending',
+        if (!unpaired) _statRow('Continuity updates queued for home', '$pending',
             valueColor: pending > 0 ? _amber : _text),
+        if (!unpaired && status == 'standby')
+          _statRow('Surface activation', 'Home is reachable, but this phone '
+              'does not yet hold the active Surface role',
+              valueColor: _amber),
+        if (!unpaired && !paired)
+          _statRow('Processing profile', 'Full phone profile until migration '
+              'is reviewed, applied at home, and confirmed after restart',
+              valueColor: _amber),
         if (!unpaired) _statRow("Home's last word", _ago(homeWord)),
         _statRow('Pairing', pairing, valueColor: paired ? _green : _text),
         if (!unpaired)
