@@ -252,6 +252,17 @@ class AuroraBridge {
     return _parseCognitiveStats(json);
   }
 
+  /// A small transport/ownership snapshot. Unlike the full cognitive
+  /// scoreboard this does not traverse her memory, genealogy, or learning.
+  static Future<Map<String, dynamic>> getStrataLinkStatus() async {
+    final json = await _channel.invokeMethod<String>('getStrataLinkStatus') ?? '{}';
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return {};
+  }
+
   /// Build 774 live turn diagnostics: get_live_turn_diagnostics() returns
   /// a JSON array (no turn_id argument = every currently-retained turn),
   /// each entry {turn_id, states: [{state, ts, ...}], last_state, last_ts}
