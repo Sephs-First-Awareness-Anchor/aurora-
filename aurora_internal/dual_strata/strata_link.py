@@ -2030,7 +2030,7 @@ class StrataLinkClient:
         else:
             label = "online"
         return {"status": label, "version": LINK_VERSION, "endpoint": self.endpoint,
-                "route": self._relay_transport.last_route if self._relay_transport else "direct",
+                "route": (self._relay_transport.last_route if self.online else "offline") if self._relay_transport else ("direct" if self.online else "offline"),
                 "surface_id": self.surface_id, "role": self.role, "epoch": self.epoch,
                 "thread_alive": bool(self._thread and self._thread.is_alive()),
                 "rtt_ms": round(self.rtt_ms, 1), "last_sync_at": self.last_sync_at,
