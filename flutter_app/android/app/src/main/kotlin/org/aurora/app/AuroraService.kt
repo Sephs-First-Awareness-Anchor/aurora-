@@ -558,7 +558,11 @@ class AuroraService : Service() {
         // that drift instead of only ever seeing a snapshot from the last
         // sendMessage() call.
         while (true) {
-            kotlinx.coroutines.delay(1_000L)
+            // The face observes already-computed axes. Re-reading Python
+            // twice per second when nobody is viewing the app wasted mobile
+            // compute without creating any new experience.
+            kotlinx.coroutines.delay(if (eventSink == null) 6_000L else 2_000L)
+            if (eventSink == null) continue
             try {
                 val axisJson = Python.getInstance()
                     .getModule("aurora_bridge")
