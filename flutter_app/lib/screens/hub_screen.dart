@@ -606,7 +606,7 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   // FIX-A118: the link to her Subsurface device.  Tap to paste the pairing
-  // line the laptop prints (http://host:port#secret).
+  // line the desktop copies (encrypted relay or legacy direct pairing).
   static const _strataChannel = MethodChannel('org.aurora.app/bridge');
 
   Future<void> _pairStrataLink() async {
@@ -618,7 +618,7 @@ class _HubScreenState extends State<HubScreen> {
         content: TextField(
           controller: controller,
           autocorrect: false,
-          decoration: const InputDecoration(hintText: 'http://host:8791#secret'),
+          decoration: const InputDecoration(hintText: 'Paste the private link copied in Aurora desktop'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -1580,19 +1580,15 @@ class _HubScreenState extends State<HubScreen> {
     final device      = (_stats['strata_link_device_name'] as String?) ?? '';
     final error       = (_stats['strata_link_error'] as String?) ?? '';
     final endpoint    = (_stats['strata_link_endpoint'] as String?) ?? '';
-    final host        = Uri.tryParse(endpoint)?.host.toLowerCase() ?? '';
-    final octets      = host.split('.');
-    final first       = octets.isNotEmpty ? int.tryParse(octets[0]) : null;
-    final second      = octets.length > 1 ? int.tryParse(octets[1]) : null;
-    final viaVpn      = host.endsWith('.ts.net') ||
-        (octets.length == 4 && first == 100 &&
-         second != null && second >= 64 && second <= 127);
-    final remoteRoute = unpaired ? 'not configured' :
-        viaVpn ? 'private VPN address configured (works across networks when connected)' :
-        'home-network address only: this pairing will not work on cellular';
+    final route       = (_stats['strata_link_route'] as String?) ?? 'not_connected';
+    final encrypted   = endpoint.startsWith('https://') && route != 'direct';
     final paired      = _stats['surface_only'] == true;
     final unpaired    = status == 'not_configured';
-
+    final String remoteRoute = unpaired ? 'not configured' :
+        route == 'relay' ? 'encrypted internet relay connected' :
+        route == 'local' ? 'direct local connection (internet relay is fallback)' :
+        encrypted ? 'encrypted HTTPS relay configured, checking connection' :
+        'direct private-network route only';
     final String where;
     final Color whereColor;
     if (unpaired) {
@@ -1646,7 +1642,7 @@ class _HubScreenState extends State<HubScreen> {
         _statRow('Pairing', pairing, valueColor: paired ? _green : _text),
         if (!unpaired)
           _statRow('Remote connectivity', remoteRoute,
-              valueColor: viaVpn ? _green : _amber),
+              valueColor: (route == 'relay' || route == 'local') ? _green : _amber),
         if (!unpaired && viaVpn)
           const Padding(
             padding: EdgeInsets.only(top: 5, bottom: 7),
