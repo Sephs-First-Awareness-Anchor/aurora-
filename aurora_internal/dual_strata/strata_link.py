@@ -817,7 +817,29 @@ class StrataLinkServer:
             wants_claim = bool(request.get("claim")) and state["owner"] != surface_id
             refused = ""
             if wants_claim and state["owner"] and not handoff:
-                wants_claim, refused = False, "checkpoint_handoff_required"
+                # The desktop bootstraps its own temporary Surface so the
+                # local Hub works before a phone joins. That is *not* a
+                # checkpointed move from a previously living phone. A valid,
+                # explicitly paired first phone must be able to take this
+                # initial role; otherwise the connection is authenticated but
+                # permanently standby, and its uplink can never drain.
+                #
+                # This exception is ONE TIME. Once any non-home Surface has
+                # held an epoch, future claims require the normal checkpoint
+                # protocol, even when the Surface later moves back to home.
+                previous_phone_owners = any(
+                    sid != self.home_surface_id
+                    for sid in state["owner_epochs"].values()
+                )
+                initial_phone = (
+                    bool(self.home_surface_id)
+                    and state["owner"] == self.home_surface_id
+                    and surface_id != self.home_surface_id
+                    and not previous_phone_owners
+                    and state["epoch"] == 1
+                )
+                if not initial_phone:
+                    wants_claim, refused = False, "checkpoint_handoff_required"
             if wants_claim and handoff and state["owner"]:
                 if expired:
                     wants_claim, refused = False, "handoff_expired; cancel from the source and prepare again"
@@ -2002,6 +2024,12 @@ class StrataLinkClient:
                     self.last_error = f"growth: {type(exc).__name__}: {exc}"[:200]
             if not self.online:
                 interval = min(max(interval, self.FAST_INTERVAL_S) * 2.0, self.MAX_BACKOFF_S)
+            elif self.role == "standby":
+                # A standby device is not permitted to send new lived
+                # continuity; repeatedly sending the same pending records
+                # every two seconds cannot make it the holder. Keep them
+                # durable and recheck ownership at the ordinary idle rate.
+                interval = self.IDLE_INTERVAL_S
             elif moved or self.outbox.stats()["pending"]:
                 interval = self.FAST_INTERVAL_S
             else:
