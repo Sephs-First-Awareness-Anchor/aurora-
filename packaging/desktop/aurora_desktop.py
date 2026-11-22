@@ -654,16 +654,32 @@ def run_gui(state_dir: Path):
         relay_status.setWordWrap(True)
         complete.addWidget(relay_status)
         def check_relay_status():
-            live = (_probe(state_dir) or {}).get("remote") or {}
-            if live.get("online"):
+            snapshot = _probe(state_dir) or {}
+            live = snapshot.get("remote") or {}
+            strata = snapshot.get("strata") or {}
+            holder = str(strata.get("owner") or "")
+            home_id = str((link_dir(state_dir) / "home_surface_id.txt").read_text(
+                encoding="utf-8").strip()) if (link_dir(state_dir) / "home_surface_id.txt").exists() else ""
+            if not live.get("online"):
                 relay_status.setText(
-                    "Desktop's outbound relay is online. Now verify a real "
-                    "signed exchange from the phone on cellular.")
+                    "The desktop relay is not currently confirmed online. "
+                    "Check Connection status for the registration/network error. "
+                    "The phone cannot use remote home yet.")
+            elif not holder or holder == home_id:
+                relay_status.setText(
+                    "Desktop can reach the relay, but the phone has NOT taken "
+                    "the active Surface role. Pair on the phone and run its "
+                    "signed connection test; network reachability is not "
+                    "the same as Surface activation.")
             else:
+                migration = snapshot.get("first_pairing") or {}
+                stage = migration.get("status", "none")
                 relay_status.setText(
-                    "Relay is not yet confirmed online by the desktop resident. "
-                    "It may still be restarting. Connection status will show "
-                    "the last error. Phone pairing is not yet verified.")
+                    "Desktop relay online and the active Surface is " + holder +
+                    ". First history migration: " + str(stage) + ". "
+                    "Use Review first pairing if staged, and verify a signed "
+                    "phone exchange on cellular. Surface-only processing "
+                    "starts after history acceptance and phone restart.")
         check_button = QPushButton("Check desktop relay connection")
         check_button.clicked.connect(check_relay_status)
         complete.addWidget(check_button)
