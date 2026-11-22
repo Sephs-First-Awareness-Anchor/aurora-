@@ -2855,12 +2855,16 @@ def strata_link_transfer(action: str, token: str = "") -> str:
             status = client.status()
             return _json.dumps({
                 "ok": bool(client.online),
+                "ready": bool(client.online and client.role == "active" and client.surface_ready),
+                "role": client.role,
                 "status": status.get("status"),
                 "route": status.get("route", "offline"),
                 "rtt_ms": status.get("rtt_ms"),
                 "pending": (status.get("up_outbox") or {}).get("pending"),
+                "migration_complete": bool(_surface_only),
+                "first_pairing": status.get("first_pairing"),
                 "last_error": status.get("last_error"),
-                "error": status.get("last_error") if not client.online else "",
+                "error": status.get("last_error") or "",
             }, default=str)
         if action == "first_pairing":
             # Only the copy is taken under the field lock (as at pairing).
