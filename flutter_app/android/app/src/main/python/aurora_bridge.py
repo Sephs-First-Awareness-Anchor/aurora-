@@ -2788,15 +2788,55 @@ def get_strata_link_status() -> str:
         return _json.dumps({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
 
 
+_first_pairing_worker = None
+_first_pairing_worker_guard = threading.Lock()
+
+
 def _send_first_pairing(client) -> None:
-    """Her whole mind goes home for the first pairing.  Only the copy is
-    taken under the field lock; sending the copy does not hold up a turn."""
+    """Migrate exactly once, after signed home admission and idle foreground.
+
+    The old pair action triggered a large snapshot immediately, often while
+    the desktop still booted or had not registered its HTTPS gateway. That
+    failed permanently and competed with the live Surface. This worker
+    waits instead of blocking the interface or creating duplicate transfers.
+    """
     try:
-        result = client.migrate(snapshot_guard=lambda: _lock)
-        if not result.get("ok"):
-            log.warning("First pairing not sent yet: %s", result.get("error"))
+        from aurora_internal.dual_strata.strata_migration import load_receipt
+        while not client._stop.is_set():
+            if _surface_only or load_receipt(client.state_dir) is not None:
+                return
+            migration = client._load_client_state().get("migration") or {}
+            if migration.get("id"):
+                return  # previously staged; normal receipt polling owns it
+            if not (client.online and client.role == "active" and client.surface_ready):
+                client.last_first_pairing = {"status": "waiting_for_active_home"}
+            elif _present_active or _present_waiting or _conversation_active():
+                client.last_first_pairing = {"status": "waiting_for_idle"}
+            elif _systems is not None and _boot_state.get("finished"):
+                result = client.migrate(snapshot_guard=lambda: _lock)
+                if not result.get("ok"):
+                    log.warning("First pairing not sent: %s", result.get("error"))
+                return
+            if client._stop.wait(2.0):
+                return
     except Exception as exc:
+        client.last_first_pairing = {"status": "not_sent",
+                                     "error": f"{type(exc).__name__}: {exc}"[:200]}
         log.warning("First pairing not sent: %s", exc)
+
+
+def _schedule_first_pairing(client) -> bool:
+    global _first_pairing_worker
+    if client is None or _surface_only:
+        return False
+    with _first_pairing_worker_guard:
+        if _first_pairing_worker is not None and _first_pairing_worker.is_alive():
+            return False
+        _first_pairing_worker = threading.Thread(
+            target=_send_first_pairing, args=(client,), daemon=True,
+            name="aurora_first_pairing")
+        _first_pairing_worker.start()
+        return True
 
 
 def configure_strata_link(pairing: str) -> str:
@@ -2823,8 +2863,7 @@ def configure_strata_link(pairing: str) -> str:
                 # applies it at home; the link then picks up the receipt by
                 # itself and this phone is her surface from its next start.
                 result["next_step"] = "first_pairing_started"
-                threading.Thread(target=_send_first_pairing, args=(client,), daemon=True,
-                                 name="aurora_first_pairing").start()
+                _schedule_first_pairing(client)
         return _json.dumps({**result, **_sl.strata_link_client_status()}, default=str)
     except Exception as exc:
         return _json.dumps({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"})
@@ -3447,6 +3486,12 @@ def initialize(state_dir: str = "") -> str:
                     context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
                 )
                 log.warning("Praxis messenger failed to start: %s", _messenger_exc)
+
+        # If the phone had already been paired before an app restart,
+        # restore the first-migration wait. A transient offline first boot
+        # must never leave a one-shot transfer permanently abandoned.
+        if not _surface_only:
+            _schedule_first_pairing(locals().get("_strata_client"))
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
