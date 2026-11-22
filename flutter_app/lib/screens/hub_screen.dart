@@ -141,12 +141,16 @@ class _AuroraPhoneConnectionGuideState
       final data = jsonDecode(raw ?? '{}') as Map<String, dynamic>;
       if (!mounted) return;
       if (data['ok'] == true) {
+        final route = (data['route'] ?? 'direct').toString();
         setState(() {
           _tested = true;
-          _feedback = 'Signed exchange confirmed. Now switch off phone '
-              'Wi-Fi, leave mobile data on, and run the test again '
-              'to verify the internet relay. If prompted, review her '
-              'first-pairing history on the desktop.';
+          _feedback = route == 'relay'
+              ? 'Encrypted internet relay confirmed by a signed exchange. '
+                'Aurora can reach home away from local Wi-Fi. '
+                'If prompted, review her first-pairing history on the desktop.'
+              : 'Signed local connection confirmed. Turn off phone Wi-Fi, '
+                'keep mobile data on, and test again to verify the encrypted '
+                'internet relay rather than only the local link.';
         });
       } else {
         setState(() => _feedback =
@@ -1834,6 +1838,7 @@ class _HubScreenState extends State<HubScreen> {
     final String remoteRoute = unpaired ? 'not configured' :
         route == 'relay' ? 'encrypted internet relay connected' :
         route == 'local' ? 'direct local connection (internet relay is fallback)' :
+        route == 'offline' ? 'home unreachable; Surface continues locally' :
         encrypted ? 'encrypted HTTPS relay configured, checking connection' :
         'direct private-network route only';
     final String where;
