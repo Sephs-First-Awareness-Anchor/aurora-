@@ -17,15 +17,22 @@ same signed Strata Link used by the desktop.
   owner console is bound to loopback only. Closing the window does not stop
   the resident. Use **Run at login** inside the app to launch its resident
   automatically after sign-in.
-- **Pair phone** opens a native desktop dialog for Aurora's own HTTPS
-  relay address and the gateway's registration key. It registers a private
-  room, configures the resident's outbound connection, discovers the local
-  LAN address as an optional fast path, and copies one private pairing link.
-  On Android, use **Hub → Pair with home** and paste. No VPN client,
-  router port forwarding or terminal is required on either installed app.
-  A public HTTPS relay *does need to exist*, and the dialog will not invent
-  one: see [relay hosting](../relay/README.md). The room and credentials
-  persist across app restarts.
+- **Connect phone • guide** is a four-step, reopenable native desktop
+  tutorial. It explains Aurora's existing Surface/Subsurface split and
+  offline fallback; the reason a hosted HTTPS relay is necessary; how to
+  deploy the private reference relay with an **in-app hosting walkthrough**;
+  how to enter its HTTPS address and private registration key; and how
+  to copy her private phone pairing link. It checks the relay's actual
+  health response before saving its configuration. Optional trusted LAN
+  preference and the stay-awake setting are explained inside the tutorial.
+  No VPN client, router port forwarding or terminal is needed on either
+  installed app. A public HTTPS gateway still needs to be hosted separately.
+- On Android, **Hub → Connect home • guide** is a matching four-step
+  tutorial. It explains what each device owns, walks through preparing
+  the desktop and transferring the secret pairing link, saves pairing
+  inside the existing Strata Link, and offers a real signed connection
+  test. Test once on home Wi-Fi and again on cellular. The guide stays
+  available as **Connection guide** after pairing.
 - **Review first pairing** shows staged history, the differences between the
   phone and desktop, and explicit phone/home decisions for developmental
   stores. It only authorizes the existing cold migration. No hidden merge
