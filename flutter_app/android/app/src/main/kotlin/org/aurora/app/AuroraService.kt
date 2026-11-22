@@ -89,23 +89,33 @@ class AuroraService : Service() {
             // (entry of this function) and where Python processing
             // actually starts (immediately before handle_message()).
             markUiTransition("aurora_receives")
-            scope?.launch {
-                val py     = Python.getInstance()
-                val bridge = py.getModule("aurora_bridge")
-
-                markUiTransition("python_processing_begins")
-
-                val reply = try {
-                    bridge.callAttr("handle_message", text).toString()
-                } catch (e: Exception) {
-                    Log.e(TAG, "sendMessage error: ${e.message}")
-                    "I encountered an error: ${e.message}"
+            val runningScope = scope
+            if (runningScope == null) {
+                // The service has not reached onCreate yet. Previously the
+                // nullable scope operator silently DROPPED this message and
+                // never invoked the Flutter callback.
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    callback("Aurora's phone service is starting. Please try again once she's ready.")
                 }
-
-                // Fetch emotional axis state immediately after cognitive processing.
-                val axisJson = try {
-                    bridge.callAttr("get_axis_state").toString()
-                } catch (_: Exception) { null }
+                return
+            }
+            runningScope.launch {
+                var axisJson: String? = null
+                // Python.getInstance/getModule can throw during boot. Both
+                // used to live outside the catch and could kill this coroutine
+                // without ever completing the user's pending Flutter turn.
+                val reply = try {
+                    val bridge = Python.getInstance().getModule("aurora_bridge")
+                    markUiTransition("python_processing_begins")
+                    val answer = bridge.callAttr("handle_message", text).toString()
+                    axisJson = try {
+                        bridge.callAttr("get_axis_state").toString()
+                    } catch (_: Exception) { null }
+                    answer
+                } catch (e: Exception) {
+                    Log.e(TAG, "sendMessage bridge failure", e)
+                    "Aurora's phone processing failed: ${e.javaClass.simpleName}: ${e.message ?: "unknown"}. Check her Hub diagnostics."
+                }
 
                 withContext(Dispatchers.Main) {
                     callback(reply)
