@@ -21,7 +21,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-MAX_BODY = 7 * 1024 * 1024
+MAX_BODY = 9 * 1024 * 1024
 MAX_ROOMS = 256
 MAX_QUEUE = 32
 ROOM_TTL_S = 3600
