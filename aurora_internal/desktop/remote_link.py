@@ -50,16 +50,22 @@ def tailscale_status():
                 "reason": f"{type(exc).__name__}: {exc}"[:250]}
 
 
-def remote_diagnostics(config: dict | None = None):
-    config = config or {}
-    current = str(config.get("AURORA_STRATA_LINK_HOST") or "")
-    vpn = tailscale_status()
+def remote_diagnostics(config: dict | None = None, relay: dict | None = None):
+    """Show configured reachability without claiming internet availability."""
+    config, relay = config or {}, relay or {}
+    if relay.get("origin"):
+        return {
+            "provider": "built_in_encrypted_https_relay",
+            "relay_origin": str(relay["origin"]),
+            "room_configured": bool(relay.get("room") and relay.get("token")),
+            "local_strata_listener": str(config.get("AURORA_STRATA_LINK_HOST") or ""),
+            "phone_vpn_required": False,
+            "desktop_must_remain_awake": True,
+            "reachability": "see live_relay and test from Android on cellular",
+        }
     return {
-        "provider": "tailscale", "vpn": vpn,
-        "configured_host": current,
-        "remote_address_configured": remote_address(current) if current else False,
-        "remote_capable": bool(vpn["online"] and current
-                               and (current == vpn.get("address") or current == vpn.get("ipv4"))),
-        "phone_vpn_required": True,
+        "provider": "not_configured",
+        "phone_vpn_required": False,
         "desktop_must_remain_awake": True,
+        "reachability": "Set up a hosted HTTPS relay with Pair phone",
     }
