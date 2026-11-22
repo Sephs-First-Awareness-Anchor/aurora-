@@ -2856,6 +2856,7 @@ def strata_link_transfer(action: str, token: str = "") -> str:
             return _json.dumps({
                 "ok": bool(client.online),
                 "status": status.get("status"),
+                "route": status.get("route", "offline"),
                 "rtt_ms": status.get("rtt_ms"),
                 "pending": (status.get("up_outbox") or {}).get("pending"),
                 "last_error": status.get("last_error"),
