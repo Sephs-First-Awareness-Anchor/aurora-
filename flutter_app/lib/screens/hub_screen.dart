@@ -376,7 +376,9 @@ class _HubScreenState extends State<HubScreen> {
   void initState() {
     super.initState();
     AuroraBridge.visibleTab.addListener(_onTabChanged);
-    _refresh(force: true);
+    // IndexedStack constructs the Hub even when the user is on Aurora's
+    // face. Never run the full developmental scoreboard on cold app launch.
+    if (AuroraBridge.isTabShown(AuroraBridge.tabHub)) _refresh(force: true);
     _loadControls();
     _timer = Timer.periodic(const Duration(seconds: 6), (_) => _refresh());
   }
