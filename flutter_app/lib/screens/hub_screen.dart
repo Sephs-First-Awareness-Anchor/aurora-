@@ -336,6 +336,8 @@ class _HubScreenState extends State<HubScreen> {
   bool _loading = true;
   bool _fromHomeOpen = false;
   Timer? _timer;
+  bool _refreshing = false;
+  DateTime? _lastFullRefresh;
 
   // Build 774 live turn diagnostics -- on-device visibility into which of
   // the ten Surface/Subsurface states each recent live turn reached
@@ -364,7 +366,7 @@ class _HubScreenState extends State<HubScreen> {
     AuroraBridge.visibleTab.addListener(_onTabChanged);
     _refresh(force: true);
     _loadControls();
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) => _refresh());
+    _timer = Timer.periodic(const Duration(seconds: 6), (_) => _refresh());
   }
 
   void _onTabChanged() {
@@ -388,28 +390,63 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   Future<void> _refresh({bool force = false}) async {
-    // The app shell keeps the Hub alive while other tabs show; it asks
-    // her nothing until it is on screen again.
+    // The app shell keeps the Hub alive while other tabs show. Do not
+    // recompute her entire developmental scoreboard on every status poll.
     if (!force && !AuroraBridge.isTabShown(AuroraBridge.tabHub)) return;
+    if (_refreshing) return; // never stack bridge work behind a slow turn
+    _refreshing = true;
     try {
-      final stats = await AuroraBridge.getCognitiveStats();
-      final habitatReport = _fromHomeOpen
-          ? await HabitatBridge.integrityReport()
-          : _habitatReport;
+      final now = DateTime.now();
+      final full = force || _stats.isEmpty || _lastFullRefresh == null ||
+          now.difference(_lastFullRefresh!).inSeconds >= 30;
+      final stats = full
+          ? await AuroraBridge.getCognitiveStats()
+          : Map<String, dynamic>.from(_stats);
+      // This link snapshot reads only the existing client status. It stays
+      // fresh even when the expensive learning/graph stats are cached.
+      final link = await AuroraBridge.getStrataLinkStatus();
+      if (link.containsKey('status')) {
+        final outbox = link['up_outbox'] is Map
+            ? link['up_outbox'] as Map : <String, dynamic>{};
+        stats.addAll({
+          'strata_link_status': link['status'],
+          'strata_link_endpoint': link['endpoint'] ?? '',
+          'strata_link_route': link['route'] ?? 'offline',
+          'strata_link_pending': outbox['pending'] ?? 0,
+          'strata_link_dropped': outbox['overflow_dropped'] ?? 0,
+          'strata_link_sent': link['sent'] ?? 0,
+          'strata_link_received': link['received'] ?? 0,
+          'strata_link_rtt_ms': link['rtt_ms'] ?? 0.0,
+          'strata_link_error': link['last_error'] ?? '',
+          'strata_link_role': link['role'] ?? '',
+          'strata_link_away': link['away'] ?? false,
+          'strata_link_surface_ready': link['surface_ready'] ?? false,
+          'strata_link_last_sync_at': link['last_sync_at'] ?? 0.0,
+          'strata_link_home_confirmed_at': link['home_last_confirmed_at'] ?? 0.0,
+          'strata_link_device_name': link['device_name'] ?? '',
+          'strata_link_first_pairing': link['first_pairing'] is Map
+              ? ((link['first_pairing'] as Map)['status'] ?? '') : '',
+        });
+      }
+      final habitatReport = full && _fromHomeOpen
+          ? await HabitatBridge.integrityReport() : _habitatReport;
       final turnDiagnostics = await AuroraBridge.getLiveTurnDiagnostics();
       final fieldStatus = await AuroraBridge.getFieldStatus();
       if (mounted) {
         setState(() {
-          _stats    = stats;
+          _stats = stats;
           _habitatReport = habitatReport;
           _turnDiagnostics = turnDiagnostics;
           _fieldStatus = fieldStatus;
-          _loading  = false;
+          _loading = false;
         });
+        if (full) _lastFullRefresh = now;
       }
     } catch (e, st) {
       UiDiagnostics.report('hub refresh', e, st);
       if (mounted) setState(() => _loading = false);
+    } finally {
+      _refreshing = false;
     }
   }
 
