@@ -175,8 +175,14 @@ class RelaySurfaceTransport:
                 req = urllib.request.Request(local + SYNC_PATH, data=body,
                     headers={"Content-Type": "application/json", **headers}, method="POST")
                 with urllib.request.urlopen(req, timeout=min(1.5, self.timeout_s)) as response:
-                    self.last_route = "local"
-                    return response.read(REQUEST_LIMIT), dict(response.headers.items())
+                    raw, signed_headers = response.read(REQUEST_LIMIT), dict(response.headers.items())
+                from aurora_internal.dual_strata.strata_link import verify
+                lower = {str(k).lower(): str(v) for k, v in signed_headers.items()}
+                if not verify(self.secret, lower.get("x-aurora-ts", ""), raw,
+                              lower.get("x-aurora-sig", "")):
+                    raise ValueError("Local response signature invalid; use encrypted relay")
+                self.last_route = "local"
+                return raw, signed_headers
             except (OSError, TimeoutError, ValueError):
                 self.local_retry_at = time.monotonic() + 30.0
         packet = _seal(self.secret, self.cfg["room"], "request",
