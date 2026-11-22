@@ -60,6 +60,7 @@ class DesktopRuntime:
         self._kernel_lock = threading.Lock()
         self._axes = {a: 0.5 for a in "XTNBA"}
         self.link = None
+        self.relay_home = None
         self.acm = None
         self.surface_id = "desktop"
         self._diagnostics = {}
@@ -248,6 +249,11 @@ class DesktopRuntime:
         self.link.set_home_surface(self.surface_id)
         self.link.handle_sync({"surface_id": self.surface_id, "name": device_name(self.state_dir)})
         self.link.start()
+        # The transport worker opens only outbound HTTPS to the optional
+        # gateway and hands requests to the SAME signed Strata Link server.
+        from aurora_internal.dual_strata.relay_transport import RelayHomePump
+        self.relay_home = RelayHomePump(self.state_dir, self.link)
+        self.relay_home.start()
         self.systems["_strata_link_server"] = self.link
         self.systems["_desktop_surface_id"] = self.surface_id
         from aurora_praxis_bridge import start_praxis_bridge
@@ -722,6 +728,7 @@ class DesktopRuntime:
                 "errors": dict(self.errors), "organs": dict(self._diagnostics),
                 "hardware": self.services.status(), "clone_harvest": self.systems.get("_clone_harvest_absorb"),
                 "strata": self.link.status() if self.link else {"status": "not_started"},
+                "remote": self.relay_home.status() if self.relay_home else {"configured": False},
                 "first_pairing": self._first_pairing_status(),
                 "home_requests": dict(self.home_requests_seen),
                 "moving": self.link.move_status() if self.link else None,
@@ -732,6 +739,8 @@ class DesktopRuntime:
 
     def stop(self, timeout=10):
         self._stop.set()
+        if self.relay_home:
+            self.relay_home.stop()
         if self._thread:
             self._thread.join(timeout)
         return not (self._thread and self._thread.is_alive())

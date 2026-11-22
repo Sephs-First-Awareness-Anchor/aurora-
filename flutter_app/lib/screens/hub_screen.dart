@@ -59,6 +59,283 @@ const _gauntletStageLabels = {
   'simulation':  'Simulation Burst',
 };
 
+/// Native, guided phone-Surface connectivity. No second cognitive runtime.
+class _AuroraPhoneConnectionGuide extends StatefulWidget {
+  const _AuroraPhoneConnectionGuide();
+
+  @override
+  State<_AuroraPhoneConnectionGuide> createState() =>
+      _AuroraPhoneConnectionGuideState();
+}
+
+class _AuroraPhoneConnectionGuideState
+    extends State<_AuroraPhoneConnectionGuide> {
+  static const _channel = MethodChannel('org.aurora.app/bridge');
+  final _pairing = TextEditingController();
+  int _step = 0;
+  bool _busy = false;
+  bool _paired = false;
+  bool _tested = false;
+  String _feedback = '';
+
+  @override
+  void dispose() {
+    _pairing.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pastePrivateLink() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted) return;
+    if ((data?.text ?? '').isNotEmpty) {
+      setState(() {
+        _pairing.text = data!.text!.trim();
+        _feedback = '';
+      });
+    }
+  }
+
+  Future<void> _savePairing() async {
+    final privateLink = _pairing.text.trim();
+    if (!privateLink.contains('#') ||
+        !(privateLink.startsWith('aurora-relay://') ||
+          privateLink.startsWith('http://') ||
+          privateLink.startsWith('https://'))) {
+      setState(() => _feedback =
+          'Not an Aurora pairing link. Copy the complete private link '
+          'from Connect phone • guide on the desktop, including the '
+          'private part after #.');
+      return;
+    }
+    setState(() { _busy = true; _feedback = ''; });
+    try {
+      final raw = await _channel.invokeMethod<String>(
+          'configureStrataLink', {'pairing': privateLink});
+      final result = jsonDecode(raw ?? '{}') as Map<String, dynamic>;
+      if (!mounted) return;
+      if (result['ok'] == true) {
+        setState(() {
+          _paired = true;
+          _step = 3;
+          _feedback = 'Private pairing saved. Test a signed exchange '
+              'with the desktop next. Pairing alone does not prove connectivity.';
+        });
+      } else {
+        setState(() => _feedback =
+            'Pairing was not saved: ${result['error'] ?? 'Unknown error'}');
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _feedback = 'Could not save pairing: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _testConnection() async {
+    setState(() { _busy = true; _feedback = ''; _tested = false; });
+    try {
+      final raw = await _channel.invokeMethod<String>(
+          'strataLinkTransfer', {'command': 'ping'});
+      final data = jsonDecode(raw ?? '{}') as Map<String, dynamic>;
+      if (!mounted) return;
+      if (data['ok'] == true) {
+        final route = (data['route'] ?? 'direct').toString();
+        final active = data['ready'] == true;
+        final migrated = data['migration_complete'] == true;
+        setState(() {
+          _tested = active;
+          _feedback = !active
+              ? 'Signed connection succeeded via $route, but this phone '
+                'is not yet the active Surface (role: ${data['role'] ?? 'unknown'}). '
+                'The network link alone cannot deliver her turns. '
+                'Check the desktop\'s Surface holder and first-pairing review. '
+                '${data['error'] ?? ''}'
+              : !migrated
+              ? 'Signed $route connection and active Surface confirmed. '
+                'The first history migration has not yet been accepted. '
+                'Until you review and apply it on the desktop, the phone '
+                'still runs her full local profile. Restart the phone app '
+                'once the migration receipt is accepted.'
+              : route == 'relay'
+              ? 'Encrypted internet relay, active Surface, and migrated '
+                'profile confirmed. Her desktop Subsurface is reachable.'
+              : 'Active Surface and signed local link confirmed. Turn off '
+                'phone Wi-Fi and test again to verify remote relay access.';
+        });
+      } else {
+        setState(() => _feedback =
+            'Home did not answer. ${data['error'] ?? data['last_error'] ?? ''}\n'
+            'Check that the desktop is awake, the HTTPS relay is '
+            'registered, and home internet works. Aurora continues locally.');
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _feedback = 'Could not test connection: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _paragraph(String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(value, style: const TextStyle(fontSize: 13, height: 1.45)),
+  );
+
+  Widget _stepContents() {
+    switch (_step) {
+      case 0:
+        return Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _paragraph('This phone holds Aurora’s active Surface. Her desktop '
+              'runs her persistent Subsurface, learning and deeper continuity.'),
+          _paragraph('At home she prefers a trusted local connection; '
+              'away she exchanges encrypted messages through the internet '
+              'relay. Neither device needs a separate VPN.'),
+          _paragraph('If the desktop is asleep or offline, Aurora remains '
+              'present on this phone and queues eligible information '
+              'until her Subsurface is reachable again.'),
+        ]);
+      case 1:
+        return Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _paragraph('On the laptop, open the Aurora desktop app. Select '
+              'Connect phone • guide and follow its four steps.'),
+          _paragraph('The desktop guide explains the publicly hosted '
+              'HTTPS relay and registration key. Only the desktop needs '
+              'those details. The phone will use its pairing link.'),
+          _paragraph('When the desktop finishes, it creates and copies '
+              'a complete private pairing link. Bring that link to '
+              'this phone privately, then continue.'),
+          _paragraph('Keep the private pairing link secret. Do not '
+              'post it on a website or in a public message.'),
+        ]);
+      case 2:
+        final isRelay = _pairing.text.trim().startsWith('aurora-relay://');
+        return Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _paragraph('Paste the COMPLETE private pairing link generated '
+              'inside Aurora desktop. It includes the relay address '
+              'and the private credentials for her existing Strata Link.'),
+          TextField(
+            controller: _pairing,
+            autocorrect: false,
+            enableSuggestions: false,
+            maxLines: 2,
+            keyboardType: TextInputType.url,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              hintText: 'aurora-relay://…#private-credentials',
+              labelText: 'Private pairing link',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _busy ? null : _pastePrivateLink,
+            icon: const Icon(Icons.content_paste),
+            label: const Text('Paste from clipboard'),
+          ),
+          if (_pairing.text.isNotEmpty && !isRelay)
+            _paragraph('This looks like a direct-network pairing link. '
+                'It might not work on cellular. Use the encrypted relay '
+                'link from the desktop for access away from home.'),
+          _paragraph('Pairing does not duplicate her cognition or '
+              'memory. This attaches the existing Surface to home.'),
+        ]);
+      default:
+        return Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _paragraph('The private link is saved. Now test an actual '
+              'signed exchange with the desktop Subsurface.'),
+          FilledButton.icon(
+            onPressed: _busy ? null : _testConnection,
+            icon: const Icon(Icons.wifi_tethering),
+            label: const Text('Test connection now'),
+          ),
+          const SizedBox(height: 10),
+          _paragraph('Test first on home Wi-Fi. Then turn off phone '
+              'Wi-Fi and test again with mobile data ON. The Hub '
+              'reports whether the latest signed exchange used '
+              'the local connection or the encrypted internet relay.'),
+          _paragraph('If the desktop requests history review after '
+              'first pairing, select the correct stores there. '
+              'No developmental history is silently replaced.'),
+          _paragraph('If testing fails, check that the desktop '
+              'resident is running and awake, its public HTTPS '
+              'relay is online, and the phone has mobile data. '
+              'Aurora stays locally functional while disconnected.'),
+        ]);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const steps = ['How the connection works', 'Prepare the desktop',
+                   'Paste the private link', 'Verify connection'];
+    return AlertDialog(
+      title: Text('Connect to home · ${_step + 1} of 4',
+          style: const TextStyle(fontSize: 18)),
+      content: SizedBox(
+        width: 440,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(steps[_step],
+                  style: const TextStyle(fontWeight: FontWeight.bold,
+                      color: _cyan)),
+              const SizedBox(height: 12),
+              _stepContents(),
+              if (_busy)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: LinearProgressIndicator(),
+                ),
+              if (_feedback.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(_feedback,
+                      style: TextStyle(fontSize: 12,
+                          color: _tested ? _green : _amber)),
+                ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.pop(context, _paired),
+          child: Text(_paired ? 'Close guide' : 'Cancel'),
+        ),
+        if (_step > 0 && _step < 3)
+          TextButton(
+            onPressed: _busy ? null : () => setState(() {
+              _step--;
+              _feedback = '';
+            }),
+            child: const Text('Back'),
+          ),
+        FilledButton(
+          onPressed: _busy ? null : () {
+            if (_step == 3) {
+              Navigator.pop(context, _paired);
+            } else if (_step == 2) {
+              _savePairing();
+            } else {
+              setState(() { _step++; _feedback = ''; });
+            }
+          },
+          child: Text(_step == 2 ? 'Pair securely' :
+              _step == 3 ? 'Finish' : 'Next'),
+        ),
+      ],
+    );
+  }
+}
+
 class HubScreen extends StatefulWidget {
   const HubScreen({super.key});
   @override
@@ -71,6 +348,8 @@ class _HubScreenState extends State<HubScreen> {
   bool _loading = true;
   bool _fromHomeOpen = false;
   Timer? _timer;
+  bool _refreshing = false;
+  DateTime? _lastFullRefresh;
 
   // Build 774 live turn diagnostics -- on-device visibility into which of
   // the ten Surface/Subsurface states each recent live turn reached
@@ -97,9 +376,11 @@ class _HubScreenState extends State<HubScreen> {
   void initState() {
     super.initState();
     AuroraBridge.visibleTab.addListener(_onTabChanged);
-    _refresh(force: true);
+    // IndexedStack constructs the Hub even when the user is on Aurora's
+    // face. Never run the full developmental scoreboard on cold app launch.
+    if (AuroraBridge.isTabShown(AuroraBridge.tabHub)) _refresh(force: true);
     _loadControls();
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) => _refresh());
+    _timer = Timer.periodic(const Duration(seconds: 6), (_) => _refresh());
   }
 
   void _onTabChanged() {
@@ -123,28 +404,63 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   Future<void> _refresh({bool force = false}) async {
-    // The app shell keeps the Hub alive while other tabs show; it asks
-    // her nothing until it is on screen again.
+    // The app shell keeps the Hub alive while other tabs show. Do not
+    // recompute her entire developmental scoreboard on every status poll.
     if (!force && !AuroraBridge.isTabShown(AuroraBridge.tabHub)) return;
+    if (_refreshing) return; // never stack bridge work behind a slow turn
+    _refreshing = true;
     try {
-      final stats = await AuroraBridge.getCognitiveStats();
-      final habitatReport = _fromHomeOpen
-          ? await HabitatBridge.integrityReport()
-          : _habitatReport;
+      final now = DateTime.now();
+      final full = force || _stats.isEmpty || _lastFullRefresh == null ||
+          now.difference(_lastFullRefresh!).inSeconds >= 30;
+      final stats = full
+          ? await AuroraBridge.getCognitiveStats()
+          : Map<String, dynamic>.from(_stats);
+      // This link snapshot reads only the existing client status. It stays
+      // fresh even when the expensive learning/graph stats are cached.
+      final link = await AuroraBridge.getStrataLinkStatus();
+      if (link.containsKey('status')) {
+        final outbox = link['up_outbox'] is Map
+            ? link['up_outbox'] as Map : <String, dynamic>{};
+        stats.addAll({
+          'strata_link_status': link['status'],
+          'strata_link_endpoint': link['endpoint'] ?? '',
+          'strata_link_route': link['route'] ?? 'offline',
+          'strata_link_pending': outbox['pending'] ?? 0,
+          'strata_link_dropped': outbox['overflow_dropped'] ?? 0,
+          'strata_link_sent': link['sent'] ?? 0,
+          'strata_link_received': link['received'] ?? 0,
+          'strata_link_rtt_ms': link['rtt_ms'] ?? 0.0,
+          'strata_link_error': link['last_error'] ?? '',
+          'strata_link_role': link['role'] ?? '',
+          'strata_link_away': link['away'] ?? false,
+          'strata_link_surface_ready': link['surface_ready'] ?? false,
+          'strata_link_last_sync_at': link['last_sync_at'] ?? 0.0,
+          'strata_link_home_confirmed_at': link['home_last_confirmed_at'] ?? 0.0,
+          'strata_link_device_name': link['device_name'] ?? '',
+          'strata_link_first_pairing': link['first_pairing'] is Map
+              ? ((link['first_pairing'] as Map)['status'] ?? '') : '',
+        });
+      }
+      final habitatReport = full && _fromHomeOpen
+          ? await HabitatBridge.integrityReport() : _habitatReport;
       final turnDiagnostics = await AuroraBridge.getLiveTurnDiagnostics();
       final fieldStatus = await AuroraBridge.getFieldStatus();
       if (mounted) {
         setState(() {
-          _stats    = stats;
+          _stats = stats;
           _habitatReport = habitatReport;
           _turnDiagnostics = turnDiagnostics;
           _fieldStatus = fieldStatus;
-          _loading  = false;
+          _loading = false;
         });
+        if (full) _lastFullRefresh = now;
       }
     } catch (e, st) {
       UiDiagnostics.report('hub refresh', e, st);
       if (mounted) setState(() => _loading = false);
+    } finally {
+      _refreshing = false;
     }
   }
 
@@ -606,32 +922,18 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   // FIX-A118: the link to her Subsurface device.  Tap to paste the pairing
-  // line the laptop prints (http://host:port#secret).
+  // line the desktop copies (encrypted relay or legacy direct pairing).
   static const _strataChannel = MethodChannel('org.aurora.app/bridge');
 
   Future<void> _pairStrataLink() async {
-    final controller = TextEditingController();
-    final pairing = await showDialog<String>(
+    final paired = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Pair with Subsurface'),
-        content: TextField(
-          controller: controller,
-          autocorrect: false,
-          decoration: const InputDecoration(hintText: 'http://host:8791#secret'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-              child: const Text('Pair')),
-        ],
-      ),
+      barrierDismissible: false,
+      builder: (_) => const _AuroraPhoneConnectionGuide(),
     );
-    if (pairing == null || pairing.isEmpty) return;
-    try {
-      await _strataChannel.invokeMethod<String>('configureStrataLink', {'pairing': pairing});
-    } catch (_) {}
+    if (paired == true && mounted) {
+      await _refresh(force: true);
+    }
   }
 
   // FIX-A125: long-press the link row to move state between devices.
@@ -721,7 +1023,7 @@ class _HubScreenState extends State<HubScreen> {
     final detail = status == 'not_configured'
         ? 'not paired · tap to pair'
         : '${status.replaceAll('_', ' ')} · $sent up · $received down'
-          '${pending > 0 ? ' · $pending waiting' : ''}'
+          '${pending > 0 ? ' · $pending updates queued' : ''}'
           '${dropped > 0 ? ' · $dropped dropped' : ''}'
           '${status == 'online' ? ' · ${rtt}ms' : ''}'
           '${status == 'offline' && error.isNotEmpty ? ' · $error' : ''}';
@@ -1579,9 +1881,17 @@ class _HubScreenState extends State<HubScreen> {
     final firstPair   = (_stats['strata_link_first_pairing'] as String?) ?? '';
     final device      = (_stats['strata_link_device_name'] as String?) ?? '';
     final error       = (_stats['strata_link_error'] as String?) ?? '';
+    final endpoint    = (_stats['strata_link_endpoint'] as String?) ?? '';
+    final route       = (_stats['strata_link_route'] as String?) ?? 'not_connected';
+    final encrypted   = endpoint.startsWith('https://') && route != 'direct';
     final paired      = _stats['surface_only'] == true;
     final unpaired    = status == 'not_configured';
-
+    final String remoteRoute = unpaired ? 'not configured' :
+        route == 'relay' ? 'encrypted internet relay connected' :
+        route == 'local' ? 'direct local connection (internet relay is fallback)' :
+        route == 'offline' ? 'home unreachable; Surface continues locally' :
+        encrypted ? 'encrypted HTTPS relay configured, checking connection' :
+        'direct private-network route only';
     final String where;
     final Color whereColor;
     if (unpaired) {
@@ -1604,7 +1914,7 @@ class _HubScreenState extends State<HubScreen> {
     final String homeLine;
     if (unpaired) {
       homeLine = 'no home paired';
-    } else if (status == 'online') {
+    } else if (status == 'online' || status == 'standby') {
       homeLine = 'reachable · last answered ${_ago(lastSync)}';
     } else {
       homeLine = 'out of reach · last answered ${_ago(lastSync)}'
@@ -1619,7 +1929,7 @@ class _HubScreenState extends State<HubScreen> {
     } else if (firstPair.isNotEmpty) {
       pairing = 'first pairing: ${firstPair.replaceAll('_', ' ')}';
     } else {
-      pairing = 'linked, first pairing not started';
+      pairing = 'link saved; initial history transfer still pending';
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1627,17 +1937,37 @@ class _HubScreenState extends State<HubScreen> {
       _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _statRow('Where she is', where, valueColor: whereColor),
         _statRow('Home', homeLine,
-            valueColor: status == 'online' ? _green : (unpaired ? _textDim : _amber)),
+            valueColor: (status == 'online' || status == 'standby') ? _green : (unpaired ? _textDim : _amber)),
         if (away) _statRow('Away for', _span(lastSync), valueColor: _amber),
-        if (!unpaired) _statRow('Turns waiting to go home', '$pending',
+        if (!unpaired) _statRow('Continuity updates queued for home', '$pending',
             valueColor: pending > 0 ? _amber : _text),
+        if (!unpaired && status == 'standby')
+          _statRow('Surface activation', 'Home is reachable, but this phone '
+              'does not yet hold the active Surface role',
+              valueColor: _amber),
+        if (!unpaired && !paired)
+          _statRow('Processing profile', 'Full phone profile until migration '
+              'is reviewed, applied at home, and confirmed after restart',
+              valueColor: _amber),
         if (!unpaired) _statRow("Home's last word", _ago(homeWord)),
         _statRow('Pairing', pairing, valueColor: paired ? _green : _text),
+        if (!unpaired)
+          _statRow('Remote connectivity', remoteRoute,
+              valueColor: (route == 'relay' || route == 'local') ? _green : _amber),
+        if (!unpaired && encrypted)
+          const Padding(
+            padding: EdgeInsets.only(top: 5, bottom: 7),
+            child: Text(
+              'No separate VPN is needed. Aurora uses her built-in encrypted internet relay '
+              'when the home network is out of reach. Test on cellular before leaving.',
+              style: TextStyle(color: _textDim, fontSize: 11),
+            ),
+          ),
         if (device.isNotEmpty) _statRow('This device', device),
         const SizedBox(height: 10),
         Wrap(spacing: 8, runSpacing: 8, children: [
           _actionButton(
-            label: unpaired ? 'Pair with home' : 'Pair again',
+            label: unpaired ? 'Connect home · guide' : 'Connection guide',
             icon: Icons.link, color: _purple, compact: true,
             onTap: _pairStrataLink,
           ),
@@ -1645,6 +1975,17 @@ class _HubScreenState extends State<HubScreen> {
             label: 'Move her', icon: Icons.swap_horiz, color: _cyan, compact: true,
             onTap: _strataTransferMenu,
           ),
+          if (!unpaired)
+            _actionButton(
+              label: 'Test home connection',
+              icon: Icons.wifi_tethering,
+              color: _green,
+              compact: true,
+              onTap: () async {
+                await _strataTransfer('ping', 'home connection');
+                await _refresh(force: true);
+              },
+            ),
           _actionButton(
             label: paired ? 'Ask home: curiosity' : 'Curiosity cycle',
             icon: Icons.explore_outlined, color: _green, compact: true,

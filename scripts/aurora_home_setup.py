@@ -69,6 +69,15 @@ def home_network_address() -> str:
     return ""
 
 
+def _native_resident_running(state_dir: Path) -> bool:
+    """Check the unified desktop resident's cross-platform process lock."""
+    try:
+        with ProcessLock(state_dir / "desktop_resident.lock", blocking=False):
+            return False
+    except (BlockingIOError, PermissionError):
+        return True
+
+
 def _resident_running(state_dir: Path) -> bool:
     """The resident runs from the stack's pid file or as a systemd service
     (scripts/strata_stack.sh starts it either way)."""
@@ -125,10 +134,10 @@ def cmd_pair(args) -> int:
     print("   ", line)
     print()
     print("Keep it private: it is the key to the link.")
-    if os.name == "nt":
-        print("Start or restart the installed AuroraDesktop resident to use this address.")
+    if _native_resident_running(state_dir):
+        print("Restart the unified resident to listen on the new address.")
     elif _resident_running(state_dir):
-        print("Restart the stack so home listens there: scripts/strata_stack.sh restart")
+        print("Legacy stack is running; use its own restart controls, not both runtimes.")
     return 0
 
 
@@ -175,6 +184,11 @@ def cmd_first_pairing(args) -> int:
               "(add --restart-stack to stop and start the stack around it).")
         return 0
     stack = REPO_ROOT / "scripts" / "strata_stack.sh"
+    if _native_resident_running(state_dir):
+        print("The unified resident owns this state. Choices have been saved; "
+              "restart the resident gracefully to apply them before its stores open. "
+              "Do not launch the legacy strata stack.")
+        return 1
     running = _resident_running(state_dir)
     if running and not args.restart_stack:
         print("The resident is running. Applying is done with it stopped: "
@@ -205,7 +219,7 @@ def cmd_first_pairing(args) -> int:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Set up this desktop as Aurora's home.")
     parser.add_argument("command", choices=("pair", "status", "first-pairing"))
-    parser.add_argument("--state-dir", default=default_state_dir() if os.name == "nt" else os.environ.get("AURORA_STATE_DIR", str(REPO_ROOT / "aurora_state")))
+    parser.add_argument("--state-dir", default=default_state_dir())
     parser.add_argument("--host", default="", help="pair: the address the phone dials (found automatically)")
     parser.add_argument("--port", type=int)
     parser.add_argument("--name", default="", help="pair: what this desktop is called (default: desktop)")
