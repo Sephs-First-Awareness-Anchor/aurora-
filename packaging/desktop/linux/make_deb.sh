@@ -45,7 +45,7 @@ StartupNotify=true
 DESKTOP
 cat > "$STAGE/DEBIAN/control" <<'CONTROL'
 Package: aurora-desktop
-Version: 0.1.1
+Version: 0.1.2
 Architecture: amd64
 Depends: libc6 (>= 2.35), libgl1, libegl1, libnss3, libgbm1, libxkbcommon-x11-0, libxcb-cursor0, libxcb-icccm4, libxcb-keysyms1, libxcb-shape0, libxcomposite1, libxdamage1, libxrandr2, libasound2 | libasound2t64
 Maintainer: Aurora Project
