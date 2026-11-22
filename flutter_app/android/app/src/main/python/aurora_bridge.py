@@ -5015,6 +5015,12 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
     _now_hm = _tp_hm.time()
     _processing_profile_started = _tp_hm.perf_counter()
     _processing_profile = {}
+    # Record at the ACTUAL input boundary, before boot gates, priming, or
+    # field admission. Previously the first diagnostic was emitted hundreds
+    # of lines later, so stuck turns misleadingly appeared as "0 live turns".
+    import uuid as _uuid_hm
+    _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
+    _record_turn_state(_turn_id, "surface_received", user_text=text[:100])
 
     # ── Sleep inertia: capture dormancy level BEFORE resetting the clock ──────
     # _get_isolation_factor() still sees the old _last_output_time here, so it
@@ -5061,6 +5067,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
+        _record_turn_state(_turn_id, "transport_failure", error="cognitive_boot_not_ready")
         return "Aurora is still initializing — please wait a moment."
 
     # ── Degraded boot: surface incomplete physics on first turn ───────────────
@@ -5456,10 +5463,6 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         # the process_external_user_turn call itself), so two turns' calls
         # still never execute concurrently -- unchanged from today.
         import aurora as _aurora  # type: ignore
-        import uuid as _uuid_hm
-
-        _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
-        _record_turn_state(_turn_id, "surface_received", user_text=text[:100])
 
         _box_lock = threading.Lock()
         _box_event = threading.Event()
