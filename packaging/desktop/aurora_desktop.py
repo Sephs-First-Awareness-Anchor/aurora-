@@ -525,18 +525,67 @@ def run_gui(state_dir: Path):
             "2. The private registration key set on that gateway.\n\n"
             "The phone will NOT need these details. It only needs the private "
             "pairing link this desktop creates on the next step.")
-        guide_button = QPushButton("Read illustrated-by-steps hosting instructions")
+        guide_button = QPushButton("Show relay hosting walkthrough in Aurora")
         def open_hosting_guide():
-            QDesktopServices.openUrl(QUrl(
+            help_window = QDialog(dialog)
+            help_window.setWindowTitle("Aurora • prepare the internet relay")
+            help_window.resize(680, 485)
+            layout = QVBoxLayout(help_window)
+            instructions = QPlainTextEdit(help_window)
+            instructions.setReadOnly(True)
+            instructions.setPlainText(
+                "WHAT IS THE RELAY?\n\n"
+                "It is a small web mailbox, not an Aurora server or a memory "
+                "store. Your desktop and phone connect OUT to it using HTTPS. "
+                "It forwards only encrypted messages.\n\n"
+                "STEP A — CHOOSE A PUBLIC HOST\n"
+                "Use an internet-accessible server or supported web host "
+                "with a domain name and an HTTPS certificate. A typical home "
+                "router does not accept incoming global connections without "
+                "extra networking, which Aurora deliberately avoids.\n\n"
+                "STEP B — RUN THE GATEWAY\n"
+                "The Aurora repository includes the gateway Python module "
+                "aurora_internal.dual_strata.relay_gateway, a systemd service "
+                "example, and a Caddy HTTPS proxy example in packaging/relay. "
+                "Deploy these ON THE PUBLIC HOST, not on your phone. The "
+                "gateway backend itself binds to 127.0.0.1:8795 there; the "
+                "HTTPS reverse proxy publicly serves port 443.\n\n"
+                "STEP C — CREATE A REGISTRATION KEY\n"
+                "Set a private random 24+ character key as the gateway's "
+                "AURORA_RELAY_REGISTRATION_KEY. Save it securely. This key "
+                "authorizes your desktop to register its private room and "
+                "does NOT go to your phone.\n\n"
+                "STEP D — CHECK THE WEB ADDRESS\n"
+                "Open https://YOUR-RELAY-DOMAIN/v1/health in a browser. "
+                "The relay must respond as aurora-opaque-relay before "
+                "the desktop app accepts the address.\n\n"
+                "STEP E — RETURN TO AURORA\n"
+                "Enter that HTTPS address and registration key on step 3. "
+                "Aurora creates your private phone pairing link and "
+                "starts her outbound desktop connection.\n\n"
+                "STEP F — CONNECT AND TEST THE PHONE\n"
+                "Follow the in-phone connection guide; test once on "
+                "home Wi-Fi and again on cellular. A running internet "
+                "gateway alone does not prove both devices are connected.\n\n"
+                "IMPORTANT: Hosting is a separate external service. This "
+                "desktop installer contains the client and the tutorial "
+                "but cannot supply a globally accessible web server or "
+                "an HTTPS domain without a host. A sleeping/offline "
+                "desktop cannot provide live Subsurface communication.")
+            layout.addWidget(instructions)
+            actions = QHBoxLayout()
+            details = QPushButton("Open full technical instructions")
+            details.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(
                 "https://github.com/Sephs-First-Awareness-Anchor/aurora-/blob/"
-                "main/packaging/relay/README.md"))
-        # The instructions are committed on this PR; the branch URL works
-        # before release, and main will work after merge.
-        def open_current_guide():
-            QDesktopServices.openUrl(QUrl(
-                "https://github.com/Sephs-First-Awareness-Anchor/aurora-/blob/"
-                "ceph/linux-resident-pairing-20261121/packaging/relay/README.md"))
-        guide_button.clicked.connect(open_current_guide)
+                "ceph/linux-resident-pairing-20261121/packaging/relay/README.md")))
+            actions.addWidget(details)
+            actions.addStretch()
+            done = QPushButton("Back to setup")
+            done.clicked.connect(help_window.accept)
+            actions.addWidget(done)
+            layout.addLayout(actions)
+            help_window.exec()
+        guide_button.clicked.connect(open_hosting_guide)
         hosting.addWidget(guide_button)
         hosting.addStretch()
 
@@ -583,7 +632,7 @@ def run_gui(state_dir: Path):
             "Configuration has been saved and the relay's health endpoint "
             "responded. This does not yet prove the desktop and phone are "
             "exchanging messages.\n\n"
-            "1. Open Aurora on the phone and choose Hub → Pair with home.\n"
+            "1. Open Aurora on the phone and choose Hub → Connect home • guide.\n"
             "2. Follow the phone's connection tutorial and paste the private "
             "link below. It is also copied to your clipboard.\n"
             "3. Test the connection on your home network, then disable Wi-Fi "
