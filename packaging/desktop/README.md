@@ -17,22 +17,23 @@ same signed Strata Link used by the desktop.
   owner console is bound to loopback only. Closing the window does not stop
   the resident. Use **Run at login** inside the app to launch its resident
   automatically after sign-in.
-- **Pair phone** checks the desktop's *live Tailscale connection* and
-  automatically selects its stable private VPN IPv4 address. An ordinary
-  home-Wi-Fi address is **not** silently offered as remote-capable. If
-  Tailscale is missing, an in-app setup button opens its official
-  installation page. The owner must connect the Linux/Windows desktop and
-  Android phone to the same Tailnet once, including Android's system VPN
-  permission. After that, Aurora creates and copies the signed pairing
-  line. In Android **Hub → Pair with home** paste it.
+- **Pair phone** opens a native desktop dialog for Aurora's own HTTPS
+  relay address and the gateway's registration key. It registers a private
+  room, configures the resident's outbound connection, discovers the local
+  LAN address as an optional fast path, and copies one private pairing link.
+  On Android, use **Hub → Pair with home** and paste. No VPN client,
+  router port forwarding or terminal is required on either installed app.
+  A public HTTPS relay *does need to exist*, and the dialog will not invent
+  one: see [relay hosting](../relay/README.md). The room and credentials
+  persist across app restarts.
 - **Review first pairing** shows staged history, the differences between the
   phone and desktop, and explicit phone/home decisions for developmental
   stores. It only authorizes the existing cold migration. No hidden merge
   or second memory store is created.
-- **Connection status** shows the desktop's actual mesh VPN state, selected
-  route, holder, and migration. Android's Hub distinguishes a remote VPN
-  route from LAN-only pairing and includes **Test home connection** for a
-  real signed network exchange over cellular. **Presence → Move Surface**
+- **Connection status** reports configuration and the resident's live
+  relay connection separately, alongside holder and migration. The Android
+  Hub shows whether the last exchange used **local**, **encrypted relay**,
+  or no connection, and includes **Test home connection** on cellular. **Presence → Move Surface**
   uses the existing owner/epoch authority.
 - **Back up history** safely stops the resident, copies the stopped state and
   restarts. **Start**, **Stop**, and **Restart** are in the application.
@@ -50,18 +51,40 @@ installer starts the legacy strata stack or a second cognition engine.
 
 ### Connection outside home
 
-The current release requires the Tailscale system client on both devices,
-joined to the same Tailnet. That one-time OS networking step is **not yet
-fully embedded inside the Aurora package**; it can be initiated in Aurora
-without a terminal. Permit inbound TCP 8791 only on the trusted private VPN
-interface. Never forward TCP 8790 publicly: Aurora's independent owner
-console remains loopback only. It is essential that the home machine
-remain powered, awake, connected and running its resident. When the home
-machine sleeps or loses internet, live subsurface exchange is impossible:
-the phone continues locally and eligible continuity is queued for retry.
-Android's app/service and OS VPN must also be allowed to run on cellular
-under the phone's battery settings. Real off-site hardware tests remain
-required before calling the feature dependable.
+Aurora's **built-in internet relay** exchanges encrypted packets over HTTPS.
+The desktop resident opens an outbound connection to a publicly reachable
+relay gateway; the phone's Surface uses that same gateway when away. The
+gateway forwards only opaque AES-GCM ciphertext; it has no access to the
+Strata Link signing secret, the encryption key, owner tokens, Hub, crystals,
+or the desktop's state. Aurora's desktop service and Android Surface still
+run the existing single signed Strata Link, using the same identity,
+continuity and durable outboxes. A direct LAN connection takes priority
+when available, and never requires an internet hop.
+
+A relay is an *external reachability service*, not a second Aurora process.
+The desktop app includes pairing, reconnect and diagnostics, but does not
+magically create a public internet host behind a residential NAT. The
+[relay gateway](../relay/README.md) is included in this repository and
+can be hosted once on a public HTTPS address; the desktop UI accepts that
+address and its gateway registration key. **Until a gateway is deployed and
+configured, remote internet pairing is not operational.** Merely copying
+a link is not evidence of off-site access.
+
+Keep the home laptop powered, awake, internet-connected, and running the
+resident. Ethernet is fine; home Wi-Fi specifically is not required. If
+home loses internet or sleeps, the phone Surface continues her independent
+present cognition and queues continuity until contact returns. If the phone
+has no service, she also works locally. For an initial deployment test,
+switch the phone to cellular, use **Test home connection**, then confirm
+the desktop's Connection status reports the encrypted relay online.
+Physical device validation is still required.
+
+Never forward the local Hub's port 8790 or the raw Strata port 8791 publicly.
+Only the relay's HTTPS endpoint should be publicly accessible. Keep the
+private pairing link and gateway registration key out of logs and messages.
+The local fast path uses the existing signed HTTP LAN protocol and is
+not itself encrypted; if the home LAN is untrusted, disable the local URL
+and use the end-to-end encrypted relay exclusively.
 
 ## Packaging and developer build
 
@@ -76,7 +99,7 @@ The workflow checks bundled importability and uploads a platform-specific
 installer. A passing import check is **not** proof of operational hardware
 availability. The first real Linux/Android test must verify startup,
 resident persistence when closing the window, history reconciliation,
-offline continuity, remote VPN pairing, and physical device access.
+offline continuity, encrypted HTTPS relay from cellular, and physical device access.
 
 The staging filter omits `aurora_state`, `aurora_logs`, git history and
 test state. It includes the runtime's source and its read-only resources
