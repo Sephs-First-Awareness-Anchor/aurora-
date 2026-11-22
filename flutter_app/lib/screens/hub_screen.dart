@@ -1643,12 +1643,12 @@ class _HubScreenState extends State<HubScreen> {
         if (!unpaired)
           _statRow('Remote connectivity', remoteRoute,
               valueColor: (route == 'relay' || route == 'local') ? _green : _amber),
-        if (!unpaired && viaVpn)
+        if (!unpaired && encrypted)
           const Padding(
             padding: EdgeInsets.only(top: 5, bottom: 7),
             child: Text(
-              'Keep the private VPN active on both devices. The desktop must remain awake and online. '
-              'Switch to cellular to verify the connection before leaving home.',
+              'No separate VPN is needed. Aurora uses her built-in encrypted internet relay '
+              'when the home network is out of reach. Test on cellular before leaving.',
               style: TextStyle(color: _textDim, fontSize: 11),
             ),
           ),
