@@ -128,3 +128,51 @@ def test_real_gateway_roundtrip_reuses_signed_strata_server(tmp_path, monkeypatc
         gateway.shutdown()
         gateway.server_close()
         gateway_thread.join(timeout=2)
+
+
+def test_first_phone_claims_from_desktop_bootstrap_and_drains_uplink(tmp_path):
+    """A first phone is not forced into permanent standby by desktop boot."""
+    from aurora_internal.dual_strata.strata_link import link_dir
+    home = tmp_path / "home"
+    server = StrataLinkServer(home, host="127.0.0.1", port=0)
+    server.set_home_surface("home-surface")
+    first = server.handle_sync({"surface_id": "home-surface", "name": "home"})
+    assert first["role"] == "active" and first["epoch"] == 1
+    result = server.handle_sync({
+        "surface_id": "phone-a", "name": "my phone", "claim": True,
+        "up": [{"seq": 1, "channel": "raw_input", "kind": "state",
+                "payload": {"text": "test", "expires_at": time.time() + 100}}],
+    })
+    assert result["role"] == "active"
+    assert result["owner"] == "phone-a"
+    assert result["surface_ready"] is True
+    assert result["epoch"] == 2
+    assert result["up_ack"] == 1
+    assert (link_dir(home) / "raw_input.json").exists()
+    # The exception is only for the first phone; a new phone still needs
+    # the established checkpoint/handoff protocol.
+    another = server.handle_sync({"surface_id": "phone-b", "claim": True})
+    assert another["role"] == "standby"
+    assert another["error"] == "checkpoint_handoff_required"
+    assert another["owner"] == "phone-a"
+
+
+def test_standby_pending_records_do_not_trigger_fast_polling(tmp_path, monkeypatch):
+    """The pending queue must not create an endless two-second retry storm."""
+    from aurora_internal.dual_strata import strata_link as sl
+    client = StrataLinkClient(tmp_path, endpoint="http://127.0.0.1:9877",
+                              secret="test", transport=lambda *_: (b"", {}))
+    client.role = "standby"
+    client.online = True
+    client.outbox.append("raw_input", "state", {"text": "queued"})
+    observed = []
+    def one_sync():
+        client._stop.set()
+        observed.append("sync")
+        return False
+    monkeypatch.setattr(client, "sync_once", one_sync)
+    # An iteration can end immediately after sync, but must not depend on
+    # or clear the pending outbox to terminate.
+    client._run()
+    assert observed == ["sync"]
+    assert client.outbox.stats()["pending"] == 1
