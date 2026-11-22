@@ -28,7 +28,7 @@ def test_pairing_is_reusable_and_contains_no_gateway_provisioning_key(tmp_path):
     assert configure_surface(phone, a)["ok"]
     client = StrataLinkClient(phone, endpoint=origin, secret=secret)
     assert client._relay_transport is not None
-    assert client.status()["route"] == "not_connected"
+    assert client.status()["route"] == "offline"
     assert "relay_home.json" not in str((phone / "strata_link" / "relay_surface.json").read_text())
 
 
@@ -116,6 +116,12 @@ def test_real_gateway_roundtrip_reuses_signed_strata_server(tmp_path, monkeypatc
                       response_headers["X-Aurora-Sig"])
         assert json.loads(answer)["v"] == 1
         assert surface.last_route == "relay"
+        # The gateway releases the Surface as soon as it receives the reply,
+        # which can precede the home pump's bookkeeping increment.
+        for _ in range(40):
+            if pump.processed >= 1:
+                break
+            time.sleep(.025)
         assert pump.processed >= 1
     finally:
         pump.stop()
