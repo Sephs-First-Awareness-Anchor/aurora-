@@ -24,7 +24,7 @@ PAIR_SCHEME = "aurora-relay"
 ROOM_PATTERN = re.compile(r"^[A-Za-z0-9_-]{24,72}$")
 HOME_FILE = "relay_home.json"
 SURFACE_FILE = "relay_surface.json"
-REQUEST_LIMIT = 7 * 1024 * 1024
+REQUEST_LIMIT = 9 * 1024 * 1024
 
 
 def _directory(state_dir: Any) -> Path:
