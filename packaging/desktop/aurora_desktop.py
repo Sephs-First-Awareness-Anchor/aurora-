@@ -169,11 +169,12 @@ def _set_login_enabled(enabled: bool):
 
 def run_gui(state_dir: Path):
     from PySide6.QtCore import QTimer, QUrl, Qt
-    from PySide6.QtGui import QAction
+    from PySide6.QtGui import QAction, QDesktopServices
     from PySide6.QtWidgets import (
         QApplication, QComboBox, QDialog, QFormLayout, QInputDialog,
         QMainWindow, QMessageBox, QScrollArea, QToolBar, QLineEdit,
-        QVBoxLayout, QWidget, QLabel, QPushButton)
+        QVBoxLayout, QHBoxLayout, QStackedWidget, QCheckBox, QPlainTextEdit,
+        QWidget, QLabel, QPushButton)
     from PySide6.QtWebEngineWidgets import QWebEngineView
     from aurora_internal.desktop.server import owner_token
     from scripts.aurora_home_setup import home_network_address
@@ -472,97 +473,243 @@ def run_gui(state_dir: Path):
         status.setText("Waiting for Aurora resident...")
 
     def pair_phone():
-        # The owner enters an HTTPS relay once. Aurora's native desktop and
-        # Android builds carry the protocol, encryption and reconnection.
-        # There is no required third-party VPN application or router port
-        # forwarding, but a real public HTTPS relay still must be hosted.
+        """Owner-facing tutorial and pairing wizard; no shell or VPN required."""
         from aurora_internal.desktop.common import write_json
-        cfg_path = link_dir(state_dir) / "relay_home.json"
-        existing = read_json(cfg_path, {})
-        origin, ok = QInputDialog.getText(
-            window, "Aurora internet connection",
-            "Enter your Aurora relay's HTTPS web address.\n"
-            "Aurora connects OUT to it, so the phone can reach home from anywhere.\n"
-            "This address must point to a deployed gateway, not your laptop's LAN IP.\n"
-            "Example: https://relay.your-domain.com",
-            text=str(existing.get("origin") or ""))
-        if not ok or not origin.strip():
-            return
-        try:
-            origin = validate_origin(origin)
-        except ValueError as exc:
-            QMessageBox.warning(window, "Relay address", str(exc))
-            return
-        key, ok = QInputDialog.getText(
-            window, "Relay registration",
-            "Enter the relay service's registration key. This is used only "
-            "to establish this desktop's private room, never shared with "
-            "the phone or transmitted in her Strata packets.",
-            echo=QLineEdit.EchoMode.Password,
-            text=str(existing.get("provisioning_key") or ""))
-        if not ok or len(key) < 24:
-            if ok:
-                QMessageBox.warning(window, "Registration key",
-                    "The hosted gateway requires a registration key of at least 24 characters.")
-            return
-        answer = QMessageBox.question(
-            window, "Connect Aurora remotely?",
-            "Aurora will prefer a direct LAN connection while your phone is "
-            "at home and switch to encrypted HTTPS relay access away from home.\n\n"
-            "The relay cannot read her encrypted Strata exchanges. Your "
-            "local owner console will remain private on this desktop.\n\n"
-            "The home computer must stay running and internet-connected. "
-            "Aurora can request an idle-sleep guard, which increases power use.\n\n"
-            "Configure the connection and copy the private pairing link?")
-        if answer != QMessageBox.StandardButton.Yes:
-            return
-        try:
-            lan_host = home_network_address()
-            if lan_host.startswith(("127.", "169.254.")) or not lan_host:
-                lan_host = ""
-            from aurora_internal.dual_strata.strata_link import DEFAULT_PORT
-            port = int(read_json(state_dir / "desktop_config.json", {}).get("AURORA_STRATA_LINK_PORT") or DEFAULT_PORT)
-            local_url = f"http://{lan_host}:{port}" if lan_host else ""
-            pairing = relay_pairing_line(state_dir, origin, local_url)
-            relay_cfg = read_json(cfg_path, {})
-            relay_cfg["provisioning_key"] = key
-            write_json(cfg_path, relay_cfg)
-            if os.name != "nt":
-                os.chmod(cfg_path, 0o600)
-            config_path = state_dir / "desktop_config.json"
-            config = read_json(config_path, {})
-            # Bind the signed Strata listener on the LAN, never the owner
-            # console. The HTTPS relay connects outbound from this process.
-            config["AURORA_STRATA_LINK_HOST"] = "0.0.0.0"
-            config["AURORA_STRATA_LINK_PORT"] = port
-            config["AURORA_KEEP_HOME_AWAKE"] = (
-                os.name == "nt" or bool(shutil.which("systemd-inhibit")))
-            write_json(config_path, config)
-            (link_dir(state_dir) / "listen_host.txt").write_text("0.0.0.0", encoding="utf-8")
-            if _probe(state_dir) is not None:
-                _stop_resident(state_dir)
-                reconnect["after_stop"] = True
-                reconnect["started"] = True
+        from aurora_internal.dual_strata.strata_link import DEFAULT_PORT
+
+        dialog = QDialog(window)
+        dialog.setWindowTitle("Connect Aurora • desktop and phone")
+        dialog.resize(720, 565)
+        root = QVBoxLayout(dialog)
+        progress = QLabel("Step 1 of 4")
+        progress.setStyleSheet("font-weight: 600; padding: 8px;")
+        root.addWidget(progress)
+        stack = QStackedWidget(dialog)
+        root.addWidget(stack, 1)
+
+        def page(title, description):
+            body = QWidget()
+            column = QVBoxLayout(body)
+            heading = QLabel(title)
+            heading.setStyleSheet("font-size: 18px; font-weight: 600;")
+            column.addWidget(heading)
+            overview = QLabel(description)
+            overview.setWordWrap(True)
+            overview.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            overview.setStyleSheet("padding: 10px 0;")
+            column.addWidget(overview)
+            stack.addWidget(body)
+            return column
+
+        intro = page("One Aurora, two devices",
+            "Your desktop runs Aurora's persistent Subsurface. Your phone is "
+            "her active Surface, keeping her present and responsive.\n\n"
+            "• At home, the phone prefers a direct local connection.\n"
+            "• Away from home, the apps use an encrypted internet relay.\n"
+            "• With no connection, the Surface keeps working locally and "
+            "queues eligible continuity for later reconciliation.\n\n"
+            "The internet relay carries messages. It is NOT another Aurora, "
+            "does not own her memories, and cannot read her encrypted history. "
+            "No separate VPN app or manual router forwarding is needed.")
+        intro.addStretch()
+
+        hosting = page("Prepare the secure internet address",
+            "The desktop can contact the internet, but a home router normally "
+            "blocks incoming connections. Both apps therefore contact one "
+            "public HTTPS relay.\n\n"
+            "This relay must be hosted at an internet-accessible HTTPS domain. "
+            "The repository includes the gateway and a hosting guide, but "
+            "a relay service has NOT been deployed automatically.\n\n"
+            "Once the gateway is online, you need only TWO details:\n"
+            "1. Its HTTPS web address.\n"
+            "2. The private registration key set on that gateway.\n\n"
+            "The phone will NOT need these details. It only needs the private "
+            "pairing link this desktop creates on the next step.")
+        guide_button = QPushButton("Read illustrated-by-steps hosting instructions")
+        def open_hosting_guide():
+            QDesktopServices.openUrl(QUrl(
+                "https://github.com/Sephs-First-Awareness-Anchor/aurora-/blob/"
+                "main/packaging/relay/README.md"))
+        # The instructions are committed on this PR; the branch URL works
+        # before release, and main will work after merge.
+        def open_current_guide():
+            QDesktopServices.openUrl(QUrl(
+                "https://github.com/Sephs-First-Awareness-Anchor/aurora-/blob/"
+                "ceph/linux-resident-pairing-20261121/packaging/relay/README.md"))
+        guide_button.clicked.connect(open_current_guide)
+        hosting.addWidget(guide_button)
+        hosting.addStretch()
+
+        form = page("Configure Aurora's private relay",
+            "Enter the address and registration key from your hosted relay. "
+            "Aurora checks its real health endpoint before creating the "
+            "phone's private pairing link.\n\n"
+            "No private keys or pairing links should be pasted into a public "
+            "website, code repository, or shared conversation.")
+        previous = read_json(link_dir(state_dir) / "relay_home.json", {})
+        origin_field = QLineEdit(str(previous.get("origin") or ""))
+        origin_field.setPlaceholderText("https://relay.your-domain.com")
+        secret_field = QLineEdit(str(previous.get("provisioning_key") or ""))
+        secret_field.setEchoMode(QLineEdit.EchoMode.Password)
+        secret_field.setPlaceholderText("Relay registration key (24+ characters)")
+        show_secret = QCheckBox("Show registration key")
+        show_secret.toggled.connect(lambda yes: secret_field.setEchoMode(
+            QLineEdit.EchoMode.Normal if yes else QLineEdit.EchoMode.Password))
+        local_check = QCheckBox("Prefer direct connection on my trusted home network")
+        local_check.setChecked(True)
+        awake_check = QCheckBox("Keep Aurora's desktop resident awake while running")
+        awake_check.setChecked(os.name == "nt" or bool(shutil.which("systemd-inhibit")))
+        tip = QLabel("Using the local link avoids relay latency but uses signed, "
+                     "unencrypted HTTP within your home network. Disable it on "
+                     "shared/untrusted Wi-Fi. The encrypted internet relay "
+                     "remains available either way.")
+        tip.setWordWrap(True)
+        form.addWidget(QLabel("HTTPS relay address"))
+        form.addWidget(origin_field)
+        form.addWidget(QLabel("Relay registration key"))
+        form.addWidget(secret_field)
+        form.addWidget(show_secret)
+        form.addSpacing(12)
+        form.addWidget(local_check)
+        form.addWidget(tip)
+        form.addWidget(awake_check)
+        power_tip = QLabel("An awake laptop uses more power. Closing its lid or "
+                           "losing home internet can still disconnect it.")
+        power_tip.setWordWrap(True)
+        form.addWidget(power_tip)
+        form.addStretch()
+
+        complete = page("Finish pairing on Aurora's phone",
+            "Configuration has been saved and the relay's health endpoint "
+            "responded. This does not yet prove the desktop and phone are "
+            "exchanging messages.\n\n"
+            "1. Open Aurora on the phone and choose Hub → Pair with home.\n"
+            "2. Follow the phone's connection tutorial and paste the private "
+            "link below. It is also copied to your clipboard.\n"
+            "3. Test the connection on your home network, then disable Wi-Fi "
+            "on the phone and test over cellular.\n"
+            "4. Return here to check that the resident reports an ONLINE relay.\n"
+            "5. If first-pairing history is staged, review its differences "
+            "in the desktop's Review first pairing screen.\n\n"
+            "If the home computer sleeps or loses internet, the phone "
+            "keeps her local Surface and queues information until reconnection.")
+        link_field = QPlainTextEdit()
+        link_field.setReadOnly(True)
+        link_field.setMaximumHeight(86)
+        complete.addWidget(link_field)
+        copy_link = QPushButton("Copy private phone pairing link again")
+        copy_link.clicked.connect(
+            lambda: QApplication.clipboard().setText(link_field.toPlainText()))
+        complete.addWidget(copy_link)
+        relay_status = QLabel("Checking for resident connection…")
+        relay_status.setWordWrap(True)
+        complete.addWidget(relay_status)
+        def check_relay_status():
+            live = (_probe(state_dir) or {}).get("remote") or {}
+            if live.get("online"):
+                relay_status.setText(
+                    "Desktop's outbound relay is online. Now verify a real "
+                    "signed exchange from the phone on cellular.")
             else:
-                reconnect["started"] = False
-                reconnect["loaded"] = False
-        except Exception as exc:
-            QMessageBox.warning(window, "Remote pairing", str(exc))
-            return
-        QApplication.clipboard().setText(pairing)
-        dialog = QMessageBox(window)
-        dialog.setWindowTitle("Pair Aurora's Android Surface")
-        dialog.setText(
-            "Encrypted internet pairing has been configured and the private "
-            "pairing link was copied. Open the Android Aurora app → Hub → "
-            "Pair with home and paste it.\n\n"
-            "The desktop resident will restart to register its relay room. "
-            "Use Connection status and Test home connection before leaving.")
-        dialog.setInformativeText(pairing)
-        dialog.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
+                relay_status.setText(
+                    "Relay is not yet confirmed online by the desktop resident. "
+                    "It may still be restarting. Connection status will show "
+                    "the last error. Phone pairing is not yet verified.")
+        check_button = QPushButton("Check desktop relay connection")
+        check_button.clicked.connect(check_relay_status)
+        complete.addWidget(check_button)
+        complete.addStretch()
+
+        controls = QHBoxLayout()
+        back = QPushButton("Back")
+        next_step = QPushButton("Next")
+        close = QPushButton("Cancel")
+        controls.addWidget(back)
+        controls.addStretch()
+        controls.addWidget(close)
+        controls.addWidget(next_step)
+        root.addLayout(controls)
+
+        def navigate(step):
+            stack.setCurrentIndex(step)
+            progress.setText(f"Step {step + 1} of 4")
+            back.setEnabled(step > 0 and step < 3)
+            next_step.setText("Done" if step == 3 else
+                              "Validate & create pairing" if step == 2 else "Next")
+            close.setVisible(step != 3)
+
+        def configure():
+            try:
+                origin = validate_origin(origin_field.text())
+                key = secret_field.text()
+                if len(key) < 24:
+                    raise ValueError("Registration key needs at least 24 characters.")
+                request = urllib.request.Request(origin + "/v1/health")
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    health = json.loads(response.read(4096))
+                if not (isinstance(health, dict) and health.get("ok") is True
+                        and health.get("service") == "aurora-opaque-relay"):
+                    raise ValueError("This HTTPS address does not serve Aurora's relay gateway.")
+            except Exception as exc:
+                QMessageBox.warning(dialog, "Relay is not ready",
+                    f"The relay could not be verified: {type(exc).__name__}: {exc}\n\n"
+                    "Check the hosting guide and public HTTPS URL. Nothing was saved "
+                    "or declared connected.")
+                return False
+            try:
+                lan_host = home_network_address() if local_check.isChecked() else ""
+                if lan_host.startswith(("127.", "169.254.")):
+                    lan_host = ""
+                config_path = state_dir / "desktop_config.json"
+                config = read_json(config_path, {})
+                port = int(config.get("AURORA_STRATA_LINK_PORT") or DEFAULT_PORT)
+                local_url = f"http://{lan_host}:{port}" if lan_host else ""
+                pairing = relay_pairing_line(state_dir, origin, local_url)
+                relay_path = link_dir(state_dir) / "relay_home.json"
+                stored = read_json(relay_path, {})
+                stored["provisioning_key"] = key
+                write_json(relay_path, stored)
+                if os.name != "nt":
+                    os.chmod(relay_path, 0o600)
+                config["AURORA_STRATA_LINK_HOST"] = "0.0.0.0" if local_url else "127.0.0.1"
+                config["AURORA_STRATA_LINK_PORT"] = port
+                config["AURORA_KEEP_HOME_AWAKE"] = awake_check.isChecked()
+                write_json(config_path, config)
+                (link_dir(state_dir) / "listen_host.txt").write_text(
+                    config["AURORA_STRATA_LINK_HOST"], encoding="utf-8")
+                if _probe(state_dir) is not None:
+                    _stop_resident(state_dir)
+                    reconnect["after_stop"] = True
+                    reconnect["started"] = True
+                else:
+                    reconnect["started"] = False
+                    reconnect["loaded"] = False
+                link_field.setPlainText(pairing)
+                QApplication.clipboard().setText(pairing)
+            except Exception as exc:
+                QMessageBox.warning(dialog, "Pairing configuration failed",
+                                    f"{type(exc).__name__}: {exc}")
+                return False
+            return True
+
+        def next_clicked():
+            current = stack.currentIndex()
+            if current == 3:
+                dialog.accept()
+            elif current == 2:
+                if configure():
+                    navigate(3)
+                    check_relay_status()
+            else:
+                navigate(current + 1)
+
+        back.clicked.connect(lambda: navigate(max(0, stack.currentIndex() - 1)))
+        next_step.clicked.connect(next_clicked)
+        close.clicked.connect(dialog.reject)
+        navigate(0)
         dialog.exec()
 
-    pair_action = QAction("Pair phone", window)
+    pair_action = QAction("Connect phone • guide", window)
     pair_action.triggered.connect(pair_phone)
     toolbar.addAction(pair_action)
     def start_now():
