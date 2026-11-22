@@ -12564,6 +12564,7 @@ def get_cognitive_stats() -> str:
             # Safe to show: endpoint excludes the '#secret' pairing fragment.
             # The phone Hub distinguishes a remote VPN route from home Wi-Fi.
             stats["strata_link_endpoint"] = str(_sl.get("endpoint", "") or "")[:250]
+            stats["strata_link_route"] = str(_sl.get("route", "not_connected") or "not_connected")[:40]
             stats["strata_link_pending"] = int((_sl.get("up_outbox") or {}).get("pending", 0) or 0)
             stats["strata_link_dropped"] = int((_sl.get("up_outbox") or {}).get("overflow_dropped", 0) or 0)
             stats["strata_link_sent"] = int(_sl.get("sent", 0) or 0)
