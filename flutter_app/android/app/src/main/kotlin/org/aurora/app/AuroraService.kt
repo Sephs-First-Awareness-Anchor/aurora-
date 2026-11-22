@@ -117,14 +117,15 @@ class AuroraService : Service() {
                     "Aurora's phone processing failed: ${e.javaClass.simpleName}: ${e.message ?: "unknown"}. Check her Hub diagnostics."
                 }
 
+                val deliveredAxisJson = axisJson
                 withContext(Dispatchers.Main) {
                     callback(reply)
                     eventSink?.success(
                         JSONObject().put("type", "response").put("text", reply).toString()
                     )
-                    if (axisJson != null) {
+                    if (deliveredAxisJson != null) {
                         try {
-                            val axisObj = JSONObject(axisJson)
+                            val axisObj = JSONObject(deliveredAxisJson)
                                 .put("source", "aurora")
                                 .put("type", "axis_state")
                             eventSink?.success(axisObj.toString())
