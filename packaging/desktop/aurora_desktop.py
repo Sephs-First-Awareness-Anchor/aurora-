@@ -818,11 +818,32 @@ def run_gui(state_dir: Path):
     return app.exec()
 
 
+def gui_self_test():
+    """Exercise a REAL graphical Qt/WebEngine startup in a virtual display.
+
+    Unlike --self-test this loads the platform plugin, opens a widget,
+    and starts Chromium's WebEngine helper process. It must never start
+    Aurora's resident or touch existing saved history.
+    """
+    from PySide6.QtCore import QTimer, QUrl
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWebEngineWidgets import QWebEngineView
+    app = QApplication(sys.argv[:1])
+    window = QWebEngineView()
+    window.setWindowTitle("Aurora graphics startup check")
+    window.resize(550, 380)
+    window.setUrl(QUrl("about:blank"))
+    window.show()
+    QTimer.singleShot(3500, app.quit)
+    return app.exec()
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Aurora Desktop App")
     parser.add_argument("--resident", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--background", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--self-test", action="store_true", help="Check runtime packaging imports")
+    parser.add_argument("--gui-self-test", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--state-dir", type=Path, default=_state_dir())
     args = parser.parse_args(argv)
     state = args.state_dir.expanduser().resolve()
@@ -834,6 +855,8 @@ def main(argv=None):
         if _probe(state) is None and _resident_free(state):
             _start_resident(state)
         return 0
+    if args.gui_self_test:
+        return gui_self_test()
     if args.self_test:
         import aurora  # noqa: F401
         from aurora_internal.desktop.runtime import DesktopRuntime  # noqa: F401
