@@ -22,7 +22,7 @@ pending ciphertext **in memory**. The desktop re-registers after restarts.
    It binds to **127.0.0.1:8795 only**.
 3. Use an HTTPS reverse proxy, for example Caddy with Caddyfile.example
    and a public domain you control. Open port 443, not backend port 8795.
-   Allow POST bodies up to 7 MiB and 35+ s exchange requests.
+   Allow POST bodies up to 9 MiB and 35+ s exchange requests.
 4. Verify `https://relay.your-domain.com/v1/health` responds.
    In Aurora desktop choose **Pair phone**, enter the relay's HTTPS URL,
    then the registration key. Aurora creates a room and copies a pairing link.
