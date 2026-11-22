@@ -172,7 +172,7 @@ def run_gui(state_dir: Path):
     from PySide6.QtGui import QAction
     from PySide6.QtWidgets import (
         QApplication, QComboBox, QDialog, QFormLayout, QInputDialog,
-        QMainWindow, QMessageBox, QScrollArea, QToolBar,
+        QMainWindow, QMessageBox, QScrollArea, QToolBar, QLineEdit,
         QVBoxLayout, QWidget, QLabel, QPushButton)
     from PySide6.QtWebEngineWidgets import QWebEngineView
     from aurora_internal.desktop.server import owner_token
@@ -180,7 +180,9 @@ def run_gui(state_dir: Path):
     from aurora_internal.dual_strata import strata_migration as migration
     from aurora_internal.hub_panels import strata_panel
     from aurora_internal.desktop.common import read_json
-    from aurora_internal.desktop.remote_link import tailscale_status, remote_diagnostics
+    from aurora_internal.desktop.remote_link import remote_diagnostics
+    from aurora_internal.dual_strata.relay_transport import relay_pairing_line, validate_origin
+    from aurora_internal.dual_strata.strata_link import link_dir
 
     state_dir.mkdir(parents=True, exist_ok=True)
     app = QApplication(sys.argv[:1])
@@ -332,10 +334,13 @@ def run_gui(state_dir: Path):
     def connection_info():
         pending = migration.load_pending(state_dir) or {}
         panel = strata_panel(str(state_dir))
-        diag = remote_diagnostics(read_json(state_dir / "desktop_config.json", {}))
+        diag = remote_diagnostics(
+            read_json(state_dir / "desktop_config.json", {}),
+            read_json(link_dir(state_dir) / "relay_home.json", {}))
         data = {
             "resident": "online" if _probe(state_dir) is not None else "not responding",
-            "private_network": diag,
+            "connection_setup": diag,
+            "live_relay": (_probe(state_dir) or {}).get("remote", {}),
             "paired": panel.get("paired"),
             "listening": panel.get("listening"),
             "holder": panel.get("holder"),
@@ -347,9 +352,9 @@ def run_gui(state_dir: Path):
         }
         QMessageBox.information(window, "Aurora: remote link and devices",
             json.dumps(data, indent=2, default=str)[:7000] +
-            "\n\nA VPN being active on this desktop does not prove the "
-            "phone is reachable. Verify an actual cellular sync from the "
-            "phone's Hub. Keep home powered and awake.")
+            "\n\nA configured relay address is not proof of a live route. "
+            "Test a signed cellular sync in the phone's Hub. Home must be "
+            "powered, awake, and connected to the internet.")
 
     connection_action = QAction("Connection status", window)
     connection_action.triggered.connect(connection_info)
@@ -467,50 +472,73 @@ def run_gui(state_dir: Path):
         status.setText("Waiting for Aurora resident...")
 
     def pair_phone():
-        # Remote connection is the default requirement, not an optional
-        # LAN address that silently fails when the phone switches to cellular.
-        vpn = tailscale_status()
-        if not vpn["online"]:
-            reply = QMessageBox.question(
-                window, "Secure connection is not ready",
-                "Away-from-home pairing needs a private route that survives "
-                "Wi-Fi/cellular changes. Connect Tailscale on this desktop "
-                "and the phone once, using the same Tailnet.\n\n"
-                + str(vpn["reason"]) + "\n\n"
-                "Open the official Tailscale setup page now? "
-                "Aurora will then detect your connected VPN address automatically.")
-            if reply == QMessageBox.StandardButton.Yes:
-                from PySide6.QtGui import QDesktopServices
-                QDesktopServices.openUrl(QUrl("https://tailscale.com/download"))
+        # The owner enters an HTTPS relay once. Aurora's native desktop and
+        # Android builds carry the protocol, encryption and reconnection.
+        # There is no required third-party VPN application or router port
+        # forwarding, but a real public HTTPS relay still must be hosted.
+        from aurora_internal.desktop.common import write_json
+        cfg_path = link_dir(state_dir) / "relay_home.json"
+        existing = read_json(cfg_path, {})
+        origin, ok = QInputDialog.getText(
+            window, "Aurora internet connection",
+            "Enter your Aurora relay's HTTPS web address.\n"
+            "Aurora connects OUT to it, so the phone can reach home from anywhere.\n"
+            "This address must point to a deployed gateway, not your laptop's LAN IP.\n"
+            "Example: https://relay.your-domain.com",
+            text=str(existing.get("origin") or ""))
+        if not ok or not origin.strip():
             return
-        host = vpn["ipv4"] or vpn["address"]
+        try:
+            origin = validate_origin(origin)
+        except ValueError as exc:
+            QMessageBox.warning(window, "Relay address", str(exc))
+            return
+        key, ok = QInputDialog.getText(
+            window, "Relay registration",
+            "Enter the relay service's registration key. This is used only "
+            "to establish this desktop's private room, never shared with "
+            "the phone or transmitted in her Strata packets.",
+            echo=QLineEdit.EchoMode.Password,
+            text=str(existing.get("provisioning_key") or ""))
+        if not ok or len(key) < 24:
+            if ok:
+                QMessageBox.warning(window, "Registration key",
+                    "The hosted gateway requires a registration key of at least 24 characters.")
+            return
         answer = QMessageBox.question(
-            window, "Pair phone over private network",
-            "Desktop private VPN address: " + host + "\n\n"
-            "The phone must have its own Tailscale connection to the same Tailnet. "
-            "This keeps her link routed through the VPN on home Wi-Fi or cellular, "
-            "while the desktop is powered and connected.\n\n"
-            "Aurora will also request that the OS prevent idle sleep while "
-            "her resident runs. This uses more power, especially on battery. "
-            "Closing the lid can still trigger sleep depending on OS settings.\n\n"
-            "Create her pairing link using this private VPN address?")
+            window, "Connect Aurora remotely?",
+            "Aurora will prefer a direct LAN connection while your phone is "
+            "at home and switch to encrypted HTTPS relay access away from home.\n\n"
+            "The relay cannot read her encrypted Strata exchanges. Your "
+            "local owner console will remain private on this desktop.\n\n"
+            "The home computer must stay running and internet-connected. "
+            "Aurora can request an idle-sleep guard, which increases power use.\n\n"
+            "Configure the connection and copy the private pairing link?")
         if answer != QMessageBox.StandardButton.Yes:
             return
         try:
-            if os.name != "nt" and not shutil.which("systemd-inhibit"):
-                QMessageBox.warning(window, "Power settings",
-                    "Your Linux desktop does not provide systemd-inhibit. "
-                    "Set the OS power settings to prevent idle sleep before "
-                    "depending on remote access; otherwise home will disconnect "
-                    "when the laptop sleeps.")
-            pairing = _pair(state_dir, host)
-            from aurora_internal.desktop.common import write_json
+            lan_host = home_network_address()
+            if lan_host.startswith(("127.", "169.254.")) or not lan_host:
+                lan_host = ""
+            from aurora_internal.dual_strata.strata_link import DEFAULT_PORT
+            port = int(read_json(state_dir / "desktop_config.json", {}).get("AURORA_STRATA_LINK_PORT") or DEFAULT_PORT)
+            local_url = f"http://{lan_host}:{port}" if lan_host else ""
+            pairing = relay_pairing_line(state_dir, origin, local_url)
+            relay_cfg = read_json(cfg_path, {})
+            relay_cfg["provisioning_key"] = key
+            write_json(cfg_path, relay_cfg)
+            if os.name != "nt":
+                os.chmod(cfg_path, 0o600)
             config_path = state_dir / "desktop_config.json"
             config = read_json(config_path, {})
-            # Remote availability is explicitly requested in the same dialog.
-            # Keep the desktop awake through the resident rather than Qt.
-            config["AURORA_KEEP_HOME_AWAKE"] = (os.name == "nt" or bool(shutil.which("systemd-inhibit")))
+            # Bind the signed Strata listener on the LAN, never the owner
+            # console. The HTTPS relay connects outbound from this process.
+            config["AURORA_STRATA_LINK_HOST"] = "0.0.0.0"
+            config["AURORA_STRATA_LINK_PORT"] = port
+            config["AURORA_KEEP_HOME_AWAKE"] = (
+                os.name == "nt" or bool(shutil.which("systemd-inhibit")))
             write_json(config_path, config)
+            (link_dir(state_dir) / "listen_host.txt").write_text("0.0.0.0", encoding="utf-8")
             if _probe(state_dir) is not None:
                 _stop_resident(state_dir)
                 reconnect["after_stop"] = True
@@ -519,16 +547,17 @@ def run_gui(state_dir: Path):
                 reconnect["started"] = False
                 reconnect["loaded"] = False
         except Exception as exc:
-            QMessageBox.warning(window, "Pairing error", str(exc))
+            QMessageBox.warning(window, "Remote pairing", str(exc))
             return
         QApplication.clipboard().setText(pairing)
         dialog = QMessageBox(window)
-        dialog.setWindowTitle("Pair Android Surface")
+        dialog.setWindowTitle("Pair Aurora's Android Surface")
         dialog.setText(
-            "The private pairing link was copied. Open Aurora on the phone → "
-            "Hub → Pair with home and paste it. Keep Tailscale on both "
-            "devices and keep the desktop awake. The resident will restart "
-            "gracefully with the remote-capable address.")
+            "Encrypted internet pairing has been configured and the private "
+            "pairing link was copied. Open the Android Aurora app → Hub → "
+            "Pair with home and paste it.\n\n"
+            "The desktop resident will restart to register its relay room. "
+            "Use Connection status and Test home connection before leaving.")
         dialog.setInformativeText(pairing)
         dialog.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
         dialog.exec()
