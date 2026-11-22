@@ -51,7 +51,7 @@ jobs:
           if-no-files-found: error
 
   linux:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -60,7 +60,7 @@ jobs:
       - name: Install Linux native WebEngine build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libegl1 libnss3 libgbm1 libxkbcommon-x11-0 libasound2t64
+          sudo apt-get install -y xvfb xauth libgl1 libegl1 libnss3 libgbm1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcomposite1 libxdamage1 libxrandr2 libasound2
       - name: Install desktop build dependencies
         run: python -m pip install -r packaging/desktop/requirements-build.txt
       - name: Check remote pairing and existing resident integration
@@ -69,8 +69,18 @@ jobs:
         run: python packaging/desktop/build.py
       - name: Verify bundled runtime imports
         run: ./dist/AuroraDesktop/AuroraDesktop --self-test
+      - name: Exercise real Qt and WebEngine startup under a virtual display
+        env:
+          QTWEBENGINE_CHROMIUM_FLAGS: "--disable-gpu --no-sandbox"
+        run: xvfb-run -a timeout 35s ./dist/AuroraDesktop/AuroraDesktop --gui-self-test
       - name: Build Linux desktop installer
         run: bash packaging/desktop/linux/make_deb.sh
+      - name: Install .deb and test its actual desktop launcher
+        env:
+          QTWEBENGINE_CHROMIUM_FLAGS: "--disable-gpu --no-sandbox"
+        run: |
+          sudo apt-get install -y ./dist/Aurora-Linux-amd64.deb
+          xvfb-run -a timeout 35s aurora-desktop --gui-self-test
       - uses: actions/upload-artifact@v4
         with:
           name: Aurora-Linux-Installer
