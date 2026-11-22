@@ -41,12 +41,38 @@ jobs:
             -storepass android -alias androiddebugkey -keypass android \
             -keyalg RSA -keysize 2048 -validity 10000 \
             -dname 'CN=Android Debug,O=Android,C=US' 2>/dev/null || true
+      - name: Detect configured stable release signing
+        id: release-signing
+        env:
+          RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_B64" ]; then
+            echo "$RELEASE_KEYSTORE_B64" | base64 -d > ~/.android/release.keystore
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            echo 'No stable release signing secret: debug APK is for isolated tests only.'
+          fi
       - name: Install Flutter dependencies
         working-directory: flutter_app
         run: flutter pub get
       - name: Build phone Surface APK (debug)
         working-directory: flutter_app
         run: flutter build apk --debug
+      - name: Build phone Surface APK (release with persistent signing key)
+        if: steps.release-signing.outputs.available == 'true'
+        working-directory: flutter_app
+        env:
+          RELEASE_STORE_PASS: ${{ secrets.RELEASE_STORE_PASS }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASS: ${{ secrets.RELEASE_KEY_PASS }}
+        run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        if: steps.release-signing.outputs.available == 'true'
+        with:
+          name: Aurora-Surface-Signed-Release-APK
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: Aurora-Surface-Debug-APK
