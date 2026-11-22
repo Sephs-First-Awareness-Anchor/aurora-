@@ -1349,9 +1349,17 @@ def configure_surface(state_dir: Any, pairing: str) -> Dict[str, Any]:
     endpoint, _, secret = text.partition("#")
     endpoint = endpoint.strip().rstrip("/")
     secret = secret.strip()
+    if endpoint.startswith("aurora-relay://"):
+        try:
+            from aurora_internal.dual_strata.relay_transport import install_surface_relay
+            return install_surface_relay(state_dir, text)
+        except (ValueError, OSError) as exc:
+            return {"ok": False, "error": str(exc)}
     if not endpoint.startswith(("http://", "https://")) or not secret:
-        return {"ok": False, "error": "expected http://host:port#secret"}
+        return {"ok": False, "error": "expected http://host:port#secret or aurora-relay://..."}
     root = link_dir(state_dir)
+    # Switching back to a direct pairing must not silently retain a stale relay.
+    (root / "relay_surface.json").unlink(missing_ok=True)
     (root / "endpoint.txt").write_text(endpoint, encoding="utf-8")
     (root / "secret.txt").write_text(secret, encoding="utf-8")
     # Pairing is the operator's explicit act, so it carries the claim: this
@@ -1407,7 +1415,12 @@ class StrataLinkClient:
         self.surface_id = surface_identity(self.state_dir)
         self.outbox = DurableOutbox(link_dir(self.state_dir) / "up_outbox.json")
         self._state_path = link_dir(self.state_dir) / "client_state.json"
-        self._transport: Transport = transport or self._http_transport
+        self._relay_transport = None
+        relay_cfg = _read_json(link_dir(self.state_dir) / "relay_surface.json", {})
+        if isinstance(relay_cfg, dict) and relay_cfg.get("origin") == self.endpoint:
+            from aurora_internal.dual_strata.relay_transport import RelaySurfaceTransport
+            self._relay_transport = RelaySurfaceTransport(relay_cfg, self.secret, timeout_s=self.timeout_s)
+        self._transport: Transport = transport or self._relay_transport or self._http_transport
         self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
         # One exchange or transfer at a time per client: the background loop
@@ -2017,6 +2030,7 @@ class StrataLinkClient:
         else:
             label = "online"
         return {"status": label, "version": LINK_VERSION, "endpoint": self.endpoint,
+                "route": self._relay_transport.last_route if self._relay_transport else "direct",
                 "surface_id": self.surface_id, "role": self.role, "epoch": self.epoch,
                 "thread_alive": bool(self._thread and self._thread.is_alive()),
                 "rtt_ms": round(self.rtt_ms, 1), "last_sync_at": self.last_sync_at,
