@@ -93,6 +93,29 @@ The local fast path uses the existing signed HTTP LAN protocol and is
 not itself encrypted; if the home LAN is untrusted, disable the local URL
 and use the end-to-end encrypted relay exclusively.
 
+## Linux launch troubleshooting
+
+Version **0.1.1** fixes a Linux install failure that permitted the original
+`.deb` to install without the Qt/XCB/Chromium shared libraries necessary to
+open a native window. It now declares those system dependencies, so a normal
+graphical software manager can install them with the package. The release
+is also built on Ubuntu 22.04 for broader glibc compatibility rather than
+using a newer Ubuntu build as the only deployment target.
+
+If Aurora still fails to open from the applications menu, launch it once,
+then open **Files → Home → Show Hidden Files** and look for
+`~/.local/state/aurora/desktop-launch.log`. This launcher log captures
+native startup failures that a no-terminal desktop app otherwise hides.
+You may safely send the *error message* from that file when seeking help,
+but review it for private tokens/paths first. Older version 0.1.0 did not
+create the launcher log. Once a resident starts, its own diagnostics are
+under `~/.local/share/aurora/state/desktop_resident.log`.
+
+GitHub Actions now checks not only importability but also starts an actual
+Qt WebEngine window in a virtual display, installs the built `.deb`, and
+repeats the GUI startup test using the installed applications launcher.
+Passing CI still does not replace testing Aurora on the user's own desktop.
+
 ## Packaging and developer build
 
 Building occurs in GitHub Actions, not on the end-user machine.
