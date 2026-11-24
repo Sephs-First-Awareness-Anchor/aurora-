@@ -10677,12 +10677,14 @@
     "aurora_internal/desktop/server.py",
     "aurora_internal/desktop/services.py",
     "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/hub_route.py",
     "aurora_internal/dual_strata/predictive_stager.py",
     "aurora_internal/dual_strata/strata_link.py",
     "aurora_internal/dual_strata/surface_working_state.py",
     "aurora_internal/process_lock.py",
     "aurora_perception_primitives.py",
-    "aurora_working_memory.py"
+    "aurora_working_memory.py",
+    "scripts/aurora_home_setup.py"
    ]
   },
   "tests/test_desktop_stack_includes_scout_worker.py": {
