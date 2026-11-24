@@ -89,32 +89,43 @@ class AuroraService : Service() {
             // (entry of this function) and where Python processing
             // actually starts (immediately before handle_message()).
             markUiTransition("aurora_receives")
-            scope?.launch {
-                val py     = Python.getInstance()
-                val bridge = py.getModule("aurora_bridge")
-
-                markUiTransition("python_processing_begins")
-
+            val runningScope = scope
+            if (runningScope == null) {
+                // The service has not reached onCreate yet. Previously the
+                // nullable scope operator silently DROPPED this message and
+                // never invoked the Flutter callback.
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    callback("Aurora's phone service is starting. Please try again once she's ready.")
+                }
+                return
+            }
+            runningScope.launch {
+                var axisJson: String? = null
+                // Python.getInstance/getModule can throw during boot. Both
+                // used to live outside the catch and could kill this coroutine
+                // without ever completing the user's pending Flutter turn.
                 val reply = try {
-                    bridge.callAttr("handle_message", text).toString()
+                    val bridge = Python.getInstance().getModule("aurora_bridge")
+                    markUiTransition("python_processing_begins")
+                    val answer = bridge.callAttr("handle_message", text).toString()
+                    axisJson = try {
+                        bridge.callAttr("get_axis_state").toString()
+                    } catch (_: Exception) { null }
+                    answer
                 } catch (e: Exception) {
-                    Log.e(TAG, "sendMessage error: ${e.message}")
-                    "I encountered an error: ${e.message}"
+                    Log.e(TAG, "sendMessage bridge failure", e)
+                    "Aurora's phone processing failed: ${e.javaClass.simpleName}: ${e.message ?: "unknown"}. Check her Hub diagnostics."
                 }
 
-                // Fetch emotional axis state immediately after cognitive processing.
-                val axisJson = try {
-                    bridge.callAttr("get_axis_state").toString()
-                } catch (_: Exception) { null }
-
+                val deliveredAxisJson = axisJson
                 withContext(Dispatchers.Main) {
                     callback(reply)
                     eventSink?.success(
                         JSONObject().put("type", "response").put("text", reply).toString()
                     )
-                    if (axisJson != null) {
+                    if (deliveredAxisJson != null) {
                         try {
-                            val axisObj = JSONObject(axisJson)
+                            val axisObj = JSONObject(deliveredAxisJson)
                                 .put("source", "aurora")
                                 .put("type", "axis_state")
                             eventSink?.success(axisObj.toString())
@@ -558,7 +569,11 @@ class AuroraService : Service() {
         // that drift instead of only ever seeing a snapshot from the last
         // sendMessage() call.
         while (true) {
-            kotlinx.coroutines.delay(1_000L)
+            // The face observes already-computed axes. Re-reading Python
+            // twice per second when nobody is viewing the app wasted mobile
+            // compute without creating any new experience.
+            kotlinx.coroutines.delay(if (eventSink == null) 6_000L else 2_000L)
+            if (eventSink == null) continue
             try {
                 val axisJson = Python.getInstance()
                     .getModule("aurora_bridge")

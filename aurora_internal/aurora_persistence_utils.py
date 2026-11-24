@@ -21,6 +21,13 @@ def _ensure_parent(path: Path) -> None:
 
 def atomic_write_json(path: Path, data: Dict[str, Any], *, indent: int = 2, default=None) -> bool:
     """Atomically write JSON to disk under a process-wide persistence lock."""
+    # The same one-state gate as the root aurora_persistence_utils: a
+    # home-owned store on a surface-only device goes to her provisional view.
+    from aurora_internal.aurora_store_ownership import store_write_path
+    target = store_write_path(path)
+    if target is None:
+        return True
+    path = target
     tmp = None
     with PERSISTENCE_LOCK:
         try:

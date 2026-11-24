@@ -141,10 +141,16 @@ def validate_manifest(manifest: Any) -> List[Dict[str, Any]]:
     return clean
 
 
-def snapshot_state(state_dir: Any, snapshot_dir: Path, *, rel_paths=None) -> List[Dict[str, Any]]:
+def snapshot_state(state_dir: Any, snapshot_dir: Path, *, rel_paths=None,
+                   strict: Optional[bool] = None) -> List[Dict[str, Any]]:
     """Copy the transferable files to a private directory and describe the
     COPY, so the hashes sent describe exactly the bytes sent even while the
-    live files keep changing underneath."""
+    live files keep changing underneath.  ``strict`` (default: a path list
+    was given) makes a listed file that cannot be copied an error; a
+    whole-state copy passes strict=False so a file that vanished mid-copy
+    is simply not part of the snapshot."""
+    if strict is None:
+        strict = rel_paths is not None
     src = Path(str(state_dir))
     snapshot_dir = Path(snapshot_dir)
     if snapshot_dir.exists():
@@ -158,7 +164,7 @@ def snapshot_state(state_dir: Any, snapshot_dir: Path, *, rel_paths=None) -> Lis
             shutil.copyfile(src / rel, dest)
             kept.append(rel)
         except OSError:
-            if rel_paths is not None:
+            if strict:
                 raise TransferError(f"required surface checkpoint could not be copied: {rel}")
             continue  # a file that vanished mid-copy is not part of this snapshot
     return build_manifest(snapshot_dir, kept)

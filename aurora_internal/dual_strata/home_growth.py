@@ -117,12 +117,19 @@ def home_growth_manifest(state_dir: Any, cache: Optional[HashCache] = None) -> L
 
 def _wanted(state_dir: Any, manifest: List[Mapping[str, Any]]) -> List[Dict[str, Any]]:
     """Rows of home's manifest whose bytes this surface does not hold."""
+    from aurora_internal.aurora_store_ownership import provisional_canon_shas
     base = Path(str(state_dir))
     cache = HashCache(_growth_root(state_dir) / HASH_CACHE_FILENAME)
+    # A store whose provisional view grew from exactly home's current bytes:
+    # home has nothing new there yet, and installing its copy would only
+    # retire what she lived since (aurora_store_ownership, sec. 8).
+    grew_from = provisional_canon_shas(state_dir)
     wanted: List[Dict[str, Any]] = []
     for row in manifest:
         rel = str(row.get("path") or "")
         if not is_growth_path(rel):
+            continue
+        if grew_from.get(rel) and grew_from[rel] == str(row.get("sha256") or ""):
             continue
         local = cache.sha(base, rel)
         if local and local["size"] == int(row["size"]) and local["sha256"] == row["sha256"]:

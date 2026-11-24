@@ -163,6 +163,11 @@ def log_relation_pairs_from_turn(user_text, systems, turn_id, source="input"):
         written += 1
 
     if lines:
-        with open(out_path, "a", encoding="utf-8") as f:
+        # Home-owned; on a surface-only device it lands in her provisional view.
+        from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+        target = store_write_path(out_path, APPEND)
+        if target is None:
+            return 0
+        with open(target, "a", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
     return written

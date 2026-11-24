@@ -377,10 +377,11 @@ class InteractionMemory:
         atomic_write_json(self.indexes_path, {"indexes": self._indexes})
 
     def _append_journal(self, entry: Mapping[str, Any]) -> None:
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(self.journal_path):
+        from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+        target = store_write_path(self.journal_path, APPEND)
+        if target is None:
             return
-        with self.journal_path.open("a", encoding="utf-8") as handle:
+        with Path(target).open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(dict(entry), sort_keys=True, default=str) + "\n")
 
     def _unique(self, values: Iterable[str]) -> List[str]:

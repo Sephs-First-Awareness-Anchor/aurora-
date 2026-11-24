@@ -416,10 +416,9 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
                 base = strength * _f(getattr(rel, "confidence", 1.0), 1.0) * (1.0 + 0.3 * math.log1p(n)) \
                     * fit(target)
                 said = dict(dict(rel.assertion).get("predicates") or {})
-                for pred in predicate_order(rel):
-                    lex = lexicalize_assertion(rel, speaker_now=speaker_now, self_now=self_now, predicate=pred)
-                    if lex is None:
-                        continue
+                for pred, lex in _voicings(rel, said, speaker_now=speaker_now, self_now=self_now,
+                                           heard_forms=heard_forms, predicate_order=predicate_order,
+                                           lexicalize_assertion=lexicalize_assertion):
                     surface = str(dict(said.get(pred) or {}).get("surface") or pred).lower()
                     asked_pred = pred.lower() in heard_forms or surface in heard_forms
                     if lex.get("basis") == "supposed" and not asked_pred:
@@ -460,6 +459,27 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
         pass
     found.sort(key=lambda r: (-r["strength"], r["source"], r["target"]))
     return found[: max(1, int(reach)) * 4]
+
+
+def _voicings(rel: Any, said: Mapping[str, Any], *, speaker_now: str, self_now: str, heard_forms: set,
+              predicate_order: Any, lexicalize_assertion: Any):
+    """(predicate, lex) for each predicate held along a relation.  Directive V2: a predicate she holds one way
+    under one condition and the other way under another is voiced once per condition (at most three), the
+    condition the moment names first, so neither manifestation is said as if it held everywhere."""
+    from aurora_internal.aurora_propositional_understanding import conditional_standing, condition_words, verdict
+    for pred in predicate_order(rel):
+        p = dict(said.get(pred) or {})
+        if verdict(p) == "conditional":
+            conds = [c for c in conditional_standing(p)]
+            named = [c for c in conds if {w.lower() for w in _words(condition_words(c["when"]))} & heard_forms - {"is", "are", "be", "it"}]
+            for c in (named + [c for c in conds if c not in named])[:3]:
+                lex = lexicalize_assertion(rel, speaker_now=speaker_now, self_now=self_now, predicate=pred, condition=c["key"])
+                if lex is not None:
+                    yield pred, lex
+            continue
+        lex = lexicalize_assertion(rel, speaker_now=speaker_now, self_now=self_now, predicate=pred)
+        if lex is not None:
+            yield pred, lex
 
 
 def _acts_in(heard: str) -> set:
@@ -552,6 +572,35 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
     concepts = list(dict.fromkeys(concepts + named))
     known = knowledge(systems, concepts, heard, reach=int(how.get("reach", 1)), session_id=session_id,
                       feeling=moved_by(pipeline))
+    # The actual learned structures and contextual occasions live on the SAME
+    # ordinary crystals as everything else.  They can qualify which existing
+    # knowledge is pertinent, but an axis path or word association cannot be
+    # voiced as a newly invented natural-language fact.
+    from aurora_internal.aurora_live_experience import crystal_context_for_turn
+    crystal_context = crystal_context_for_turn(systems, heard)
+    for statement in known:
+        matching = [
+            item for item in crystal_context["facets"]
+            if item["concept"] in (statement.get("source"), statement.get("target"))
+        ]
+        if matching:
+            statement["crystal_context"] = [
+                {"concept": item["concept"], "kind": item["kind"], "key": item["key"],
+                 "degree": item["degree"], "facet_role": item["facet_role"],
+                 "occasions": item["occasions"]}
+                for item in matching[:2]
+            ]
+        relevant_paths = [
+            item for item in crystal_context["representations"]
+            if set(item["word_hits"]) & set(_words(
+                " ".join(str(statement.get(k) or "") for k in ("source", "target"))
+            ))
+        ]
+        if relevant_paths:
+            statement["resolution_evidence"] = [
+                {"id": item["id"], "path": item["path"], "facet_role": item["facet_role"],
+                 "word_hits": item["word_hits"]} for item in relevant_paths[:2]
+            ]
     # affect: how it moved her
     surface = dict(pipeline.get("surface_reactive_emotion") or {})
     tone = str(surface.get("tone_bias") or "").lower()
@@ -569,6 +618,7 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
         "addressed": addressed,
         "salient": salient,
         "knowledge": known,
+        "crystal_context": crystal_context,
         "affect": affect,
         "time": when,
         "obligation": str(obligation.get("operation") or ""),
@@ -609,7 +659,11 @@ def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, pref
     def _voiced(k: Mapping[str, Any]) -> bool:
         key = _said_key(dict(k.get("lex") or {}))
         return any(key == t or t.startswith(key + " ") for t in said)   # "feel calm right now" says "feel calm"
-    pool = [k for k in known if (k["source"], k["target"]) not in used
+    # Directive V2: what holds under one condition and what she held THEN are statements of their own about the
+    # pair, not the pair said again -- they rest only when that very statement was said (`_voiced`).
+    def _own_statement(k: Mapping[str, Any]) -> bool:
+        return bool(k.get("condition")) or k.get("basis") == "recalled"
+    pool = [k for k in known if ((k["source"], k["target"]) not in used or _own_statement(k))
             and not _voiced(k)
             and (k.get("asked") or (k["source"], k["target"], str(dict(k.get("lex") or {}).get("predicate") or ""))
                  not in (resting or set()))]

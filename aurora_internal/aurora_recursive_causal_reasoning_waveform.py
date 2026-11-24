@@ -1488,13 +1488,18 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
     def _append_history(self, cycle: Mapping[str, Any]) -> None:
         if not self.persist:
             return
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(self.history_path):
+        # Home-owned on a surface-only device: appended to her provisional
+        # view, which is never trimmed (it is laid over home's copy by offset).
+        from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+        target = store_write_path(self.history_path, APPEND)
+        if target is None:
             return
         try:
             line = json.dumps(dict(cycle or {}), sort_keys=True, default=str)
-            with self.history_path.open("a", encoding="utf-8") as fh:
+            with open(target, "a", encoding="utf-8") as fh:
                 fh.write(line + "\n")
+            if Path(target).resolve() != Path(self.history_path).resolve():
+                return
             # Bound the diagnostic history without touching live state.
             lines = self.history_path.read_text(encoding="utf-8").splitlines()
             if len(lines) > _MAX_HISTORY_LINES:

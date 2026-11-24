@@ -2788,15 +2788,55 @@ def get_strata_link_status() -> str:
         return _json.dumps({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
 
 
+_first_pairing_worker = None
+_first_pairing_worker_guard = threading.Lock()
+
+
 def _send_first_pairing(client) -> None:
-    """Her whole mind goes home for the first pairing.  Only the copy is
-    taken under the field lock; sending the copy does not hold up a turn."""
+    """Migrate exactly once, after signed home admission and idle foreground.
+
+    The old pair action triggered a large snapshot immediately, often while
+    the desktop still booted or had not registered its HTTPS gateway. That
+    failed permanently and competed with the live Surface. This worker
+    waits instead of blocking the interface or creating duplicate transfers.
+    """
     try:
-        result = client.migrate(snapshot_guard=lambda: _lock)
-        if not result.get("ok"):
-            log.warning("First pairing not sent yet: %s", result.get("error"))
+        from aurora_internal.dual_strata.strata_migration import load_receipt
+        while not client._stop.is_set():
+            if _surface_only or load_receipt(client.state_dir) is not None:
+                return
+            migration = client._load_client_state().get("migration") or {}
+            if migration.get("id"):
+                return  # previously staged; normal receipt polling owns it
+            if not (client.online and client.role == "active" and client.surface_ready):
+                client.last_first_pairing = {"status": "waiting_for_active_home"}
+            elif _present_active or _present_waiting or _conversation_active():
+                client.last_first_pairing = {"status": "waiting_for_idle"}
+            elif _systems is not None and _boot_state.get("finished"):
+                result = client.migrate(snapshot_guard=lambda: _lock)
+                if not result.get("ok"):
+                    log.warning("First pairing not sent: %s", result.get("error"))
+                return
+            if client._stop.wait(2.0):
+                return
     except Exception as exc:
+        client.last_first_pairing = {"status": "not_sent",
+                                     "error": f"{type(exc).__name__}: {exc}"[:200]}
         log.warning("First pairing not sent: %s", exc)
+
+
+def _schedule_first_pairing(client) -> bool:
+    global _first_pairing_worker
+    if client is None or _surface_only:
+        return False
+    with _first_pairing_worker_guard:
+        if _first_pairing_worker is not None and _first_pairing_worker.is_alive():
+            return False
+        _first_pairing_worker = threading.Thread(
+            target=_send_first_pairing, args=(client,), daemon=True,
+            name="aurora_first_pairing")
+        _first_pairing_worker.start()
+        return True
 
 
 def configure_strata_link(pairing: str) -> str:
@@ -2823,8 +2863,7 @@ def configure_strata_link(pairing: str) -> str:
                 # applies it at home; the link then picks up the receipt by
                 # itself and this phone is her surface from its next start.
                 result["next_step"] = "first_pairing_started"
-                threading.Thread(target=_send_first_pairing, args=(client,), daemon=True,
-                                 name="aurora_first_pairing").start()
+                _schedule_first_pairing(client)
         return _json.dumps({**result, **_sl.strata_link_client_status()}, default=str)
     except Exception as exc:
         return _json.dumps({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"})
@@ -2848,6 +2887,24 @@ def strata_link_transfer(action: str, token: str = "") -> str:
         client = _sl.start_strata_link_client_if_configured(_dir)
         if client is None:
             return _json.dumps({"ok": False, "error": "not paired with a Subsurface device"})
+        if action == "ping":
+            # Test remote reachability immediately without waiting for the
+            # periodic sync loop or acquiring the cognitive field lock.
+            client.sync_once()
+            status = client.status()
+            return _json.dumps({
+                "ok": bool(client.online),
+                "ready": bool(client.online and client.role == "active" and client.surface_ready),
+                "role": client.role,
+                "status": status.get("status"),
+                "route": status.get("route", "offline"),
+                "rtt_ms": status.get("rtt_ms"),
+                "pending": (status.get("up_outbox") or {}).get("pending"),
+                "migration_complete": bool(_surface_only),
+                "first_pairing": status.get("first_pairing"),
+                "last_error": status.get("last_error"),
+                "error": status.get("last_error") or "",
+            }, default=str)
         if action == "first_pairing":
             # Only the copy is taken under the field lock (as at pairing).
             return _json.dumps(client.migrate(snapshot_guard=lambda: _lock), default=str)
@@ -2980,6 +3037,17 @@ def initialize(state_dir: str = "") -> str:
                 log.info("Home's growth installed on the surface: %s", _growth)
         except Exception as _growth_exc:
             log.warning("Home's growth not installed this start: %s", _growth_exc)
+        # What she lived on this device while home could not take it is laid
+        # back over each copy it grew from, so a restart does not forget it.
+        # A copy home has replaced since retires its view: home has already
+        # admitted those occurrences once, and its integration is the authority.
+        try:
+            from aurora_internal.aurora_store_ownership import restore_provisional
+            _prov = restore_provisional(os.path.abspath(_strata_state_dir))
+            if _prov.get("restored") or _prov.get("appended") or _prov.get("retired") or _prov.get("errors"):
+                log.info("Her provisional view on this start: %s", _prov)
+        except Exception as _prov_exc:
+            log.warning("Provisional view not restored this start: %s", _prov_exc)
         from aurora_internal.aurora_store_ownership import enable_surface_only
         enable_surface_only(os.path.abspath(_strata_state_dir))
         _evo_sim = None
@@ -3429,6 +3497,12 @@ def initialize(state_dir: str = "") -> str:
                     context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
                 )
                 log.warning("Praxis messenger failed to start: %s", _messenger_exc)
+
+        # If the phone had already been paired before an app restart,
+        # restore the first-migration wait. A transient offline first boot
+        # must never leave a one-shot transfer permanently abandoned.
+        if not _surface_only:
+            _schedule_first_pairing(locals().get("_strata_client"))
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
@@ -4952,6 +5026,12 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
     _now_hm = _tp_hm.time()
     _processing_profile_started = _tp_hm.perf_counter()
     _processing_profile = {}
+    # Record at the ACTUAL input boundary, before boot gates, priming, or
+    # field admission. Previously the first diagnostic was emitted hundreds
+    # of lines later, so stuck turns misleadingly appeared as "0 live turns".
+    import uuid as _uuid_hm
+    _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
+    _record_turn_state(_turn_id, "surface_received", user_text=text[:100])
 
     # ── Sleep inertia: capture dormancy level BEFORE resetting the clock ──────
     # _get_isolation_factor() still sees the old _last_output_time here, so it
@@ -4998,6 +5078,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
+        _record_turn_state(_turn_id, "transport_failure", error="cognitive_boot_not_ready")
         return "Aurora is still initializing — please wait a moment."
 
     # ── Degraded boot: surface incomplete physics on first turn ───────────────
@@ -5393,10 +5474,6 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         # the process_external_user_turn call itself), so two turns' calls
         # still never execute concurrently -- unchanged from today.
         import aurora as _aurora  # type: ignore
-        import uuid as _uuid_hm
-
-        _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
-        _record_turn_state(_turn_id, "surface_received", user_text=text[:100])
 
         _box_lock = threading.Lock()
         _box_event = threading.Event()
@@ -8685,10 +8762,11 @@ def _store_relational_claim(text: str, entity_type: str, entity_label: str) -> N
             "content":      [w for w in words if len(w) > 4][:20],
         }
         _claims_path = os.path.join(state_dir, "relational_claims.jsonl")
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(_claims_path):
+        from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+        _claims_target = store_write_path(_claims_path, APPEND)
+        if _claims_target is None:
             return  # home keeps her claims history; the turn itself goes home
-        with open(_claims_path, "a", encoding="utf-8") as f:
+        with open(_claims_target, "a", encoding="utf-8") as f:
             f.write(_json.dumps(entry) + "\n")
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -12548,6 +12626,10 @@ def get_cognitive_stats() -> str:
             from aurora_internal.dual_strata.strata_link import strata_link_client_status as _sl_status
             _sl = _sl_status()
             stats["strata_link_status"] = str(_sl.get("status", "not_configured"))
+            # Safe to show: endpoint excludes the '#secret' pairing fragment.
+            # The phone Hub distinguishes a remote VPN route from home Wi-Fi.
+            stats["strata_link_endpoint"] = str(_sl.get("endpoint", "") or "")[:250]
+            stats["strata_link_route"] = str(_sl.get("route", "not_connected") or "not_connected")[:40]
             stats["strata_link_pending"] = int((_sl.get("up_outbox") or {}).get("pending", 0) or 0)
             stats["strata_link_dropped"] = int((_sl.get("up_outbox") or {}).get("overflow_dropped", 0) or 0)
             stats["strata_link_sent"] = int(_sl.get("sent", 0) or 0)

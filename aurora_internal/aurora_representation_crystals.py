@@ -31,8 +31,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 try:  # the facet class the registry itself writes
     from concept_crystal import _DPSCrystalFacet
@@ -62,6 +63,9 @@ class RepresentationCrystals:
     def __init__(self, registry: Any) -> None:
         self.registry = registry
         self._cache: Dict[tuple, str] = {}
+        # Derived in-memory index of the SAME lsa:res facets. Never persisted:
+        # the uniform crystal registry remains the sole source of truth.
+        self._lexical_lookup: Optional[Dict[str, List[Tuple[Dict[str, Any], Dict[str, Any]]]]] = None
 
     @staticmethod
     def coordinate(path: str, extra: Optional[Mapping[str, Mapping[str, float]]] = None) -> Dict[str, float]:
@@ -128,6 +132,7 @@ class RepresentationCrystals:
             root = str(record["target"]).upper()
             pole_ax[root] = -pole_ax.get(root, 0.0)
             self._place_words(_crystal_for(reg, self._cache, pole_ax), low, known_word)
+        self._lexical_lookup = None   # earned evidence was written to its canonical facet
         return True
 
     def _place_words(self, crystal: Any, words: List[Mapping[str, Any]], known_word: Optional[Callable[[str], bool]]) -> None:
@@ -174,6 +179,57 @@ class RepresentationCrystals:
             and (path is None or r.get("path") == path)
             and (target is None or r.get("target") == target)
         ]
+
+
+    def recall_relevant(self, heard: str, *, subject: Optional[str] = None, limit: int = 4) -> List[Dict[str, Any]]:
+        """Reuse earned word-associated evidence from existing lsa:res facets.
+
+        The transient index is rebuilt only after a facet changes.  Nothing
+        here upgrades lexical association into factual semantic grounding or
+        treats remembering as a new observation.
+        """
+        terms = set(re.findall(r"[a-z][a-z']{1,}", str(heard or "").lower()))
+        if not terms:
+            return []
+        if self._lexical_lookup is None:
+            index: Dict[str, List[Tuple[Dict[str, Any], Dict[str, Any]]]] = {}
+            for record in self.load_all():
+                if record.get("status") != "earned":
+                    continue
+                path = str(record.get("path") or "")
+                if not path or all(axis in ("X", "B") for axis in path.split(">")):
+                    continue
+                for item in record.get("word_evidence", []) or []:
+                    if not isinstance(item, Mapping):
+                        continue
+                    word = str(item.get("word") or "").lower()
+                    if word and abs(float(item.get("lift", 0.0) or 0.0)) >= _MIN_WORD_LIFT:
+                        index.setdefault(word, []).append((record, dict(item)))
+            self._lexical_lookup = index
+        found: Dict[str, Dict[str, Any]] = {}
+        for term in terms:
+            for record, evidence in self._lexical_lookup.get(term, []):
+                if subject is not None and record.get("subject") != subject:
+                    continue
+                rid = str(record["id"])
+                if rid not in found:
+                    path = str(record.get("path") or "")
+                    found[rid] = {
+                        "id": rid, "path": path, "subject": record["subject"],
+                        "target": record.get("target"), "status": "earned",
+                        "z": float(record.get("z", 0.0) or 0.0),
+                        "word_hits": [], "evidence": [],
+                        "facet_role": self.role(str(record["subject"]), str(record.get("identity_path") or path)),
+                        "recognition_kernel": dict(record.get("kernel") or {}).get("id"),
+                    }
+                found[rid]["word_hits"].append(evidence["word"])
+                found[rid]["evidence"].append(evidence)
+        rows = list(found.values())
+        for item in rows:
+            item["word_hits"].sort()
+            item["evidence"].sort(key=lambda e: str(e["word"]))
+        rows.sort(key=lambda item: (-len(item["word_hits"]), -item["z"], item["id"]))
+        return rows[:max(0, int(limit))]
 
 
 class HypothesisCrystals:

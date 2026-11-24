@@ -153,6 +153,12 @@ def _safe(value: Any, depth: int = 0) -> Any:
 
 
 def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
+    # Home-owned on a surface-only device: lands in her provisional view.
+    from aurora_internal.aurora_store_ownership import SNAPSHOT, store_write_path
+    target = store_write_path(path, SNAPSHOT)
+    if target is None:
+        return
+    path = Path(target)
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(path.suffix + ".tmp")
     temp.write_text(json.dumps(_safe(payload), indent=2, ensure_ascii=True), encoding="utf-8")
@@ -160,6 +166,11 @@ def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
 
 
 def _append_jsonl(path: Path, payload: Mapping[str, Any]) -> None:
+    from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+    target = store_write_path(path, APPEND)
+    if target is None:
+        return
+    path = Path(target)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(_safe(payload), ensure_ascii=True) + "\n")

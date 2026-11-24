@@ -1,0 +1,80 @@
+name: Aurora relay Android build
+
+on:
+  pull_request:
+    paths:
+      - 'flutter_app/**'
+      - 'aurora_internal/dual_strata/**'
+      - '.github/workflows/relay-android-build.yml'
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.3'
+          channel: stable
+          cache: true
+      - name: Install Android NDK
+        run: |
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            'ndk;25.1.8937393' 'cmake;3.22.1'
+      - name: Configure Android SDK
+        working-directory: flutter_app/android
+        run: |
+          printf 'flutter.sdk=%s\nsdk.dir=%s\nndk.dir=%s\nndk.version=25.1.8937393\n' \
+            "$FLUTTER_ROOT" "$ANDROID_SDK_ROOT" "$ANDROID_SDK_ROOT/ndk/25.1.8937393" > local.properties
+      - name: Generate stable debug keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkeypair -keystore ~/.android/debug.keystore \
+            -storepass android -alias androiddebugkey -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname 'CN=Android Debug,O=Android,C=US' 2>/dev/null || true
+      - name: Detect configured stable release signing
+        id: release-signing
+        env:
+          RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_B64" ]; then
+            echo "$RELEASE_KEYSTORE_B64" | base64 -d > ~/.android/release.keystore
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            echo 'No stable release signing secret: debug APK is for isolated tests only.'
+          fi
+      - name: Install Flutter dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+      - name: Build phone Surface APK (debug)
+        working-directory: flutter_app
+        run: flutter build apk --debug
+      - name: Build phone Surface APK (release with persistent signing key)
+        if: steps.release-signing.outputs.available == 'true'
+        working-directory: flutter_app
+        env:
+          RELEASE_STORE_PASS: ${{ secrets.RELEASE_STORE_PASS }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASS: ${{ secrets.RELEASE_KEY_PASS }}
+        run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        if: steps.release-signing.outputs.available == 'true'
+        with:
+          name: Aurora-Surface-Signed-Release-APK
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Aurora-Surface-Debug-APK
+          path: flutter_app/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error

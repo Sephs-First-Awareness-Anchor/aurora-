@@ -18,7 +18,7 @@ The record is `docs/module_ownership.json`. Change a domain, subsystem, layer or
 
 ## Coverage
 
-Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 1044 files.
+Covers every source file in the repository: desktop Aurora's Python (runtime, scripts and tests), the phone app's Dart, Kotlin, Java and Python, the ACM's Rust and Python, launchers, service units, prototypes and CI workflows. Data, state, documentation and build configuration are not source and are listed below. It lists 1047 files.
 
 Covered: files ending in `.py`, `.dart`, `.rs`, `.kt`, `.java`, `.sh`, `.bat`, `.ps1`, `.jsx`, `.html`, `.service`, and files under `.github/workflows/`, skipping folders named `.git`, `__pycache__`, `node_modules`, `build`, `.dart_tool`, `target`, `aurora_state`, `aurora_state_test`, `aurora_logs`, `vector_data`, `lessons`, `aurora_genealogy`.
 
@@ -36,7 +36,7 @@ Not covered:
 
 | Quasi (domain) | Holds | Subsystems | Composites | Files |
 |---|---|---|---|---|
-| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 45 | 980 |
+| Desktop Aurora | Her Python runtime and everything that runs, tests or maintains it on a computer. | 16 | 45 | 983 |
 | Phone app | The Flutter app with its Android services and on-device Python. | 5 | 4 | 27 |
 | ACM | The Rust kernel, its runner and the native Python ACM runtime. | 8 | 3 | 30 |
 | Repository and CI | Workflows that build, test and run the other domains. | 1 | 0 | 7 |
@@ -56,10 +56,10 @@ Not covered:
 | Perception and expression | Sensory and hardware IO, intake, utterance parsing, expression and the reply well-formedness gate. | 1 | 9 | 14 |
 | Identity and language | Behavioral identity, language state, lexicon, grammar and word use. | 3 | 7 | 8 |
 | Governance, persistence and health | Persistence, checkpoints, autonomy, runtime faults and health, metabolic clock, fail-closed guards. | 2 | 21 | 2 |
-| Dual strata (surface and subsurface) | The dual-strata package and the surface/subsurface daemons and substrate. | 2 | 45 | 8 |
+| Dual strata (surface and subsurface) | The dual-strata package and the surface/subsurface daemons and substrate. | 2 | 46 | 8 |
 | Bridges and external tools | Praxis, ACM, scouting, research dispatch and tool registries. | 3 | 9 | 8 |
 | Investigative and diagnostic | Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here. | 5 | 12 | 23 |
-| Tests | The pytest suite. Each test lists the files it exercises. | 3 | 9 | 479 |
+| Tests | The pytest suite. Each test lists the files it exercises. | 3 | 9 | 481 |
 | Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 1 | 5 | 89 |
 
 ## Quasi: Phone app
@@ -243,7 +243,7 @@ Support is the knowledge graph's verdict: `supported` and `partly_supported` mea
 | `language.3` | Identity and language | `aurora_internal/aurora_communication_emergence.py` | 2 | supported |
 | `governance.1` | Governance, persistence and health | `aurora_internal/aurora_runtime_faults.py` | 19 | partly_supported |
 | `governance.2` | Governance, persistence and health | `aurora_internal/aurora_metabolic_steps.py` | 2 | supported |
-| `strata.1` | Dual strata (surface and subsurface) | `aurora_internal/dual_strata/__init__.py` | 43 | partly_supported |
+| `strata.1` | Dual strata (surface and subsurface) | `aurora_internal/dual_strata/__init__.py` | 44 | partly_supported |
 | `strata.2` | Dual strata (surface and subsurface) | `aurora_internal/aurora_surface_dispatcher.py` | 2 | supported |
 | `bridges.1` | Bridges and external tools | `aurora_internal/scouting/contracts.py` | 4 | supported |
 | `bridges.2` | Bridges and external tools | `aurora_praxis_messenger.py` | 3 | supported |
@@ -698,6 +698,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `aurora_internal/aurora_surface_doc.py` | strata.2 |  | reviewed |
 | `aurora_internal/dual_strata/__init__.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/activation_field.py` | strata.1 |  | name_and_docstring |
+| `aurora_internal/dual_strata/anticipatory_facets.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/cers_bridge.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/cers_deprecation.py` | strata.1 |  | name_and_docstring |
 | `aurora_internal/dual_strata/cers_potential_trial.py` | strata.1 |  | name_and_docstring |
@@ -826,6 +827,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_ambient_audio_raw_pcm_features.py` |  |  | location |
 | `tests/test_ambient_visual_richer_features.py` |  |  | location |
 | `tests/test_android_surface_subsurface_reconnection.py` |  |  | location |
+| `tests/test_anticipatory_facets.py` |  |  | location |
 | `tests/test_app_bridge_praxis.py` |  |  | location |
 | `tests/test_articulation_semantic_strategy.py` |  |  | location |
 | `tests/test_asked_thing_and_manner.py` |  |  | location |
@@ -1144,6 +1146,7 @@ Composite is blank for a base file that no import joins to another file in its s
 | `tests/test_promotion_lookup_scaling.py` |  |  | location |
 | `tests/test_propositional_understanding.py` | tests.3 |  | location |
 | `tests/test_provenance_integrity.py` |  |  | location |
+| `tests/test_provisional_view.py` |  |  | location |
 | `tests/test_prune_recall_marker_nodes.py` |  |  | location |
 | `tests/test_ps1_2_persistence_arbitration.py` |  |  | location |
 | `tests/test_qualified_promotion.py` |  |  | location |

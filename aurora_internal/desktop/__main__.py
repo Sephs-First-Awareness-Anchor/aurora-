@@ -47,6 +47,20 @@ def main(argv=None):
     from .common import read_json
     from .runtime import DesktopRuntime
     config = read_json(root / "desktop_config.json", {})
+    # On Windows the resident itself owns the idle-sleep request. A window
+    # process cannot hold it reliably after the window closes. OS shutdown,
+    # explicit sleep and battery/power policy still take precedence.
+    if os.name == "nt" and config.get("AURORA_KEEP_HOME_AWAKE"):
+        try:
+            import ctypes
+            ES_CONTINUOUS = 0x80000000
+            ES_SYSTEM_REQUIRED = 0x00000001
+            previous = ctypes.windll.kernel32.SetThreadExecutionState(
+                ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+            if not previous:
+                print("Aurora: OS refused idle sleep guard")
+        except Exception as exc:
+            print(f"Aurora: idle sleep guard unavailable: {exc}")
     for name in ("AURORA_PRAXIS_URL", "AURORA_STRATA_LINK_HOST", "AURORA_STRATA_LINK_PORT", "AURORA_ACM_BRIDGE", "AURORA_ACM_PORT"):
         if name in config:
             os.environ[name] = str(config[name])

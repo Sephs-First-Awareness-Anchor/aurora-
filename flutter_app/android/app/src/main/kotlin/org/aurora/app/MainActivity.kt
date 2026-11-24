@@ -55,10 +55,10 @@ class MainActivity : FlutterActivity() {
         const val BRIDGE      = "org.aurora.app/bridge"
         const val EVENTS      = "org.aurora.app/events"
         const val PERM_REQUEST = 1001
-        const val FRAME_INTERVAL_MS = 1_000L  // 1 FPS is ample for Aurora's visual loop
-        const val FACE_DETECT_INTERVAL_MS = 300L  // faster than FRAME_INTERVAL_MS -- proximity should feel responsive
+        const val FRAME_INTERVAL_MS = 2_000L  // low-cost ambient frames; on-demand camera remains available
+        const val FACE_DETECT_INTERVAL_MS = 750L  // responsive front-camera face detection without 3 FPS ML churn
         const val AMBIENT_AUDIO_SAMPLE_RATE = 16_000  // Hz -- ample for the DSP features computed Python-side
-        const val AUDIO_PUSH_INTERVAL_MS = 1_000L      // bounded push rate (Section XXVIII battery discipline)
+        const val AUDIO_PUSH_INTERVAL_MS = 2_000L      // continuous hearing buffer; expensive Python DSP half as often
     }
 
     // Diagnostic hardening, part 6 (per Sunni: repeated tests never showed

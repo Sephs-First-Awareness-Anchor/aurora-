@@ -78,11 +78,15 @@ class LiveLineageJournal:
             from aurora_internal.aurora_turn_persistence import batch_defer
             if batch_defer(self):
                 return True
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(self.storage_path):
+        # Home-owned on a surface-only device: kept in her provisional view.
+        from aurora_internal.aurora_store_ownership import SNAPSHOT, store_write_path
+        _target = store_write_path(self.storage_path, SNAPSHOT)
+        if _target is None:
             return True
+        _target = str(_target)
+        _own_copy = os.path.abspath(_target) == os.path.abspath(self.storage_path)
         try:
-            os.makedirs(os.path.dirname(self.storage_path) or ".", exist_ok=True)
+            os.makedirs(os.path.dirname(_target) or ".", exist_ok=True)
             payload = {
                 "updated_at": float(time.time()),
                 "events": list(self.events),
@@ -90,8 +94,10 @@ class LiveLineageJournal:
                 "seen_links": dict(self.seen_links),
                 "seen_traits": dict(self.seen_traits),
             }
-            with open(self.storage_path, "w", encoding="utf-8") as handle:
+            with open(_target, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
+            if not _own_copy:
+                return True       # home's copy is unchanged, so nothing to reload from it
             try:
                 st = os.stat(self.storage_path)
                 self._storage_mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))

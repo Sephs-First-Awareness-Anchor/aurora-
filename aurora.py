@@ -16034,6 +16034,23 @@ def _build_established_strata_evidence(
         _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13147)
         pass
 
+    # Experiential recall (directive V2, Sir 2026-11-21): for the things this turn is about, what she held THEN
+    # (each remembered occasion, with what she held right after it as recorded at the time) kept apart from what
+    # she holds NOW (overall and under each condition), for the few predicates whose understanding moved.  A
+    # bounded view read through the web's own index; it records nothing, so recalling never counts as experience.
+    try:
+        from aurora_internal.aurora_confluence import _find_web as _er_find_web
+        from aurora_internal import aurora_experiential_recall as _ER
+        _er_words = list(surface_input.get("topic_words") or [])[:4]
+        _er_web = _er_find_web(systems) if _er_words else None
+        if _er_web is not None:
+            _er_recs = _ER.recollect(_er_web, _er_words)
+            if _er_recs:
+                evidence['experiential_recall'] = [_ER.compact(r) for r in _er_recs]
+    except Exception as _aurora_boundary_exc:
+        _aurora_fault(locals(), _aurora_boundary_exc, '_build_established_strata_evidence', 13150)
+        pass
+
     # Grammar state hint (discourse mode from grammar engine)
     try:
         _ge = systems.get('grammar_engine')

@@ -13,7 +13,8 @@ These pin:
   * the surface's own present, its journals and caches are still written;
   * the real writers honour the gate: atomic_write_json, the interaction
     memory journal, the pressure-experience log (the felt pressure stays in
-    the buffer) and the understanding sediment overlay;
+    the buffer) and the understanding sediment overlay; what they would have
+    written is kept in her provisional view (test_provisional_view.py);
   * paths outside her state directory are never touched by the gate.
 """
 from __future__ import annotations
@@ -160,5 +161,8 @@ def test_understanding_sediment_is_home_owned(tmp_path):
     overlay = UnderstandingSedimentOverlay(state_dir=str(tmp_path))
     overlay._dirty = True
     gate.enable_surface_only(tmp_path)
-    assert overlay.save() is False
+    # Home's copy is untouched; what she understood is kept in her
+    # provisional view until home has it (dual-strata directive, sec. 8).
+    assert overlay.save() is True
     assert not Path(overlay._path).exists()
+    assert (Path(tmp_path).resolve() / "provisional" / Path(overlay._path).name).exists()

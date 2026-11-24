@@ -118,12 +118,27 @@ def _read_last_snapshot(path: str) -> Optional[Dict[str, Any]]:
 
 def _append_capped(path: str, entry: Dict[str, Any]) -> int:
     try:
-        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        # The timeline is home's developmental record.  On a surface-only
+        # device the line lands in her provisional view instead (appended, not
+        # capped: an append view is laid over home's copy by byte offset, so it
+        # must only grow; its size is bounded by the provisional budget).
+        from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+        target = store_write_path(path, APPEND)
+        if target is None:
+            return 0
+        target = str(target)
+        os.makedirs(os.path.dirname(target) or ".", exist_ok=True)
+        line = json.dumps(entry, default=str) + "\n"
+        if os.path.abspath(target) != os.path.abspath(path):
+            with open(target, "a", encoding="utf-8") as fh:
+                fh.write(line)
+            with open(target, "r", encoding="utf-8") as fh:
+                return sum(1 for _ in fh)
         lines = []
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as fh:
                 lines = fh.readlines()
-        lines.append(json.dumps(entry, default=str) + "\n")
+        lines.append(line)
         if len(lines) > _MAX_LINES:
             lines = lines[-_MAX_LINES:]
         with open(path, "w", encoding="utf-8") as fh:

@@ -404,9 +404,11 @@ class TopologyTracker:
     def save(self) -> bool:
         if not self._path:
             return False
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(self._path):
+        from aurora_internal.aurora_store_ownership import store_write_path
+        target = store_write_path(self._path)
+        if target is None:
             return False
+        target = str(target)
         with self._lock:
             if not self._dirty:
                 return False
@@ -418,10 +420,10 @@ class TopologyTracker:
                     "windows": {scale: w.to_state() for scale, w in self._windows.items()},
                     "saved_at": time.time(),
                 }
-                tmp = self._path + ".tmp"
+                tmp = target + ".tmp"
                 with open(tmp, "w", encoding="utf-8") as fh:
                     json.dump(payload, fh, indent=1)
-                os.replace(tmp, self._path)
+                os.replace(tmp, target)
                 self._dirty = False
                 return True
             except Exception as _aurora_boundary_exc:

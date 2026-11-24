@@ -157,13 +157,15 @@ class UnderstandingSedimentOverlay:
                 return False
             try:
                 os.makedirs(self._state_dir, exist_ok=True)
-                from aurora_internal.aurora_store_ownership import store_write_allowed
-                if not store_write_allowed(self._path):
+                from aurora_internal.aurora_store_ownership import store_write_path
+                target = store_write_path(self._path)
+                if target is None:
                     return False
-                tmp = self._path + ".tmp"
+                target = str(target)
+                tmp = target + ".tmp"
                 with open(tmp, "w", encoding="utf-8") as f:
                     json.dump({"version": 1, "entries": self._entries}, f, indent=1)
-                os.replace(tmp, self._path)
+                os.replace(tmp, target)
                 self._dirty = False
                 return True
             except Exception as _aurora_boundary_exc:
@@ -367,10 +369,12 @@ class PersistentWorthLedger:
                 return False
             try:
                 os.makedirs(self._state_dir, exist_ok=True)
-                from aurora_internal.aurora_store_ownership import store_write_allowed
-                if not store_write_allowed(self._path):
+                from aurora_internal.aurora_store_ownership import store_write_path
+                target = store_write_path(self._path)
+                if target is None:
                     return False
-                tmp = self._path + ".tmp"
+                target = str(target)
+                tmp = target + ".tmp"
                 payload = {
                     "version": 1,
                     "windows": {k: [round(s, 6) for s in v]
@@ -378,7 +382,7 @@ class PersistentWorthLedger:
                 }
                 with open(tmp, "w", encoding="utf-8") as f:
                     json.dump(payload, f, indent=1)
-                os.replace(tmp, self._path)
+                os.replace(tmp, target)
                 self._dirty = False
                 return True
             except Exception as _aurora_boundary_exc:

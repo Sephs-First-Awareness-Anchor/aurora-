@@ -369,6 +369,25 @@ def settle_recommendations(output_dir: str, *, now: Optional[float] = None,
     return {"aged_out": len(stale), "released": released}
 
 
+# On a surface-only device the hub's logs are home's (the gate declines their
+# writes), so a decision made here cannot be recorded here.  Without this the
+# surface re-decided the same items on every pass: each start aged out the
+# same few thousand stale items again (measured: ~3,900 declined writes in a
+# three-turn session), and a high-priority item could be raised with Sunni
+# again and again.  The surface remembers what it decided for as long as it
+# runs; aging out and releasing the logs is home's bookkeeping.
+_SURFACE_DECIDED: Dict[str, float] = {}
+_SURFACE_DISCUSSED: List[float] = []
+
+
+def _surface_only() -> bool:
+    try:
+        from aurora_internal.aurora_store_ownership import surface_only_root
+        return surface_only_root() is not None
+    except Exception:
+        return False
+
+
 def process_pending_for_aurora(
     output_dir: str,
     discuss_callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
@@ -376,12 +395,20 @@ def process_pending_for_aurora(
     cooldown_seconds: float = DISCUSS_COOLDOWN_SECONDS,
 ) -> List[Dict[str, Any]]:
     done: List[Dict[str, Any]] = []
-    try:
-        settle_recommendations(output_dir)
-    except Exception:
-        pass
+    surface = _surface_only()
+    if not surface:
+        try:
+            settle_recommendations(output_dir)
+        except Exception:
+            pass
     discuss_blocked = _recent_discuss_block(output_dir, cooldown_seconds)
-    for rec in pending_recommendations(output_dir, limit=max_items):
+    if surface:
+        discuss_blocked = discuss_blocked or any(
+            time.time() - at < cooldown_seconds for at in _SURFACE_DISCUSSED)
+    pending = pending_recommendations(output_dir, limit=max_items + len(_SURFACE_DECIDED))
+    if surface:
+        pending = [r for r in pending if str(r.get("id") or "") not in _SURFACE_DECIDED][:max_items]
+    for rec in pending:
         action = choose_action(rec)
         rationale = f"priority={float(rec.get('priority', 0.0) or 0.0):.2f}"
         if action == "discuss_with_user" and discuss_blocked:
@@ -389,6 +416,10 @@ def process_pending_for_aurora(
             rationale += "; discuss_cooldown_applied"
         result = act_recommendation(output_dir, rec, action=action, rationale=rationale)
         done.append(result)
+        if surface:
+            _SURFACE_DECIDED[str(rec.get("id") or "")] = time.time()
+            if action == "discuss_with_user":
+                _SURFACE_DISCUSSED.append(time.time())
 
         if action == "discuss_with_user":
             discuss_blocked = True

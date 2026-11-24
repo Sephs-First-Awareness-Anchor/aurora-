@@ -574,6 +574,11 @@ def collect_subsurface_downlink(state_dir: Any, outbox: DurableOutbox, memo: Dic
     except Exception:
         pass
     try:
+        from aurora_internal.dual_strata.anticipatory_facets import relay_down as _views_down
+        queued += _views_down(state_dir, outbox, memo)
+    except Exception:
+        pass
+    try:
         from aurora_internal.aurora_screen_apprenticeship import relay_down as _skills_down
         queued += _skills_down(state_dir, outbox, memo)
     except Exception:
@@ -640,6 +645,9 @@ def apply_downlink_record(state_dir: Any, record: Mapping[str, Any]) -> str:
     if channel == "home_inquiry" and isinstance(payload, dict):
         from aurora_internal.dual_strata.inquiry_tiers import receive_down
         return receive_down(state_dir, payload)
+    if channel == "facet_view" and isinstance(payload, dict):
+        from aurora_internal.dual_strata.anticipatory_facets import receive_down as _views_receive
+        return _views_receive(state_dir, payload)
     if channel == "home_skills" and isinstance(payload, dict):
         from aurora_internal.aurora_screen_apprenticeship import receive_down as _skills_receive
         return _skills_receive(state_dir, payload)
@@ -817,7 +825,29 @@ class StrataLinkServer:
             wants_claim = bool(request.get("claim")) and state["owner"] != surface_id
             refused = ""
             if wants_claim and state["owner"] and not handoff:
-                wants_claim, refused = False, "checkpoint_handoff_required"
+                # The desktop bootstraps its own temporary Surface so the
+                # local Hub works before a phone joins. That is *not* a
+                # checkpointed move from a previously living phone. A valid,
+                # explicitly paired first phone must be able to take this
+                # initial role; otherwise the connection is authenticated but
+                # permanently standby, and its uplink can never drain.
+                #
+                # This exception is ONE TIME. Once any non-home Surface has
+                # held an epoch, future claims require the normal checkpoint
+                # protocol, even when the Surface later moves back to home.
+                previous_phone_owners = any(
+                    sid != self.home_surface_id
+                    for sid in state["owner_epochs"].values()
+                )
+                initial_phone = (
+                    bool(self.home_surface_id)
+                    and state["owner"] == self.home_surface_id
+                    and surface_id != self.home_surface_id
+                    and not previous_phone_owners
+                    and state["epoch"] == 1
+                )
+                if not initial_phone:
+                    wants_claim, refused = False, "checkpoint_handoff_required"
             if wants_claim and handoff and state["owner"]:
                 if expired:
                     wants_claim, refused = False, "handoff_expired; cancel from the source and prepare again"
@@ -1349,9 +1379,17 @@ def configure_surface(state_dir: Any, pairing: str) -> Dict[str, Any]:
     endpoint, _, secret = text.partition("#")
     endpoint = endpoint.strip().rstrip("/")
     secret = secret.strip()
+    if endpoint.startswith("aurora-relay://"):
+        try:
+            from aurora_internal.dual_strata.relay_transport import install_surface_relay
+            return install_surface_relay(state_dir, text)
+        except (ValueError, OSError) as exc:
+            return {"ok": False, "error": str(exc)}
     if not endpoint.startswith(("http://", "https://")) or not secret:
-        return {"ok": False, "error": "expected http://host:port#secret"}
+        return {"ok": False, "error": "expected http://host:port#secret or aurora-relay://..."}
     root = link_dir(state_dir)
+    # Switching back to a direct pairing must not silently retain a stale relay.
+    (root / "relay_surface.json").unlink(missing_ok=True)
     (root / "endpoint.txt").write_text(endpoint, encoding="utf-8")
     (root / "secret.txt").write_text(secret, encoding="utf-8")
     # Pairing is the operator's explicit act, so it carries the claim: this
@@ -1407,7 +1445,12 @@ class StrataLinkClient:
         self.surface_id = surface_identity(self.state_dir)
         self.outbox = DurableOutbox(link_dir(self.state_dir) / "up_outbox.json")
         self._state_path = link_dir(self.state_dir) / "client_state.json"
-        self._transport: Transport = transport or self._http_transport
+        self._relay_transport = None
+        relay_cfg = _read_json(link_dir(self.state_dir) / "relay_surface.json", {})
+        if isinstance(relay_cfg, dict) and relay_cfg.get("origin") == self.endpoint:
+            from aurora_internal.dual_strata.relay_transport import RelaySurfaceTransport
+            self._relay_transport = RelaySurfaceTransport(relay_cfg, self.secret, timeout_s=self.timeout_s)
+        self._transport: Transport = transport or self._relay_transport or self._http_transport
         self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
         # One exchange or transfer at a time per client: the background loop
@@ -1686,13 +1729,21 @@ class StrataLinkClient:
                 from aurora_internal.aurora_store_ownership import moves_with_her
                 rel_paths = sorted({FILENAME, *moves_with_her(self.state_dir)})
                 manifest = st.snapshot_state(self.state_dir, snap, rel_paths=rel_paths)
-            elif snapshot_guard is not None:
-                # Only the copy needs her held still (e.g. the app's field
-                # lock); the transfer of the copy that follows does not.
-                with snapshot_guard():
-                    manifest = st.snapshot_state(self.state_dir, snap)
             else:
-                manifest = st.snapshot_state(self.state_dir, snap)
+                # A whole-state seed or first-pairing carries her canonical
+                # stores, never her provisional view of them: that view is
+                # this device's lived interpretation awaiting home's
+                # integration, not a store home may adopt as its own.
+                from aurora_internal.aurora_store_ownership import PROVISIONAL_DIRNAME
+                whole = [rel for rel in st.list_transferable(self.state_dir)
+                         if not rel.startswith(PROVISIONAL_DIRNAME + "/")]
+                if snapshot_guard is not None:
+                    # Only the copy needs her held still (e.g. the app's field
+                    # lock); the transfer of the copy that follows does not.
+                    with snapshot_guard():
+                        manifest = st.snapshot_state(self.state_dir, snap, rel_paths=whole, strict=False)
+                else:
+                    manifest = st.snapshot_state(self.state_dir, snap, rel_paths=whole, strict=False)
             if not manifest:
                 return {"ok": False, "error": "nothing to transfer"}
             digest = st.manifest_digest(manifest)
@@ -1989,6 +2040,12 @@ class StrataLinkClient:
                     self.last_error = f"growth: {type(exc).__name__}: {exc}"[:200]
             if not self.online:
                 interval = min(max(interval, self.FAST_INTERVAL_S) * 2.0, self.MAX_BACKOFF_S)
+            elif self.role == "standby":
+                # A standby device is not permitted to send new lived
+                # continuity; repeatedly sending the same pending records
+                # every two seconds cannot make it the holder. Keep them
+                # durable and recheck ownership at the ordinary idle rate.
+                interval = self.IDLE_INTERVAL_S
             elif moved or self.outbox.stats()["pending"]:
                 interval = self.FAST_INTERVAL_S
             else:
@@ -2017,6 +2074,7 @@ class StrataLinkClient:
         else:
             label = "online"
         return {"status": label, "version": LINK_VERSION, "endpoint": self.endpoint,
+                "route": (self._relay_transport.last_route if self.online else "offline") if self._relay_transport else ("direct" if self.online else "offline"),
                 "surface_id": self.surface_id, "role": self.role, "epoch": self.epoch,
                 "thread_alive": bool(self._thread and self._thread.is_alive()),
                 "rtt_ms": round(self.rtt_ms, 1), "last_sync_at": self.last_sync_at,

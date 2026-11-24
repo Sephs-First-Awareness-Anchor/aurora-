@@ -276,7 +276,7 @@ def test_apply_dry_run_changes_nothing_and_reports():
     add(b, source="told", strength=0.6)
     cr = crystals()
     r = F.apply_to_crystals(b, {"sunni": "id_s", "letter": "id_l"}, cr)
-    assert r == {"crystals_touched": 1, "facets": 1, "entries": 1, "dry_run": True} and len(cr["id_s"].facets) == 0
+    assert r == {"crystals_touched": 1, "facets": 1, "entries": 1, "lowered": 0, "dry_run": True} and len(cr["id_s"].facets) == 0
 
 
 def test_apply_writes_one_facet_per_kind_with_counted_entries_only_and_is_additive_and_idempotent():
@@ -297,7 +297,7 @@ def test_apply_writes_one_facet_per_kind_with_counted_entries_only_and_is_additi
     assert {f.role: (f.content, f.confidence) for f in cr["id_s"].facets.values()} == snap and len(cr["id_s"].facets) == 2
 
 
-def test_apply_merges_into_an_existing_facet_keeping_the_stronger_and_never_lowers_confidence():
+def test_apply_revises_a_stale_existing_key_when_qualified_evidence_weakens_it():
     b = F.FacetBook()
     add(b, key="a", ref="1", source="told", strength=0.3)
     cr = crystals()
@@ -305,7 +305,8 @@ def test_apply_merges_into_an_existing_facet_keeping_the_stronger_and_never_lowe
     F.apply_to_crystals(b, {"sunni": "id_s"}, cr, dry_run=False)
     f = next(x for x in cr["id_s"].facets.values() if x.role == "fk:definition")
     ents = {e["key"]: e for e in f.content["entries"]}
-    assert ents["a"]["degree"] == 0.9 and "z" in ents and f.confidence == 0.9
+    assert ents["a"]["degree"] == pytest.approx(0.3) and "z" in ents
+    assert f.confidence == pytest.approx(0.3)  # the old .9 must not mask correction
 
 
 def test_it_works_on_the_real_crystal_and_its_serialisation():
@@ -320,7 +321,7 @@ def test_it_works_on_the_real_crystal_and_its_serialisation():
 
 # -- isolation ---------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_only_the_association_module_is_imported_and_nothing_running_imports_this():
+def test_the_facet_writer_is_isolated_while_the_live_cognition_reader_is_explicit():
     tree = ast.parse(open(F.__file__, encoding="utf-8").read())
     mods = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module and n.module.startswith("aurora")}
     assert mods == {"aurora_internal.crystal_associations", "aurora_internal.crystal_store"}      # (the store module is pure: names and bookkeeping prefixes only)
@@ -332,7 +333,7 @@ def test_only_the_association_module_is_imported_and_nothing_running_imports_thi
         for f in files:
             if f.endswith(".py") and f not in ("crystal_facets.py", "crystal_weave.py", "crystal_runtime.py", "crystal_lexicon.py", "crystal_sensory.py") and re.search(r"(from|import)\s+[\w.]*crystal_facets", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
                 hits.append(f)
-    assert hits == []
+    assert sorted(hits) == ["aurora_live_experience.py"]  # read-only bridge, no alternate writer
 
 
 def test_no_degree_is_compared_with_a_cut_off():
@@ -367,3 +368,23 @@ def test_recorded_uses_go_where_they_belong_and_repeats_attach_to_one_entry():
     t0 = b.totals()
     F.place_oets_node(b, node)
     assert b.totals() == t0
+
+
+def test_live_read_finds_the_facets_the_crystal_pass_wove_on_a_real_boot_layout():
+    """On a real boot systems["dimensional"] is DimensionalSystems: the index and
+    the crystals the crystal pass weaves fk:* facets into sit on its .dps, and
+    the concept crystal registry is a different store.  The live read must find
+    the woven facets there (Sunni (Sir) Morningstar & Cael Devo)."""
+    from types import SimpleNamespace
+    from aurora_internal.crystal_facets import recall_contextual_facets
+    facet = SimpleNamespace(role="fk:relation", content={"entries": [
+        {"key": "needs", "content": "power", "degree": 0.7, "occasions": [{"source": "conversation"}]}]})
+    dps = SimpleNamespace(concept_index={"kettle": "c1"},
+                          crystals={"c1": SimpleNamespace(facets={"f": facet})})
+    systems = {"dimensional": SimpleNamespace(dps=dps),
+               "_concept_crystal_registry": SimpleNamespace(crystal_by_id=lambda cid: None)}
+    got = recall_contextual_facets(systems, "is the kettle on?")
+    assert [(g["concept"], g["key"], g["degree"]) for g in got] == [("kettle", "needs", 0.7)]
+    # No registry at all still reads the processing system's own crystals.
+    systems.pop("_concept_crystal_registry")
+    assert len(recall_contextual_facets(systems, "kettle")) == 1

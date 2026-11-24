@@ -613,9 +613,11 @@ class LexicalMemory:
         """Persist full vocabulary to disk."""
         import json as _j, os as _os
         p = path or self._path or self._DEFAULT_PATH
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(p):
+        from aurora_internal.aurora_store_ownership import store_write_path
+        _target = store_write_path(p)
+        if _target is None:
             return True
+        p = str(_target)
         try:
             _os.makedirs(_os.path.dirname(p), exist_ok=True)
             data = {
@@ -1197,9 +1199,11 @@ class ImpressionCascade:
         """Persist full vocabulary to disk."""
         import json as _j, os as _os
         p = path or self._DEFAULT_PATH
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(p):
+        from aurora_internal.aurora_store_ownership import store_write_path
+        _target = store_write_path(p)
+        if _target is None:
             return True
+        p = str(_target)
         try:
             _os.makedirs(_os.path.dirname(p), exist_ok=True)
             data = {
@@ -5118,11 +5122,16 @@ class ExpressionPerceptionEngine(WarpCapable):
     def _save_representation_communication_ledger(self) -> None:
         try:
             import json as _j
-            os.makedirs(os.path.dirname(self._repr_communication_path), exist_ok=True)
-            tmp = self._repr_communication_path + ".tmp"
+            from aurora_internal.aurora_store_ownership import SNAPSHOT, store_write_path
+            _target = store_write_path(self._repr_communication_path, SNAPSHOT)
+            if _target is None:
+                return
+            _target = str(_target)
+            os.makedirs(os.path.dirname(_target), exist_ok=True)
+            tmp = _target + ".tmp"
             with open(tmp, "w", encoding="utf-8") as handle:
                 _j.dump(self._repr_communication_ledger, handle, indent=2, sort_keys=True)
-            os.replace(tmp, self._repr_communication_path)
+            os.replace(tmp, _target)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
