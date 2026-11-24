@@ -368,3 +368,23 @@ def test_recorded_uses_go_where_they_belong_and_repeats_attach_to_one_entry():
     t0 = b.totals()
     F.place_oets_node(b, node)
     assert b.totals() == t0
+
+
+def test_live_read_finds_the_facets_the_crystal_pass_wove_on_a_real_boot_layout():
+    """On a real boot systems["dimensional"] is DimensionalSystems: the index and
+    the crystals the crystal pass weaves fk:* facets into sit on its .dps, and
+    the concept crystal registry is a different store.  The live read must find
+    the woven facets there (Sunni (Sir) Morningstar & Cael Devo)."""
+    from types import SimpleNamespace
+    from aurora_internal.crystal_facets import recall_contextual_facets
+    facet = SimpleNamespace(role="fk:relation", content={"entries": [
+        {"key": "needs", "content": "power", "degree": 0.7, "occasions": [{"source": "conversation"}]}]})
+    dps = SimpleNamespace(concept_index={"kettle": "c1"},
+                          crystals={"c1": SimpleNamespace(facets={"f": facet})})
+    systems = {"dimensional": SimpleNamespace(dps=dps),
+               "_concept_crystal_registry": SimpleNamespace(crystal_by_id=lambda cid: None)}
+    got = recall_contextual_facets(systems, "is the kettle on?")
+    assert [(g["concept"], g["key"], g["degree"]) for g in got] == [("kettle", "needs", 0.7)]
+    # No registry at all still reads the processing system's own crystals.
+    systems.pop("_concept_crystal_registry")
+    assert len(recall_contextual_facets(systems, "kettle")) == 1

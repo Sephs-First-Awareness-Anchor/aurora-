@@ -466,12 +466,18 @@ def recall_contextual_facets(systems: Mapping[str, Any], heard: str, *, max_entr
     if not terms or not isinstance(systems, Mapping):
         return []
     registry = systems.get("_concept_crystal_registry")
-    if registry is None:
-        return []
     # This index already maps known concepts to their canonical ordinary crystals.
-    dps = systems.get("dimensional")
+    # On a real boot systems["dimensional"] is DimensionalSystems, whose crystal
+    # processing system (.dps) holds the index and the crystals that the crystal
+    # pass weaves fk:* facets into; a bare processing system holds them itself.
+    dimensional = systems.get("dimensional")
+    dps = getattr(dimensional, "dps", None) or dimensional
     idx = getattr(dps, "concept_index", None)
     if not isinstance(idx, Mapping):
+        return []
+    owned = getattr(dps, "crystals", None)
+    owned = owned if isinstance(owned, Mapping) else None
+    if owned is None and registry is None:
         return []
     out: List[Dict[str, Any]] = []
     kinds = {"episode_ref", "context", "condition", "cause", "effect", "relation",
@@ -482,7 +488,9 @@ def recall_contextual_facets(systems: Mapping[str, Any], heard: str, *, max_entr
         cid = idx.get(concept)
         if not cid:
             continue
-        crystal = registry.crystal_by_id(cid) if cid else None
+        crystal = owned.get(cid) if owned is not None else None
+        if crystal is None and registry is not None and hasattr(registry, "crystal_by_id"):
+            crystal = registry.crystal_by_id(cid)
         if crystal is None:
             continue
         for facet in getattr(crystal, "facets", {}).values():
