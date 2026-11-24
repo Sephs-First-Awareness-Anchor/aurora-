@@ -243,7 +243,7 @@ Support is the knowledge graph's verdict: `supported` and `partly_supported` mea
 | `language.3` | Identity and language | `aurora_internal/aurora_communication_emergence.py` | 2 | supported |
 | `governance.1` | Governance, persistence and health | `aurora_internal/aurora_runtime_faults.py` | 19 | partly_supported |
 | `governance.2` | Governance, persistence and health | `aurora_internal/aurora_metabolic_steps.py` | 2 | supported |
-| `strata.1` | Dual strata (surface and subsurface) | `aurora_internal/dual_strata/__init__.py` | 44 | unchecked |
+| `strata.1` | Dual strata (surface and subsurface) | `aurora_internal/dual_strata/__init__.py` | 44 | partly_supported |
 | `strata.2` | Dual strata (surface and subsurface) | `aurora_internal/aurora_surface_dispatcher.py` | 2 | supported |
 | `bridges.1` | Bridges and external tools | `aurora_internal/scouting/contracts.py` | 4 | supported |
 | `bridges.2` | Bridges and external tools | `aurora_praxis_messenger.py` | 3 | supported |

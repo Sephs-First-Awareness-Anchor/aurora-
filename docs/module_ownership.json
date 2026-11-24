@@ -2034,7 +2034,7 @@
      "aurora_internal/dual_strata/topology_tracker.py"
     ]
    ],
-   "support": "unchecked"
+   "support": "partly_supported"
   },
   "strata.2": {
    "domain": "desktop",
@@ -16930,6 +16930,7 @@
      "aurora_internal/aurora_store_ownership.py",
      "aurora_internal/dual_strata/__init__.py",
      "aurora_internal/dual_strata/activation_field.py",
+     "aurora_internal/dual_strata/anticipatory_facets.py",
      "aurora_internal/dual_strata/cers_bridge.py",
      "aurora_internal/dual_strata/cers_deprecation.py",
      "aurora_internal/dual_strata/cers_potential_trial.py",

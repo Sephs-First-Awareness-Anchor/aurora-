@@ -12,7 +12,7 @@ yet.  This module carries that read down.  It never carries a reply.
   * Home builds a VIEW when her raw input reaches it (strata_link's
     disposable raw_input feed), while its own live work is idle.  A view is
     the same bounded read the surface makes on every turn
-    (crystal_facets.recall_contextual_facets), on home's authoritative
+    (aurora_live_experience.crystal_context_for_turn), on home's authoritative
     registry, and nothing else: no new crystal, facet kind, vote or store of
     knowledge.
   * Every view carries its own provenance: input_id, the words it was read
@@ -126,11 +126,13 @@ def build_home_view(systems: Mapping[str, Any], text: str, *, input_id: str = ""
                     state_dir: Any = None, now: Optional[float] = None) -> Optional[Dict[str, Any]]:
     """Home's read of its own crystals for ``text``.  None when there is
     nothing to read (no known concept carries a qualified facet)."""
-    from aurora_internal.crystal_facets import recall_contextual_facets
+    # The same reader her live cognition uses; on home the profile is not the
+    # surface, so this is home's own facets with no home view laid over them.
+    from aurora_internal.aurora_live_experience import crystal_context_for_turn
     terms = _terms(text)
     if not terms:
         return None
-    facets = recall_contextual_facets(systems, text, max_entries=MAX_ENTRIES)
+    facets = list(crystal_context_for_turn(systems, text, max_entries=MAX_ENTRIES).get("facets") or [])
     if not facets:
         return None
     at = float(now if now is not None else time.time())
