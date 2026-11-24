@@ -1,0 +1,9 @@
+# Replace with your actual DNS name and point it to the public host.
+relay.your-domain.com {
+    reverse_proxy 127.0.0.1:8795 {
+        transport http {
+            read_timeout 40s
+            write_timeout 40s
+        }
+    }
+}

@@ -187,6 +187,9 @@ android {
                 // dead weight, including its own compiled C extension.
                 install "numpy==1.26.2"
                 install "Pillow"
+                // AES-GCM for end-to-end encrypted Surface ↔ Subsurface relay.
+                // Chaquopy provides a CPython 3.12 arm64 Android wheel.
+                install "cryptography==42.0.8"
             }
             // APK size: ship only compiled .pyc, not the .py source --
             // Aurora's Python tree is ~450 files after tests/scripts were

@@ -1,0 +1,88 @@
+name: Desktop app installers
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'packaging/desktop/**'
+      - 'aurora_internal/desktop/**'
+      - 'scripts/aurora_home_setup.py'
+      - 'requirements-desktop.txt'
+      - '.github/workflows/desktop-app-build.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packaging/desktop/**'
+      - 'aurora_internal/desktop/**'
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install desktop build dependencies
+        run: python -m pip install -r packaging/desktop/requirements-build.txt
+      - name: Check remote pairing and existing resident integration
+        run: python -m pytest -q tests/test_desktop_remote_link.py tests/test_desktop_embodiment.py tests/test_strata_migration.py tests/test_strata_relay.py
+      - name: Package executable and bundled Aurora runtime
+        run: python packaging/desktop/build.py
+      - name: Verify bundled runtime imports
+        shell: pwsh
+        run: |
+          # A PyInstaller --windowed .exe is a GUI-subsystem binary.
+          # PowerShell's call operator may not wait for its exit code.
+          $test = Start-Process -FilePath ".\dist\AuroraDesktop\AuroraDesktop.exe" -ArgumentList "--self-test" -Wait -PassThru
+          if ($test.ExitCode -ne 0) { throw "Bundled runtime self-test failed: $($test.ExitCode)" }
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+      - name: Build single Windows installer
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "packaging\desktop\windows\Aurora.iss"
+          if ($LASTEXITCODE -ne 0) { throw 'Windows installer failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Aurora-Windows-Installer
+          path: dist/Aurora-Setup-Windows-x64.exe
+          if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Linux native WebEngine build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xauth libgl1 libegl1 libnss3 libgbm1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcomposite1 libxdamage1 libxrandr2 libasound2
+      - name: Install desktop build dependencies
+        run: python -m pip install -r packaging/desktop/requirements-build.txt
+      - name: Check remote pairing and existing resident integration
+        run: python -m pytest -q tests/test_desktop_remote_link.py tests/test_desktop_embodiment.py tests/test_strata_migration.py tests/test_strata_relay.py
+      - name: Package executable and bundled Aurora runtime
+        run: python packaging/desktop/build.py
+      - name: Verify bundled runtime imports
+        run: ./dist/AuroraDesktop/AuroraDesktop --self-test
+      - name: Exercise real Qt and WebEngine startup under a virtual display
+        env:
+          QTWEBENGINE_CHROMIUM_FLAGS: "--disable-gpu --no-sandbox"
+        run: xvfb-run -a timeout 35s ./dist/AuroraDesktop/AuroraDesktop --gui-self-test
+      - name: Build Linux desktop installer
+        run: bash packaging/desktop/linux/make_deb.sh
+      - name: Install .deb and test its actual desktop launcher
+        env:
+          QTWEBENGINE_CHROMIUM_FLAGS: "--disable-gpu --no-sandbox"
+        run: |
+          sudo apt-get install -y ./dist/Aurora-Linux-amd64.deb
+          xvfb-run -a timeout 35s aurora-desktop --gui-self-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Aurora-Linux-Installer
+          path: dist/Aurora-Linux-amd64.deb
+          if-no-files-found: error

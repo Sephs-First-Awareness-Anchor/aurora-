@@ -1,0 +1,22 @@
+# Example: hosted service at /etc/systemd/system/aurora-relay.service
+[Unit]
+Description=Aurora opaque internet relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=aurora-relay
+WorkingDirectory=/opt/aurora
+EnvironmentFile=/etc/aurora-relay/relay.env
+ExecStart=/usr/bin/python3 -m aurora_internal.dual_strata.relay_gateway
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
