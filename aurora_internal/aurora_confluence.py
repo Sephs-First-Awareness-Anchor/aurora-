@@ -572,6 +572,35 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
     concepts = list(dict.fromkeys(concepts + named))
     known = knowledge(systems, concepts, heard, reach=int(how.get("reach", 1)), session_id=session_id,
                       feeling=moved_by(pipeline))
+    # The actual learned structures and contextual occasions live on the SAME
+    # ordinary crystals as everything else.  They can qualify which existing
+    # knowledge is pertinent, but an axis path or word association cannot be
+    # voiced as a newly invented natural-language fact.
+    from aurora_internal.aurora_live_experience import crystal_context_for_turn
+    crystal_context = crystal_context_for_turn(systems, heard)
+    for statement in known:
+        matching = [
+            item for item in crystal_context["facets"]
+            if item["concept"] in (statement.get("source"), statement.get("target"))
+        ]
+        if matching:
+            statement["crystal_context"] = [
+                {"concept": item["concept"], "kind": item["kind"], "key": item["key"],
+                 "degree": item["degree"], "facet_role": item["facet_role"],
+                 "occasions": item["occasions"]}
+                for item in matching[:2]
+            ]
+        relevant_paths = [
+            item for item in crystal_context["representations"]
+            if set(item["word_hits"]) & set(_words(
+                " ".join(str(statement.get(k) or "") for k in ("source", "target"))
+            ))
+        ]
+        if relevant_paths:
+            statement["resolution_evidence"] = [
+                {"id": item["id"], "path": item["path"], "facet_role": item["facet_role"],
+                 "word_hits": item["word_hits"]} for item in relevant_paths[:2]
+            ]
     # affect: how it moved her
     surface = dict(pipeline.get("surface_reactive_emotion") or {})
     tone = str(surface.get("tone_bias") or "").lower()
@@ -589,6 +618,7 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
         "addressed": addressed,
         "salient": salient,
         "knowledge": known,
+        "crystal_context": crystal_context,
         "affect": affect,
         "time": when,
         "obligation": str(obligation.get("operation") or ""),

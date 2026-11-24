@@ -297,7 +297,7 @@ def test_apply_writes_one_facet_per_kind_with_counted_entries_only_and_is_additi
     assert {f.role: (f.content, f.confidence) for f in cr["id_s"].facets.values()} == snap and len(cr["id_s"].facets) == 2
 
 
-def test_apply_merges_into_an_existing_facet_keeping_the_stronger_and_never_lowers_confidence():
+def test_apply_revises_a_stale_existing_key_when_qualified_evidence_weakens_it():
     b = F.FacetBook()
     add(b, key="a", ref="1", source="told", strength=0.3)
     cr = crystals()
@@ -305,7 +305,8 @@ def test_apply_merges_into_an_existing_facet_keeping_the_stronger_and_never_lowe
     F.apply_to_crystals(b, {"sunni": "id_s"}, cr, dry_run=False)
     f = next(x for x in cr["id_s"].facets.values() if x.role == "fk:definition")
     ents = {e["key"]: e for e in f.content["entries"]}
-    assert ents["a"]["degree"] == 0.9 and "z" in ents and f.confidence == 0.9
+    assert ents["a"]["degree"] == pytest.approx(0.3) and "z" in ents
+    assert f.confidence == pytest.approx(0.3)  # the old .9 must not mask correction
 
 
 def test_it_works_on_the_real_crystal_and_its_serialisation():
@@ -320,7 +321,7 @@ def test_it_works_on_the_real_crystal_and_its_serialisation():
 
 # -- isolation ---------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_only_the_association_module_is_imported_and_nothing_running_imports_this():
+def test_the_facet_writer_is_isolated_while_the_live_cognition_reader_is_explicit():
     tree = ast.parse(open(F.__file__, encoding="utf-8").read())
     mods = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module and n.module.startswith("aurora")}
     assert mods == {"aurora_internal.crystal_associations", "aurora_internal.crystal_store"}      # (the store module is pure: names and bookkeeping prefixes only)
@@ -332,7 +333,7 @@ def test_only_the_association_module_is_imported_and_nothing_running_imports_thi
         for f in files:
             if f.endswith(".py") and f not in ("crystal_facets.py", "crystal_weave.py", "crystal_runtime.py", "crystal_lexicon.py", "crystal_sensory.py") and re.search(r"(from|import)\s+[\w.]*crystal_facets", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
                 hits.append(f)
-    assert hits == []
+    assert sorted(hits) == ["aurora_live_experience.py"]  # read-only bridge, no alternate writer
 
 
 def test_no_degree_is_compared_with_a_cut_off():
