@@ -487,6 +487,13 @@ class DesktopRuntime:
             raw = read_json(self.state_dir / "strata_link" / "raw_input.json", {})
             if raw.get("expires_at", 0) >= time.time():
                 self.systems["_anticipatory_input"] = raw
+                # Home's read of her crystals for what she is hearing, handed
+                # down beside her own on the next turns (never a reply).
+                try:
+                    from aurora_internal.dual_strata.anticipatory_facets import stage_from_anticipatory_input
+                    stage_from_anticipatory_input(self.systems, self.state_dir)
+                except Exception as exc:
+                    self.errors["facet_view"] = f"{type(exc).__name__}: {exc}"
             else:
                 self.systems.pop("_anticipatory_input", None)
             from aurora_acm_bridge import _read_axes_from_collective

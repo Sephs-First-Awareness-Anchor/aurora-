@@ -1198,6 +1198,12 @@ class UniversalFunctionLineage:
             return self.status()
 
     def _write_manifest(self) -> None:
+        # Derived from the code itself, not lived: on a surface-only device
+        # home rebuilds it, so the write is declined (counted) rather than
+        # spending her provisional budget on it.
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self.manifest_path):
+            return
         self.manifest_path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.manifest_path.with_suffix(self.manifest_path.suffix + ".tmp")
         tmp.write_text(json.dumps(self._manifest, ensure_ascii=True, separators=(",", ":"), sort_keys=True), encoding="utf-8")
@@ -1211,6 +1217,9 @@ class UniversalFunctionLineage:
                 fid: list(rec.get("root_labels", []) or []) for fid, rec in self._functions.items()
             },
         }
+        from aurora_internal.aurora_store_ownership import store_write_allowed
+        if not store_write_allowed(self.constraint_index_path):
+            return
         tmp = self.constraint_index_path.with_suffix(self.constraint_index_path.suffix + ".tmp")
         tmp.write_text(json.dumps(payload, ensure_ascii=True, separators=(",", ":"), sort_keys=True), encoding="utf-8")
         os.replace(tmp, self.constraint_index_path)

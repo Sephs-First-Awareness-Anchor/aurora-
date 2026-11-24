@@ -427,6 +427,10 @@
      "corpus_runner.py"
     ],
     [
+     "aurora_internal/__init__.py",
+     "aurora_internal/desktop/runtime.py"
+    ],
+    [
      "aurora_internal/desktop/__main__.py",
      "aurora_internal/desktop/common.py"
     ],
@@ -1606,6 +1610,7 @@
     "aurora_internal/aurora_store_ownership.py",
     "aurora_internal/dual_strata/__init__.py",
     "aurora_internal/dual_strata/activation_field.py",
+    "aurora_internal/dual_strata/anticipatory_facets.py",
     "aurora_internal/dual_strata/cers_bridge.py",
     "aurora_internal/dual_strata/cers_deprecation.py",
     "aurora_internal/dual_strata/cers_potential_trial.py",
@@ -1755,6 +1760,10 @@
     [
      "aurora_internal/dual_strata/__init__.py",
      "aurora_internal/dual_strata/topological_semantic_coordinator.py"
+    ],
+    [
+     "aurora_internal/dual_strata/anticipatory_facets.py",
+     "aurora_internal/dual_strata/strata_link.py"
     ],
     [
      "aurora_internal/dual_strata/cers_bridge.py",
@@ -2025,7 +2034,7 @@
      "aurora_internal/dual_strata/topology_tracker.py"
     ]
    ],
-   "support": "partly_supported"
+   "support": "unchecked"
   },
   "strata.2": {
    "domain": "desktop",
@@ -16378,6 +16387,58 @@
    "duties": null,
    "exercises": [
     "aurora.py"
+   ]
+  },
+  "aurora_internal/dual_strata/anticipatory_facets.py": {
+   "domain": "desktop",
+   "subsystem": "strata",
+   "also": [],
+   "composite": "strata.1",
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "name_and_docstring",
+   "duties": null
+  },
+  "tests/test_anticipatory_facets.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_internal/__init__.py",
+    "aurora_internal/aurora_live_experience.py",
+    "aurora_internal/aurora_recommendation_hub.py",
+    "aurora_internal/aurora_store_ownership.py",
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/anticipatory_facets.py",
+    "aurora_internal/dual_strata/strata_link.py"
+   ]
+  },
+  "tests/test_provisional_view.py": {
+   "domain": "desktop",
+   "subsystem": "tests",
+   "also": [],
+   "composite": null,
+   "layer": null,
+   "layer_role": null,
+   "language": "python",
+   "basis": "location",
+   "duties": null,
+   "exercises": [
+    "aurora_developmental_log.py",
+    "aurora_internal/__init__.py",
+    "aurora_internal/aurora_reflective_readdressing.py",
+    "aurora_internal/aurora_store_ownership.py",
+    "aurora_internal/aurora_universal_function_lineage.py",
+    "aurora_internal/dual_strata/__init__.py",
+    "aurora_internal/dual_strata/home_growth.py",
+    "aurora_internal/dual_strata/strata_state_transfer.py"
    ]
   }
  },

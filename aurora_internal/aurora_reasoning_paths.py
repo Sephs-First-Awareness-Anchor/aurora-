@@ -205,19 +205,22 @@ class ReasoningPaths:
     def flush_write_batch(self) -> None:
         if not self.persist:
             return
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(self.path):
+        # Home-owned on a surface-only device: kept in her provisional view.
+        from aurora_internal.aurora_store_ownership import SNAPSHOT, store_write_path
+        _target = store_write_path(self.path, SNAPSHOT)
+        if _target is None:
             return
+        _target = str(_target)
         try:
-            os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
-            tmp = self.path + ".tmp"
+            os.makedirs(os.path.dirname(_target) or ".", exist_ok=True)
+            tmp = _target + ".tmp"
             with self._lock:
                 payload = {"version": PATHS_VERSION, "paths": self.paths,
                            "counters": self.counters, "last_divergence": self.last_divergence}
                 data = json.dumps(payload)
             with open(tmp, "w", encoding="utf-8") as fh:
                 fh.write(data)
-            os.replace(tmp, self.path)
+            os.replace(tmp, _target)
         except Exception:
             pass
 

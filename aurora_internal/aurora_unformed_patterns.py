@@ -175,21 +175,24 @@ class UnformedPatterns:
     def flush_write_batch(self) -> None:
         if not self.persist:
             return
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(self.path):
+        # Home-owned on a surface-only device: kept in her provisional view.
+        from aurora_internal.aurora_store_ownership import SNAPSHOT, store_write_path
+        _target = store_write_path(self.path, SNAPSHOT)
+        if _target is None:
             return
+        _target = str(_target)
         try:
-            os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
+            os.makedirs(os.path.dirname(_target) or ".", exist_ok=True)
             with self._lock:
                 data = json.dumps({"version": UNFORMED_VERSION, "ref_n": self.ref_n,
                                    "ref_counts": self.ref_counts, "ref_axis_sum": self.ref_axis_sum,
                                    "ref_axis_sq": self.ref_axis_sq, "patterns": self.patterns,
                                    "counters": self.counters, "last_residue": self.last_residue,
                                    "last_handoff": self.last_handoff})
-            tmp = self.path + ".tmp"
+            tmp = _target + ".tmp"
             with open(tmp, "w", encoding="utf-8") as fh:
                 fh.write(data)
-            os.replace(tmp, self.path)
+            os.replace(tmp, _target)
         except Exception:
             pass
 

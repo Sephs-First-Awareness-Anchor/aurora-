@@ -243,10 +243,12 @@ class ToroidalCirculationLayer:
                 return False
             try:
                 os.makedirs(self._state_dir, exist_ok=True)
-                from aurora_internal.aurora_store_ownership import store_write_allowed
-                if not store_write_allowed(self._path):
+                from aurora_internal.aurora_store_ownership import store_write_path
+                target = store_write_path(self._path)
+                if target is None:
                     return False
-                tmp = self._path + ".tmp"
+                target = str(target)
+                tmp = target + ".tmp"
                 payload = {
                     "version": 1,
                     "observations": self._observations,
@@ -257,7 +259,7 @@ class ToroidalCirculationLayer:
                 }
                 with open(tmp, "w", encoding="utf-8") as fh:
                     json.dump(payload, fh, indent=1)
-                os.replace(tmp, self._path)
+                os.replace(tmp, target)
                 self._dirty = False
                 return True
             except Exception as _aurora_boundary_exc:

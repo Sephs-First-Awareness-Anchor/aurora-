@@ -916,9 +916,11 @@ class FailPointLedger:
         try:
             os.makedirs(self.state_dir, exist_ok=True)
             path = os.path.join(self.state_dir, _FAIL_POINTS_FILE)
-            from aurora_internal.aurora_store_ownership import store_write_allowed
-            if not store_write_allowed(path):
+            from aurora_internal.aurora_store_ownership import store_write_path
+            target = store_write_path(path)
+            if target is None:
                 return True
+            target = str(target)
             # Safety: if in-memory state is empty but disk has data, merge before saving.
             # Guards against a startup where load() failed (corrupt JSON) so the ledger
             # was never populated -- we must not overwrite good disk data with zeros.
@@ -933,7 +935,7 @@ class FailPointLedger:
                 except Exception as _aurora_boundary_exc:
                     _aurora_fault(locals(), _aurora_boundary_exc, 'save', 632)
                     pass
-            tmp = path + ".tmp"
+            tmp = target + ".tmp"
             data = {
                 "total_fails": self._total_fails,
                 "records": {d: r.to_dict() for d, r in self._records.items()},
@@ -942,7 +944,7 @@ class FailPointLedger:
                 json.dump(data, f, indent=2)
                 f.flush()
                 os.fsync(f.fileno())
-            os.replace(tmp, path)
+            os.replace(tmp, target)
             # Rich stream persistence is additive and must never affect this
             # method's own success/failure contract for the aggregate file.
             try:

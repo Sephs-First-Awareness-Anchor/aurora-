@@ -2980,6 +2980,17 @@ def initialize(state_dir: str = "") -> str:
                 log.info("Home's growth installed on the surface: %s", _growth)
         except Exception as _growth_exc:
             log.warning("Home's growth not installed this start: %s", _growth_exc)
+        # What she lived on this device while home could not take it is laid
+        # back over each copy it grew from, so a restart does not forget it.
+        # A copy home has replaced since retires its view: home has already
+        # admitted those occurrences once, and its integration is the authority.
+        try:
+            from aurora_internal.aurora_store_ownership import restore_provisional
+            _prov = restore_provisional(os.path.abspath(_strata_state_dir))
+            if _prov.get("restored") or _prov.get("appended") or _prov.get("retired") or _prov.get("errors"):
+                log.info("Her provisional view on this start: %s", _prov)
+        except Exception as _prov_exc:
+            log.warning("Provisional view not restored this start: %s", _prov_exc)
         from aurora_internal.aurora_store_ownership import enable_surface_only
         enable_surface_only(os.path.abspath(_strata_state_dir))
         _evo_sim = None
@@ -8685,10 +8696,11 @@ def _store_relational_claim(text: str, entity_type: str, entity_label: str) -> N
             "content":      [w for w in words if len(w) > 4][:20],
         }
         _claims_path = os.path.join(state_dir, "relational_claims.jsonl")
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(_claims_path):
+        from aurora_internal.aurora_store_ownership import APPEND, store_write_path
+        _claims_target = store_write_path(_claims_path, APPEND)
+        if _claims_target is None:
             return  # home keeps her claims history; the turn itself goes home
-        with open(_claims_path, "a", encoding="utf-8") as f:
+        with open(_claims_target, "a", encoding="utf-8") as f:
             f.write(_json.dumps(entry) + "\n")
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(

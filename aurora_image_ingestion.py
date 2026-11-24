@@ -726,14 +726,21 @@ class ImageIngestionProtocol:
             }
         try:
             import tempfile
-            dirp = os.path.dirname(os.path.abspath(self.index_path))
+            # Home-owned; on a surface-only device what she saw lands in her
+            # provisional view until home has it.
+            from aurora_internal.aurora_store_ownership import SNAPSHOT, store_write_path
+            _target = store_write_path(self.index_path, SNAPSHOT)
+            if _target is None:
+                return
+            _target = str(_target)
+            dirp = os.path.dirname(os.path.abspath(_target))
             os.makedirs(dirp, exist_ok=True)
             fd, tmp = tempfile.mkstemp(dir=dirp, suffix=".tmp")
             with os.fdopen(fd, 'w') as f:
                 json.dump(data, f)
                 f.flush()
                 os.fsync(f.fileno())
-            os.replace(tmp, self.index_path)
+            os.replace(tmp, _target)
         except Exception as e:
             _aurora_fault(locals(), e, 'save_index', 558)
             logger.debug(f"[Vision] Index save failed: {e}")

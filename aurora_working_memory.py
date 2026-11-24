@@ -2441,6 +2441,11 @@ class WorkingMemory:
             targets = []
 
         if isinstance(systems, dict):
+            # Recall the same historical context she has already deposited
+            # on ordinary concept crystals, without another store or an
+            # additional vote for the remembered event.
+            from aurora_internal.aurora_live_experience import crystal_context_for_turn
+            systems["_last_recalled_crystal_context"] = crystal_context_for_turn(systems, user_text)
             sedimemory_queries = list(dict.fromkeys(targets[:4] + ([str(user_text or '').strip()] if str(user_text or '').strip() else [])))
             for query in sedimemory_queries:
                 recalled = _recall_semantic_sedimemory(
@@ -2484,6 +2489,29 @@ class WorkingMemory:
                     )
                     if rendered:
                         return rendered
+        # A longer-horizon quoted recall may still be available in the
+        # already-existing fk:episode_ref facet, even when the short rolling
+        # working-memory deque and SediMemory have rotated. Require a
+        # witnessed/told conversation occasion, not a dream or hypothesis.
+        if isinstance(systems, dict) and is_quote_request(user_text):
+            view = dict(systems.get("_last_recalled_crystal_context") or {})
+            for item in view.get("facets", []):
+                if item.get("kind") != "episode_ref":
+                    continue
+                if not any(o.get("basis") == "told" and o.get("source") == "conversation"
+                           for o in item.get("occasions", [])):
+                    continue
+                summary = str(dict(item.get("content") or {}).get("summary") or "").strip()
+                if not summary or summary.endswith("?"):
+                    continue
+                rendered = _render_runtime_intent(
+                    systems, summary[:160], emotion_tone='precise',
+                    relationship_signal='recognition', certainty=min(0.94, float(item["degree"])),
+                    supporting_concepts=[str(item["concept"]), 'earlier', 'utterance'],
+                    constraints=['recall', 'crystal', 'witnessed'],
+                )
+                if rendered:
+                    return rendered
         return ""
 
     def apply_context_control(

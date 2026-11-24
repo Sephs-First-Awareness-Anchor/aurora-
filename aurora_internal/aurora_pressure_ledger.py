@@ -279,20 +279,28 @@ class PressureExperienceLedger:
 
         # Persist immediately -- atomic append to JSONL (max 500 entries retained)
         _MAX_ENTRIES = self._MAX_ENTRIES
-        from aurora_internal.aurora_store_ownership import store_write_allowed
+        from aurora_internal.aurora_store_ownership import APPEND, store_write_path
         try:
             # On a surface-only device this log is home-owned: the felt pressure
-            # still lands in the buffer above, home keeps the durable record.
-            if store_write_allowed(self._log_path):
-                with open(self._log_path, "a") as f:
+            # still lands in the buffer above, home keeps the durable record,
+            # and her provisional view keeps what she felt until home has it.
+            _log_target = store_write_path(self._log_path, APPEND)
+            if _log_target is not None:
+                with open(_log_target, "a") as f:
                     f.write(json.dumps(exp.to_dict()) + "\n")
-                # Trim to last 500 entries if file is growing too large
+                # Trim to last 500 entries if file is growing too large.  Her
+                # provisional view is never trimmed: it is laid over home's
+                # copy by byte offset, so it may only grow (budget-bounded).
                 try:
-                    with open(self._log_path, "r") as _rf:
+                    if os.path.abspath(str(_log_target)) != os.path.abspath(str(self._log_path)):
+                        raise StopIteration
+                    with open(_log_target, "r") as _rf:
                         _lines = _rf.readlines()
                     if len(_lines) > _MAX_ENTRIES:
-                        with open(self._log_path, "w") as _wf:
+                        with open(_log_target, "w") as _wf:
                             _wf.writelines(_lines[-_MAX_ENTRIES:])
+                except StopIteration:
+                    pass
                 except Exception as _aurora_boundary_exc:
                     _aurora_fault(locals(), _aurora_boundary_exc, 'record', 174)
                     pass

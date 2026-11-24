@@ -804,9 +804,11 @@ class PrimitivePerspectiveEngine:
         path = self.path
         if not path:
             return
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(path):
+        from aurora_internal.aurora_store_ownership import store_write_path
+        target = store_write_path(path)
+        if target is None:
             return
+        path = str(target)
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             payload = {"formed": self.formed,

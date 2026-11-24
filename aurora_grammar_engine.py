@@ -941,9 +941,11 @@ class MotifLineage:
         # prepare_response_trace every turn (~12% of turn wall time).
         if not force and batch_defer(self):
             return
-        from aurora_internal.aurora_store_ownership import store_write_allowed
-        if not store_write_allowed(self._state_path):
+        from aurora_internal.aurora_store_ownership import store_write_path
+        target = store_write_path(self._state_path)
+        if target is None:
             return
+        target = str(target)
         try:
             data = {
                 "motifs":    {k: v.to_dict() for k, v in self._motifs.items()},
@@ -951,12 +953,12 @@ class MotifLineage:
                 "saved_at":  time.time(),
                 "clone_harvest_chunks": sorted(self._clone_harvest_chunks),
             }
-            tmp = self._state_path + ".tmp"
+            tmp = target + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
                 # Compact: this file is ~10 MB and was rewritten every turn with
                 # indent=2 (pure-Python encoder, ~12% of turn wall time). Same data.
                 json.dump(data, f, separators=(",", ":"))
-            os.replace(tmp, self._state_path)
+            os.replace(tmp, target)
         except Exception as _aurora_boundary_exc:
             _aurora_fault(locals(), _aurora_boundary_exc, '_save', 843)
             pass
