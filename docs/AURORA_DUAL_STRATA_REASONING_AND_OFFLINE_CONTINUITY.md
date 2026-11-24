@@ -2,7 +2,16 @@
 
 **Authors:** Sunni (Sir) Morningstar and Cael Devo
 **Directive:** AURORA_DUAL_STRATA_REASONING_AND_OFFLINE_CONTINUITY_DIRECTIVE
-**Branch:** `claude/aurora-dual-strata-20261121`, based on `claude/aurora-phone-hands-20261121` (#269), with draft #268 (`ceph/crystal-resolution-reuse-20261121`) merged in.
+**Branch:** `claude/aurora-update-20261121`, on current `main` (which already holds #266, #269 and #270).
+
+This branch is one whole update for review. It carries, in one merge:
+
+- this directive (dual strata and offline continuity);
+- #268, learned resolution and contextual recall through the uniform crystal facets;
+- #272, the desktop resident and phone pairing over the encrypted relay, with the desktop and Linux installers;
+- experiential recall (directive V2), what she held then kept apart from what she holds now.
+
+Merging it replaces #268 and #272; nothing else needs merging first.
 
 She is one mind on two strata. Her surface (the phone) owns the present and
 runs her whole cognitive loop, offline too. Her subsurface (the HP desktop,
@@ -33,10 +42,11 @@ pairing line that points at an address that never answers).
 | The surface already runs the full turn offline. | Probe: surface boot 19 to 21 s; turns 0.1 to 2.9 s with home unreachable; no turn waits on the link. | Acceptance 1 and 3 already held; this change keeps them. |
 | A competence limit, not a strata problem. | "If the kettle is unplugged, can it boil water?" gets silence in every configuration, the whole mind included. Turn 3 and 4 replies differ between runs regardless of the gate. | Reported honestly; not caused or fixed by this change. |
 
-PR #268 (still a draft) adds `crystal_context_for_turn` in
-`aurora_live_experience.py`, which reads `fk:*` facets from the canonical
-crystal registry through `dimensional.concept_index`. This branch carries
-#268 merged so the facet views below read exactly what #268 reads.
+#268 adds `crystal_context_for_turn` in `aurora_live_experience.py`, which
+reads `fk:*` facets from the canonical crystal registry through
+`dimensional.concept_index`. It is the one reader live cognition uses outside
+the crystal modules, and home's facet views are built through the same
+reader, so the surface and home read her crystals one way.
 
 ---
 
@@ -182,10 +192,52 @@ when the power is on." Then the phone restarts, still offline.
 She keeps what she learned offline. The reply itself is poor; that is her
 current expression, not the strata.
 
-### Paired benefit and tests
+### Paired benefit (home's facet views reaching the surface)
 
-See the PR description for the paired facet-view measurement and the full
-test-suite comparison against the base branch, run on this branch.
+Home booted a copy of `aurora_state` as the whole mind, lived three teaching
+turns about a zephyrine and a kettle, and wove its crystals as it does on
+save (1,385 facets, 7.3 s). The surface booted a separate copy that had not
+lived those turns, received home's views, and read three follow-up turns.
+
+| Measure | Result |
+|---|---|
+| Home builds a view | 0.17 to 0.51 ms per input, 12 entries each, all evidence class "earned" |
+| Surface reads her own facets | 0.02 to 0.05 ms, 0 entries (her copy holds no woven facets) |
+| Surface adds home's view | 0.1 to 0.4 ms, 6 read-only entries per turn, marked as home's |
+
+The path works end to end and never holds a turn up. What it carries is
+weak today: the bounded read takes the words she hears in alphabetical
+order, so its budget is spent on the commonest words ("can", "does",
+"what") before "kettle" or "zephyrine" are read. How the read should choose
+among the words she hears is a design question for her recall, not for the
+strata, so it is left as it is and reported here.
+
+This measurement also found that the live facet read returned nothing on a
+real boot: it looked for the concept index on `DimensionalSystems` and
+resolved ids in the concept crystal registry, while the index and the woven
+`fk:*` facets sit on `DimensionalSystems.dps`. That is fixed in
+`crystal_facets.recall_contextual_facets`, with a test on the real layout,
+and it is what makes #268's read and experiential recall reach her woven
+facets at all.
+
+### Tests
+
+Full suite, one lane, on this branch and on `main`:
+
+| | Passed | Failed |
+|---|---|---|
+| `main` | 5,911 | 31 |
+| This branch, before the last fixes | 5,977 | 33 |
+| This branch, now | about 5,980 | 30 to 31, every one also failing on `main` |
+
+Of the three that failed only here, two are fixed (home's view now reads
+through the live cognition reader; the strata.1 verdict is refreshed from a
+knowledge-graph build of this branch). The third,
+`test_default_state_files_unchanged_by_boot_and_live_turn`, passes alone and
+fails on `main` too when run after the same four test files: an earlier
+test leaves the pressure ledger pointed at the real `aurora_state`. One test
+that fails on `main` passes here
+(`test_composites_and_exercises_match_the_source`).
 
 ---
 
@@ -197,14 +249,20 @@ test-suite comparison against the base branch, run on this branch.
    `serve`). Wait until it has exited.
 2. Back up the state directory (default `%LOCALAPPDATA%\Aurora\state`) to a
    folder outside it.
-3. In the repository: `git fetch` and check out the merged commit (or this
+3. Either install the packaged app (the `Aurora-Windows-Installer` artifact
+   from the "Desktop app installers" workflow, `Aurora-Setup-Windows-x64`,
+   installed under `%LOCALAPPDATA%\Programs\Aurora`; see
+   `AURORA_HOME_AND_SURFACE_SETUP.md` and `packaging/desktop/README.md`), or
+   in the repository `git fetch` and check out the merged commit (or this
    branch for testing).
-4. Start it again: `.\.venv\Scripts\python.exe -m aurora_internal.desktop serve --open`.
+4. Start it again from the app, or with
+   `.\.venv\Scripts\python.exe -m aurora_internal.desktop serve --open`.
 5. Check the hub's strata panel: the store gate line and the new "kept
    provisionally" line appear once a phone has synced.
 
-Rollback: stop the resident, check out the previous commit, start it. The
-only new home file is `strata_link/facet_views_home.json`; an older build
+Rollback: stop the resident, check out the previous commit (or reinstall
+the previous installer), start it, and restore the backup from step 2 only
+if the state itself is in doubt. The only new home file is `strata_link/facet_views_home.json`; an older build
 ignores it.
 
 ### Android surface
@@ -249,10 +307,10 @@ directory while the app is closed.
 
 ## 10. Overlaps
 
-- **Experiential recall directive V2** (handled in its own task): it also
-  works in `crystal_context_for_turn` and `recall_contextual_facets`. Home
-  views are added by a wrapper (`_with_home_views`) after her own read, so a
-  change to how recall reads facets carries into home views without edits
-  here.
-- **#268** is merged into this branch. If #268 changes before it merges,
-  this branch needs a rebase onto it.
+- **Experiential recall directive V2** is carried here. It also works in
+  `crystal_context_for_turn` and `recall_contextual_facets`. Home views are
+  added by a wrapper (`_with_home_views`) after her own read, and home builds
+  its views through `crystal_context_for_turn`, so a change to how recall
+  reads facets carries into home views without edits here.
+- **#268 and #272** are carried whole, at their current heads. If either
+  changes before this merges, this branch takes the change in.
